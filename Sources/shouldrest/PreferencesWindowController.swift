@@ -59,6 +59,7 @@ final class PreferencesWindowController: NSWindowController {
 
     private let customBodyTitle = NSTextField()
     private let customBodyText = NSTextField()
+    private let customBodyIdeasJSON = NSTextField()
     private let localImagePath = NSTextField()
     private let useBuiltInIdeas = NSButton(checkboxWithTitle: L10n.tr("prefs.useBuiltInIdeas"), target: nil, action: nil)
 
@@ -216,6 +217,7 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(useBuiltInIdeas)
         stack.addArrangedSubview(row(L10n.tr("prefs.title"), customBodyTitle))
         stack.addArrangedSubview(row(L10n.tr("prefs.text"), customBodyText))
+        stack.addArrangedSubview(row(L10n.tr("prefs.advancedIdeasJSON"), customBodyIdeasJSON))
         stack.addArrangedSubview(row(L10n.tr("prefs.localImagePath"), localImagePath))
 
         stack.addArrangedSubview(separator())
@@ -281,7 +283,7 @@ final class PreferencesWindowController: NSWindowController {
 
         let wideFields = [
             eyeColor, bodyColor, eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, customBodyTitle,
-            customBodyText, localImagePath, shortcutPauseToggle, shortcutPause30,
+            customBodyText, customBodyIdeasJSON, localImagePath, shortcutPauseToggle, shortcutPause30,
             shortcutPause1h, shortcutPause2h, shortcutPause5h, shortcutPauseUntilMorning,
             shortcutEyeNow, shortcutBodyNow, shortcutSkipBody, shortcutEmergencyEye, shortcutReset,
             appExclusionName, appExclusionTerms, updateFeedURL,
@@ -348,6 +350,7 @@ final class PreferencesWindowController: NSWindowController {
         useBuiltInIdeas.state = state(settings.contentLibrary.useBuiltInIdeas)
         customBodyTitle.stringValue = custom?.title ?? ""
         customBodyText.stringValue = custom?.body ?? ""
+        customBodyIdeasJSON.stringValue = encodedCustomIdeas(settings.contentLibrary.customBodyBreakIdeas)
         localImagePath.stringValue = settings.contentLibrary.localImagePaths.first ?? ""
 
         shortcutPauseToggle.stringValue = settings.shortcuts.pauseToggle
@@ -426,7 +429,7 @@ final class PreferencesWindowController: NSWindowController {
         next.bodyBreak.finishSound = soundPolicy(name: bodyFinishSound.stringValue, volume: volume)
 
         next.contentLibrary.useBuiltInIdeas = isOn(useBuiltInIdeas)
-        next.contentLibrary.customBodyBreakIdeas = savedCustomIdeas()
+        next.contentLibrary.customBodyBreakIdeas = savedAdvancedCustomIdeas() ?? savedCustomIdeas()
         next.contentLibrary.localImagePaths = savedLocalImagePaths()
         next.bodyBreak.content = next.contentLibrary.localImagePaths.isEmpty ? .richRestIdea : .localImage
         next.shortcuts.pauseToggle = shortcutPauseToggle.stringValue
@@ -520,6 +523,33 @@ final class PreferencesWindowController: NSWindowController {
                 isEnabled: true
             )
         ]
+    }
+
+    private func savedAdvancedCustomIdeas() -> [RestIdea]? {
+        let raw = customBodyIdeasJSON.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !raw.isEmpty, let data = raw.data(using: .utf8) else { return nil }
+        guard let decoded = try? JSONDecoder().decode([RestIdea].self, from: data) else { return nil }
+        return decoded
+            .filter { $0.kind == .bodyBreak }
+            .map {
+                RestIdea(
+                    id: $0.id.isEmpty ? UUID().uuidString : $0.id,
+                    kind: .bodyBreak,
+                    title: $0.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Custom Body Break" : $0.title,
+                    body: ContentSanitizer.sanitizeRichText($0.body),
+                    isEnabled: $0.isEnabled
+                )
+            }
+    }
+
+    private func encodedCustomIdeas(_ ideas: [RestIdea]) -> String {
+        let bodyIdeas = ideas.filter { $0.kind == .bodyBreak }
+        guard !bodyIdeas.isEmpty,
+              let data = try? JSONEncoder().encode(bodyIdeas),
+              let string = String(data: data, encoding: .utf8) else {
+            return ""
+        }
+        return string
     }
 
     private func savedLocalImagePaths() -> [String] {

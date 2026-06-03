@@ -111,6 +111,7 @@
 "prefs.useBuiltInIdeas" = "使用内置休息提示";
 "prefs.title" = "标题";
 "prefs.text" = "文本";
+"prefs.advancedIdeasJSON" = "高级提示 JSON";
 "prefs.localImagePath" = "本地图片路径";
 "prefs.sectionShortcuts" = "全局快捷键";
 "prefs.pauseToggle" = "暂停切换";

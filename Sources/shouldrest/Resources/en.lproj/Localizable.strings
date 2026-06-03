@@ -111,6 +111,7 @@
 "prefs.useBuiltInIdeas" = "Use built-in rest ideas";
 "prefs.title" = "Title";
 "prefs.text" = "Text";
+"prefs.advancedIdeasJSON" = "Advanced ideas JSON";
 "prefs.localImagePath" = "Local image path";
 "prefs.sectionShortcuts" = "Global Shortcuts";
 "prefs.pauseToggle" = "Pause toggle";
