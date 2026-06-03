@@ -1350,56 +1350,77 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     }
 
     private func updateShortcutConflictWarning() {
-        guard let message = shortcutConflictWarningMessage() else {
+        let entries = visibleShortcutPreferenceEntries()
+        entries.forEach { $0.recorder.validationWarning = nil }
+
+        guard let warning = shortcutValidationWarning(for: entries) else {
             shortcutConflictLabel.stringValue = ""
             shortcutConflictRow.isHidden = true
             return
         }
-        shortcutConflictLabel.stringValue = message
+
+        shortcutConflictLabel.stringValue = warning.message
         shortcutConflictRow.isHidden = false
+        warning.recorders.forEach { $0.validationWarning = warning.message }
     }
 
-    private func shortcutConflictWarningMessage() -> String? {
-        var entriesByShortcut: [String: [(title: String, displayValue: String)]] = [:]
-        for entry in visibleShortcutPreferenceEntries() {
+    private struct ShortcutPreferenceEntry {
+        var title: String
+        var recorder: ShortcutRecorderButton
+    }
+
+    private struct ShortcutValidationWarning {
+        var message: String
+        var recorders: [ShortcutRecorderButton]
+    }
+
+    private func shortcutValidationWarning(for entries: [ShortcutPreferenceEntry]) -> ShortcutValidationWarning? {
+        var entriesByShortcut: [String: [ShortcutPreferenceEntry]] = [:]
+        for entry in entries {
             let rawValue = entry.recorder.shortcutValue.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !rawValue.isEmpty else { continue }
             guard let parsed = ParsedShortcut(rawValue) else {
-                return L10n.format("prefs.shortcutUnsupported", entry.recorder.displayValue, entry.title)
+                return ShortcutValidationWarning(
+                    message: L10n.format("prefs.shortcutUnsupported", entry.recorder.displayValue, entry.title),
+                    recorders: [entry.recorder]
+                )
             }
             let key = "\(parsed.modifiers):\(parsed.keyCode)"
-            entriesByShortcut[key, default: []].append((entry.title, entry.recorder.displayValue))
+            entriesByShortcut[key, default: []].append(entry)
         }
 
         guard let conflict = entriesByShortcut.values.first(where: { $0.count > 1 }),
-              let shortcut = conflict.first?.displayValue else {
+              let shortcut = conflict.first?.recorder.displayValue else {
             return nil
         }
         let actions = conflict.map(\.title).joined(separator: ", ")
-        return L10n.format("prefs.shortcutConflict", shortcut, actions)
+        return ShortcutValidationWarning(
+            message: L10n.format("prefs.shortcutConflict", shortcut, actions),
+            recorders: conflict.map(\.recorder)
+        )
     }
 
-    private func visibleShortcutPreferenceEntries() -> [(title: String, recorder: ShortcutRecorderButton)] {
-        var entries: [(title: String, recorder: ShortcutRecorderButton)] = [
-            (L10n.tr("prefs.pauseToggle"), shortcutPauseToggle),
-            (L10n.tr("prefs.pause30Shortcut"), shortcutPause30),
-            (L10n.tr("prefs.pause1hShortcut"), shortcutPause1h),
-            (L10n.tr("prefs.pause2hShortcut"), shortcutPause2h),
-            (L10n.tr("prefs.pause5hShortcut"), shortcutPause5h),
-            (L10n.tr("prefs.pauseUntilMorningShortcut"), shortcutPauseUntilMorning),
-            (L10n.tr("prefs.nextScheduledRest"), shortcutNextScheduled)
+    private func visibleShortcutPreferenceEntries() -> [ShortcutPreferenceEntry] {
+        var entries: [ShortcutPreferenceEntry] = [
+            ShortcutPreferenceEntry(title: L10n.tr("prefs.pauseToggle"), recorder: shortcutPauseToggle),
+            ShortcutPreferenceEntry(title: L10n.tr("prefs.pause30Shortcut"), recorder: shortcutPause30),
+            ShortcutPreferenceEntry(title: L10n.tr("prefs.pause1hShortcut"), recorder: shortcutPause1h),
+            ShortcutPreferenceEntry(title: L10n.tr("prefs.pause2hShortcut"), recorder: shortcutPause2h),
+            ShortcutPreferenceEntry(title: L10n.tr("prefs.pause5hShortcut"), recorder: shortcutPause5h),
+            ShortcutPreferenceEntry(title: L10n.tr("prefs.pauseUntilMorningShortcut"), recorder: shortcutPauseUntilMorning),
+            ShortcutPreferenceEntry(title: L10n.tr("prefs.nextScheduledRest"), recorder: shortcutNextScheduled)
         ]
 
         func appendIfVisible(_ row: NSView?, _ title: String, _ recorder: ShortcutRecorderButton) {
             guard !(row?.isHidden ?? false) else { return }
-            entries.append((title, recorder))
+            entries.append(ShortcutPreferenceEntry(title: title, recorder: recorder))
         }
 
         appendIfVisible(shortcutEyeNowRow, L10n.tr("prefs.eyeGateNow"), shortcutEyeNow)
         appendIfVisible(shortcutBodyNowRow, L10n.tr("prefs.bodyBreakNow"), shortcutBodyNow)
         appendIfVisible(shortcutEndBodyRow, L10n.tr("prefs.endBodyBreak"), shortcutEndBody)
         appendIfVisible(shortcutEmergencyEyeRow, L10n.tr("prefs.emergencyEyeGate"), shortcutEmergencyEye)
-        entries.append((L10n.tr("prefs.reset"), shortcutReset))
+        entries.append(ShortcutPreferenceEntry(title: L10n.tr("prefs.reset"), recorder: shortcutReset))
         return entries
     }
 
@@ -2390,6 +2411,13 @@ final class ShortcutRecorderButton: NSButton {
             }
         }
     }
+    var validationWarning: String? {
+        didSet {
+            if !isRecording {
+                updateDisplay()
+            }
+        }
+    }
     var displayValue: String {
         ShortcutDisplay.string(shortcutValue)
     }
@@ -2514,6 +2542,18 @@ final class ShortcutRecorderButton: NSButton {
             contentTintColor = nil
             setSymbol("keyboard")
         }
+
+        if case .recording = state {
+            return
+        }
+        applyValidationWarningIfNeeded()
+    }
+
+    private func applyValidationWarningIfNeeded() {
+        guard let validationWarning else { return }
+        toolTip = validationWarning
+        contentTintColor = .systemOrange
+        setSymbol("exclamationmark.triangle.fill", fallback: "exclamationmark.triangle")
     }
 
     private func setSymbol(_ symbolName: String, fallback: String? = nil) {

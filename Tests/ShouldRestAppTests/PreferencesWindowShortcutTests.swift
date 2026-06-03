@@ -76,6 +76,15 @@ final class PreferencesWindowShortcutTests: XCTestCase {
 
         let warning = try XCTUnwrap(visibleTexts.first { $0.contains(L10n.tr("prefs.eyeGateNow")) && $0.contains(L10n.tr("prefs.bodyBreakNow")) })
         XCTAssertTrue(warning.contains("⌘1"))
+
+        let eyeNow = try XCTUnwrap(control(withIdentifier: "shortcut.eyeNow", in: contentView) as? ShortcutRecorderButton)
+        let bodyNow = try XCTUnwrap(control(withIdentifier: "shortcut.bodyNow", in: contentView) as? ShortcutRecorderButton)
+        XCTAssertEqual(eyeNow.validationWarning, warning)
+        XCTAssertEqual(bodyNow.validationWarning, warning)
+        XCTAssertEqual(eyeNow.toolTip, warning)
+        XCTAssertEqual(bodyNow.toolTip, warning)
+        XCTAssertWarningTint(eyeNow)
+        XCTAssertWarningTint(bodyNow)
     }
 
     func testDistinctShortcutsHideConflictWarning() throws {
@@ -89,6 +98,46 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         let visibleTexts = visibleTexts(in: contentView)
 
         XCTAssertFalse(visibleTexts.contains { $0.contains(L10n.tr("prefs.shortcutConflict").prefix(12)) })
+    }
+
+    func testShortcutWarningClearsWhenConflictIsResolved() throws {
+        var settings = RestSettings.defaults
+        settings.shortcuts.takeEyeGateNow = "Cmd+1"
+        settings.shortcuts.takeBodyBreakNow = "Command+1"
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectShortcutsTab(in: contentView)
+        let eyeNow = try XCTUnwrap(control(withIdentifier: "shortcut.eyeNow", in: contentView) as? ShortcutRecorderButton)
+        let bodyNow = try XCTUnwrap(control(withIdentifier: "shortcut.bodyNow", in: contentView) as? ShortcutRecorderButton)
+        XCTAssertNotNil(eyeNow.validationWarning)
+        XCTAssertNotNil(bodyNow.validationWarning)
+
+        bodyNow.shortcutValue = "Cmd+2"
+        bodyNow.onChange?()
+
+        XCTAssertNil(eyeNow.validationWarning)
+        XCTAssertNil(bodyNow.validationWarning)
+        XCTAssertEqual(eyeNow.toolTip, L10n.tr("shortcut.clearHelp"))
+        XCTAssertEqual(bodyNow.toolTip, L10n.tr("shortcut.clearHelp"))
+    }
+
+    func testUnsupportedShortcutMarksOnlyInvalidRecorder() throws {
+        var settings = RestSettings.defaults
+        settings.shortcuts.takeEyeGateNow = "Meta+X"
+        settings.shortcuts.takeBodyBreakNow = "Command+2"
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectShortcutsTab(in: contentView)
+        let warning = try XCTUnwrap(visibleTexts(in: contentView).first { $0.contains(L10n.tr("prefs.eyeGateNow")) && $0.contains("METAX") })
+        let eyeNow = try XCTUnwrap(control(withIdentifier: "shortcut.eyeNow", in: contentView) as? ShortcutRecorderButton)
+        let bodyNow = try XCTUnwrap(control(withIdentifier: "shortcut.bodyNow", in: contentView) as? ShortcutRecorderButton)
+
+        XCTAssertEqual(eyeNow.validationWarning, warning)
+        XCTAssertNil(bodyNow.validationWarning)
+        XCTAssertEqual(eyeNow.toolTip, warning)
+        XCTAssertWarningTint(eyeNow)
     }
 
     func testHiddenEmergencyShortcutIsIgnoredForConflictWarning() throws {
@@ -293,6 +342,18 @@ final class PreferencesWindowShortcutTests: XCTestCase {
     private func sendAction(from control: NSControl) -> Bool {
         guard let action = control.action else { return false }
         return NSApplication.shared.sendAction(action, to: control.target, from: control)
+    }
+
+    private func XCTAssertWarningTint(
+        _ button: ShortcutRecorderButton,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        let color = button.contentTintColor?.usingColorSpace(.sRGB)
+        XCTAssertNotNil(color, file: file, line: line)
+        XCTAssertGreaterThan(color?.redComponent ?? 0, 0.85, file: file, line: line)
+        XCTAssertGreaterThan(color?.greenComponent ?? 0, 0.25, file: file, line: line)
+        XCTAssertLessThan(color?.blueComponent ?? 1, 0.25, file: file, line: line)
     }
 
     private func keyEvent(keyCode: Int, characters: String = "") throws -> NSEvent {
