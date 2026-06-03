@@ -402,7 +402,9 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         let advancedStack = contentStack()
         advancedStack.addArrangedSubview(section(L10n.tr("prefs.sectionOperations"), symbolName: "gearshape"))
         advancedStack.addArrangedSubview(openAtLogin)
+        checkUpdates.identifier = NSUserInterfaceItemIdentifier("prefs.checkUpdates")
         advancedStack.addArrangedSubview(checkUpdates)
+        notifyNewVersion.identifier = NSUserInterfaceItemIdentifier("prefs.notifyNewVersion")
         advancedStack.addArrangedSubview(notifyNewVersion)
         advancedStack.addArrangedSubview(showOnboardingNextLaunch)
         let pauseUntilMorningModeRow = row(L10n.tr("prefs.pauseUntilMorningMode"), pauseUntilMorningMode)
@@ -430,6 +432,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         advancedStack.addArrangedSubview(pauseUntilMorningLongitudeRow)
         advancedStack.addArrangedSubview(pauseForSuspendOrLock)
         let updateFeedURLRow = row(L10n.tr("prefs.updateFeedURL"), updateFeedURL)
+        updateFeedURL.identifier = NSUserInterfaceItemIdentifier("prefs.updateFeedURLField")
+        updateFeedURLRow.identifier = NSUserInterfaceItemIdentifier("prefs.updateFeedURLRow")
         self.updateFeedURLRow = updateFeedURLRow
         advancedStack.addArrangedSubview(updateFeedURLRow)
         advancedStack.addArrangedSubview(separator())
@@ -1165,11 +1169,18 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         bodyAllowSkip.isHidden = settings.admin.hideStrictPreferences
         shortcutEmergencyEyeRow?.isHidden = settings.admin.hideStrictPreferences
 
-        let hideUpdateControls = settings.admin.disableAppUpdateFeatures
-        checkUpdates.isHidden = hideUpdateControls
-        notifyNewVersion.isHidden = hideUpdateControls
-        updateFeedURLRow?.isHidden = hideUpdateControls
+        updateUpdatePreferencesVisibility()
         updateShortcutConflictWarning()
+    }
+
+    private func updateUpdatePreferencesVisibility() {
+        let hideUpdateControls = settings.admin.disableAppUpdateFeatures
+        let showUpdateDependents = !hideUpdateControls && isOn(checkUpdates)
+        checkUpdates.isHidden = hideUpdateControls
+        notifyNewVersion.isHidden = !showUpdateDependents
+        notifyNewVersion.isEnabled = showUpdateDependents
+        updateFeedURLRow?.isHidden = !showUpdateDependents
+        updateFeedURL.isEnabled = showUpdateDependents
     }
 
     private func updateShortcutConflictWarning() {
@@ -1276,7 +1287,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         ].forEach { $0.isEnabled = exclusionEnabled }
 
         trayStyle.isEnabled = true
-        notifyNewVersion.isEnabled = isOn(checkUpdates)
+        updateUpdatePreferencesVisibility()
 
         let morningMode = selected(MorningPauseMode.self, from: pauseUntilMorningMode, fallback: .hour)
         let usesSunrise = morningMode == .sunrise
