@@ -64,6 +64,8 @@
 "overlay.emergencyOverride" = "紧急";
 "overlay.emergencyOverrideIn" = "%d 秒后紧急";
 "overlay.emergencyOverrideHelp" = "只在真正中断时使用。仍需确认，并计为未完成的 Eye Gate。";
+"overlay.emergencyConfirmStep" = "确认 %d/%d";
+"overlay.emergencyConfirmHelp" = "只用于真正中断。此次计为未完成的 Eye Gate。";
 "preferences.title" = "ShouldRest 偏好设置";
 "debug.title" = "ShouldRest 调试";
 "prefs.enableEyeGate" = "启用 Eye Gate";
@@ -90,10 +92,15 @@
 "prefs.adminHideUpdates" = "管理员：隐藏更新 UI";
 "prefs.adminHideSettingsPath" = "管理员：隐藏设置、日志、支持与图片路径";
 "prefs.adminHideStrict" = "管理员：隐藏严格模式偏好";
+"prefs.tabSchedule" = "日程";
+"prefs.tabContext" = "上下文";
+"prefs.tabAppearance" = "外观";
+"prefs.tabShortcuts" = "快捷键";
+"prefs.tabAdvanced" = "高级";
 "prefs.sectionEyeGate" = "Eye Gate";
 "prefs.everyMinutes" = "每隔分钟数";
 "prefs.durationSeconds" = "持续秒数";
-"prefs.overlayColor" = "覆盖层颜色 hex";
+"prefs.overlayColor" = "覆盖层颜色";
 "prefs.notificationLead" = "提前通知秒数";
 "prefs.sectionBodyBreak" = "Body Break";
 "prefs.bodyIntervalMinutes" = "关闭 Eye Gate 时每隔分钟数";
@@ -152,7 +159,10 @@
 "prefs.title" = "标题";
 "prefs.text" = "文本";
 "prefs.advancedIdeasJSON" = "高级提示 JSON";
-"prefs.localImagePath" = "本地图片路径";
+"prefs.localImagePath" = "Body Break 图片";
+"prefs.chooseFile" = "选择...";
+"prefs.clear" = "清空";
+"prefs.noImageSelected" = "未选择图片";
 "prefs.sectionShortcuts" = "全局快捷键";
 "prefs.pauseToggle" = "暂停切换";
 "prefs.pause30Shortcut" = "暂停 30 分钟";

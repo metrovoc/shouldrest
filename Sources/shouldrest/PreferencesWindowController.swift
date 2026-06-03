@@ -2,6 +2,7 @@ import AppKit
 import Carbon
 import Foundation
 import ShouldRestCore
+import UniformTypeIdentifiers
 
 @MainActor
 final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate {
@@ -16,7 +17,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let eyeEnabled = NSButton(checkboxWithTitle: L10n.tr("prefs.enableEyeGate"), target: nil, action: nil)
     private let eyeInterval = NSTextField()
     private let eyeDuration = NSTextField()
-    private let eyeColor = NSTextField()
+    private let eyeColor = NSColorWell()
     private let eyeNotify = NSButton(checkboxWithTitle: L10n.tr("prefs.notifyEyeGate"), target: nil, action: nil)
     private let eyeLead = NSTextField()
     private let eyeManualFinish = NSButton(checkboxWithTitle: L10n.tr("prefs.eyeManualFinish"), target: nil, action: nil)
@@ -25,7 +26,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let bodyInterval = NSTextField()
     private let bodyDuration = NSTextField()
     private let bodyAfterEyeGates = NSTextField()
-    private let bodyColor = NSTextField()
+    private let bodyColor = NSColorWell()
     private let bodyNotify = NSButton(checkboxWithTitle: L10n.tr("prefs.notifyBodyBreak"), target: nil, action: nil)
     private let bodyLead = NSTextField()
     private let bodyPostponeMinutes = NSTextField()
@@ -76,6 +77,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let customBodyText = NSTextField()
     private let customBodyIdeasJSON = NSTextField()
     private let localImagePath = NSTextField()
+    private let localImageChooseButton = NSButton()
+    private let localImageClearButton = NSButton()
     private let useBuiltInIdeas = NSButton(checkboxWithTitle: L10n.tr("prefs.useBuiltInIdeas"), target: nil, action: nil)
 
     private let shortcutPauseToggle = ShortcutRecorderButton()
@@ -146,28 +149,200 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private func buildContent() {
         guard let contentView = window?.contentView else { return }
 
-        let scrollView = NSScrollView()
-        scrollView.hasVerticalScroller = true
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(scrollView)
+        configurePopups()
+        configureFieldWidths()
+        configureImagePickerControls()
+        configureSoundPreviewButtons()
+        configureEnablementGuards()
+        configureAutosave()
 
-        let documentView = NSView()
-        documentView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.documentView = documentView
+        let root = NSStackView()
+        root.orientation = .vertical
+        root.alignment = .leading
+        root.spacing = 0
+        root.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(root)
 
+        let tabView = NSTabView()
+        tabView.translatesAutoresizingMaskIntoConstraints = false
+        tabView.setContentHuggingPriority(.defaultLow, for: .vertical)
+        tabView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
+        root.addArrangedSubview(tabView)
+
+        let scheduleStack = contentStack()
+        adminMessageLabel.lineBreakMode = .byWordWrapping
+        adminMessageLabel.widthAnchor.constraint(equalToConstant: 620).isActive = true
+        scheduleStack.addArrangedSubview(adminMessageLabel)
+        scheduleStack.addArrangedSubview(section(L10n.tr("prefs.sectionEyeGate"), symbolName: "timer"))
+        scheduleStack.addArrangedSubview(eyeEnabled)
+        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.everyMinutes"), eyeInterval))
+        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.durationSeconds"), eyeDuration))
+        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.overlayColor"), eyeColor))
+        scheduleStack.addArrangedSubview(eyeNotify)
+        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.notificationLead"), eyeLead))
+        scheduleStack.addArrangedSubview(eyeManualFinish)
+        scheduleStack.addArrangedSubview(separator())
+        scheduleStack.addArrangedSubview(section(L10n.tr("prefs.sectionBodyBreak"), symbolName: "figure.walk"))
+        scheduleStack.addArrangedSubview(bodyEnabled)
+        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.bodyIntervalMinutes"), bodyInterval))
+        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.durationMinutes"), bodyDuration))
+        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.afterEyeGates"), bodyAfterEyeGates))
+        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.overlayColor"), bodyColor))
+        scheduleStack.addArrangedSubview(bodyNotify)
+        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.notificationLead"), bodyLead))
+        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.postponeMinutes"), bodyPostponeMinutes))
+        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.maxPostpones"), bodyPostponeLimit))
+        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.postponeWindowPercent"), bodyPostponeWindowPercent))
+        scheduleStack.addArrangedSubview(bodyAllowSkip)
+        scheduleStack.addArrangedSubview(bodyManualFinish)
+        scheduleStack.addArrangedSubview(bodyCoversAllDisplays)
+        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.bodyCoveredDisplay"), bodyCoveredDisplay))
+        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.bodyContentDisplay"), bodyContentDisplay))
+        scheduleStack.addArrangedSubview(bodyBlankSecondaryDisplays)
+        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.configuredDisplayIndex"), bodyConfiguredDisplayIndex))
+        addTab(to: tabView, title: L10n.tr("prefs.tabSchedule"), stack: scheduleStack)
+
+        let contextStack = contentStack()
+        contextStack.addArrangedSubview(section(L10n.tr("prefs.sectionContext"), symbolName: "scope"))
+        contextStack.addArrangedSubview(naturalBreaks)
+        contextStack.addArrangedSubview(row(L10n.tr("prefs.naturalIdleMinutes"), naturalIdleMinutes))
+        contextStack.addArrangedSubview(focusMonitor)
+        contextStack.addArrangedSubview(focusDefersBody)
+        contextStack.addArrangedSubview(workingHoursEnabled)
+        contextStack.addArrangedSubview(row(L10n.tr("prefs.workingStart"), workingStart))
+        contextStack.addArrangedSubview(row(L10n.tr("prefs.workingEnd"), workingEnd))
+        contextStack.addArrangedSubview(separator())
+        contextStack.addArrangedSubview(section(L10n.tr("prefs.sectionExclusion"), symbolName: "app.badge"))
+        contextStack.addArrangedSubview(appExclusionEnabled)
+        contextStack.addArrangedSubview(row(L10n.tr("prefs.name"), appExclusionName))
+        contextStack.addArrangedSubview(row(L10n.tr("prefs.matchTerms"), appExclusionTerms))
+        contextStack.addArrangedSubview(row(L10n.tr("prefs.mode"), appExclusionMode))
+        contextStack.addArrangedSubview(appExclusionAppliesEye)
+        contextStack.addArrangedSubview(appExclusionAppliesBody)
+        contextStack.addArrangedSubview(row(L10n.tr("prefs.advancedRulesJSON"), appExclusionsJSON))
+        addTab(to: tabView, title: L10n.tr("prefs.tabContext"), stack: contextStack)
+
+        let appearanceStack = contentStack()
+        appearanceStack.addArrangedSubview(section(L10n.tr("prefs.sectionPresentation"), symbolName: "paintbrush"))
+        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.theme"), themeSource))
+        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.menuBarStyle"), trayStyle))
+        appearanceStack.addArrangedSubview(showMenuBarItem)
+        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.language"), languageIdentifier))
+        appearanceStack.addArrangedSubview(currentTimeInBodyBreak)
+        appearanceStack.addArrangedSubview(breakHealth)
+        appearanceStack.addArrangedSubview(silentNotifications)
+        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.eyeStartSound"), soundPickerRow(eyeStartSound, eyeStartSoundPreview)))
+        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.eyeFinishSound"), soundPickerRow(eyeFinishSound, eyeFinishSoundPreview)))
+        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.bodyStartSound"), soundPickerRow(bodyStartSound, bodyStartSoundPreview)))
+        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.bodyFinishSound"), soundPickerRow(bodyFinishSound, bodyFinishSoundPreview)))
+        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.volume"), soundVolume))
+        appearanceStack.addArrangedSubview(separator())
+        appearanceStack.addArrangedSubview(section(L10n.tr("prefs.sectionCustomIdea"), symbolName: "text.bubble"))
+        appearanceStack.addArrangedSubview(useBuiltInIdeas)
+        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.title"), customBodyTitle))
+        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.text"), customBodyText))
+        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.advancedIdeasJSON"), customBodyIdeasJSON))
+        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.localImagePath"), localImagePickerRow()))
+        addTab(to: tabView, title: L10n.tr("prefs.tabAppearance"), stack: appearanceStack)
+
+        let shortcutsStack = contentStack()
+        shortcutsStack.addArrangedSubview(section(L10n.tr("prefs.sectionShortcuts"), symbolName: "keyboard"))
+        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.pauseToggle"), shortcutPauseToggle))
+        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.pause30Shortcut"), shortcutPause30))
+        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.pause1hShortcut"), shortcutPause1h))
+        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.pause2hShortcut"), shortcutPause2h))
+        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.pause5hShortcut"), shortcutPause5h))
+        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningShortcut"), shortcutPauseUntilMorning))
+        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.nextScheduledRest"), shortcutNextScheduled))
+        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.eyeGateNow"), shortcutEyeNow))
+        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.bodyBreakNow"), shortcutBodyNow))
+        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.skipToBodyBreak"), shortcutSkipBody))
+        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.endBodyBreak"), shortcutEndBody))
+        let shortcutEmergencyEyeRow = row(L10n.tr("prefs.emergencyEyeGate"), shortcutEmergencyEye)
+        self.shortcutEmergencyEyeRow = shortcutEmergencyEyeRow
+        shortcutsStack.addArrangedSubview(shortcutEmergencyEyeRow)
+        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.reset"), shortcutReset))
+        addTab(to: tabView, title: L10n.tr("prefs.tabShortcuts"), stack: shortcutsStack)
+
+        let advancedStack = contentStack()
+        advancedStack.addArrangedSubview(section(L10n.tr("prefs.sectionOperations"), symbolName: "gearshape"))
+        advancedStack.addArrangedSubview(openAtLogin)
+        advancedStack.addArrangedSubview(checkUpdates)
+        advancedStack.addArrangedSubview(notifyNewVersion)
+        advancedStack.addArrangedSubview(showOnboardingNextLaunch)
+        advancedStack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningMode"), pauseUntilMorningMode))
+        advancedStack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningHour"), pauseUntilMorningHour))
+        advancedStack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningLatitude"), pauseUntilMorningLatitude))
+        advancedStack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningLongitude"), pauseUntilMorningLongitude))
+        advancedStack.addArrangedSubview(pauseForSuspendOrLock)
+        let updateFeedURLRow = row(L10n.tr("prefs.updateFeedURL"), updateFeedURL)
+        self.updateFeedURLRow = updateFeedURLRow
+        advancedStack.addArrangedSubview(updateFeedURLRow)
+        advancedStack.addArrangedSubview(disableUpdateFeatures)
+        advancedStack.addArrangedSubview(hideSettingsPath)
+        advancedStack.addArrangedSubview(hideStrictPreferences)
+        advancedStack.addArrangedSubview(row(L10n.tr("prefs.preferencesMessage"), customPreferencesMessage))
+        addTab(to: tabView, title: L10n.tr("prefs.tabAdvanced"), stack: advancedStack)
+
+        let footer = footerBar()
+        root.addArrangedSubview(footer)
+
+        NSLayoutConstraint.activate([
+            root.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            root.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            root.topAnchor.constraint(equalTo: contentView.topAnchor),
+            root.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            tabView.widthAnchor.constraint(equalTo: root.widthAnchor),
+            footer.widthAnchor.constraint(equalTo: root.widthAnchor)
+        ])
+    }
+
+    private func footerBar() -> NSStackView {
+        let footer = NSStackView()
+        footer.orientation = .horizontal
+        footer.spacing = 12
+        footer.alignment = .centerY
+        footer.edgeInsets = NSEdgeInsets(top: 10, left: 24, bottom: 14, right: 24)
+        let restoreDefaultsButton = NSButton(title: L10n.tr("prefs.restoreDefaults"), target: self, action: #selector(restoreDefaultsPressed))
+        restoreDefaultsButton.image = NSImage(systemSymbolName: "arrow.counterclockwise", accessibilityDescription: nil)
+        restoreDefaultsButton.imagePosition = .imageLeading
+        saveStatusLabel.textColor = .secondaryLabelColor
+        let spacer = NSView()
+        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        footer.addArrangedSubview(saveStatusLabel)
+        footer.addArrangedSubview(spacer)
+        footer.addArrangedSubview(restoreDefaultsButton)
+        return footer
+    }
+
+    private func contentStack() -> NSStackView {
         let stack = NSStackView()
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 14
         stack.edgeInsets = NSEdgeInsets(top: 24, left: 24, bottom: 24, right: 24)
         stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
+    }
+
+    private func addTab(to tabView: NSTabView, title: String, stack: NSStackView) {
+        let item = NSTabViewItem(identifier: title)
+        item.label = title
+        item.view = scrollContainer(for: stack)
+        tabView.addTabViewItem(item)
+    }
+
+    private func scrollContainer(for stack: NSStackView) -> NSScrollView {
+        let scrollView = NSScrollView()
+        scrollView.hasVerticalScroller = true
+        scrollView.drawsBackground = false
+
+        let documentView = NSView()
+        documentView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.documentView = documentView
         documentView.addSubview(stack)
 
         NSLayoutConstraint.activate([
-            scrollView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            scrollView.topAnchor.constraint(equalTo: contentView.topAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
             documentView.widthAnchor.constraint(equalTo: scrollView.contentView.widthAnchor),
             stack.leadingAnchor.constraint(equalTo: documentView.leadingAnchor),
             stack.trailingAnchor.constraint(equalTo: documentView.trailingAnchor),
@@ -175,136 +350,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             stack.bottomAnchor.constraint(equalTo: documentView.bottomAnchor)
         ])
 
-        configurePopups()
-        configureFieldWidths()
-        configureSoundPreviewButtons()
-        configureEnablementGuards()
-        configureAutosave()
-
-        adminMessageLabel.lineBreakMode = .byWordWrapping
-        adminMessageLabel.widthAnchor.constraint(equalToConstant: 620).isActive = true
-        stack.addArrangedSubview(adminMessageLabel)
-
-        stack.addArrangedSubview(section(L10n.tr("prefs.sectionEyeGate"), symbolName: "eye"))
-        stack.addArrangedSubview(eyeEnabled)
-        stack.addArrangedSubview(row(L10n.tr("prefs.everyMinutes"), eyeInterval))
-        stack.addArrangedSubview(row(L10n.tr("prefs.durationSeconds"), eyeDuration))
-        stack.addArrangedSubview(row(L10n.tr("prefs.overlayColor"), eyeColor))
-        stack.addArrangedSubview(eyeNotify)
-        stack.addArrangedSubview(row(L10n.tr("prefs.notificationLead"), eyeLead))
-        stack.addArrangedSubview(eyeManualFinish)
-
-        stack.addArrangedSubview(separator())
-        stack.addArrangedSubview(section(L10n.tr("prefs.sectionBodyBreak"), symbolName: "figure.walk"))
-        stack.addArrangedSubview(bodyEnabled)
-        stack.addArrangedSubview(row(L10n.tr("prefs.bodyIntervalMinutes"), bodyInterval))
-        stack.addArrangedSubview(row(L10n.tr("prefs.durationMinutes"), bodyDuration))
-        stack.addArrangedSubview(row(L10n.tr("prefs.afterEyeGates"), bodyAfterEyeGates))
-        stack.addArrangedSubview(row(L10n.tr("prefs.overlayColor"), bodyColor))
-        stack.addArrangedSubview(bodyNotify)
-        stack.addArrangedSubview(row(L10n.tr("prefs.notificationLead"), bodyLead))
-        stack.addArrangedSubview(row(L10n.tr("prefs.postponeMinutes"), bodyPostponeMinutes))
-        stack.addArrangedSubview(row(L10n.tr("prefs.maxPostpones"), bodyPostponeLimit))
-        stack.addArrangedSubview(row(L10n.tr("prefs.postponeWindowPercent"), bodyPostponeWindowPercent))
-        stack.addArrangedSubview(bodyAllowSkip)
-        stack.addArrangedSubview(bodyManualFinish)
-        stack.addArrangedSubview(bodyCoversAllDisplays)
-        stack.addArrangedSubview(row(L10n.tr("prefs.bodyCoveredDisplay"), bodyCoveredDisplay))
-        stack.addArrangedSubview(row(L10n.tr("prefs.bodyContentDisplay"), bodyContentDisplay))
-        stack.addArrangedSubview(bodyBlankSecondaryDisplays)
-        stack.addArrangedSubview(row(L10n.tr("prefs.configuredDisplayIndex"), bodyConfiguredDisplayIndex))
-
-        stack.addArrangedSubview(separator())
-        stack.addArrangedSubview(section(L10n.tr("prefs.sectionContext"), symbolName: "scope"))
-        stack.addArrangedSubview(naturalBreaks)
-        stack.addArrangedSubview(row(L10n.tr("prefs.naturalIdleMinutes"), naturalIdleMinutes))
-        stack.addArrangedSubview(focusMonitor)
-        stack.addArrangedSubview(focusDefersBody)
-        stack.addArrangedSubview(workingHoursEnabled)
-        stack.addArrangedSubview(row(L10n.tr("prefs.workingStart"), workingStart))
-        stack.addArrangedSubview(row(L10n.tr("prefs.workingEnd"), workingEnd))
-
-        stack.addArrangedSubview(separator())
-        stack.addArrangedSubview(section(L10n.tr("prefs.sectionExclusion"), symbolName: "app.badge"))
-        stack.addArrangedSubview(appExclusionEnabled)
-        stack.addArrangedSubview(row(L10n.tr("prefs.name"), appExclusionName))
-        stack.addArrangedSubview(row(L10n.tr("prefs.matchTerms"), appExclusionTerms))
-        stack.addArrangedSubview(row(L10n.tr("prefs.mode"), appExclusionMode))
-        stack.addArrangedSubview(appExclusionAppliesEye)
-        stack.addArrangedSubview(appExclusionAppliesBody)
-        stack.addArrangedSubview(row(L10n.tr("prefs.advancedRulesJSON"), appExclusionsJSON))
-
-        stack.addArrangedSubview(separator())
-        stack.addArrangedSubview(section(L10n.tr("prefs.sectionPresentation"), symbolName: "paintbrush"))
-        stack.addArrangedSubview(row(L10n.tr("prefs.theme"), themeSource))
-        stack.addArrangedSubview(row(L10n.tr("prefs.menuBarStyle"), trayStyle))
-        stack.addArrangedSubview(showMenuBarItem)
-        stack.addArrangedSubview(row(L10n.tr("prefs.language"), languageIdentifier))
-        stack.addArrangedSubview(currentTimeInBodyBreak)
-        stack.addArrangedSubview(breakHealth)
-        stack.addArrangedSubview(silentNotifications)
-        stack.addArrangedSubview(row(L10n.tr("prefs.eyeStartSound"), soundPickerRow(eyeStartSound, eyeStartSoundPreview)))
-        stack.addArrangedSubview(row(L10n.tr("prefs.eyeFinishSound"), soundPickerRow(eyeFinishSound, eyeFinishSoundPreview)))
-        stack.addArrangedSubview(row(L10n.tr("prefs.bodyStartSound"), soundPickerRow(bodyStartSound, bodyStartSoundPreview)))
-        stack.addArrangedSubview(row(L10n.tr("prefs.bodyFinishSound"), soundPickerRow(bodyFinishSound, bodyFinishSoundPreview)))
-        stack.addArrangedSubview(row(L10n.tr("prefs.volume"), soundVolume))
-
-        stack.addArrangedSubview(separator())
-        stack.addArrangedSubview(section(L10n.tr("prefs.sectionCustomIdea"), symbolName: "text.bubble"))
-        stack.addArrangedSubview(useBuiltInIdeas)
-        stack.addArrangedSubview(row(L10n.tr("prefs.title"), customBodyTitle))
-        stack.addArrangedSubview(row(L10n.tr("prefs.text"), customBodyText))
-        stack.addArrangedSubview(row(L10n.tr("prefs.advancedIdeasJSON"), customBodyIdeasJSON))
-        stack.addArrangedSubview(row(L10n.tr("prefs.localImagePath"), localImagePath))
-
-        stack.addArrangedSubview(separator())
-        stack.addArrangedSubview(section(L10n.tr("prefs.sectionShortcuts"), symbolName: "keyboard"))
-        stack.addArrangedSubview(row(L10n.tr("prefs.pauseToggle"), shortcutPauseToggle))
-        stack.addArrangedSubview(row(L10n.tr("prefs.pause30Shortcut"), shortcutPause30))
-        stack.addArrangedSubview(row(L10n.tr("prefs.pause1hShortcut"), shortcutPause1h))
-        stack.addArrangedSubview(row(L10n.tr("prefs.pause2hShortcut"), shortcutPause2h))
-        stack.addArrangedSubview(row(L10n.tr("prefs.pause5hShortcut"), shortcutPause5h))
-        stack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningShortcut"), shortcutPauseUntilMorning))
-        stack.addArrangedSubview(row(L10n.tr("prefs.nextScheduledRest"), shortcutNextScheduled))
-        stack.addArrangedSubview(row(L10n.tr("prefs.eyeGateNow"), shortcutEyeNow))
-        stack.addArrangedSubview(row(L10n.tr("prefs.bodyBreakNow"), shortcutBodyNow))
-        stack.addArrangedSubview(row(L10n.tr("prefs.skipToBodyBreak"), shortcutSkipBody))
-        stack.addArrangedSubview(row(L10n.tr("prefs.endBodyBreak"), shortcutEndBody))
-        let shortcutEmergencyEyeRow = row(L10n.tr("prefs.emergencyEyeGate"), shortcutEmergencyEye)
-        self.shortcutEmergencyEyeRow = shortcutEmergencyEyeRow
-        stack.addArrangedSubview(shortcutEmergencyEyeRow)
-        stack.addArrangedSubview(row(L10n.tr("prefs.reset"), shortcutReset))
-
-        stack.addArrangedSubview(separator())
-        stack.addArrangedSubview(section(L10n.tr("prefs.sectionOperations"), symbolName: "gearshape"))
-        stack.addArrangedSubview(openAtLogin)
-        stack.addArrangedSubview(checkUpdates)
-        stack.addArrangedSubview(notifyNewVersion)
-        stack.addArrangedSubview(showOnboardingNextLaunch)
-        stack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningMode"), pauseUntilMorningMode))
-        stack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningHour"), pauseUntilMorningHour))
-        stack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningLatitude"), pauseUntilMorningLatitude))
-        stack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningLongitude"), pauseUntilMorningLongitude))
-        stack.addArrangedSubview(pauseForSuspendOrLock)
-        let updateFeedURLRow = row(L10n.tr("prefs.updateFeedURL"), updateFeedURL)
-        self.updateFeedURLRow = updateFeedURLRow
-        stack.addArrangedSubview(updateFeedURLRow)
-        stack.addArrangedSubview(disableUpdateFeatures)
-        stack.addArrangedSubview(hideSettingsPath)
-        stack.addArrangedSubview(hideStrictPreferences)
-        stack.addArrangedSubview(row(L10n.tr("prefs.preferencesMessage"), customPreferencesMessage))
-
-        let buttons = NSStackView()
-        buttons.orientation = .horizontal
-        buttons.spacing = 12
-        buttons.alignment = .centerY
-        let restoreDefaultsButton = NSButton(title: L10n.tr("prefs.restoreDefaults"), target: self, action: #selector(restoreDefaultsPressed))
-        restoreDefaultsButton.image = NSImage(systemSymbolName: "arrow.counterclockwise", accessibilityDescription: nil)
-        restoreDefaultsButton.imagePosition = .imageLeading
-        saveStatusLabel.textColor = .secondaryLabelColor
-        buttons.addArrangedSubview(saveStatusLabel)
-        buttons.addArrangedSubview(restoreDefaultsButton)
-        stack.addArrangedSubview(buttons)
+        return scrollView
     }
 
     private func configurePopups() {
@@ -354,9 +400,13 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             pauseUntilMorningLatitude, pauseUntilMorningLongitude
         ]
         compactFields.forEach { $0.widthAnchor.constraint(equalToConstant: 110).isActive = true }
+        [eyeColor, bodyColor].forEach { colorWell in
+            colorWell.widthAnchor.constraint(equalToConstant: 56).isActive = true
+            colorWell.heightAnchor.constraint(equalToConstant: 28).isActive = true
+        }
 
         let wideFields: [NSView] = [
-            eyeColor, bodyColor, eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, customBodyTitle,
+            eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, customBodyTitle,
             customBodyText, customBodyIdeasJSON, localImagePath, languageIdentifier, shortcutPauseToggle,
             shortcutPause30, shortcutPause1h, shortcutPause2h, shortcutPause5h, shortcutPauseUntilMorning,
             shortcutNextScheduled, shortcutEyeNow, shortcutBodyNow, shortcutSkipBody, shortcutEndBody,
@@ -365,6 +415,24 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             customPreferencesMessage, appExclusionsJSON
         ]
         wideFields.forEach { $0.widthAnchor.constraint(equalToConstant: 360).isActive = true }
+    }
+
+    private func configureImagePickerControls() {
+        localImagePath.isEditable = false
+        localImagePath.isSelectable = true
+        localImagePath.placeholderString = L10n.tr("prefs.noImageSelected")
+
+        localImageChooseButton.title = L10n.tr("prefs.chooseFile")
+        localImageChooseButton.image = NSImage(systemSymbolName: "photo", accessibilityDescription: nil)
+        localImageChooseButton.imagePosition = .imageLeading
+        localImageChooseButton.target = self
+        localImageChooseButton.action = #selector(chooseLocalImagePressed)
+
+        localImageClearButton.title = L10n.tr("prefs.clear")
+        localImageClearButton.image = NSImage(systemSymbolName: "xmark.circle", accessibilityDescription: nil)
+        localImageClearButton.imagePosition = .imageLeading
+        localImageClearButton.target = self
+        localImageClearButton.action = #selector(clearLocalImagePressed)
     }
 
     private func configureEnablementGuards() {
@@ -376,7 +444,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     private func configureAutosave() {
         let textFields = [
-            eyeInterval, eyeDuration, eyeColor, eyeLead, bodyInterval, bodyDuration, bodyAfterEyeGates, bodyColor,
+            eyeInterval, eyeDuration, eyeLead, bodyInterval, bodyDuration, bodyAfterEyeGates,
             bodyLead, bodyPostponeMinutes, bodyPostponeLimit, bodyPostponeWindowPercent, naturalIdleMinutes,
             workingStart, workingEnd, appExclusionName, appExclusionTerms, appExclusionsJSON, soundVolume,
             customBodyTitle, customBodyText, customBodyIdeasJSON, localImagePath, bodyConfiguredDisplayIndex,
@@ -390,7 +458,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         }
 
         let controls: [NSControl] = [
-            eyeNotify, eyeManualFinish, bodyNotify, bodyAllowSkip, bodyManualFinish, bodyCoversAllDisplays,
+            eyeColor, bodyColor, eyeNotify, eyeManualFinish, bodyNotify, bodyAllowSkip, bodyManualFinish, bodyCoversAllDisplays,
             bodyBlankSecondaryDisplays, naturalBreaks, focusMonitor, focusDefersBody, workingHoursEnabled,
             appExclusionEnabled, appExclusionAppliesEye, appExclusionAppliesBody, themeSource, trayStyle,
             showMenuBarItem, languageIdentifier, currentTimeInBodyBreak, breakHealth, silentNotifications,
@@ -448,7 +516,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         eyeEnabled.state = state(settings.eyeGate.isEnabled)
         eyeInterval.stringValue = String(Int(settings.eyeGate.interval / 60))
         eyeDuration.stringValue = String(Int(settings.eyeGate.duration))
-        eyeColor.stringValue = settings.eyeGate.colorHex
+        eyeColor.color = NSColor(hex: settings.eyeGate.colorHex)
         eyeNotify.state = state(settings.notifications.eyeGateEnabled)
         eyeLead.stringValue = String(Int(settings.notifications.eyeGateLeadTime))
         eyeManualFinish.state = state(settings.eyeGate.manualFinishEnabled)
@@ -457,7 +525,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         bodyInterval.stringValue = String(Int(settings.bodyBreak.interval / 60))
         bodyDuration.stringValue = String(Int(settings.bodyBreak.duration / 60))
         bodyAfterEyeGates.stringValue = String(settings.bodyBreakAfterEyeGates)
-        bodyColor.stringValue = settings.bodyBreak.colorHex
+        bodyColor.color = NSColor(hex: settings.bodyBreak.colorHex)
         bodyNotify.state = state(settings.notifications.bodyBreakEnabled)
         bodyLead.stringValue = String(Int(settings.notifications.bodyBreakLeadTime))
         bodyPostponeMinutes.stringValue = String(Int(settings.bodyBreak.postpone.duration / 60))
@@ -563,7 +631,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         next.eyeGate.isEnabled = isOn(eyeEnabled)
         next.eyeGate.interval = TimeInterval(max(1, intValue(eyeInterval)) * 60)
         next.eyeGate.duration = TimeInterval(max(1, intValue(eyeDuration)))
-        next.eyeGate.colorHex = normalizedHex(eyeColor.stringValue, fallback: RestSettings.defaults.eyeGate.colorHex)
+        next.eyeGate.colorHex = hexString(from: eyeColor.color, fallback: RestSettings.defaults.eyeGate.colorHex)
         next.notifications.eyeGateEnabled = isOn(eyeNotify)
         next.notifications.eyeGateLeadTime = TimeInterval(max(0, intValue(eyeLead)))
         next.eyeGate.manualFinishEnabled = isOn(eyeManualFinish)
@@ -577,7 +645,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         next.bodyBreak.interval = TimeInterval(max(1, intValue(bodyInterval)) * 60)
         next.bodyBreak.duration = TimeInterval(max(1, intValue(bodyDuration)) * 60)
         next.bodyBreakAfterEyeGates = max(1, intValue(bodyAfterEyeGates))
-        next.bodyBreak.colorHex = normalizedHex(bodyColor.stringValue, fallback: RestSettings.defaults.bodyBreak.colorHex)
+        next.bodyBreak.colorHex = hexString(from: bodyColor.color, fallback: RestSettings.defaults.bodyBreak.colorHex)
         next.notifications.bodyBreakEnabled = isOn(bodyNotify)
         next.notifications.bodyBreakLeadTime = TimeInterval(max(0, intValue(bodyLead)))
         next.bodyBreak.postpone = PostponePolicy(
@@ -737,6 +805,25 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         guard let popup = soundPopup(for: sender.identifier?.rawValue) else { return }
         let volume = min(1, max(0, doubleValue(soundVolume, fallback: 1)))
         soundPlayer.play(soundPolicy(from: popup, volume: volume))
+    }
+
+    @objc private func chooseLocalImagePressed() {
+        let panel = NSOpenPanel()
+        panel.canChooseDirectories = false
+        panel.canChooseFiles = true
+        panel.allowsMultipleSelection = false
+        panel.allowedContentTypes = [.image]
+        panel.prompt = L10n.tr("prefs.chooseFile")
+
+        if panel.runModal() == .OK, let url = panel.url {
+            localImagePath.stringValue = url.path
+            scheduleAutosave()
+        }
+    }
+
+    @objc private func clearLocalImagePressed() {
+        localImagePath.stringValue = ""
+        scheduleAutosave()
     }
 
     private func showCannotDisableBothRestsAlert() {
@@ -900,6 +987,14 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         return stack
     }
 
+    private func localImagePickerRow() -> NSStackView {
+        let stack = NSStackView(views: [localImagePath, localImageChooseButton, localImageClearButton])
+        stack.orientation = .horizontal
+        stack.spacing = 8
+        stack.alignment = .centerY
+        return stack
+    }
+
     private func separator() -> NSBox {
         let box = NSBox()
         box.boxType = .separator
@@ -928,6 +1023,14 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     private func doubleValue(_ field: NSTextField, fallback: Double) -> Double {
         Double(field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)) ?? fallback
+    }
+
+    private func hexString(from color: NSColor, fallback: String) -> String {
+        guard let rgb = color.usingColorSpace(.deviceRGB) else { return fallback }
+        let red = min(255, max(0, Int(round(rgb.redComponent * 255))))
+        let green = min(255, max(0, Int(round(rgb.greenComponent * 255))))
+        let blue = min(255, max(0, Int(round(rgb.blueComponent * 255))))
+        return String(format: "#%02X%02X%02X", red, green, blue)
     }
 
     private func normalizedHex(_ raw: String, fallback: String) -> String {

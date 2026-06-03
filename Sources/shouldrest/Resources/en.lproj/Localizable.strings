@@ -64,6 +64,8 @@
 "overlay.emergencyOverride" = "Emergency";
 "overlay.emergencyOverrideIn" = "Emergency in %ds";
 "overlay.emergencyOverrideHelp" = "Use only for a genuine interruption. It still requires confirmation and counts as a missed Eye Gate.";
+"overlay.emergencyConfirmStep" = "Confirm %d/%d";
+"overlay.emergencyConfirmHelp" = "Genuine interruption only. Counts as a missed Eye Gate.";
 "preferences.title" = "ShouldRest Preferences";
 "debug.title" = "ShouldRest Debug";
 "prefs.enableEyeGate" = "Enable Eye Gate";
@@ -90,10 +92,15 @@
 "prefs.adminHideUpdates" = "Admin: hide update UI";
 "prefs.adminHideSettingsPath" = "Admin: hide settings, log, support, and image paths";
 "prefs.adminHideStrict" = "Admin: hide strict preferences";
+"prefs.tabSchedule" = "Schedule";
+"prefs.tabContext" = "Context";
+"prefs.tabAppearance" = "Appearance";
+"prefs.tabShortcuts" = "Shortcuts";
+"prefs.tabAdvanced" = "Advanced";
 "prefs.sectionEyeGate" = "Eye Gate";
 "prefs.everyMinutes" = "Every minutes";
 "prefs.durationSeconds" = "Duration seconds";
-"prefs.overlayColor" = "Overlay color hex";
+"prefs.overlayColor" = "Overlay color";
 "prefs.notificationLead" = "Notification lead seconds";
 "prefs.sectionBodyBreak" = "Body Break";
 "prefs.bodyIntervalMinutes" = "Every minutes when Eye Gate is off";
@@ -152,7 +159,10 @@
 "prefs.title" = "Title";
 "prefs.text" = "Text";
 "prefs.advancedIdeasJSON" = "Advanced ideas JSON";
-"prefs.localImagePath" = "Local image path";
+"prefs.localImagePath" = "Body Break image";
+"prefs.chooseFile" = "Choose...";
+"prefs.clear" = "Clear";
+"prefs.noImageSelected" = "No image selected";
 "prefs.sectionShortcuts" = "Global Shortcuts";
 "prefs.pauseToggle" = "Pause toggle";
 "prefs.pause30Shortcut" = "Pause 30 minutes";
