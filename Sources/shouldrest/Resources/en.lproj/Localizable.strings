@@ -63,10 +63,10 @@
 "overlay.completeTitle" = "Break complete";
 "overlay.completeBody" = "Finish when ready";
 "overlay.ready" = "ready";
-"overlay.emergencyOverride" = "Emergency";
-"overlay.emergencyOverrideIn" = "Emergency in %ds";
+"overlay.emergencyOverride" = "Emergency · Esc";
+"overlay.emergencyOverrideIn" = "Emergency in %ds · Esc";
 "overlay.emergencyOverrideArmed" = "Armed · %ds";
-"overlay.emergencyOverrideHelp" = "Use only for a genuine interruption. One trigger arms the override and counts as a missed Eye Gate.";
+"overlay.emergencyOverrideHelp" = "Use only for a genuine interruption. Press Esc or click once; it counts as a missed Eye Gate.";
 "overlay.bodyPostpone" = "Postpone";
 "overlay.bodySkip" = "Skip";
 "overlay.bodyFinish" = "Finish";

@@ -63,10 +63,10 @@
 "overlay.completeTitle" = "休息完成";
 "overlay.completeBody" = "准备好后结束休息";
 "overlay.ready" = "就绪";
-"overlay.emergencyOverride" = "紧急";
-"overlay.emergencyOverrideIn" = "%d 秒后紧急";
+"overlay.emergencyOverride" = "紧急 · Esc";
+"overlay.emergencyOverrideIn" = "%d 秒后紧急 · Esc";
 "overlay.emergencyOverrideArmed" = "已触发 · %d 秒";
-"overlay.emergencyOverrideHelp" = "只在真正中断时使用。触发一次即可等待自动退出，并计为未完成的护眼休息。";
+"overlay.emergencyOverrideHelp" = "只在真正中断时使用。按 Esc 或点击一次；会计为未完成的护眼休息。";
 "overlay.bodyPostpone" = "推迟";
 "overlay.bodySkip" = "跳过";
 "overlay.bodyFinish" = "完成";

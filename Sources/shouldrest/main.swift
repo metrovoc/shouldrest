@@ -1494,9 +1494,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
-enum EmergencyOverlayCommandResult: Equatable {
+enum EmergencyOverlayActivationResult: Equatable {
     case unavailable
-    case confirmed(Int)
+    case activated(legacyConfirmationSteps: Int)
 }
 
 struct BodyOverlayActions {
@@ -1506,6 +1506,15 @@ struct BodyOverlayActions {
     var postpone: (() -> Void)?
     var finish: (() -> Void)?
     var skip: (() -> Void)?
+}
+
+private func isEmergencyOverrideKey(_ event: NSEvent) -> Bool {
+    switch Int(event.keyCode) {
+    case kVK_Return, kVK_Space, kVK_ANSI_KeypadEnter, kVK_Escape:
+        return true
+    default:
+        return false
+    }
 }
 
 @MainActor
@@ -1595,14 +1604,14 @@ final class OverlayController {
         }
     }
 
-    fileprivate func advanceEmergencyOverrideConfirmation() -> EmergencyOverlayCommandResult {
+    fileprivate func activateEmergencyOverrideIfAvailable() -> EmergencyOverlayActivationResult {
         for window in windows.values {
-            switch window.overlayView.advanceEmergencyOverrideConfirmationIfAvailable() {
-            case .confirmed(let steps):
+            switch window.overlayView.activateEmergencyOverrideIfAvailable() {
+            case .activated(let steps):
                 window.makeKeyAndOrderFront(nil)
                 window.orderFrontRegardless()
                 window.makeFirstResponder(window.overlayView)
-                return .confirmed(steps)
+                return .activated(legacyConfirmationSteps: steps)
             case .unavailable:
                 break
             }
@@ -1753,10 +1762,9 @@ final class OverlayWindow: NSWindow {
     }
 
     override func keyDown(with event: NSEvent) {
-        switch event.keyCode {
-        case 36, 49, 76:
+        if isEmergencyOverrideKey(event) {
             overlayView.performEmergencyOverrideKeyCommand()
-        default:
+        } else {
             super.keyDown(with: event)
         }
     }
@@ -1966,10 +1974,9 @@ final class RestOverlayView: NSView {
     }
 
     override func keyDown(with event: NSEvent) {
-        switch event.keyCode {
-        case 36, 49, 76:
+        if isEmergencyOverrideKey(event) {
             performEmergencyOverrideKeyCommand()
-        default:
+        } else {
             super.keyDown(with: event)
         }
     }
@@ -2061,7 +2068,7 @@ final class RestOverlayView: NSView {
             return
         }
 
-        if case .confirmed(let steps) = advanceEmergencyOverrideConfirmationIfAvailable() {
+        if case .activated(let steps) = activateEmergencyOverrideIfAvailable() {
             onEmergencyOverrideConfirmed?(steps)
         }
     }
@@ -2097,13 +2104,13 @@ final class RestOverlayView: NSView {
         bodyFinishPressed()
     }
 
-    func advanceEmergencyOverrideConfirmationIfAvailable() -> EmergencyOverlayCommandResult {
+    func activateEmergencyOverrideIfAvailable() -> EmergencyOverlayActivationResult {
         guard !emergencyButton.isHidden,
               emergencyRemainingSeconds == 0 else {
             return .unavailable
         }
 
-        return .confirmed(emergencyConfirmationSteps)
+        return .activated(legacyConfirmationSteps: emergencyConfirmationSteps)
     }
 
     private func configureEmergencyButton(

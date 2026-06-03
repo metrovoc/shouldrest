@@ -1,4 +1,5 @@
 import AppKit
+import Carbon
 import ShouldRestCore
 import XCTest
 @testable import shouldrest
@@ -8,7 +9,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
     func testOverlayEmergencyCompletesOnFirstTriggerEvenWithLegacyConfirmationSteps() {
         let view = configuredEyeGateOverlay(confirmationSteps: 2)
 
-        XCTAssertEqual(view.advanceEmergencyOverrideConfirmationIfAvailable(), .confirmed(2))
+        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated(legacyConfirmationSteps: 2))
     }
 
     func testOverlayKeyboardCommandCompletesEmergencyOnFirstTrigger() {
@@ -19,6 +20,30 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         }
 
         view.performEmergencyOverrideKeyCommand()
+        XCTAssertEqual(confirmedSteps, 2)
+    }
+
+    func testEscapeKeyTriggersEmergencyInsideOverlay() throws {
+        let view = configuredEyeGateOverlay(confirmationSteps: 2)
+        var confirmedSteps: Int?
+        view.onEmergencyOverrideConfirmed = { steps in
+            confirmedSteps = steps
+        }
+
+        let event = try XCTUnwrap(NSEvent.keyEvent(
+            with: .keyDown,
+            location: .zero,
+            modifierFlags: [],
+            timestamp: 0,
+            windowNumber: 0,
+            context: nil,
+            characters: "\u{1B}",
+            charactersIgnoringModifiers: "\u{1B}",
+            isARepeat: false,
+            keyCode: UInt16(kVK_Escape)
+        ))
+        view.keyDown(with: event)
+
         XCTAssertEqual(confirmedSteps, 2)
     }
 
@@ -64,6 +89,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         let title = try XCTUnwrap(titleColor)
 
         XCTAssertFalse(button.isHidden)
+        XCTAssertTrue(button.attributedTitle.string.contains("Esc"))
         XCTAssertLessThanOrEqual(button.alphaValue, 0.40)
         XCTAssertGreaterThan(tint.redComponent, 0.80)
         XCTAssertLessThan(tint.greenComponent, 0.35)
@@ -83,6 +109,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         let tint = try XCTUnwrap(button.contentTintColor?.usingColorSpace(.sRGB))
 
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverride"))
+        XCTAssertTrue(button.attributedTitle.string.contains("Esc"))
         XCTAssertLessThanOrEqual(button.alphaValue, 0.50)
         XCTAssertLessThanOrEqual(tint.alphaComponent, 0.66)
         XCTAssertLessThanOrEqual(panel.layer?.backgroundColor?.alpha ?? 1, 0.03)
@@ -98,7 +125,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertFalse(panel.isHidden)
         XCTAssertNil(view.descendant(withIdentifier: "overlay.emergency.hint"))
 
-        XCTAssertEqual(view.advanceEmergencyOverrideConfirmationIfAvailable(), .confirmed(2))
+        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated(legacyConfirmationSteps: 2))
 
         view.layoutSubtreeIfNeeded()
         XCTAssertFalse(panel.isHidden)
@@ -112,7 +139,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         view.layoutSubtreeIfNeeded()
         XCTAssertFalse(view.hitTest(NSPoint(x: 400, y: 300)) === view)
 
-        XCTAssertEqual(view.advanceEmergencyOverrideConfirmationIfAvailable(), .confirmed(2))
+        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated(legacyConfirmationSteps: 2))
         view.layoutSubtreeIfNeeded()
 
         XCTAssertFalse(view.hitTest(NSPoint(x: 400, y: 300)) === view)
@@ -143,7 +170,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
     func testSingleStepEmergencyConfirmationCompletesOnFirstTrigger() {
         let view = configuredEyeGateOverlay(confirmationSteps: 1)
 
-        XCTAssertEqual(view.advanceEmergencyOverrideConfirmationIfAvailable(), .confirmed(1))
+        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated(legacyConfirmationSteps: 1))
     }
 
     func testOverlayEmergencyConfirmationIsUnavailableWhenButtonIsHidden() {
@@ -167,7 +194,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             emergencyOverrideConfirmationSteps: 0
         )
 
-        XCTAssertEqual(view.advanceEmergencyOverrideConfirmationIfAvailable(), .unavailable)
+        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .unavailable)
     }
 
     private func configuredEyeGateOverlay(
