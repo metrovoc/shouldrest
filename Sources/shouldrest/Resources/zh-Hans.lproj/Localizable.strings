@@ -121,6 +121,7 @@
 "prefs.pause2hShortcut" = "暂停 2 小时";
 "prefs.pause5hShortcut" = "暂停 5 小时";
 "prefs.pauseUntilMorningShortcut" = "暂停到早晨";
+"prefs.nextScheduledRest" = "立即执行下一项计划休息";
 "prefs.eyeGateNow" = "立即 Eye Gate";
 "prefs.bodyBreakNow" = "立即 Body Break";
 "prefs.skipToBodyBreak" = "跳到 Body Break";

@@ -480,6 +480,7 @@ public struct ShortcutSettings: Codable, Equatable, Sendable {
     public var pauseFor2Hours: String
     public var pauseFor5Hours: String
     public var pauseUntilMorning: String
+    public var skipToNextScheduledRest: String?
     public var takeEyeGateNow: String
     public var takeBodyBreakNow: String
     public var skipToNextBodyBreak: String
@@ -494,6 +495,7 @@ public struct ShortcutSettings: Codable, Equatable, Sendable {
         pauseFor2Hours: String,
         pauseFor5Hours: String,
         pauseUntilMorning: String,
+        skipToNextScheduledRest: String? = nil,
         takeEyeGateNow: String,
         takeBodyBreakNow: String,
         skipToNextBodyBreak: String,
@@ -507,6 +509,7 @@ public struct ShortcutSettings: Codable, Equatable, Sendable {
         self.pauseFor2Hours = pauseFor2Hours
         self.pauseFor5Hours = pauseFor5Hours
         self.pauseUntilMorning = pauseUntilMorning
+        self.skipToNextScheduledRest = skipToNextScheduledRest
         self.takeEyeGateNow = takeEyeGateNow
         self.takeBodyBreakNow = takeBodyBreakNow
         self.skipToNextBodyBreak = skipToNextBodyBreak

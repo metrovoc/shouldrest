@@ -70,6 +70,7 @@ final class PreferencesWindowController: NSWindowController {
     private let shortcutPause2h = NSTextField()
     private let shortcutPause5h = NSTextField()
     private let shortcutPauseUntilMorning = NSTextField()
+    private let shortcutNextScheduled = NSTextField()
     private let shortcutEyeNow = NSTextField()
     private let shortcutBodyNow = NSTextField()
     private let shortcutSkipBody = NSTextField()
@@ -235,6 +236,7 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(row(L10n.tr("prefs.pause2hShortcut"), shortcutPause2h))
         stack.addArrangedSubview(row(L10n.tr("prefs.pause5hShortcut"), shortcutPause5h))
         stack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningShortcut"), shortcutPauseUntilMorning))
+        stack.addArrangedSubview(row(L10n.tr("prefs.nextScheduledRest"), shortcutNextScheduled))
         stack.addArrangedSubview(row(L10n.tr("prefs.eyeGateNow"), shortcutEyeNow))
         stack.addArrangedSubview(row(L10n.tr("prefs.bodyBreakNow"), shortcutBodyNow))
         stack.addArrangedSubview(row(L10n.tr("prefs.skipToBodyBreak"), shortcutSkipBody))
@@ -299,7 +301,8 @@ final class PreferencesWindowController: NSWindowController {
             eyeColor, bodyColor, eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, customBodyTitle,
             customBodyText, customBodyIdeasJSON, localImagePath, shortcutPauseToggle, shortcutPause30,
             shortcutPause1h, shortcutPause2h, shortcutPause5h, shortcutPauseUntilMorning,
-            shortcutEyeNow, shortcutBodyNow, shortcutSkipBody, shortcutEndBody, shortcutEmergencyEye, shortcutReset,
+            shortcutNextScheduled, shortcutEyeNow, shortcutBodyNow, shortcutSkipBody, shortcutEndBody,
+            shortcutEmergencyEye, shortcutReset,
             appExclusionName, appExclusionTerms, updateFeedURL,
             customPreferencesMessage, appExclusionsJSON
         ]
@@ -374,6 +377,7 @@ final class PreferencesWindowController: NSWindowController {
         shortcutPause2h.stringValue = settings.shortcuts.pauseFor2Hours
         shortcutPause5h.stringValue = settings.shortcuts.pauseFor5Hours
         shortcutPauseUntilMorning.stringValue = settings.shortcuts.pauseUntilMorning
+        shortcutNextScheduled.stringValue = settings.shortcuts.skipToNextScheduledRest ?? ""
         shortcutEyeNow.stringValue = settings.shortcuts.takeEyeGateNow
         shortcutBodyNow.stringValue = settings.shortcuts.takeBodyBreakNow
         shortcutSkipBody.stringValue = settings.shortcuts.skipToNextBodyBreak
@@ -459,6 +463,7 @@ final class PreferencesWindowController: NSWindowController {
         next.shortcuts.pauseFor2Hours = shortcutPause2h.stringValue
         next.shortcuts.pauseFor5Hours = shortcutPause5h.stringValue
         next.shortcuts.pauseUntilMorning = shortcutPauseUntilMorning.stringValue
+        next.shortcuts.skipToNextScheduledRest = shortcutNextScheduled.stringValue
         next.shortcuts.takeEyeGateNow = shortcutEyeNow.stringValue
         next.shortcuts.takeBodyBreakNow = shortcutBodyNow.stringValue
         next.shortcuts.skipToNextBodyBreak = shortcutSkipBody.stringValue

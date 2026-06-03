@@ -121,6 +121,7 @@
 "prefs.pause2hShortcut" = "Pause 2 hours";
 "prefs.pause5hShortcut" = "Pause 5 hours";
 "prefs.pauseUntilMorningShortcut" = "Pause until morning";
+"prefs.nextScheduledRest" = "Next scheduled rest now";
 "prefs.eyeGateNow" = "Eye Gate now";
 "prefs.bodyBreakNow" = "Body Break now";
 "prefs.skipToBodyBreak" = "Skip to Body Break";

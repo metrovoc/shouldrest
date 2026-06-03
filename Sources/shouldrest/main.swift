@@ -342,6 +342,16 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         rebuildMenu()
     }
 
+    @objc private func takeNextScheduledRestNow() {
+        guard let scheduled = engine.state.scheduled else { return }
+        switch scheduled.kind {
+        case .eyeGate:
+            takeEyeGateNow()
+        case .bodyBreak:
+            takeBodyBreakNow()
+        }
+    }
+
     @objc private func postponeBodyBreak() {
         if case .postponed = engine.postponeActive() {
             overlayController.dismiss()
@@ -702,6 +712,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
         registerShortcut(settings.shortcuts.pauseUntilMorning) { [weak self] in
             self?.pauseUntilMorning()
+        }
+        registerShortcut(settings.shortcuts.skipToNextScheduledRest ?? "") { [weak self] in
+            self?.takeNextScheduledRestNow()
         }
         registerShortcut(settings.shortcuts.takeEyeGateNow) { [weak self] in
             self?.takeEyeGateNow()

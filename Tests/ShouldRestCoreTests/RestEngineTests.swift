@@ -348,6 +348,7 @@ final class RestEngineTests: XCTestCase {
 
         XCTAssertNil(shortcuts.emergencyEyeGateOverride)
         XCTAssertNil(shortcuts.endBodyBreak)
+        XCTAssertNil(shortcuts.skipToNextScheduledRest)
     }
 
     func testOperationsSettingsCalculatesUntilMorningUsingConfiguredHour() throws {
