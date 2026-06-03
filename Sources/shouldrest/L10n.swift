@@ -13,10 +13,15 @@ enum L10n {
 
     private static var languageBundle: Bundle? {
         guard let languageOverride,
-              !languageOverride.isEmpty,
-              let path = Bundle.module.path(forResource: languageOverride, ofType: "lproj") else {
+              !languageOverride.isEmpty else {
             return nil
         }
-        return Bundle(path: path)
+        for candidate in [languageOverride, languageOverride.lowercased()] {
+            if let path = Bundle.module.path(forResource: candidate, ofType: "lproj"),
+               let bundle = Bundle(path: path) {
+                return bundle
+            }
+        }
+        return nil
     }
 }
