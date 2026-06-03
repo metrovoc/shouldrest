@@ -43,6 +43,45 @@ final class EmergencyOverrideCoordinatorTests: XCTestCase {
         )
     }
 
+    func testEmergencyIsUnavailableAfterEyeGateDurationHasBeenSatisfied() {
+        let session = eyeGateSession(duration: 20)
+        let policy = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 0, minimumHoldDuration: 3)
+        var coordinator = EmergencyOverrideCoordinator()
+
+        XCTAssertTrue(EmergencyOverrideCoordinator.isAvailable(
+            session: session,
+            policy: policy,
+            now: start.addingTimeInterval(19)
+        ))
+        XCTAssertFalse(EmergencyOverrideCoordinator.isAvailable(
+            session: session,
+            policy: policy,
+            now: start.addingTimeInterval(20)
+        ))
+        XCTAssertEqual(
+            coordinator.request(session: session, policy: policy, now: start.addingTimeInterval(20)),
+            .unavailable
+        )
+    }
+
+    func testArmedEmergencyClearsInsteadOfCompletingAfterEyeGateDuration() {
+        let session = eyeGateSession(duration: 20)
+        let policy = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 0, minimumHoldDuration: 21)
+        var coordinator = EmergencyOverrideCoordinator()
+
+        XCTAssertEqual(
+            coordinator.request(session: session, policy: policy, now: start.addingTimeInterval(18)),
+            .waiting(remainingSeconds: 3)
+        )
+        XCTAssertTrue(coordinator.isArmed(for: session))
+        XCTAssertNil(coordinator.completionIfArmedAndReady(
+            session: session,
+            policy: policy,
+            now: start.addingTimeInterval(21)
+        ))
+        XCTAssertFalse(coordinator.isArmed(for: session))
+    }
+
     func testDisabledPolicyClearsArmedState() {
         let session = eyeGateSession()
         let enabled = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 0, minimumHoldDuration: 3)
@@ -77,12 +116,12 @@ final class EmergencyOverrideCoordinatorTests: XCTestCase {
         XCTAssertFalse(coordinator.isArmed(for: session))
     }
 
-    private func eyeGateSession() -> RestSession {
+    private func eyeGateSession(duration: TimeInterval = 60) -> RestSession {
         RestSession(
             kind: .eyeGate,
             startedAt: start,
             scheduledAt: start,
-            duration: 60,
+            duration: duration,
             manualFinishEnabled: false
         )
     }

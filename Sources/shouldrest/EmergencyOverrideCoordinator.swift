@@ -10,6 +10,14 @@ enum EmergencyOverrideDecision: Equatable {
 struct EmergencyOverrideCoordinator {
     private(set) var armedSessionID: UUID?
 
+    static func isAvailable(session: RestSession, policy: EmergencyOverridePolicy, now: Date) -> Bool {
+        let elapsed = now.timeIntervalSince(session.startedAt)
+        return session.kind == .eyeGate &&
+            policy.isEnabled &&
+            elapsed >= 0 &&
+            elapsed < session.duration
+    }
+
     func isArmed(for session: RestSession) -> Bool {
         armedSessionID == session.id
     }
@@ -19,7 +27,7 @@ struct EmergencyOverrideCoordinator {
         policy: EmergencyOverridePolicy,
         now: Date
     ) -> EmergencyOverrideDecision {
-        guard session.kind == .eyeGate, policy.isEnabled else {
+        guard Self.isAvailable(session: session, policy: policy, now: now) else {
             armedSessionID = nil
             return .unavailable
         }
@@ -40,9 +48,9 @@ struct EmergencyOverrideCoordinator {
         now: Date
     ) -> EmergencyOverrideDecision? {
         guard armedSessionID == session.id else { return nil }
-        guard session.kind == .eyeGate, policy.isEnabled else {
+        guard Self.isAvailable(session: session, policy: policy, now: now) else {
             armedSessionID = nil
-            return .unavailable
+            return nil
         }
 
         let heldDuration = max(0, now.timeIntervalSince(session.startedAt))

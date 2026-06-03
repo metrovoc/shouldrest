@@ -86,6 +86,26 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
         XCTAssertTrue(didFinish)
     }
 
+    func testManualAwaitingEyeGateOverlaySuppressesEmergencyAffordance() throws {
+        let view = configuredEyeGateOverlay(
+            manualAwaiting: true,
+            emergencyOverrideRemainingSeconds: 0,
+            actions: BodyOverlayActions(
+                canPostpone: false,
+                canFinish: true,
+                canSkip: false,
+                postpone: nil,
+                finish: nil,
+                skip: nil
+            )
+        )
+
+        let emergencyButton = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        let finishButton = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodyFinish.button") as? NSButton)
+        XCTAssertTrue(emergencyButton.isHidden)
+        XCTAssertFalse(finishButton.isHidden)
+    }
+
     func testEyeGateOverlayDoesNotShowFinishBeforeManualAwaiting() throws {
         let view = configuredEyeGateOverlay(
             manualAwaiting: false,
@@ -143,6 +163,7 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
 
     private func configuredEyeGateOverlay(
         manualAwaiting: Bool,
+        emergencyOverrideRemainingSeconds: Int? = nil,
         actions: BodyOverlayActions?
     ) -> RestOverlayView {
         let start = Date()
@@ -160,7 +181,7 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
             settings: .defaults,
             showsContent: true,
             manualAwaiting: manualAwaiting,
-            emergencyOverrideRemainingSeconds: nil,
+            emergencyOverrideRemainingSeconds: emergencyOverrideRemainingSeconds,
             bodyActions: actions
         )
         return view

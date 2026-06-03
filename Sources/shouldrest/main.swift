@@ -269,7 +269,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 settings: overlaySettings(for: active),
                 now: now,
                 manualAwaiting: shouldAwaitManualFinish,
-                emergencyOverrideAction: overlayEmergencyOverrideAction(for: active),
+                emergencyOverrideAction: overlayEmergencyOverrideAction(for: active, now: now),
                 emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: active),
                 bodyActions: overlayBodyActions(for: active, now: now)
             )
@@ -322,7 +322,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 session: session,
                 settings: overlaySettings(for: session),
                 now: now,
-                emergencyOverrideAction: overlayEmergencyOverrideAction(for: session),
+                emergencyOverrideAction: overlayEmergencyOverrideAction(for: session, now: now),
                 emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: session),
                 bodyActions: overlayBodyActions(for: session, now: now)
             )
@@ -400,7 +400,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 menu.addItem(actionItem(L10n.tr("menu.finishEyeGate"), #selector(finishActiveBreak)))
                 addedEyeGateAction = true
             }
-            if settings.eyeGate.emergencyOverride.isEnabled {
+            if canEmergencyOverrideEyeGate(active, now: now) {
                 menu.addItem(actionItem(L10n.tr("menu.emergencyOverride"), #selector(emergencyOverrideEyeGate)))
                 addedEyeGateAction = true
             }
@@ -558,8 +558,16 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         return !canPostponeBodyBreak(session, now: now)
     }
 
-    private func overlayEmergencyOverrideAction(for session: RestSession) -> (() -> Void)? {
-        guard session.kind == .eyeGate, settings.eyeGate.emergencyOverride.isEnabled else { return nil }
+    private func canEmergencyOverrideEyeGate(_ session: RestSession, now: Date) -> Bool {
+        EmergencyOverrideCoordinator.isAvailable(
+            session: session,
+            policy: settings.eyeGate.emergencyOverride,
+            now: now
+        )
+    }
+
+    private func overlayEmergencyOverrideAction(for session: RestSession, now: Date) -> (() -> Void)? {
+        guard canEmergencyOverrideEyeGate(session, now: now) else { return nil }
         return { [weak self] in
             self?.performEmergencyOverrideEyeGate()
         }
@@ -599,11 +607,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     @objc private func takeEyeGateNow() {
         if case .started(let session) = engine.takeNow(.eyeGate) {
             playRestSound(settings.rule(for: session.kind).startSound)
+            let now = Date()
             overlayController.present(
                 session: session,
                 settings: settings,
-                now: Date(),
-                emergencyOverrideAction: overlayEmergencyOverrideAction(for: session),
+                now: now,
+                emergencyOverrideAction: overlayEmergencyOverrideAction(for: session, now: now),
                 emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: session),
                 bodyActions: nil
             )
@@ -631,7 +640,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 session: session,
                 settings: overlaySettings(for: session),
                 now: now,
-                emergencyOverrideAction: overlayEmergencyOverrideAction(for: session),
+                emergencyOverrideAction: overlayEmergencyOverrideAction(for: session, now: now),
                 emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: session),
                 bodyActions: overlayBodyActions(for: session, now: now)
             )
@@ -767,7 +776,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 settings: overlaySettings(for: session),
                 now: now,
                 manualAwaiting: false,
-                emergencyOverrideAction: overlayEmergencyOverrideAction(for: session),
+                emergencyOverrideAction: overlayEmergencyOverrideAction(for: session, now: now),
                 emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: session),
                 bodyActions: nil
             )
@@ -878,7 +887,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func refreshEmergencyEscapeShortcut() {
         guard let active = engine.state.activeSession,
               active.kind == .eyeGate,
-              settings.eyeGate.emergencyOverride.isEnabled else {
+              canEmergencyOverrideEyeGate(active, now: Date()) else {
             unregisterEmergencyEscapeShortcut()
             return
         }
@@ -1780,7 +1789,13 @@ final class OverlayController {
     }
 
     private func emergencyOverrideRemainingSeconds(for session: RestSession, settings: RestSettings, now: Date) -> Int? {
-        guard session.kind == .eyeGate, settings.eyeGate.emergencyOverride.isEnabled else { return nil }
+        guard EmergencyOverrideCoordinator.isAvailable(
+            session: session,
+            policy: settings.eyeGate.emergencyOverride,
+            now: now
+        ) else {
+            return nil
+        }
         let remaining = settings.eyeGate.emergencyOverride.minimumHoldDuration - now.timeIntervalSince(session.startedAt)
         return max(0, Int(ceil(remaining)))
     }
@@ -2141,9 +2156,15 @@ final class RestOverlayView: NSView {
         let rule = settings.rule(for: session.kind)
         layer?.backgroundColor = NSColor(hex: rule.colorHex).withAlphaComponent(rule.enforcement.opacity).cgColor
         self.bodyActions = bodyActions
+        let visibleEmergencyRemaining: Int?
+        if manualAwaiting && session.kind == .eyeGate {
+            visibleEmergencyRemaining = nil
+        } else {
+            visibleEmergencyRemaining = emergencyOverrideRemainingSeconds
+        }
         configureEmergencyButton(
             sessionID: session.id,
-            remainingSeconds: emergencyOverrideRemainingSeconds,
+            remainingSeconds: visibleEmergencyRemaining,
             isArmed: emergencyOverrideArmed
         )
 
