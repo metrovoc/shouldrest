@@ -160,11 +160,10 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func showNotification(for kind: RestKind) {
-        let content = UNMutableNotificationContent()
-        content.title = L10n.tr("app.name")
-        content.body = kind == .eyeGate ? L10n.tr("notification.eyeGateSoon") : L10n.tr("notification.bodyBreakSoon")
-        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
-        UNUserNotificationCenter.current().add(request)
+        showAppNotification(
+            title: L10n.tr("app.name"),
+            body: kind == .eyeGate ? L10n.tr("notification.eyeGateSoon") : L10n.tr("notification.bodyBreakSoon")
+        )
     }
 
     private func rebuildMenu() {
@@ -177,6 +176,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(.separator())
         }
         menu.addItem(disabledItem(statusText()))
+        if settings.presentation.breakHealthMode {
+            menu.addItem(disabledItem(L10n.format("status.health", engine.state.dangerScore)))
+        }
         menu.addItem(.separator())
 
         if engine.state.activeSession == nil {
@@ -662,6 +664,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
+        if !settings.notifications.silentNotifications {
+            content.sound = .default
+        }
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request)
     }

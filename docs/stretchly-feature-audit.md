@@ -173,6 +173,8 @@ Implemented now:
 - Stretchly-style display targeting for Body Break: all displays or a selected single display, primary/cursor/configured-display selection, separate content-display selection, optional secondary-display blanking, and backward-compatible settings decoding. Eye Gate still forces all-display coverage.
 - Sanitized Body Break rich-text rendering with remote/inline HTML images stripped; images remain available through the explicit safe local-image channel.
 - Complete global-shortcut preference surface for pause toggle, pause durations, pause until morning, immediate rests, Body Break skip-to-next, and reset; pause-until-morning shortcut is registered at runtime.
+- Notification sound policy honors the silent-notifications setting for both pre-break and update notifications.
+- Break-health danger is visible in the menu status surface, not only in debug output.
 
 Still to implement:
 - Developer ID signing identity selection, notarization, and installer/distribution polish.

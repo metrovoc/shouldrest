@@ -34,6 +34,7 @@
 "status.active" = "%@ active, %ds remaining";
 "status.deferredShort" = "Deferred";
 "status.deferred" = "%@ deferred: %@";
+"status.health" = "Break health danger: %d/10";
 "deferral.outsideWorkingHours" = "outside working hours";
 "deferral.focusMode" = "Focus / Do Not Disturb";
 "deferral.appExclusion" = "app exclusion: %@";

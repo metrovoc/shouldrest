@@ -34,6 +34,7 @@
 "status.active" = "%@ 进行中，剩余 %d 秒";
 "status.deferredShort" = "已延后";
 "status.deferred" = "%@ 已延后：%@";
+"status.health" = "休息健康危险值：%d/10";
 "deferral.outsideWorkingHours" = "非工作时间";
 "deferral.focusMode" = "Focus / 勿扰模式";
 "deferral.appExclusion" = "应用排除：%@";
