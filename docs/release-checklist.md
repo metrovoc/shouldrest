@@ -10,11 +10,12 @@ This checklist covers the remaining distribution work after the local package bu
 - Confirm `codesign --verify --deep --strict dist/ShouldRest.app` passes.
 - Run `scripts/check_stretchly_settings_coverage.sh /path/to/stretchly/app/utils/defaultSettings.js`.
 - Run `swift test`.
+- Run `scripts/gui_smoke.sh dist/ShouldRest.app` to verify first-run onboarding against a temporary support directory.
 
 ## Manual GUI Smoke
 
 - Launch `dist/ShouldRest.app`.
-- On a fresh settings directory, verify the first-run onboarding window appears.
+- On a clean user account, verify the first-run onboarding window appears.
 - Open Preferences and verify the scroll view exposes scheduling, context, app exclusions, presentation, content, shortcuts, operations, and admin controls.
 - Use `Take Eye Gate Now` only when ready for the strong full-screen overlay.
 - Use `Take Body Break Now` to verify content, optional image, and manual finish behavior.

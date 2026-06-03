@@ -3,12 +3,21 @@ import Foundation
 import ShouldRestCore
 
 enum AppPaths {
-    static let supportDirectory = FileManager.default
-        .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        .appendingPathComponent("ShouldRest", isDirectory: true)
+    static let supportDirectory = supportDirectory(environment: ProcessInfo.processInfo.environment)
 
     static let settingsURL = supportDirectory.appendingPathComponent("settings.json")
     static let logURL = supportDirectory.appendingPathComponent("logs/shouldrest.log")
+
+    static func supportDirectory(environment: [String: String]) -> URL {
+        if let override = environment["SHOULDREST_SUPPORT_DIR"]?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !override.isEmpty {
+            return URL(fileURLWithPath: override, isDirectory: true).standardizedFileURL
+        }
+
+        return FileManager.default
+            .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+            .appendingPathComponent("ShouldRest", isDirectory: true)
+    }
 }
 
 enum AppVersion {

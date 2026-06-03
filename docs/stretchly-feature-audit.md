@@ -276,6 +276,7 @@ Implemented now:
 - Stretchly-style Welcome/About surface: first-run onboarding includes a learn-more action, and the menu exposes an About panel with version, product design notes, and a direct path into debug info.
 - Restore Defaults asks for confirmation, then uses product defaults without reopening first-run onboarding, matching Stretchly's restore behavior.
 - Packaged-app GUI smoke check using CoreGraphics window enumeration; verified `Welcome to ShouldRest` appears on-screen in `dist/ShouldRest.app`.
+- Automated packaged-app GUI smoke script runs the app against a temporary support directory and verifies first-run onboarding through both window enumeration and smoke-run logs.
 - Floating/all-spaces presentation for onboarding, preferences, and debug utility windows.
 - AppKit theme application for system/light/dark preferences, admin preferences message display, and optional current time during Body Break.
 - Stretchly-compatible menu bar visibility preference: visible by default, hideable for CLI/URL-managed setups.
