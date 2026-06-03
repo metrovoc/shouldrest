@@ -159,7 +159,7 @@
 "prefs.trayStyle.appName" = "短名称";
 "prefs.trayStyle.timeToBreak" = "倒计时";
 "prefs.trayStyle.progress" = "类型 + 倒计时";
-"prefs.language" = "语言覆盖";
+"prefs.language" = "界面语言";
 "prefs.language.system" = "跟随系统语言";
 "prefs.language.english" = "英语";
 "prefs.language.simplifiedChinese" = "简体中文";
@@ -203,7 +203,7 @@
 "prefs.eyeGateNow" = "立即护眼休息";
 "prefs.bodyBreakNow" = "立即活动休息";
 "prefs.skipToBodyBreak" = "跳到活动休息";
-"prefs.endBodyBreak" = "结束当前活动休息";
+"prefs.endBodyBreak" = "结束当前休息";
 "prefs.emergencyEyeGate" = "护眼紧急退出";
 "prefs.reset" = "重置";
 "prefs.sectionOperations" = "操作";

@@ -159,7 +159,7 @@
 "prefs.trayStyle.appName" = "Compact name";
 "prefs.trayStyle.timeToBreak" = "Countdown";
 "prefs.trayStyle.progress" = "Type + countdown";
-"prefs.language" = "Language override";
+"prefs.language" = "Interface language";
 "prefs.language.system" = "System language";
 "prefs.language.english" = "English";
 "prefs.language.simplifiedChinese" = "Simplified Chinese";
