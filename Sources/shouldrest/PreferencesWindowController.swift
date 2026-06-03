@@ -529,9 +529,9 @@ final class PreferencesWindowController: NSWindowController {
     }
 
     @objc private func restoreDefaultsPressed() {
-        settings = .defaults
+        settings = .restoredDefaults
         loadSettings()
-        onSave(.defaults)
+        onSave(settings)
     }
 
     @objc private func restEnablementChanged(_ sender: NSButton) {

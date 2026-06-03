@@ -61,6 +61,13 @@ public struct RestSettings: Codable, Equatable, Sendable {
         admin: .defaults
     )
 
+    public static var restoredDefaults: RestSettings {
+        var settings = defaults
+        settings.operations.hasCompletedOnboarding = true
+        settings.operations.showOnboardingOnNextLaunch = false
+        return settings
+    }
+
     public func rule(for kind: RestKind) -> RestRule {
         switch kind {
         case .eyeGate:

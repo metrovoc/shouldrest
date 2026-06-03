@@ -388,6 +388,13 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(loaded, .defaults)
     }
 
+    func testRestoredDefaultsDoNotReopenFirstRunOnboarding() {
+        let restored = RestSettings.restoredDefaults
+
+        XCTAssertTrue(restored.operations.hasCompletedOnboarding)
+        XCTAssertFalse(restored.operations.resolvedShowOnboardingOnNextLaunch)
+    }
+
     func testSettingsStoreKeepsAtLeastOneRestEnabled() throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
