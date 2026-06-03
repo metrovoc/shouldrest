@@ -68,7 +68,7 @@
 "overlay.emergencyOverrideIn" = "Emergency in %ds";
 "overlay.emergencyOverrideHelp" = "Use only for a genuine interruption. It still requires confirmation and counts as a missed Eye Gate.";
 "overlay.emergencyConfirmStep" = "Confirm %d/%d";
-"overlay.emergencyConfirmHelp" = "Press Emergency again, Return, or Space. Counts as a missed Eye Gate.";
+"overlay.emergencyConfirmHelp" = "Confirm inside this overlay: click again, Return, or Space. Counts as a missed Eye Gate.";
 "overlay.bodyPostpone" = "Postpone";
 "overlay.bodySkip" = "Skip";
 "overlay.bodyFinish" = "Finish";
@@ -138,7 +138,7 @@
 "prefs.hideAdvancedRules" = "Hide advanced rules";
 "prefs.exclusionMode.pauseWhenMatched" = "Pause while matched";
 "prefs.exclusionMode.resumeOnlyWhenMatched" = "Run only while matched";
-"prefs.sectionPresentation" = "Presentation And Sound";
+"prefs.sectionPresentation" = "Presentation and Sound";
 "prefs.theme" = "Theme";
 "prefs.theme.system" = "Follow System";
 "prefs.theme.light" = "Light";
@@ -158,6 +158,9 @@
 "prefs.bodyFinishSound" = "Body finish sound";
 "prefs.finishSound" = "Finish sound";
 "prefs.previewSound" = "Preview";
+"prefs.previewSoundHelp" = "Play this sound once";
+"prefs.soundPreviewSilence" = "Silence selected";
+"prefs.soundPreviewPlayed" = "Previewed %@";
 "prefs.sound.silence" = "Silence";
 "prefs.sound.crystalGlass" = "Crystal Glass";
 "prefs.sound.windChime" = "Wind Chime";

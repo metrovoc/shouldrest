@@ -1636,6 +1636,7 @@ final class RestOverlayView: NSView {
     private let detailLabel = NSTextField(labelWithString: "")
     private let countdownLabel = NSTextField(labelWithString: "")
     private let imageView = NSImageView()
+    private let emergencyPanel = NSView()
     private let emergencyButton = OverlayActionButton()
     private let emergencyCancelButton = OverlayActionButton()
     private let emergencyHintLabel = NSTextField(labelWithString: "")
@@ -1649,6 +1650,8 @@ final class RestOverlayView: NSView {
     private var emergencyConfirmationProgress = 0
     private var isEmergencyConfirming = false
     private var emergencySessionID: UUID?
+    private var emergencyPanelWidthConstraint: NSLayoutConstraint?
+    private var emergencyPanelHeightConstraint: NSLayoutConstraint?
     var onEmergencyOverrideConfirmed: ((Int) -> Void)?
     var bodyActions: BodyOverlayActions? {
         didSet {
@@ -1677,6 +1680,16 @@ final class RestOverlayView: NSView {
         detailLabel.font = .systemFont(ofSize: 18, weight: .regular)
         countdownLabel.font = .monospacedDigitSystemFont(ofSize: 28, weight: .medium)
 
+        emergencyPanel.identifier = NSUserInterfaceItemIdentifier("overlay.emergency.panel")
+        emergencyPanel.translatesAutoresizingMaskIntoConstraints = false
+        emergencyPanel.wantsLayer = true
+        emergencyPanel.layer?.cornerRadius = 7
+        emergencyPanel.layer?.borderWidth = 1
+        emergencyPanel.alphaValue = 0.72
+        emergencyPanel.isHidden = true
+        addSubview(emergencyPanel)
+
+        emergencyButton.identifier = NSUserInterfaceItemIdentifier("overlay.emergency.button")
         emergencyButton.translatesAutoresizingMaskIntoConstraints = false
         emergencyButton.bezelStyle = .inline
         emergencyButton.isBordered = false
@@ -1689,6 +1702,7 @@ final class RestOverlayView: NSView {
         emergencyButton.isHidden = true
         addSubview(emergencyButton)
 
+        emergencyCancelButton.identifier = NSUserInterfaceItemIdentifier("overlay.emergency.cancel")
         emergencyCancelButton.translatesAutoresizingMaskIntoConstraints = false
         emergencyCancelButton.bezelStyle = .inline
         emergencyCancelButton.isBordered = false
@@ -1700,6 +1714,7 @@ final class RestOverlayView: NSView {
         emergencyCancelButton.isHidden = true
         addSubview(emergencyCancelButton)
 
+        emergencyHintLabel.identifier = NSUserInterfaceItemIdentifier("overlay.emergency.hint")
         emergencyHintLabel.translatesAutoresizingMaskIntoConstraints = false
         emergencyHintLabel.alignment = .right
         emergencyHintLabel.lineBreakMode = .byWordWrapping
@@ -1737,6 +1752,11 @@ final class RestOverlayView: NSView {
         bodyActionStack.isHidden = true
         addSubview(bodyActionStack)
 
+        let emergencyPanelWidthConstraint = emergencyPanel.widthAnchor.constraint(equalToConstant: 164)
+        let emergencyPanelHeightConstraint = emergencyPanel.heightAnchor.constraint(equalToConstant: 44)
+        self.emergencyPanelWidthConstraint = emergencyPanelWidthConstraint
+        self.emergencyPanelHeightConstraint = emergencyPanelHeightConstraint
+
         NSLayoutConstraint.activate([
             imageView.centerXAnchor.constraint(equalTo: centerXAnchor),
             imageView.bottomAnchor.constraint(equalTo: titleLabel.topAnchor, constant: -24),
@@ -1754,6 +1774,10 @@ final class RestOverlayView: NSView {
             emergencyButton.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -24),
             emergencyButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 126),
             emergencyButton.heightAnchor.constraint(equalToConstant: 28),
+            emergencyPanel.trailingAnchor.constraint(equalTo: emergencyButton.trailingAnchor, constant: 12),
+            emergencyPanel.bottomAnchor.constraint(equalTo: emergencyButton.bottomAnchor, constant: 10),
+            emergencyPanelWidthConstraint,
+            emergencyPanelHeightConstraint,
             emergencyCancelButton.trailingAnchor.constraint(equalTo: emergencyButton.leadingAnchor, constant: -10),
             emergencyCancelButton.centerYAnchor.constraint(equalTo: emergencyButton.centerYAnchor),
             emergencyCancelButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 74),
@@ -1821,7 +1845,10 @@ final class RestOverlayView: NSView {
     }
 
     private func emergencyActivationFrame() -> NSRect {
-        let buttonFrame = emergencyButton.frame.insetBy(dx: -24, dy: -16)
+        var buttonFrame = emergencyButton.frame.insetBy(dx: -24, dy: -16)
+        if !emergencyPanel.isHidden {
+            buttonFrame = buttonFrame.union(emergencyPanel.frame.insetBy(dx: -10, dy: -10))
+        }
         let safetyFrame = NSRect(
             x: max(bounds.minX, bounds.maxX - 260),
             y: bounds.minY,
@@ -1996,6 +2023,7 @@ final class RestOverlayView: NSView {
         emergencyConfirmationSteps = max(0, confirmationSteps)
 
         guard let remainingSeconds else {
+            emergencyPanel.isHidden = true
             emergencyButton.isHidden = true
             emergencyCancelButton.isHidden = true
             emergencyHintLabel.isHidden = true
@@ -2015,6 +2043,16 @@ final class RestOverlayView: NSView {
 
     private func updateEmergencyConfirmationUI() {
         guard let remainingSeconds = emergencyRemainingSeconds else { return }
+
+        emergencyPanel.isHidden = false
+        emergencyPanelWidthConstraint?.constant = isEmergencyConfirming ? 360 : 164
+        emergencyPanelHeightConstraint?.constant = isEmergencyConfirming ? 76 : 44
+        emergencyPanel.layer?.backgroundColor = NSColor.systemRed
+            .withAlphaComponent(isEmergencyConfirming ? 0.055 : 0.028)
+            .cgColor
+        emergencyPanel.layer?.borderColor = NSColor.systemRed
+            .withAlphaComponent(isEmergencyConfirming ? 0.22 : 0.11)
+            .cgColor
 
         if isEmergencyConfirming {
             emergencyCancelButton.isHidden = false

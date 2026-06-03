@@ -98,6 +98,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let soundVolume = NSTextField()
     private let soundVolumeSlider = NSSlider()
     private let soundVolumeValueLabel = NSTextField(labelWithString: "")
+    private let soundPreviewStatusLabel = NSTextField(labelWithString: "")
 
     private let customBodyTitle = NSTextField()
     private let customBodyTextEditor = NSTextView()
@@ -303,6 +304,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.bodyStartSound"), soundPickerRow(bodyStartSound, bodyStartSoundPreview)))
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.bodyFinishSound"), soundPickerRow(bodyFinishSound, bodyFinishSoundPreview)))
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.volume"), soundVolumeRow()))
+        appearanceStack.addArrangedSubview(soundPreviewStatusLabel)
         appearanceStack.addArrangedSubview(separator())
         appearanceStack.addArrangedSubview(section(L10n.tr("prefs.sectionCustomIdea"), symbolName: "text.bubble"))
         appearanceStack.addArrangedSubview(useBuiltInIdeas)
@@ -532,6 +534,11 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         soundVolumeValueLabel.textColor = .secondaryLabelColor
         soundVolumeValueLabel.alignment = .right
         soundVolumeValueLabel.widthAnchor.constraint(equalToConstant: 54).isActive = true
+        soundPreviewStatusLabel.identifier = NSUserInterfaceItemIdentifier("soundPreviewStatus")
+        soundPreviewStatusLabel.textColor = .secondaryLabelColor
+        soundPreviewStatusLabel.font = .systemFont(ofSize: 12)
+        soundPreviewStatusLabel.isHidden = true
+        soundPreviewStatusLabel.widthAnchor.constraint(equalToConstant: 620).isActive = true
     }
 
     private func configureCustomBodyTextEditor() {
@@ -709,6 +716,9 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     private func configureSoundPreviewButton(_ button: NSButton, identifier: String) {
         button.title = L10n.tr("prefs.previewSound")
+        button.image = NSImage(systemSymbolName: "speaker.wave.2", accessibilityDescription: nil)
+        button.imagePosition = .imageLeading
+        button.toolTip = L10n.tr("prefs.previewSoundHelp")
         button.target = self
         button.action = #selector(previewSound(_:))
         button.identifier = NSUserInterfaceItemIdentifier(identifier)
@@ -1142,6 +1152,10 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             soundVolume.stringValue = String(soundVolumeSlider.doubleValue)
             updateSoundVolumeLabel()
         }
+        if let popup = sender as? NSPopUpButton, isSoundPopup(popup) {
+            soundPreviewStatusLabel.isHidden = true
+            soundPreviewStatusLabel.stringValue = ""
+        }
         updateDependentControlEnablement()
         scheduleAutosave()
     }
@@ -1213,7 +1227,12 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     @objc private func previewSound(_ sender: NSButton) {
         guard let popup = soundPopup(for: sender.identifier?.rawValue) else { return }
         let volume = min(1, max(0, soundVolumeSlider.doubleValue))
-        soundPlayer.play(soundPolicy(from: popup, volume: volume))
+        let option = selectedSoundOption(in: popup)
+        soundPlayer.play(option == .silence ? .silent : .named(option.name, volume: volume))
+        soundPreviewStatusLabel.stringValue = option == .silence
+            ? L10n.tr("prefs.soundPreviewSilence")
+            : L10n.format("prefs.soundPreviewPlayed", option.title)
+        soundPreviewStatusLabel.isHidden = false
     }
 
     @objc private func chooseLocalImagePressed() {
@@ -1697,6 +1716,10 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     private func selectedSoundOption(in popup: NSPopUpButton) -> SoundOption {
         SoundOption(name: popup.selectedItem?.representedObject as? String ?? "silence")
+    }
+
+    private func isSoundPopup(_ popup: NSPopUpButton) -> Bool {
+        [eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound].contains { $0 === popup }
     }
 
     private func soundPopup(for identifier: String?) -> NSPopUpButton? {

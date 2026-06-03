@@ -26,6 +26,25 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(confirmedSteps, 2)
     }
 
+    func testEmergencyConfirmationExpandsOverlayLocalPanel() throws {
+        let view = configuredEyeGateOverlay(confirmationSteps: 2)
+        let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.panel"))
+        let hint = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.hint"))
+
+        view.layoutSubtreeIfNeeded()
+        let idleWidth = panel.frame.width
+        XCTAssertFalse(panel.isHidden)
+        XCTAssertTrue(hint.isHidden)
+
+        XCTAssertEqual(view.advanceEmergencyOverrideConfirmationIfAvailable(), .waitingForConfirmation)
+
+        view.layoutSubtreeIfNeeded()
+        XCTAssertFalse(panel.isHidden)
+        XCTAssertFalse(hint.isHidden)
+        XCTAssertGreaterThan(panel.frame.width, idleWidth)
+        XCTAssertTrue(view.hitTest(NSPoint(x: panel.frame.midX, y: panel.frame.midY)) === view)
+    }
+
     func testEmergencyClickAreaRoutesToOverlayView() {
         let view = configuredEyeGateOverlay(confirmationSteps: 2)
 
@@ -98,5 +117,19 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             emergencyOverrideConfirmationSteps: confirmationSteps
         )
         return view
+    }
+}
+
+private extension NSView {
+    func descendant(withIdentifier rawIdentifier: String) -> NSView? {
+        if identifier?.rawValue == rawIdentifier {
+            return self
+        }
+        for subview in subviews {
+            if let match = subview.descendant(withIdentifier: rawIdentifier) {
+                return match
+            }
+        }
+        return nil
     }
 }
