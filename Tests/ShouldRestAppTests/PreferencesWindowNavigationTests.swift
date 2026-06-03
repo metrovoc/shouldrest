@@ -1,4 +1,5 @@
 import AppKit
+import Carbon
 import ShouldRestCore
 import XCTest
 @testable import shouldrest
@@ -37,6 +38,7 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         let saveStatus = try XCTUnwrap(view(withIdentifier: "autosaveStatusLabel", in: contentView) as? NSTextField)
 
         XCTAssertEqual(searchField.placeholderString, L10n.tr("prefs.searchPlaceholder"))
+        XCTAssertEqual(searchField.toolTip, L10n.tr("prefs.searchHelp"))
         searchField.stringValue = L10n.tr("prefs.pause5hShortcut")
 
         XCTAssertTrue(sendAction(from: searchField))
@@ -72,6 +74,50 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         XCTAssertEqual(searchStatus.textColor, .systemOrange)
     }
 
+    func testCommandFFocusesPreferenceSearch() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
+        let searchField = try XCTUnwrap(view(withIdentifier: "prefs.searchField", in: contentView) as? NSSearchField)
+
+        XCTAssertTrue(window.performKeyEquivalent(with: try keyEvent(
+            keyCode: kVK_ANSI_F,
+            characters: "f",
+            modifierFlags: .command,
+            window: window
+        )))
+
+        XCTAssertTrue(isFirstResponder(searchField, in: window))
+    }
+
+    func testEscapeClearsPreferenceSearchOnlyWhenSearchFieldIsFocused() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
+        let searchField = try XCTUnwrap(view(withIdentifier: "prefs.searchField", in: contentView) as? NSSearchField)
+        let searchStatus = try XCTUnwrap(view(withIdentifier: "prefs.searchStatusLabel", in: contentView) as? NSTextField)
+
+        searchField.stringValue = L10n.tr("prefs.pause5hShortcut")
+        XCTAssertTrue(sendAction(from: searchField))
+        XCTAssertFalse(searchStatus.isHidden)
+
+        XCTAssertTrue(window.makeFirstResponder(searchField))
+        window.cancelOperation(nil)
+
+        XCTAssertEqual(searchField.stringValue, "")
+        XCTAssertTrue(searchStatus.isHidden)
+
+        searchField.stringValue = L10n.tr("prefs.pause5hShortcut")
+        XCTAssertTrue(sendAction(from: searchField))
+        XCTAssertFalse(searchStatus.isHidden)
+        let tabView = try XCTUnwrap(view(withIdentifier: "prefs.tabView", in: contentView) as? NSTabView)
+        XCTAssertTrue(window.makeFirstResponder(tabView))
+        window.cancelOperation(nil)
+
+        XCTAssertEqual(searchField.stringValue, L10n.tr("prefs.pause5hShortcut"))
+        XCTAssertFalse(searchStatus.isHidden)
+    }
+
     private func view(withIdentifier identifier: String, in view: NSView) -> NSView? {
         if view.identifier?.rawValue == identifier {
             return view
@@ -87,6 +133,30 @@ final class PreferencesWindowNavigationTests: XCTestCase {
     private func sendAction(from control: NSControl) -> Bool {
         guard let action = control.action else { return false }
         return NSApplication.shared.sendAction(action, to: control.target, from: control)
+    }
+
+    private func isFirstResponder(_ control: NSControl, in window: NSWindow) -> Bool {
+        window.firstResponder === control || control.currentEditor() === window.firstResponder
+    }
+
+    private func keyEvent(
+        keyCode: Int,
+        characters: String,
+        modifierFlags: NSEvent.ModifierFlags = [],
+        window: NSWindow
+    ) throws -> NSEvent {
+        try XCTUnwrap(NSEvent.keyEvent(
+            with: .keyDown,
+            location: .zero,
+            modifierFlags: modifierFlags,
+            timestamp: 0,
+            windowNumber: window.windowNumber,
+            context: nil,
+            characters: characters,
+            charactersIgnoringModifiers: characters,
+            isARepeat: false,
+            keyCode: UInt16(keyCode)
+        ))
     }
 }
 

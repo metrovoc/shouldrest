@@ -53,7 +53,35 @@ private struct PreferencesHighlightSnapshot {
 }
 
 @MainActor
-final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate, NSSearchFieldDelegate, NSTextViewDelegate {
+private protocol PreferencesWindowKeyboardDelegate: AnyObject {
+    func focusPreferencesSearch()
+    func clearPreferencesSearchIfFocused() -> Bool
+}
+
+private final class PreferencesWindow: NSWindow {
+    weak var keyboardDelegate: PreferencesWindowKeyboardDelegate?
+
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        if event.type == .keyDown,
+           flags == .command,
+           event.charactersIgnoringModifiers?.lowercased() == "f" {
+            keyboardDelegate?.focusPreferencesSearch()
+            return true
+        }
+        return super.performKeyEquivalent(with: event)
+    }
+
+    override func cancelOperation(_ sender: Any?) {
+        if keyboardDelegate?.clearPreferencesSearchIfFocused() == true {
+            return
+        }
+        super.cancelOperation(sender)
+    }
+}
+
+@MainActor
+final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate, NSSearchFieldDelegate, NSTextViewDelegate, PreferencesWindowKeyboardDelegate {
     private var settings: RestSettings
     private let onSave: (RestSettings) -> Void
     private let adminMessageLabel = NSTextField(labelWithString: "")
@@ -226,7 +254,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         self.settings = settings
         self.onSave = onSave
 
-        let window = NSWindow(
+        let window = PreferencesWindow(
             contentRect: NSRect(x: 0, y: 0, width: 820, height: 760),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered,
@@ -238,6 +266,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         window.hidesOnDeactivate = false
         window.center()
         super.init(window: window)
+        window.keyboardDelegate = self
 
         buildContent()
         loadSettings()
@@ -916,6 +945,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private func configureSearchField() {
         searchField.identifier = NSUserInterfaceItemIdentifier("prefs.searchField")
         searchField.placeholderString = L10n.tr("prefs.searchPlaceholder")
+        searchField.toolTip = L10n.tr("prefs.searchHelp")
         searchField.sendsSearchStringImmediately = true
         searchField.delegate = self
         searchField.target = self
@@ -2289,6 +2319,32 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         view.layer?.cornerRadius = highlightedSearchTarget.cornerRadius
         view.wantsLayer = highlightedSearchTarget.wantsLayer
         self.highlightedSearchTarget = nil
+    }
+
+    func focusPreferencesSearch() {
+        window?.makeFirstResponder(searchField)
+        searchField.selectText(nil)
+    }
+
+    func clearPreferencesSearchIfFocused() -> Bool {
+        guard isSearchFieldFocused() else { return false }
+        guard !searchField.stringValue.isEmpty || !searchStatusLabel.isHidden || highlightedSearchTarget != nil else {
+            return false
+        }
+        searchField.stringValue = ""
+        performPreferencesSearch("")
+        return true
+    }
+
+    private func isSearchFieldFocused() -> Bool {
+        guard let window else { return false }
+        if window.firstResponder === searchField {
+            return true
+        }
+        if let editor = searchField.currentEditor(), window.firstResponder === editor {
+            return true
+        }
+        return false
     }
 
     private func localImagePickerRow() -> NSStackView {
