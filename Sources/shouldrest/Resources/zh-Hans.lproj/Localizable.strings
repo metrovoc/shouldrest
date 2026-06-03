@@ -30,6 +30,7 @@
 "notification.updateNoFeed" = "未配置更新源。";
 "notification.updateFailed" = "更新检查失败：%@";
 "notification.emergencyHold" = "%d 秒后可使用紧急覆盖。";
+"notification.resumingBreaks" = "正在恢复休息";
 "status.noRests" = "没有启用的休息计划";
 "status.pausedIndefinitely" = "已无限期暂停";
 "status.pausedUntil" = "暂停到 %@";

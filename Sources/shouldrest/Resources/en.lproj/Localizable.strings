@@ -30,6 +30,7 @@
 "notification.updateNoFeed" = "No update feed is configured.";
 "notification.updateFailed" = "Update check failed: %@";
 "notification.emergencyHold" = "Emergency override is available in %d seconds.";
+"notification.resumingBreaks" = "Resuming breaks";
 "status.noRests" = "No enabled rests";
 "status.pausedIndefinitely" = "Paused indefinitely";
 "status.pausedUntil" = "Paused until %@";

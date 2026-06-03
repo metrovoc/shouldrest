@@ -151,8 +151,14 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
+        let expiredPause = engine.state.pause.flatMap { pause in
+            pause.isActive(at: now) ? nil : pause
+        }
         let result = engine.evaluate(now: now, context: currentContext())
         handleEngineResult(result, now: now)
+        if let expiredPause, engine.state.pause == nil {
+            notifyAutomaticResume(from: expiredPause)
+        }
         rebuildMenu()
     }
 
@@ -525,6 +531,11 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func playRestSound(_ policy: SoundPolicy) {
         guard !settings.notifications.silentNotifications else { return }
         soundPlayer.play(policy)
+    }
+
+    private func notifyAutomaticResume(from pause: PauseState) {
+        guard pause.reason == .user || pause.reason == .untilMorning else { return }
+        showAppNotification(title: L10n.tr("app.name"), body: L10n.tr("notification.resumingBreaks"))
     }
 
     @objc private func resumeBreaks() {
