@@ -16,6 +16,7 @@ final class PreferencesWindowController: NSWindowController {
     private let eyeLead = NSTextField()
 
     private let bodyEnabled = NSButton(checkboxWithTitle: L10n.tr("prefs.enableBodyBreak"), target: nil, action: nil)
+    private let bodyInterval = NSTextField()
     private let bodyDuration = NSTextField()
     private let bodyAfterEyeGates = NSTextField()
     private let bodyColor = NSTextField()
@@ -173,6 +174,7 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(separator())
         stack.addArrangedSubview(section(L10n.tr("prefs.sectionBodyBreak")))
         stack.addArrangedSubview(bodyEnabled)
+        stack.addArrangedSubview(row(L10n.tr("prefs.bodyIntervalMinutes"), bodyInterval))
         stack.addArrangedSubview(row(L10n.tr("prefs.durationMinutes"), bodyDuration))
         stack.addArrangedSubview(row(L10n.tr("prefs.afterEyeGates"), bodyAfterEyeGates))
         stack.addArrangedSubview(row(L10n.tr("prefs.overlayColor"), bodyColor))
@@ -292,7 +294,7 @@ final class PreferencesWindowController: NSWindowController {
 
     private func configureFieldWidths() {
         let compactFields = [
-            eyeInterval, eyeDuration, bodyDuration, bodyAfterEyeGates, eyeLead, bodyLead,
+            eyeInterval, eyeDuration, bodyInterval, bodyDuration, bodyAfterEyeGates, eyeLead, bodyLead,
             bodyPostponeMinutes, bodyPostponeLimit, naturalIdleMinutes, workingStart,
             workingEnd, soundVolume, bodyConfiguredDisplayIndex, pauseUntilMorningHour,
             pauseUntilMorningLatitude, pauseUntilMorningLongitude
@@ -323,6 +325,7 @@ final class PreferencesWindowController: NSWindowController {
         eyeLead.stringValue = String(Int(settings.notifications.eyeGateLeadTime))
 
         bodyEnabled.state = state(settings.bodyBreak.isEnabled)
+        bodyInterval.stringValue = String(Int(settings.bodyBreak.interval / 60))
         bodyDuration.stringValue = String(Int(settings.bodyBreak.duration / 60))
         bodyAfterEyeGates.stringValue = String(settings.bodyBreakAfterEyeGates)
         bodyColor.stringValue = settings.bodyBreak.colorHex
@@ -413,6 +416,7 @@ final class PreferencesWindowController: NSWindowController {
         next.notifications.eyeGateLeadTime = TimeInterval(max(0, intValue(eyeLead)))
 
         next.bodyBreak.isEnabled = isOn(bodyEnabled)
+        next.bodyBreak.interval = TimeInterval(max(1, intValue(bodyInterval)) * 60)
         next.bodyBreak.duration = TimeInterval(max(1, intValue(bodyDuration)) * 60)
         next.bodyBreakAfterEyeGates = max(1, intValue(bodyAfterEyeGates))
         next.bodyBreak.colorHex = normalizedHex(bodyColor.stringValue, fallback: RestSettings.defaults.bodyBreak.colorHex)

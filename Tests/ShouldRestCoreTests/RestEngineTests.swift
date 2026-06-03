@@ -35,6 +35,18 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.scheduled?.kind, .bodyBreak)
     }
 
+    func testBodyBreakOnlyScheduleUsesConfiguredBodyInterval() {
+        var settings = RestSettings.defaults
+        settings.eyeGate.isEnabled = false
+        settings.bodyBreak.isEnabled = true
+        settings.bodyBreak.interval = 45 * 60
+
+        let engine = RestEngine(settings: settings, now: start)
+
+        XCTAssertEqual(engine.state.scheduled?.kind, .bodyBreak)
+        XCTAssertEqual(engine.state.scheduled?.dueAt, start.addingTimeInterval(45 * 60))
+    }
+
     func testEyeGateCannotUseOrdinaryPostponeOrSkip() {
         var engine = RestEngine(settings: .defaults, now: start)
         _ = engine.takeNow(.eyeGate, now: start)

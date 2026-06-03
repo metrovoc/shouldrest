@@ -80,6 +80,7 @@
 "prefs.overlayColor" = "Overlay color hex";
 "prefs.notificationLead" = "Notification lead seconds";
 "prefs.sectionBodyBreak" = "Body Break";
+"prefs.bodyIntervalMinutes" = "Every minutes when Eye Gate is off";
 "prefs.durationMinutes" = "Duration minutes";
 "prefs.afterEyeGates" = "After Eye Gates";
 "prefs.postponeMinutes" = "Postpone minutes";
