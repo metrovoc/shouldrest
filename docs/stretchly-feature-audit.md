@@ -287,6 +287,7 @@ Implemented now:
 - Update feed checks with manual menu action, launch-time and 48-hour repeat checks, admin disable switch that hides normal update controls, automatic update notifications that open the release page when clicked, and explicit manual-check feedback even when automatic update notifications are disabled.
 - Update checker tests cover version comparison, GitHub-style release JSON, `version` fallback responses, unconfigured feeds, HTTP failures, and malformed responses without using the network.
 - SwiftPM localization resource bundle with English and Simplified Chinese strings for core menu, notification, status, debug, preferences, and overlay surfaces.
+- Localization key coverage script verifies bundled non-English `.strings` files have the same key set as English before local release verification can pass.
 - Preference-level language selector for System language, English, and Simplified Chinese; unknown legacy locale identifiers fall back to System language instead of persisting an invalid override.
 - Safe local image Body Break content path support and overlay renderer.
 - Reproducible `.app` packaging script with `shouldrest://` URL-scheme Info.plist registration and localization resource bundling.
@@ -297,7 +298,7 @@ Implemented now:
 - Restore Defaults asks for confirmation, then uses product defaults without reopening first-run onboarding, matching Stretchly's restore behavior.
 - Packaged-app GUI smoke check using CoreGraphics window enumeration; verified `Welcome to ShouldRest` appears on-screen in `dist/ShouldRest.app`.
 - Automated packaged-app GUI smoke script runs the app against a temporary support directory and verifies first-run onboarding plus Preferences automation through both window enumeration and smoke-run logs.
-- Unified local release verification script covers Stretchly settings-key and command coverage, whitespace checks, tests, app metadata/resources, strict codesign, first-run/Preferences GUI smoke, ad-hoc DMG creation, and DMG checksum verification.
+- Unified local release verification script covers Stretchly settings-key and command coverage, localization key coverage, whitespace checks, tests, app metadata/resources, strict codesign, first-run/Preferences GUI smoke, ad-hoc DMG creation, and DMG checksum verification.
 - Floating/all-spaces presentation for onboarding, preferences, and debug utility windows.
 - AppKit theme application for system/light/dark preferences, admin preferences message display, and optional current time during Body Break.
 - Stretchly-compatible menu bar visibility preference: visible by default, hideable for CLI/URL-managed setups.

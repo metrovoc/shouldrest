@@ -5,7 +5,7 @@ This checklist covers local verification plus the remaining Developer ID distrib
 ## Local Verification
 
 - Run `scripts/verify_release_local.sh /path/to/stretchly/app/utils/defaultSettings.js`.
-- This verifies Stretchly settings-key and command coverage, `git diff --check`, `swift test`, app build, `shouldrest://` URL scheme, bundle identifier, localization and sound resources, strict app codesign, first-run and Preferences GUI smoke against a temporary support directory, ad-hoc DMG creation, and `hdiutil verify`.
+- This verifies Stretchly settings-key and command coverage, localization key coverage, `git diff --check`, `swift test`, app build, `shouldrest://` URL scheme, bundle identifier, localization and sound resources, strict app codesign, first-run and Preferences GUI smoke against a temporary support directory, ad-hoc DMG creation, and `hdiutil verify`.
 - On machines without Developer ID credentials, the script uses `ALLOW_ADHOC=1` by default for the local DMG dry run.
 
 ## Manual GUI Smoke

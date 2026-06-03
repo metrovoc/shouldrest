@@ -34,6 +34,9 @@ echo "==> Checking Stretchly settings coverage"
 echo "==> Checking Stretchly command coverage"
 "$ROOT/scripts/check_stretchly_command_coverage.sh" "$stretchly_commands" "$ROOT/docs/stretchly-feature-audit.md"
 
+echo "==> Checking localization key coverage"
+"$ROOT/scripts/check_localization_keys.sh"
+
 echo "==> Checking patch whitespace"
 git diff --check
 
