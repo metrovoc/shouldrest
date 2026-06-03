@@ -68,6 +68,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         logger.log("Application launched")
+        applyAppearanceSetting()
         applyOpenAtLoginSetting()
         configureGlobalShortcuts()
         scheduleAutomaticUpdateCheck()
@@ -384,6 +385,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         preferencesWindowController?.update(settings: settings)
         preferencesWindowController?.showWindow(nil)
         preferencesWindowController?.window?.makeKeyAndOrderFront(nil)
+        preferencesWindowController?.window?.orderFrontRegardless()
         NSApp.activate(ignoringOtherApps: true)
     }
 
@@ -397,8 +399,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 self?.completeOnboarding(openPreferences: true)
             }
         )
-        onboardingWindowController?.showWindow(nil)
-        onboardingWindowController?.window?.makeKeyAndOrderFront(nil)
+        onboardingWindowController?.show()
         NSApp.activate(ignoringOtherApps: true)
         logger.log("Onboarding shown")
     }
@@ -446,6 +447,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         debugWindowController?.update(text: debugInfo())
         debugWindowController?.showWindow(nil)
         debugWindowController?.window?.makeKeyAndOrderFront(nil)
+        debugWindowController?.window?.orderFrontRegardless()
         NSApp.activate(ignoringOtherApps: true)
         logger.log("Debug panel opened")
     }
@@ -453,6 +455,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func applySettings(_ nextSettings: RestSettings) {
         settings = nextSettings
         engine.updateSettings(nextSettings)
+        applyAppearanceSetting()
         applyOpenAtLoginSetting()
         configureGlobalShortcuts()
         scheduleAutomaticUpdateCheck()
@@ -538,6 +541,18 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 logger.log("Open-at-login unavailable: \(error.localizedDescription)")
             }
         }
+    }
+
+    private func applyAppearanceSetting() {
+        switch settings.presentation.themeSource {
+        case .system:
+            NSApp.appearance = nil
+        case .light:
+            NSApp.appearance = NSAppearance(named: .aqua)
+        case .dark:
+            NSApp.appearance = NSAppearance(named: .darkAqua)
+        }
+        logger.log("Appearance applied source=\(settings.presentation.themeSource.rawValue)")
     }
 
     private func configureGlobalShortcuts() {
@@ -881,7 +896,11 @@ final class RestOverlayView: NSView {
                 imageView.isHidden = false
             }
         }
-        countdownLabel.stringValue = "\(remainingSeconds)s"
+        if session.kind == .bodyBreak, settings.presentation.showCurrentTimeDuringBodyBreak {
+            countdownLabel.stringValue = "\(remainingSeconds)s · \(Date().formatted(date: .omitted, time: .shortened))"
+        } else {
+            countdownLabel.stringValue = "\(remainingSeconds)s"
+        }
     }
 
     private func localBodyBreakImage(settings: RestSettings) -> NSImage? {

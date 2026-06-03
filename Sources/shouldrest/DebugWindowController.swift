@@ -21,6 +21,9 @@ final class DebugWindowController: NSWindowController {
             defer: false
         )
         window.title = L10n.tr("debug.title")
+        window.level = .floating
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        window.hidesOnDeactivate = false
         window.contentView = scrollView
         window.center()
         super.init(window: window)

@@ -17,6 +17,9 @@ final class OnboardingWindowController: NSWindowController {
             defer: false
         )
         window.title = L10n.tr("onboarding.title")
+        window.level = .floating
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        window.hidesOnDeactivate = false
         window.center()
         super.init(window: window)
         buildContent()
@@ -69,5 +72,10 @@ final class OnboardingWindowController: NSWindowController {
         onOpenPreferences()
         close()
     }
-}
 
+    func show() {
+        showWindow(nil)
+        window?.makeKeyAndOrderFront(nil)
+        window?.orderFrontRegardless()
+    }
+}

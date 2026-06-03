@@ -6,6 +6,7 @@ import ShouldRestCore
 final class PreferencesWindowController: NSWindowController {
     private var settings: RestSettings
     private let onSave: (RestSettings) -> Void
+    private let adminMessageLabel = NSTextField(labelWithString: "")
 
     private let eyeEnabled = NSButton(checkboxWithTitle: L10n.tr("prefs.enableEyeGate"), target: nil, action: nil)
     private let eyeInterval = NSTextField()
@@ -78,6 +79,9 @@ final class PreferencesWindowController: NSWindowController {
             defer: false
         )
         window.title = L10n.tr("preferences.title")
+        window.level = .floating
+        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        window.hidesOnDeactivate = false
         window.center()
         super.init(window: window)
 
@@ -128,6 +132,10 @@ final class PreferencesWindowController: NSWindowController {
 
         configurePopups()
         configureFieldWidths()
+
+        adminMessageLabel.lineBreakMode = .byWordWrapping
+        adminMessageLabel.widthAnchor.constraint(equalToConstant: 620).isActive = true
+        stack.addArrangedSubview(adminMessageLabel)
 
         stack.addArrangedSubview(section(L10n.tr("prefs.sectionEyeGate")))
         stack.addArrangedSubview(eyeEnabled)
@@ -237,6 +245,9 @@ final class PreferencesWindowController: NSWindowController {
     }
 
     private func loadSettings() {
+        adminMessageLabel.stringValue = settings.admin.customPreferencesMessage
+        adminMessageLabel.isHidden = settings.admin.customPreferencesMessage.isEmpty
+
         eyeEnabled.state = state(settings.eyeGate.isEnabled)
         eyeInterval.stringValue = String(Int(settings.eyeGate.interval / 60))
         eyeDuration.stringValue = String(Int(settings.eyeGate.duration))
