@@ -292,6 +292,7 @@ final class RestEngineTests: XCTestCase {
         let presentation = try JSONDecoder().decode(PresentationSettings.self, from: legacyJSON)
 
         XCTAssertNil(presentation.showMenuBarItem)
+        XCTAssertNil(presentation.languageIdentifier)
         XCTAssertTrue(presentation.resolvedShowMenuBarItem)
     }
 

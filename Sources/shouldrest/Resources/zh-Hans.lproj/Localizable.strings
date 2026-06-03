@@ -102,6 +102,7 @@
 "prefs.theme" = "主题";
 "prefs.menuBarStyle" = "菜单栏样式";
 "prefs.showMenuBarItem" = "显示菜单栏项目";
+"prefs.language" = "语言覆盖";
 "prefs.eyeStartSound" = "Eye Gate 开始声音";
 "prefs.eyeFinishSound" = "Eye Gate 结束声音";
 "prefs.bodyStartSound" = "Body Break 开始声音";

@@ -13,6 +13,10 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 - No transparent or partial Eye Gate overlay.
 - No rich Eye Gate content that asks the user to read the screen.
 - No regular/focusable break window mode for enforced breaks.
+- No percentage-sized partial active break windows for enforced rests; Body Break uses display targeting and optional secondary blanking instead.
+- No ordinary tray/menu actions during Eye Gate beyond the frictional emergency override.
+- No Stretchly icon-color variants as a core setting; the Mac app uses brand/status text styles instead.
+- No user-tunable app-exclusion polling interval; the native app uses a fixed low-latency context evaluation loop.
 - Do Not Disturb does not globally cancel Eye Gate.
 - No contributor-gated preferences.
 - No third-party account-based sync in the core product.
@@ -61,6 +65,7 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 ### Presentation
 
 - Light, dark, and system appearance.
+- System language with optional in-app language override for bundled translations.
 - Configurable colors for rest surfaces.
 - Optional sounds at start and finish.
 - Configurable sound volume.

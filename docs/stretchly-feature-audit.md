@@ -47,6 +47,10 @@ These Stretchly behaviors are design divergences, not missing features.
 | Transparent and blurred break surfaces. | Eye Gate is opaque full-screen. Body Break may use styling, but enforced surfaces remain visually decisive. | Partial visibility invites continued screen work. |
 | Rich mini-break ideas on screen. | Eye Gate avoids rich readable content. Rich ideas belong to Body Break. | Reading instructions is still near-screen visual work. |
 | Regular/focusable break windows. | Enforced breaks use native overlay windows, not ordinary document-like windows. | Ordinary windows lose stacking authority and invite interaction. |
+| Percentage-sized active break windows (`breakWindowWidth` / `breakWindowHeight`). | Enforced rests cover the targeted display area; Body Break instead supports display targeting, content-display selection, and secondary blanking. | Partial active windows leave enough visual access to continue working. |
+| Tray/menu actions during strict mini breaks (`showTrayMenuInStrictMode`). | Eye Gate exposes only a frictional emergency override while active. | Ordinary menu actions collapse strict mode back into habitual dismissal. |
+| Monochrome/inverted tray icon variants. | ShouldRest uses Mac-native status text styles: default, time-to-break, and progress. | Brand/status clarity is more useful than copying Stretchly's icon-color matrix. |
+| Configurable app-exclusion polling interval. | ShouldRest evaluates context on a fixed low-latency native loop. | This avoids exposing a performance tuning knob that is not part of the rest behavior. |
 | DND/Focus globally pauses all breaks. | Focus defers Body Break by default, not Eye Gate. | Meetings should not erase the frequent eye-rest constraint. |
 | Contributor-only preferences. | No paywall or contributor gate for core controls. | The safety-critical control surface should be coherent and available. |
 | Account-based sync as a core feature. | Local JSON settings are core; sync is optional integration later. | The core app should remain local and deterministic. |
@@ -171,6 +175,7 @@ Implemented now:
 - Floating/all-spaces presentation for onboarding, preferences, and debug utility windows.
 - AppKit theme application for system/light/dark preferences, admin preferences message display, and optional current time during Body Break.
 - Stretchly-compatible menu bar visibility preference: visible by default, hideable for CLI/URL-managed setups.
+- Language override setting for bundled translations, while defaulting to the macOS system language.
 - Packaged app build with default ad-hoc signing, optional Developer ID signing hook, optional hardened runtime hook, and strict `codesign` verification.
 - Continuous context-deferral state for Focus, working-hours, and app-exclusion gates: first deferral raises break-health danger, repeated ticks do not double-count, and the due rest starts immediately when context clears.
 - Stretchly-style display targeting for Body Break: all displays or a selected single display, primary/cursor/configured-display selection, separate content-display selection, optional secondary-display blanking, and backward-compatible settings decoding. Eye Gate still forces all-display coverage.

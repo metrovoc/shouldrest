@@ -102,6 +102,7 @@
 "prefs.theme" = "Theme";
 "prefs.menuBarStyle" = "Menu bar style";
 "prefs.showMenuBarItem" = "Show menu bar item";
+"prefs.language" = "Language override";
 "prefs.eyeStartSound" = "Eye Gate start sound";
 "prefs.eyeFinishSound" = "Eye Gate finish sound";
 "prefs.bodyStartSound" = "Body start sound";

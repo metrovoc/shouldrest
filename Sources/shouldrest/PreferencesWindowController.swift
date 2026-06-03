@@ -49,6 +49,7 @@ final class PreferencesWindowController: NSWindowController {
     private let themeSource = NSPopUpButton()
     private let trayStyle = NSPopUpButton()
     private let showMenuBarItem = NSButton(checkboxWithTitle: L10n.tr("prefs.showMenuBarItem"), target: nil, action: nil)
+    private let languageIdentifier = NSTextField()
     private let currentTimeInBodyBreak = NSButton(checkboxWithTitle: L10n.tr("prefs.currentTimeBody"), target: nil, action: nil)
     private let breakHealth = NSButton(checkboxWithTitle: L10n.tr("prefs.breakHealth"), target: nil, action: nil)
     private let silentNotifications = NSButton(checkboxWithTitle: L10n.tr("prefs.silentNotifications"), target: nil, action: nil)
@@ -211,6 +212,7 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(row(L10n.tr("prefs.theme"), themeSource))
         stack.addArrangedSubview(row(L10n.tr("prefs.menuBarStyle"), trayStyle))
         stack.addArrangedSubview(showMenuBarItem)
+        stack.addArrangedSubview(row(L10n.tr("prefs.language"), languageIdentifier))
         stack.addArrangedSubview(currentTimeInBodyBreak)
         stack.addArrangedSubview(breakHealth)
         stack.addArrangedSubview(silentNotifications)
@@ -299,8 +301,8 @@ final class PreferencesWindowController: NSWindowController {
 
         let wideFields = [
             eyeColor, bodyColor, eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, customBodyTitle,
-            customBodyText, customBodyIdeasJSON, localImagePath, shortcutPauseToggle, shortcutPause30,
-            shortcutPause1h, shortcutPause2h, shortcutPause5h, shortcutPauseUntilMorning,
+            customBodyText, customBodyIdeasJSON, localImagePath, languageIdentifier, shortcutPauseToggle,
+            shortcutPause30, shortcutPause1h, shortcutPause2h, shortcutPause5h, shortcutPauseUntilMorning,
             shortcutNextScheduled, shortcutEyeNow, shortcutBodyNow, shortcutSkipBody, shortcutEndBody,
             shortcutEmergencyEye, shortcutReset,
             appExclusionName, appExclusionTerms, updateFeedURL,
@@ -355,6 +357,7 @@ final class PreferencesWindowController: NSWindowController {
         themeSource.selectItem(withTitle: settings.presentation.themeSource.rawValue)
         trayStyle.selectItem(withTitle: settings.presentation.trayIconStyle.rawValue)
         showMenuBarItem.state = state(settings.presentation.resolvedShowMenuBarItem)
+        languageIdentifier.stringValue = settings.presentation.languageIdentifier ?? ""
         currentTimeInBodyBreak.state = state(settings.presentation.showCurrentTimeDuringBodyBreak)
         breakHealth.state = state(settings.presentation.breakHealthMode)
         silentNotifications.state = state(settings.notifications.silentNotifications)
@@ -444,6 +447,7 @@ final class PreferencesWindowController: NSWindowController {
         next.presentation.themeSource = selected(ThemeSource.self, from: themeSource, fallback: .system)
         next.presentation.trayIconStyle = selected(TrayIconStyle.self, from: trayStyle, fallback: .default)
         next.presentation.showMenuBarItem = isOn(showMenuBarItem)
+        next.presentation.languageIdentifier = optionalString(languageIdentifier.stringValue)
         next.presentation.showCurrentTimeDuringBodyBreak = isOn(currentTimeInBodyBreak)
         next.presentation.breakHealthMode = isOn(breakHealth)
         next.notifications.silentNotifications = isOn(silentNotifications)
@@ -625,6 +629,11 @@ final class PreferencesWindowController: NSWindowController {
 
     private func doubleValue(_ field: NSTextField, fallback: Double) -> Double {
         Double(field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)) ?? fallback
+    }
+
+    private func optionalString(_ raw: String) -> String? {
+        let value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        return value.isEmpty ? nil : value
     }
 
     private func normalizedHex(_ raw: String, fallback: String) -> String {

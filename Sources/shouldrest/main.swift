@@ -39,6 +39,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
+        applyLanguageSetting()
         applyMenuBarVisibility()
         NotificationCenter.default.addObserver(
             self,
@@ -578,6 +579,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func applySettings(_ nextSettings: RestSettings) {
         settings = nextSettings
         engine.updateSettings(nextSettings)
+        applyLanguageSetting()
         applyAppearanceSetting()
         applyOpenAtLoginSetting()
         applyMenuBarVisibility()
@@ -687,6 +689,11 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             NSApp.appearance = NSAppearance(named: .darkAqua)
         }
         logger.log("Appearance applied source=\(settings.presentation.themeSource.rawValue)")
+    }
+
+    private func applyLanguageSetting() {
+        L10n.languageOverride = settings.presentation.languageIdentifier
+        logger.log("Language applied override=\(settings.presentation.languageIdentifier ?? "system")")
     }
 
     private func configureGlobalShortcuts() {
