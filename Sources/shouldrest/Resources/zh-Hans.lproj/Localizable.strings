@@ -159,7 +159,7 @@
 "prefs.sectionCustomIdea" = "自定义 Body Break 内容";
 "prefs.useBuiltInIdeas" = "使用内置休息提示";
 "prefs.title" = "标题";
-"prefs.text" = "文本";
+"prefs.text" = "正文";
 "prefs.advancedIdeasJSON" = "高级提示 JSON";
 "prefs.showAdvancedIdeas" = "高级提示";
 "prefs.hideAdvancedIdeas" = "隐藏高级提示";

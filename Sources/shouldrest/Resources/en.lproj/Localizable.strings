@@ -159,7 +159,7 @@
 "prefs.sectionCustomIdea" = "Custom Body Break Idea";
 "prefs.useBuiltInIdeas" = "Use built-in rest ideas";
 "prefs.title" = "Title";
-"prefs.text" = "Text";
+"prefs.text" = "Body text";
 "prefs.advancedIdeasJSON" = "Advanced ideas JSON";
 "prefs.showAdvancedIdeas" = "Advanced ideas";
 "prefs.hideAdvancedIdeas" = "Hide advanced ideas";

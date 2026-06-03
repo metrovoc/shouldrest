@@ -18,7 +18,7 @@ private struct NumberInput {
 }
 
 @MainActor
-final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate {
+final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate, NSTextViewDelegate {
     private var settings: RestSettings
     private let onSave: (RestSettings) -> Void
     private let adminMessageLabel = NSTextField(labelWithString: "")
@@ -94,7 +94,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let soundVolumeValueLabel = NSTextField(labelWithString: "")
 
     private let customBodyTitle = NSTextField()
-    private let customBodyText = NSTextField()
+    private let customBodyTextEditor = NSTextView()
+    private let customBodyTextScrollView = NSScrollView()
     private let customBodyIdeasJSON = NSTextField()
     private let customBodyIdeasAdvancedButton = NSButton()
     private var customBodyIdeasJSONRow: NSView?
@@ -177,6 +178,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         configureAdvancedDisclosureButtons()
         configureTimePickers()
         configureSoundVolumeControls()
+        configureCustomBodyTextEditor()
         configureSoundPreviewButtons()
         configureEnablementGuards()
         configureAutosave()
@@ -267,13 +269,13 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         appearanceStack.addArrangedSubview(separator())
         appearanceStack.addArrangedSubview(section(L10n.tr("prefs.sectionCustomIdea"), symbolName: "text.bubble"))
         appearanceStack.addArrangedSubview(useBuiltInIdeas)
+        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.localImagePath"), localImagePickerRow()))
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.title"), customBodyTitle))
-        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.text"), customBodyText))
+        appearanceStack.addArrangedSubview(multilineRow(L10n.tr("prefs.text"), customBodyTextScrollView))
         appearanceStack.addArrangedSubview(customBodyIdeasAdvancedButton)
         let customBodyIdeasJSONRow = row(L10n.tr("prefs.advancedIdeasJSON"), customBodyIdeasJSON)
         self.customBodyIdeasJSONRow = customBodyIdeasJSONRow
         appearanceStack.addArrangedSubview(customBodyIdeasJSONRow)
-        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.localImagePath"), localImagePickerRow()))
         addTab(to: tabView, title: L10n.tr("prefs.tabAppearance"), stack: appearanceStack)
 
         let shortcutsStack = contentStack()
@@ -438,7 +440,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
         let wideFields: [NSView] = [
             eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, customBodyTitle,
-            customBodyText, customBodyIdeasJSON, localImagePath, languageIdentifier, shortcutPauseToggle,
+            customBodyIdeasJSON, localImagePath, languageIdentifier, shortcutPauseToggle,
             shortcutPause30, shortcutPause1h, shortcutPause2h, shortcutPause5h, shortcutPauseUntilMorning,
             shortcutNextScheduled, shortcutEyeNow, shortcutBodyNow, shortcutSkipBody, shortcutEndBody,
             shortcutEmergencyEye, shortcutReset,
@@ -479,6 +481,26 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         soundVolumeValueLabel.textColor = .secondaryLabelColor
         soundVolumeValueLabel.alignment = .right
         soundVolumeValueLabel.widthAnchor.constraint(equalToConstant: 54).isActive = true
+    }
+
+    private func configureCustomBodyTextEditor() {
+        customBodyTextEditor.isRichText = false
+        customBodyTextEditor.isAutomaticQuoteSubstitutionEnabled = false
+        customBodyTextEditor.isAutomaticDashSubstitutionEnabled = false
+        customBodyTextEditor.font = .systemFont(ofSize: NSFont.systemFontSize)
+        customBodyTextEditor.textContainerInset = NSSize(width: 8, height: 6)
+        customBodyTextEditor.isHorizontallyResizable = false
+        customBodyTextEditor.isVerticallyResizable = true
+        customBodyTextEditor.autoresizingMask = [.width]
+        customBodyTextEditor.textContainer?.widthTracksTextView = true
+        customBodyTextEditor.textContainer?.containerSize = NSSize(width: 360, height: CGFloat.greatestFiniteMagnitude)
+
+        customBodyTextScrollView.borderType = .bezelBorder
+        customBodyTextScrollView.hasVerticalScroller = true
+        customBodyTextScrollView.drawsBackground = true
+        customBodyTextScrollView.documentView = customBodyTextEditor
+        customBodyTextScrollView.widthAnchor.constraint(equalToConstant: 360).isActive = true
+        customBodyTextScrollView.heightAnchor.constraint(equalToConstant: 96).isActive = true
     }
 
     private func configureDisclosureButton(_ button: NSButton, identifier: String, expanded: Bool) {
@@ -533,7 +555,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             eyeInterval, eyeDuration, eyeLead, bodyInterval, bodyDuration, bodyAfterEyeGates,
             bodyLead, bodyPostponeMinutes, bodyPostponeLimit, bodyPostponeWindowPercent, naturalIdleMinutes,
             appExclusionName, appExclusionTerms, appExclusionsJSON,
-            customBodyTitle, customBodyText, customBodyIdeasJSON, localImagePath, bodyConfiguredDisplayIndex,
+            customBodyTitle, customBodyIdeasJSON, localImagePath, bodyConfiguredDisplayIndex,
             pauseUntilMorningHour, pauseUntilMorningLatitude, pauseUntilMorningLongitude, updateFeedURL,
             customPreferencesMessage
         ]
@@ -542,6 +564,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             field.target = self
             field.action = #selector(controlChanged(_:))
         }
+        customBodyTextEditor.delegate = self
 
         let controls: [NSControl] = [
             eyeColor, bodyColor, eyeNotify, eyeManualFinish, bodyNotify, bodyAllowSkip, bodyManualFinish, bodyCoversAllDisplays,
@@ -669,7 +692,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         let custom = settings.contentLibrary.customBodyBreakIdeas.first
         useBuiltInIdeas.state = state(settings.contentLibrary.useBuiltInIdeas)
         customBodyTitle.stringValue = custom?.title ?? ""
-        customBodyText.stringValue = custom?.body ?? ""
+        customBodyTextEditor.string = custom?.body ?? ""
         customBodyIdeasJSON.stringValue = encodedCustomIdeas(settings.contentLibrary.customBodyBreakIdeas)
         setAdvancedDisclosure(
             row: customBodyIdeasJSONRow,
@@ -978,6 +1001,16 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         scheduleAutosave()
     }
 
+    func textDidChange(_ notification: Notification) {
+        guard !isLoadingSettings else { return }
+        saveStatusLabel.stringValue = L10n.tr("prefs.autosaveEditing")
+        scheduleAutosave()
+    }
+
+    func textDidEndEditing(_ notification: Notification) {
+        scheduleAutosave()
+    }
+
     private func scheduleAutosave() {
         guard !isLoadingSettings else { return }
         autosaveTask?.cancel()
@@ -1099,7 +1132,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     private func savedCustomIdeas() -> [RestIdea] {
         let title = customBodyTitle.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        let body = ContentSanitizer.sanitizeRichText(customBodyText.stringValue)
+        let body = ContentSanitizer.sanitizeRichText(customBodyTextEditor.string)
         guard !title.isEmpty || !body.isEmpty else { return [] }
         return [
             RestIdea(
@@ -1173,6 +1206,16 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         stack.orientation = .horizontal
         stack.spacing = 12
         stack.alignment = .centerY
+        return stack
+    }
+
+    private func multilineRow(_ title: String, _ field: NSView) -> NSStackView {
+        let label = NSTextField(labelWithString: title)
+        label.widthAnchor.constraint(equalToConstant: 220).isActive = true
+        let stack = NSStackView(views: [label, field])
+        stack.orientation = .horizontal
+        stack.spacing = 12
+        stack.alignment = .top
         return stack
     }
 
