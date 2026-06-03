@@ -5,6 +5,7 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
 stretchly_settings="${1:-/tmp/stretchly-research/app/utils/defaultSettings.js}"
+stretchly_commands="${2:-$(dirname "$stretchly_settings")/commands.js}"
 app_dir="$ROOT/dist/ShouldRest.app"
 info_plist="$app_dir/Contents/Info.plist"
 resources_dir="$app_dir/Contents/Resources/ShouldRest_shouldrest.bundle"
@@ -29,6 +30,9 @@ require_dir() {
 
 echo "==> Checking Stretchly settings coverage"
 "$ROOT/scripts/check_stretchly_settings_coverage.sh" "$stretchly_settings" "$ROOT/docs/stretchly-feature-audit.md"
+
+echo "==> Checking Stretchly command coverage"
+"$ROOT/scripts/check_stretchly_command_coverage.sh" "$stretchly_commands" "$ROOT/docs/stretchly-feature-audit.md"
 
 echo "==> Checking patch whitespace"
 git diff --check

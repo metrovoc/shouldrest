@@ -57,6 +57,7 @@ These Stretchly behaviors are design divergences, not missing features.
 | Account-based sync as a core feature. | Local JSON settings are core; sync is optional integration later. | The core app should remain local and deterministic. |
 | Electron-first implementation. | Mac-first native AppKit implementation. | Native window levels are required for a strong overlay on macOS. |
 | Stretchly's full translation catalog. | ShouldRest ships its own localization set, currently English and Simplified Chinese. | Translation breadth is brand/content rollout, not a copied rest-mechanism capability. |
+| No-argument command-line launch prints help. | No-argument launch starts the Mac menu-bar app; `help`, `--help`, and `-h` print help. | A packaged macOS app is launched through the same executable without command arguments. |
 
 ## Re-scoped, Not Removed
 
@@ -160,6 +161,23 @@ It is intended to catch gaps that are easy to miss when a behavior is exposed on
 | `breakHealthMode` | Implemented and visible in menu/debug surfaces. |
 | `openAtLogin` | Implemented through macOS ServiceManagement when bundled. |
 | `_migratedOpenAtLogin` | Not a product capability; Stretchly migration sentinel only. |
+
+## Stretchly Command Coverage
+
+This table is a mechanical coverage pass over every command in Stretchly's `app/utils/commands.js`.
+
+| Stretchly command | ShouldRest coverage |
+| --- | --- |
+| `help` | Implemented as `help`, `--help`, and `-h`. No-argument behavior intentionally launches the Mac app instead of printing help. |
+| `version` | Implemented as `version`, `--version`, and `-v`. |
+| `logs` | Implemented, with admin path hiding respected. |
+| `reset` | Implemented, with strict active-rest bypass protection. |
+| `pause` | Implemented with Stretchly-style `--duration` / `-d`, including `indefinitely`, `until-morning`, numeric minutes, `HHh`, `MMm`, and `HHhMMm`. |
+| `resume` | Implemented. |
+| `toggle` | Implemented as pause/resume toggle. |
+| `mini` | Implemented as an Eye Gate alias, including delayed start and `noskip`; readable title injection is intentionally rejected for Eye Gate. |
+| `long` | Implemented as a Body Break alias, including delayed start, `noskip`, title, and text customization. |
+| `preferences` | Implemented; opens preferences in the running or newly launched app. |
 
 ## Required Superset Surface
 
@@ -277,7 +295,7 @@ Implemented now:
 - Restore Defaults asks for confirmation, then uses product defaults without reopening first-run onboarding, matching Stretchly's restore behavior.
 - Packaged-app GUI smoke check using CoreGraphics window enumeration; verified `Welcome to ShouldRest` appears on-screen in `dist/ShouldRest.app`.
 - Automated packaged-app GUI smoke script runs the app against a temporary support directory and verifies first-run onboarding through both window enumeration and smoke-run logs.
-- Unified local release verification script covers Stretchly settings-key coverage, whitespace checks, tests, app metadata/resources, strict codesign, first-run GUI smoke, ad-hoc DMG creation, and DMG checksum verification.
+- Unified local release verification script covers Stretchly settings-key and command coverage, whitespace checks, tests, app metadata/resources, strict codesign, first-run GUI smoke, ad-hoc DMG creation, and DMG checksum verification.
 - Floating/all-spaces presentation for onboarding, preferences, and debug utility windows.
 - AppKit theme application for system/light/dark preferences, admin preferences message display, and optional current time during Body Break.
 - Stretchly-compatible menu bar visibility preference: visible by default, hideable for CLI/URL-managed setups.
