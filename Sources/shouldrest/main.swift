@@ -134,7 +134,6 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private let soundPlayer = SoundPlayer()
     private let globalShortcuts = GlobalShortcutManager()
     private let activeBreakShortcuts = GlobalShortcutManager(signature: GlobalShortcutManager.signature("SRAB"))
-    private let emergencyEscapeShortcuts = GlobalShortcutManager(signature: GlobalShortcutManager.signature("SREE"))
     private let updateChecker = UpdateChecker()
     private var emergencyOverrideCoordinator = EmergencyOverrideCoordinator()
     private var preferencesWindowController: PreferencesWindowController?
@@ -156,7 +155,6 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private var activeBreakShortcutValue: String?
     private var activeBreakShortcutRegistered = false
     private var emergencyEscapeShortcutSessionID: UUID?
-    private var emergencyEscapeShortcutRegistered = false
     private var menuBarImageCache: [String: NSImage] = [:]
     private var currentMenuBarImageKey: String?
     private var lastGlobalShortcutFailureKey: String?
@@ -1015,38 +1013,15 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        guard emergencyEscapeShortcutSessionID != active.id else {
-            return
-        }
-
-        emergencyEscapeShortcuts.unregisterAll()
+        guard emergencyEscapeShortcutSessionID != active.id else { return }
         emergencyEscapeShortcutSessionID = active.id
-        emergencyEscapeShortcutRegistered = emergencyEscapeShortcuts.register(shortcut: "Escape") { [weak self] in
-            Task { @MainActor in
-                self?.performEmergencyOverrideEyeGate()
-            }
-        }
-        if emergencyEscapeShortcutRegistered {
-            logger.log("Emergency Escape shortcut registered for Eye Gate")
-        } else {
-            logger.log("Emergency Escape shortcut unavailable for Eye Gate")
-        }
+        logger.log("Emergency Escape is routed by the overlay for Eye Gate")
     }
 
     private func unregisterEmergencyEscapeShortcut() {
-        guard emergencyEscapeShortcutSessionID != nil ||
-              emergencyEscapeShortcutRegistered else {
-            return
-        }
-        let wasRegistered = emergencyEscapeShortcutRegistered
-        emergencyEscapeShortcuts.unregisterAll()
+        guard emergencyEscapeShortcutSessionID != nil else { return }
         emergencyEscapeShortcutSessionID = nil
-        emergencyEscapeShortcutRegistered = false
-        if wasRegistered {
-            logger.log("Emergency Escape shortcut unregistered")
-        } else {
-            logger.log("Emergency Escape shortcut state cleared")
-        }
+        logger.log("Emergency Escape overlay routing state cleared")
     }
 
     @objc private func resumeBreaks() {

@@ -32,11 +32,6 @@ struct EmergencyOverrideCoordinator {
             return .unavailable
         }
 
-        guard Self.effectiveConfirmationSteps(policy) > 0 else {
-            clear()
-            return .complete
-        }
-
         if armedSessionID == session.id {
             clear()
             return .complete
@@ -81,7 +76,4 @@ struct EmergencyOverrideCoordinator {
         }
     }
 
-    private static func effectiveConfirmationSteps(_ policy: EmergencyOverridePolicy) -> Int {
-        min(1, max(0, policy.confirmationSteps))
-    }
 }

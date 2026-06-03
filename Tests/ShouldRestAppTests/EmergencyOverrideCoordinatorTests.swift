@@ -6,21 +6,26 @@ import XCTest
 final class EmergencyOverrideCoordinatorTests: XCTestCase {
     private let start = Date(timeIntervalSinceReferenceDate: 1_000)
 
-    func testRequestCompletesImmediatelyWithoutArmingOrWaiting() {
+    func testEnabledEmergencyRequiresSecondRequestEvenWhenLegacyStepsAreZero() {
         let session = eyeGateSession()
         let policy = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 0, minimumHoldDuration: 3)
         var coordinator = EmergencyOverrideCoordinator()
 
         XCTAssertEqual(
             coordinator.request(session: session, policy: policy, now: start.addingTimeInterval(1)),
-            .complete
+            .waiting(remainingSeconds: 0)
         )
-        XCTAssertFalse(coordinator.isArmed(for: session))
+        XCTAssertTrue(coordinator.isArmed(for: session))
         XCTAssertNil(coordinator.completionIfArmedAndReady(
             session: session,
             policy: policy,
             now: start.addingTimeInterval(3)
         ))
+        XCTAssertEqual(
+            coordinator.request(session: session, policy: policy, now: start.addingTimeInterval(3)),
+            .complete
+        )
+        XCTAssertFalse(coordinator.isArmed(for: session))
     }
 
     func testSecondRequestCompletesInternalOverlayConfirmationIgnoringLegacyExtraStepsAndHold() {
@@ -96,13 +101,14 @@ final class EmergencyOverrideCoordinatorTests: XCTestCase {
 
         XCTAssertEqual(
             coordinator.request(session: session, policy: policy, now: start.addingTimeInterval(18)),
-            .complete
+            .waiting(remainingSeconds: 0)
         )
-        XCTAssertFalse(coordinator.isArmed(for: session))
+        XCTAssertTrue(coordinator.isArmed(for: session))
         XCTAssertEqual(
             coordinator.request(session: session, policy: policy, now: start.addingTimeInterval(20)),
             .unavailable
         )
+        XCTAssertFalse(coordinator.isArmed(for: session))
     }
 
     func testDisabledPolicyCannotLeaveArmedState() {
@@ -113,9 +119,9 @@ final class EmergencyOverrideCoordinatorTests: XCTestCase {
 
         XCTAssertEqual(
             coordinator.request(session: session, policy: enabled, now: start.addingTimeInterval(1)),
-            .complete
+            .waiting(remainingSeconds: 0)
         )
-        XCTAssertFalse(coordinator.isArmed(for: session))
+        XCTAssertTrue(coordinator.isArmed(for: session))
 
         XCTAssertEqual(
             coordinator.request(session: session, policy: disabled, now: start.addingTimeInterval(1)),
