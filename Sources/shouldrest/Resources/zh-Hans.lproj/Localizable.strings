@@ -66,7 +66,7 @@
 "overlay.emergencyOverride" = "紧急 · Esc";
 "overlay.emergencyOverrideIn" = "%d 秒后紧急 · Esc";
 "overlay.emergencyOverrideArmed" = "已触发 · %d 秒";
-"overlay.emergencyOverrideHelp" = "只在真正中断时使用。按 Esc 或点击一次；会计为未完成的护眼休息。";
+"overlay.emergencyOverrideHelp" = "只在真正中断时使用。护眼休息期间，Esc 由覆盖层直接监听，并计为未完成的护眼休息。";
 "overlay.bodyPostpone" = "推迟";
 "overlay.bodySkip" = "跳过";
 "overlay.bodyFinish" = "完成";
@@ -261,7 +261,7 @@
 "onboarding.eyeFeatureTitle" = "短而频繁的护眼休息";
 "onboarding.eyeFeatureBody" = "短暂不透明的覆盖层，减少 20 秒休息被忽视或习惯性跳过。";
 "onboarding.emergencyFeatureTitle" = "紧急覆盖不再锁死";
-"onboarding.emergencyFeatureBody" = "等待时间结束后，本地触发一次即可退出，并计为未完成的护眼休息。";
+"onboarding.emergencyFeatureBody" = "逃生入口属于覆盖层自身：等待时间结束后，Esc 或淡红色紧急入口可退出，不再打开单独确认窗口。";
 "onboarding.bodyFeatureTitle" = "活动休息可配置";
 "onboarding.bodyFeatureBody" = "更长的活动休息支持推迟、图片、显示器规则和手动完成。";
 "onboarding.learnMore" = "了解更多";

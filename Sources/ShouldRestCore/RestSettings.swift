@@ -83,6 +83,13 @@ public struct RestSettings: Codable, Equatable, Sendable {
         copy.eyeGate.isEnabled = true
         return copy
     }
+
+    public func normalizedForCurrentDesign() -> RestSettings {
+        var copy = enforcingAtLeastOneEnabledRest()
+        copy.eyeGate.emergencyOverride.confirmationSteps = 0
+        copy.bodyBreak.emergencyOverride.confirmationSteps = 0
+        return copy
+    }
 }
 
 public struct RestRule: Codable, Equatable, Sendable {

@@ -135,7 +135,8 @@ struct ParsedShortcut: Equatable {
         "5": 23, "=": 24, "9": 25, "7": 26, "-": 27, "8": 28, "0": 29,
         "]": 30, "o": 31, "u": 32, "[": 33, "i": 34, "p": 35, "l": 37,
         "j": 38, "'": 39, "k": 40, ";": 41, "\\": 42, ",": 43, "/": 44,
-        "n": 45, "m": 46, ".": 47, "`": 50, "space": 49
+        "n": 45, "m": 46, ".": 47, "`": 50, "space": 49,
+        "esc": kVK_Escape, "escape": kVK_Escape
     ]
 }
 
@@ -155,6 +156,8 @@ enum ShortcutDisplay {
                     return "⇧"
                 case "space":
                     return "Space"
+                case "esc", "escape":
+                    return "Esc"
                 default:
                     return part.uppercased()
                 }

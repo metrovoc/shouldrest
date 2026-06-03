@@ -589,6 +589,40 @@ final class RestEngineTests: XCTestCase {
         XCTAssertFalse(loaded.bodyBreak.isEnabled)
     }
 
+    func testSettingsStoreMigratesLegacyEmergencyConfirmationSteps() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let url = directory.appendingPathComponent("settings.json")
+        let store = SettingsStore(fileURL: url)
+        var legacy = RestSettings.defaults
+        legacy.eyeGate.emergencyOverride = EmergencyOverridePolicy(
+            isEnabled: true,
+            confirmationSteps: 3,
+            minimumHoldDuration: 3
+        )
+        legacy.bodyBreak.emergencyOverride = EmergencyOverridePolicy(
+            isEnabled: true,
+            confirmationSteps: 2,
+            minimumHoldDuration: 0
+        )
+
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let rawData = try JSONEncoder().encode(legacy)
+        try rawData.write(to: url, options: [.atomic])
+
+        let loaded = try store.load()
+
+        XCTAssertEqual(loaded.eyeGate.emergencyOverride.confirmationSteps, 0)
+        XCTAssertEqual(loaded.bodyBreak.emergencyOverride.confirmationSteps, 0)
+
+        try store.save(legacy)
+        let savedData = try Data(contentsOf: url)
+        let savedRaw = try JSONDecoder().decode(RestSettings.self, from: savedData)
+
+        XCTAssertEqual(savedRaw.eyeGate.emergencyOverride.confirmationSteps, 0)
+        XCTAssertEqual(savedRaw.bodyBreak.emergencyOverride.confirmationSteps, 0)
+    }
+
     func testEnforcementProfileDecodesLegacyDisplaySettings() throws {
         let legacyJSON = #"""
         {

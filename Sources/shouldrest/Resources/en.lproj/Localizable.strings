@@ -66,7 +66,7 @@
 "overlay.emergencyOverride" = "Emergency · Esc";
 "overlay.emergencyOverrideIn" = "Emergency in %ds · Esc";
 "overlay.emergencyOverrideArmed" = "Armed · %ds";
-"overlay.emergencyOverrideHelp" = "Use only for a genuine interruption. Press Esc or click once; it counts as a missed Eye Gate.";
+"overlay.emergencyOverrideHelp" = "Use only for a genuine interruption. During Eye Gate, Esc is listened for inside the overlay and counts as a missed Eye Gate.";
 "overlay.bodyPostpone" = "Postpone";
 "overlay.bodySkip" = "Skip";
 "overlay.bodyFinish" = "Finish";
@@ -261,7 +261,7 @@
 "onboarding.eyeFeatureTitle" = "Short, frequent Eye Gates";
 "onboarding.eyeFeatureBody" = "Brief opaque breaks protect the habit from skip muscle memory and visual drift.";
 "onboarding.emergencyFeatureTitle" = "Emergency without deadlock";
-"onboarding.emergencyFeatureBody" = "After the hold time, one local trigger exits and counts as a missed Eye Gate.";
+"onboarding.emergencyFeatureBody" = "The overlay owns the escape hatch: Esc or the dim red Emergency affordance exits after the hold time, without a separate confirmation window.";
 "onboarding.bodyFeatureTitle" = "Configurable Body Breaks";
 "onboarding.bodyFeatureBody" = "Longer movement breaks can use postpones, images, display rules, and manual finish.";
 "onboarding.learnMore" = "Learn More";

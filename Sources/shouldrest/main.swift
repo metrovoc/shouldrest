@@ -104,6 +104,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private let soundPlayer = SoundPlayer()
     private let globalShortcuts = GlobalShortcutManager()
     private let activeBreakShortcuts = GlobalShortcutManager(signature: GlobalShortcutManager.signature("SRAB"))
+    private let emergencyEscapeShortcuts = GlobalShortcutManager(signature: GlobalShortcutManager.signature("SREE"))
     private let updateChecker = UpdateChecker()
     private var emergencyOverrideCoordinator = EmergencyOverrideCoordinator()
     private var preferencesWindowController: PreferencesWindowController?
@@ -124,6 +125,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private var activeBreakShortcutSessionID: UUID?
     private var activeBreakShortcutValue: String?
     private var activeBreakShortcutRegistered = false
+    private var emergencyEscapeShortcutSessionID: UUID?
+    private var emergencyEscapeShortcutRegistered = false
     private var lastGlobalShortcutFailureKey: String?
     private var lastActiveBreakShortcutFailureKey: String?
     private var automationTasks: [UUID: Task<Void, Never>] = [:]
@@ -184,6 +187,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         tickTimer?.invalidate()
         updateCheckTimer?.invalidate()
         unregisterActiveBreakShortcut()
+        unregisterEmergencyEscapeShortcut()
         overlayController.dismiss()
         logger.log("Application terminated")
     }
@@ -244,6 +248,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             }
             if case .deferred(let kind, let reason) = engine.deferActiveForAppExclusion(now: now, context: currentContext()) {
                 unregisterActiveBreakShortcut()
+                unregisterEmergencyEscapeShortcut()
                 overlayController.dismiss()
                 emergencyOverrideCoordinator.clear(sessionID: active.id)
                 manualAwaitingSessionID = nil
@@ -256,6 +261,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 return
             }
             refreshActiveBreakShortcut()
+            refreshEmergencyEscapeShortcut()
             let elapsed = now.timeIntervalSince(active.startedAt)
             let shouldAwaitManualFinish = elapsed >= active.duration && active.manualFinishEnabled
             overlayController.update(
@@ -280,6 +286,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 playRestSound(settings.rule(for: active.kind).finishSound)
                 _ = engine.completeActive(now: now, reason: .completed)
                 unregisterActiveBreakShortcut()
+                unregisterEmergencyEscapeShortcut()
                 overlayController.dismiss()
                 emergencyOverrideCoordinator.clear(sessionID: active.id)
                 manualAwaitingSessionID = nil
@@ -294,6 +301,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
         emergencyOverrideCoordinator.clear()
         unregisterActiveBreakShortcut()
+        unregisterEmergencyEscapeShortcut()
         let expiredPause = engine.state.pause.flatMap { pause in
             pause.isActive(at: now) ? nil : pause
         }
@@ -319,6 +327,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 bodyActions: overlayBodyActions(for: session, now: now)
             )
             refreshActiveBreakShortcut()
+            refreshEmergencyEscapeShortcut()
             logger.log("Started \(session.kind.rawValue)")
         case .notificationDue(let kind):
             showNotification(for: kind)
@@ -571,6 +580,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 bodyActions: nil
             )
             refreshActiveBreakShortcut()
+            refreshEmergencyEscapeShortcut()
             logger.log("Manual Eye Gate started")
         }
         rebuildMenu()
@@ -598,6 +608,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 bodyActions: overlayBodyActions(for: session, now: now)
             )
             refreshActiveBreakShortcut()
+            refreshEmergencyEscapeShortcut()
             logger.log("Manual Body Break started")
         }
         rebuildMenu()
@@ -617,6 +628,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         let active = engine.state.activeSession
         if case .postponed = engine.postponeActive() {
             unregisterActiveBreakShortcut()
+            unregisterEmergencyEscapeShortcut()
             overlayController.dismiss()
             if let active {
                 emergencyOverrideCoordinator.clear(sessionID: active.id)
@@ -637,6 +649,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             playRestSound(settings.rule(for: active.kind).finishSound)
             logger.log("Manually finished \(active.kind.rawValue)")
             unregisterActiveBreakShortcut()
+            unregisterEmergencyEscapeShortcut()
             clearActiveBodyBreakIdea(for: active)
             overlayController.dismiss()
             emergencyOverrideCoordinator.clear(sessionID: active.id)
@@ -654,6 +667,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
         if case .completed = engine.skipActive() {
             unregisterActiveBreakShortcut()
+            unregisterEmergencyEscapeShortcut()
             clearActiveBodyBreakIdea(for: active)
             overlayController.dismiss()
             emergencyOverrideCoordinator.clear(sessionID: active.id)
@@ -680,12 +694,14 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
         if case .postponed = engine.postponeActive(now: now) {
             unregisterActiveBreakShortcut()
+            unregisterEmergencyEscapeShortcut()
             overlayController.dismiss()
             emergencyOverrideCoordinator.clear(sessionID: active.id)
             clearActiveBodyBreakIdea(for: active)
             logger.log("Body Break postponed by end shortcut")
         } else if case .completed = engine.skipActive(now: now) {
             unregisterActiveBreakShortcut()
+            unregisterEmergencyEscapeShortcut()
             overlayController.dismiss()
             emergencyOverrideCoordinator.clear(sessionID: active.id)
             manualAwaitingSessionID = nil
@@ -755,6 +771,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         )
         if case .completed(let completedSession, _) = result {
             playRestSound(settings.rule(for: completedSession.kind).finishSound)
+            unregisterActiveBreakShortcut()
+            unregisterEmergencyEscapeShortcut()
             overlayController.dismiss()
             emergencyOverrideCoordinator.clear(sessionID: session.id)
             manualAwaitingSessionID = nil
@@ -832,6 +850,48 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    private func refreshEmergencyEscapeShortcut() {
+        guard let active = engine.state.activeSession,
+              active.kind == .eyeGate,
+              settings.eyeGate.emergencyOverride.isEnabled else {
+            unregisterEmergencyEscapeShortcut()
+            return
+        }
+
+        guard emergencyEscapeShortcutSessionID != active.id else {
+            return
+        }
+
+        emergencyEscapeShortcuts.unregisterAll()
+        emergencyEscapeShortcutSessionID = active.id
+        emergencyEscapeShortcutRegistered = emergencyEscapeShortcuts.register(shortcut: "Escape") { [weak self] in
+            Task { @MainActor in
+                self?.performEmergencyOverrideEyeGate()
+            }
+        }
+        if emergencyEscapeShortcutRegistered {
+            logger.log("Emergency Escape shortcut registered for Eye Gate")
+        } else {
+            logger.log("Emergency Escape shortcut unavailable for Eye Gate")
+        }
+    }
+
+    private func unregisterEmergencyEscapeShortcut() {
+        guard emergencyEscapeShortcutSessionID != nil ||
+              emergencyEscapeShortcutRegistered else {
+            return
+        }
+        let wasRegistered = emergencyEscapeShortcutRegistered
+        emergencyEscapeShortcuts.unregisterAll()
+        emergencyEscapeShortcutSessionID = nil
+        emergencyEscapeShortcutRegistered = false
+        if wasRegistered {
+            logger.log("Emergency Escape shortcut unregistered")
+        } else {
+            logger.log("Emergency Escape shortcut state cleared")
+        }
+    }
+
     @objc private func resumeBreaks() {
         _ = engine.resume()
         logger.log("Breaks resumed")
@@ -866,6 +926,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         let active = engine.state.activeSession
         if case .paused = engine.pause(for: duration, reason: reason) {
             unregisterActiveBreakShortcut()
+            unregisterEmergencyEscapeShortcut()
             overlayController.dismiss()
             if let active {
                 clearActiveBodyBreakIdea(for: active)
@@ -887,6 +948,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
         _ = engine.reset()
         unregisterActiveBreakShortcut()
+        unregisterEmergencyEscapeShortcut()
         overlayController.dismiss()
         manualAwaitingSessionID = nil
         pendingBodyBreakIdea = nil
@@ -1024,6 +1086,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         applyMenuBarVisibility()
         configureGlobalShortcuts()
         refreshActiveBreakShortcut()
+        refreshEmergencyEscapeShortcut()
         scheduleAutomaticUpdateCheck()
         do {
             try settingsStore.save(nextSettings)
@@ -1237,6 +1300,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 pausedForSuspendOrLock = true
             }
             unregisterActiveBreakShortcut()
+            unregisterEmergencyEscapeShortcut()
             overlayController.dismiss()
             logger.log("System pause detected")
         } else {
@@ -1256,6 +1320,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         let result = engine.evaluate(now: now, context: RestContext(idleDuration: idleDuration))
         handleEngineResult(result, now: now)
         refreshActiveBreakShortcut()
+        refreshEmergencyEscapeShortcut()
         logger.log("System resume detected idleDuration=\(idleDuration)")
         rebuildMenu()
     }

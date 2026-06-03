@@ -24,6 +24,14 @@ final class GlobalShortcutParsingTests: XCTestCase {
         XCTAssertEqual(shortcut.modifiers, UInt32(controlKey | optionKey))
     }
 
+    func testParsesEscapeForEmergencyOverlayFallback() throws {
+        let shortcut = try XCTUnwrap(ParsedShortcut("Escape"))
+
+        XCTAssertEqual(shortcut.keyCode, UInt32(kVK_Escape))
+        XCTAssertEqual(shortcut.modifiers, 0)
+        XCTAssertEqual(ShortcutDisplay.string("Escape"), "Esc")
+    }
+
     func testRejectsUnknownKeysAndModifiers() {
         XCTAssertNil(ParsedShortcut(""))
         XCTAssertNil(ParsedShortcut("CmdOrCtrl"))

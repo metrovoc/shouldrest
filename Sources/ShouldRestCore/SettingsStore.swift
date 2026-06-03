@@ -17,13 +17,13 @@ public struct SettingsStore: Sendable {
             return .defaults
         }
         let data = try Data(contentsOf: fileURL)
-        return try decoder.decode(RestSettings.self, from: data).enforcingAtLeastOneEnabledRest()
+        return try decoder.decode(RestSettings.self, from: data).normalizedForCurrentDesign()
     }
 
     public func save(_ settings: RestSettings) throws {
         let directory = fileURL.deletingLastPathComponent()
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let data = try encoder.encode(settings.enforcingAtLeastOneEnabledRest())
+        let data = try encoder.encode(settings.normalizedForCurrentDesign())
         try data.write(to: fileURL, options: [.atomic])
     }
 }
