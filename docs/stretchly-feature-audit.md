@@ -277,6 +277,7 @@ Implemented now:
 - Restore Defaults asks for confirmation, then uses product defaults without reopening first-run onboarding, matching Stretchly's restore behavior.
 - Packaged-app GUI smoke check using CoreGraphics window enumeration; verified `Welcome to ShouldRest` appears on-screen in `dist/ShouldRest.app`.
 - Automated packaged-app GUI smoke script runs the app against a temporary support directory and verifies first-run onboarding through both window enumeration and smoke-run logs.
+- Unified local release verification script covers Stretchly settings-key coverage, whitespace checks, tests, app metadata/resources, strict codesign, first-run GUI smoke, ad-hoc DMG creation, and DMG checksum verification.
 - Floating/all-spaces presentation for onboarding, preferences, and debug utility windows.
 - AppKit theme application for system/light/dark preferences, admin preferences message display, and optional current time during Body Break.
 - Stretchly-compatible menu bar visibility preference: visible by default, hideable for CLI/URL-managed setups.

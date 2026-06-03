@@ -1,16 +1,12 @@
 # Release Checklist
 
-This checklist covers the remaining distribution work after the local package build.
+This checklist covers local verification plus the remaining Developer ID distribution work.
 
-## Local Build
+## Local Verification
 
-- Run `scripts/build_app.sh`.
-- Confirm `dist/ShouldRest.app/Contents/Info.plist` contains the `shouldrest://` URL scheme.
-- Confirm `dist/ShouldRest.app/Contents/Resources/ShouldRest_shouldrest.bundle` contains localization resources.
-- Confirm `codesign --verify --deep --strict dist/ShouldRest.app` passes.
-- Run `scripts/check_stretchly_settings_coverage.sh /path/to/stretchly/app/utils/defaultSettings.js`.
-- Run `swift test`.
-- Run `scripts/gui_smoke.sh dist/ShouldRest.app` to verify first-run onboarding against a temporary support directory.
+- Run `scripts/verify_release_local.sh /path/to/stretchly/app/utils/defaultSettings.js`.
+- This verifies Stretchly settings-key coverage, `git diff --check`, `swift test`, app build, `shouldrest://` URL scheme, bundle identifier, localization and sound resources, strict app codesign, first-run GUI smoke against a temporary support directory, ad-hoc DMG creation, and `hdiutil verify`.
+- On machines without Developer ID credentials, the script uses `ALLOW_ADHOC=1` by default for the local DMG dry run.
 
 ## Manual GUI Smoke
 
