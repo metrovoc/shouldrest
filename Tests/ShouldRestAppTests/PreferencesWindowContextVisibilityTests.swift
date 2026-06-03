@@ -147,6 +147,60 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.advancedRulesJSON")))
     }
 
+    func testEyeOnlyModeHidesBodyAppExclusionTarget() throws {
+        var settings = RestSettings.defaults
+        settings.eyeGate.isEnabled = true
+        settings.bodyBreak.isEnabled = false
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "eye-only",
+                name: "Calls",
+                matchTerms: ["zoom"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.eyeGate, .bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+
+        XCTAssertFalse(try view(withIdentifier: "prefs.appExclusionAppliesEye", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.appExclusionAppliesBody", in: contentView).isHidden)
+
+        let visibleTexts = visibleTexts(in: contentView)
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.appliesEye")))
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.appliesBody")))
+    }
+
+    func testBodyOnlyModeHidesEyeAppExclusionTarget() throws {
+        var settings = RestSettings.defaults
+        settings.eyeGate.isEnabled = false
+        settings.bodyBreak.isEnabled = true
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "body-only",
+                name: "Deep work",
+                matchTerms: ["xcode"],
+                mode: .resumeOnlyWhenMatched,
+                appliesTo: [.eyeGate, .bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+
+        XCTAssertTrue(try view(withIdentifier: "prefs.appExclusionAppliesEye", in: contentView).isHidden)
+        XCTAssertFalse(try view(withIdentifier: "prefs.appExclusionAppliesBody", in: contentView).isHidden)
+
+        let visibleTexts = visibleTexts(in: contentView)
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.appliesEye")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.appliesBody")))
+    }
+
     private func selectContextTab(in view: NSView) throws {
         let tabView = try XCTUnwrap(firstTabView(in: view))
         tabView.selectTabViewItem(withIdentifier: L10n.tr("prefs.tabContext"))

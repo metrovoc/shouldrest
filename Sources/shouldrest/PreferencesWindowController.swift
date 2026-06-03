@@ -1485,15 +1485,20 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             appExclusionNameRow, appExclusionTermsRow, appExclusionModeRow
         ].forEach { $0?.isHidden = !exclusionEnabled }
         [
-            appExclusionAppliesEye, appExclusionAppliesBody, appExclusionsAdvancedButton
+            appExclusionsAdvancedButton
         ].forEach { $0.isHidden = !exclusionEnabled }
+        let appExclusionAppliesEyeVisible = exclusionEnabled && eyeGateEnabled
+        let appExclusionAppliesBodyVisible = exclusionEnabled && bodyBreakEnabled
+        appExclusionAppliesEye.isHidden = !appExclusionAppliesEyeVisible
+        appExclusionAppliesBody.isHidden = !appExclusionAppliesBodyVisible
         if !exclusionEnabled {
             setAdvancedDisclosure(row: appExclusionsJSONRow, button: appExclusionsAdvancedButton, expanded: false)
         }
         [
-            appExclusionName, appExclusionTerms, appExclusionMode,
-            appExclusionAppliesEye, appExclusionAppliesBody
+            appExclusionName, appExclusionTerms, appExclusionMode
         ].forEach { $0.isEnabled = exclusionEnabled }
+        appExclusionAppliesEye.isEnabled = appExclusionAppliesEyeVisible
+        appExclusionAppliesBody.isEnabled = appExclusionAppliesBodyVisible
 
         trayStyle.isEnabled = true
         updateUpdatePreferencesVisibility()
