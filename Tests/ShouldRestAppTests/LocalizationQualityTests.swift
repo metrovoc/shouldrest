@@ -57,6 +57,20 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(L10n.tr("notification.resetBlocked").contains("严格"))
     }
 
+    func testRestoreDefaultsConfirmationNamesTheDestructiveAction() {
+        defer { L10n.languageOverride = nil }
+
+        L10n.languageOverride = "en"
+        XCTAssertEqual(L10n.tr("prefs.restoreDefaultsContinue"), "Restore Defaults")
+        XCTAssertTrue(L10n.tr("prefs.restoreDefaultsWarning").contains("current preferences"))
+        XCTAssertFalse(L10n.tr("prefs.restoreDefaultsContinue").localizedCaseInsensitiveContains("continue"))
+
+        L10n.languageOverride = "zh-Hans"
+        XCTAssertEqual(L10n.tr("prefs.restoreDefaultsContinue"), "恢复默认")
+        XCTAssertTrue(L10n.tr("prefs.restoreDefaultsWarning").contains("当前偏好设置"))
+        XCTAssertFalse(L10n.tr("prefs.restoreDefaultsContinue").contains("继续"))
+    }
+
     private func simplifiedChineseLocalizedValues() throws -> [String] {
         try localizedValues(language: "zh-Hans")
     }

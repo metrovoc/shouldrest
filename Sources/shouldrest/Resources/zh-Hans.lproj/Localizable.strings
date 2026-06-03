@@ -243,8 +243,8 @@
 "prefs.unit.percent" = "%";
 "prefs.unit.hour" = "点";
 "prefs.restoreDefaults" = "恢复默认";
-"prefs.restoreDefaultsWarning" = "这会恢复应用默认值，并丢失所有当前设置。";
-"prefs.restoreDefaultsContinue" = "继续";
+"prefs.restoreDefaultsWarning" = "这会用应用默认值替换当前偏好设置。欢迎窗口仍会保持已完成。";
+"prefs.restoreDefaultsContinue" = "恢复默认";
 "prefs.restoreDefaultsCancel" = "取消";
 "prefs.invalidJSONTitle" = "JSON 无效";
 "prefs.invalidJSONBody" = "%@：%@";

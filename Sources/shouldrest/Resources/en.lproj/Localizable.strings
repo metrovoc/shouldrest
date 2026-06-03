@@ -243,8 +243,8 @@
 "prefs.unit.percent" = "%";
 "prefs.unit.hour" = "hour";
 "prefs.restoreDefaults" = "Restore Defaults";
-"prefs.restoreDefaultsWarning" = "This will restore app defaults and all your settings will be lost.";
-"prefs.restoreDefaultsContinue" = "Continue";
+"prefs.restoreDefaultsWarning" = "This will replace your current preferences with app defaults. The welcome window will stay completed.";
+"prefs.restoreDefaultsContinue" = "Restore Defaults";
 "prefs.restoreDefaultsCancel" = "Cancel";
 "prefs.invalidJSONTitle" = "Invalid JSON";
 "prefs.invalidJSONBody" = "%@: %@";
