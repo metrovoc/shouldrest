@@ -602,7 +602,7 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
         openAtLogin: false,
         checkForUpdates: true,
         notifyNewVersion: true,
-        updateFeedURL: "https://api.github.com/repos/tovkaic/shouldrest/releases/latest",
+        updateFeedURL: "https://api.github.com/repos/metrovoc/shouldrest/releases/latest",
         hasCompletedOnboarding: false,
         showOnboardingOnNextLaunch: false,
         pauseUntilMorningHour: defaultPauseUntilMorningHour,
