@@ -274,19 +274,20 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     private func rebuildMenu() {
         guard let item = statusItem else { return }
-        let title = menuBarTitle()
+        let now = Date()
+        let title = MenuStatusPresenter.menuBarTitle(state: engine.state, settings: settings, now: now)
         item.length = title.isEmpty ? NSStatusItem.squareLength : NSStatusItem.variableLength
         item.button?.image = menuBarImage()
         item.button?.imagePosition = title.isEmpty ? .imageOnly : .imageLeading
         item.button?.title = title
-        item.button?.toolTip = MenuStatusPresenter.tooltip(state: engine.state, settings: settings)
+        item.button?.toolTip = MenuStatusPresenter.tooltip(state: engine.state, settings: settings, now: now)
 
         let menu = NSMenu()
         if !settings.admin.disableAppUpdateFeatures, latestReleaseURL != nil {
             menu.addItem(actionItem(L10n.tr("menu.downloadLatest"), #selector(openLatestRelease)))
             menu.addItem(.separator())
         }
-        for line in MenuStatusPresenter.lines(state: engine.state, settings: settings) {
+        for line in MenuStatusPresenter.lines(state: engine.state, settings: settings, now: now) {
             menu.addItem(disabledItem(line))
         }
         if settings.presentation.breakHealthMode {
@@ -379,53 +380,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         item.menu = menu
     }
 
-    private func menuBarTitle() -> String {
-        switch settings.presentation.trayIconStyle {
-        case .default:
-            return ""
-        case .appName:
-            break
-        case .timeToBreak, .progress:
-            break
-        }
-
-        if engine.state.activeSession != nil {
-            return "Rest"
-        }
-        if engine.state.pause != nil {
-            return "Paused"
-        }
-        if engine.state.activeDeferral != nil {
-            return L10n.tr("status.deferredShort")
-        }
-        guard let scheduled = engine.state.scheduled else {
-            return L10n.tr("app.name")
-        }
-        let seconds = max(0, Int(scheduled.dueAt.timeIntervalSinceNow))
-        switch settings.presentation.trayIconStyle {
-        case .default:
-            return ""
-        case .appName:
-            return L10n.tr("app.name")
-        case .timeToBreak:
-            return seconds >= 60 ? "\(seconds / 60)m" : "\(seconds)s"
-        case .progress:
-            return scheduled.kind == .eyeGate ? "Eye \(seconds / 60)m" : "Body \(seconds / 60)m"
-        }
-    }
-
     private func menuBarImage() -> NSImage? {
-        if let active = engine.state.activeSession {
-            return active.kind == .bodyBreak ? symbolMenuBarImage("figure.walk") : symbolMenuBarImage("timer")
-        } else if engine.state.pause != nil {
-            return symbolMenuBarImage("pause.circle")
-        } else if engine.state.activeDeferral != nil {
-            return symbolMenuBarImage("clock")
-        } else if engine.state.scheduled?.kind == .bodyBreak {
-            return symbolMenuBarImage("figure.walk")
-        }
-
-        return symbolMenuBarImage("timer")
+        symbolMenuBarImage(MenuStatusPresenter.menuBarSymbolName(state: engine.state))
     }
 
     private func symbolMenuBarImage(_ symbolName: String) -> NSImage? {
