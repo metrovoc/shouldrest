@@ -1237,7 +1237,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         register(L10n.tr("prefs.skipToBodyBreak"), settings.shortcuts.skipToNextBodyBreak) { [weak self] in
             self?.takeBodyBreakNow()
         }
-        register(L10n.tr("prefs.emergencyEyeGate"), settings.shortcuts.emergencyEyeGateOverride ?? "") { [weak self] in
+        register(L10n.tr("prefs.emergencyEyeGate"), settings.shortcuts.resolvedEmergencyEyeGateOverride) { [weak self] in
             self?.emergencyOverrideEyeGate()
         }
         register(L10n.tr("prefs.reset"), settings.shortcuts.reset) { [weak self] in
@@ -1888,6 +1888,10 @@ final class RestOverlayView: NSView {
         if !emergencyCancelButton.isHidden,
            emergencyCancelButton.frame.insetBy(dx: -14, dy: -10).contains(point) {
             return .cancel
+        }
+        if isEmergencyConfirming,
+           bounds.contains(point) {
+            return .emergency
         }
         if !emergencyButton.isHidden,
            emergencyActivationFrame().contains(point) {

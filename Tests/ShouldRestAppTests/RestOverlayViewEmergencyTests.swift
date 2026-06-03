@@ -45,6 +45,18 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertTrue(view.hitTest(NSPoint(x: panel.frame.midX, y: panel.frame.midY)) === view)
     }
 
+    func testEmergencyConfirmationTurnsWholeOverlayIntoConfirmSurface() {
+        let view = configuredEyeGateOverlay(confirmationSteps: 2)
+
+        view.layoutSubtreeIfNeeded()
+        XCTAssertFalse(view.hitTest(NSPoint(x: 400, y: 300)) === view)
+
+        XCTAssertEqual(view.advanceEmergencyOverrideConfirmationIfAvailable(), .waitingForConfirmation)
+        view.layoutSubtreeIfNeeded()
+
+        XCTAssertTrue(view.hitTest(NSPoint(x: 400, y: 300)) === view)
+    }
+
     func testEmergencyClickAreaRoutesToOverlayView() {
         let view = configuredEyeGateOverlay(confirmationSteps: 2)
 

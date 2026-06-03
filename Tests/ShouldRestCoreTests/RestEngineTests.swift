@@ -535,10 +535,21 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(ShortcutSettings.defaultEndBodyBreakShortcut, "CmdOrCtrl+X")
         XCTAssertEqual(ShortcutSettings.defaults.endBodyBreak, ShortcutSettings.defaultEndBodyBreakShortcut)
         XCTAssertEqual(ShortcutSettings.defaults.resolvedEndBodyBreakShortcut, ShortcutSettings.defaultEndBodyBreakShortcut)
+        XCTAssertEqual(ShortcutSettings.defaultEmergencyEyeGateOverride, "CmdOrCtrl+Option+E")
+        XCTAssertEqual(
+            ShortcutSettings.defaults.emergencyEyeGateOverride,
+            ShortcutSettings.defaultEmergencyEyeGateOverride
+        )
+        XCTAssertEqual(
+            ShortcutSettings.defaults.resolvedEmergencyEyeGateOverride,
+            ShortcutSettings.defaultEmergencyEyeGateOverride
+        )
 
         var disabled = ShortcutSettings.defaults
         disabled.endBodyBreak = ""
+        disabled.emergencyEyeGateOverride = ""
         XCTAssertEqual(disabled.resolvedEndBodyBreakShortcut, "")
+        XCTAssertEqual(disabled.resolvedEmergencyEyeGateOverride, "")
     }
 
     func testRestoredDefaultsDoNotReopenFirstRunOnboarding() {
@@ -615,6 +626,10 @@ final class RestEngineTests: XCTestCase {
         XCTAssertNil(shortcuts.endBodyBreak)
         XCTAssertNil(shortcuts.skipToNextScheduledRest)
         XCTAssertEqual(shortcuts.resolvedEndBodyBreakShortcut, ShortcutSettings.defaultEndBodyBreakShortcut)
+        XCTAssertEqual(
+            shortcuts.resolvedEmergencyEyeGateOverride,
+            ShortcutSettings.defaultEmergencyEyeGateOverride
+        )
     }
 
     func testOperationsSettingsCalculatesUntilMorningUsingConfiguredHour() throws {

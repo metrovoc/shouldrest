@@ -67,7 +67,7 @@
 "overlay.emergencyOverrideIn" = "%d 秒后紧急";
 "overlay.emergencyOverrideHelp" = "只在真正中断时使用。仍需确认，并计为未完成的 Eye Gate。";
 "overlay.emergencyConfirmStep" = "确认 %d/%d";
-"overlay.emergencyConfirmHelp" = "在此覆盖层内确认：再次点击，或按 Return/Space。此次计为未完成的 Eye Gate。";
+"overlay.emergencyConfirmHelp" = "在此覆盖层内确认：点击任意位置，或按 Return、Space、再次按紧急快捷键。此次计为未完成的 Eye Gate。";
 "overlay.bodyPostpone" = "推迟";
 "overlay.bodySkip" = "跳过";
 "overlay.bodyFinish" = "完成";

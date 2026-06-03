@@ -851,7 +851,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         shortcutBodyNow.shortcutValue = settings.shortcuts.takeBodyBreakNow
         shortcutSkipBody.shortcutValue = settings.shortcuts.skipToNextBodyBreak
         shortcutEndBody.shortcutValue = settings.shortcuts.resolvedEndBodyBreakShortcut
-        shortcutEmergencyEye.shortcutValue = settings.shortcuts.emergencyEyeGateOverride ?? ""
+        shortcutEmergencyEye.shortcutValue = settings.shortcuts.resolvedEmergencyEyeGateOverride
         shortcutReset.shortcutValue = settings.shortcuts.reset
 
         openAtLogin.state = state(settings.operations.openAtLogin)
