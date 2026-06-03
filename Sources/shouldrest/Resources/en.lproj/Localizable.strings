@@ -15,7 +15,7 @@
 "menu.pause5h" = "5 Hours";
 "menu.pauseUntilMorning" = "Until Morning";
 "menu.pauseIndefinitely" = "Indefinitely";
-"menu.reset" = "Reset";
+"menu.reset" = "Reset Schedule";
 "menu.preferences" = "Preferences...";
 "menu.checkUpdates" = "Check for Updates";
 "menu.downloadLatest" = "Download Latest Version";
@@ -37,7 +37,7 @@
 "notification.emergencyHold" = "Emergency exit is available in %d seconds.";
 "notification.resumingBreaks" = "Resuming breaks";
 "notification.quitBlocked" = "Finish %@ before quitting.";
-"notification.resetBlocked" = "Finish %@ before resetting breaks.";
+"notification.resetBlocked" = "Finish %@ before resetting the schedule.";
 "status.noRests" = "No enabled rests";
 "status.pausedIndefinitely" = "Paused indefinitely";
 "status.pausedUntil" = "Paused until %@";
@@ -206,7 +206,7 @@
 "prefs.skipToBodyBreak" = "Skip to Body Break";
 "prefs.endBodyBreak" = "End active rest";
 "prefs.emergencyEyeGate" = "Emergency Exit shortcut";
-"prefs.reset" = "Reset";
+"prefs.reset" = "Reset Schedule";
 "prefs.sectionOperations" = "Operations";
 "prefs.pauseUntilMorningMode" = "Pause until morning";
 "prefs.pauseUntilMorningHour" = "Resume hour";

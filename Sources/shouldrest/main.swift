@@ -40,6 +40,30 @@ enum TerminationPolicy {
     }
 }
 
+enum BlockedActionCopy {
+    static func quitMessage(for kind: RestKind) -> String {
+        L10n.format("notification.quitBlocked", MenuStatusPresenter.restKindName(kind))
+    }
+
+    static func quitMessage(state: RestEngineState, settings: RestSettings) -> String? {
+        guard let kind = TerminationPolicy.strictActiveRestKind(state: state, settings: settings) else {
+            return nil
+        }
+        return quitMessage(for: kind)
+    }
+
+    static func resetScheduleMessage(for kind: RestKind) -> String {
+        L10n.format("notification.resetBlocked", MenuStatusPresenter.restKindName(kind))
+    }
+
+    static func resetScheduleMessage(state: RestEngineState, settings: RestSettings) -> String? {
+        guard let kind = TerminationPolicy.strictActiveRestKind(state: state, settings: settings) else {
+            return nil
+        }
+        return resetScheduleMessage(for: kind)
+    }
+}
+
 enum StatusMenuPolicy {
     static func showsOrdinaryControls(state: RestEngineState) -> Bool {
         state.activeSession?.kind != .eyeGate
@@ -202,10 +226,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         guard let kind = TerminationPolicy.strictActiveRestKind(state: engine.state, settings: settings) else {
             return .terminateNow
         }
-        showAppNotification(
-            title: L10n.tr("app.name"),
-            body: L10n.format("notification.quitBlocked", MenuStatusPresenter.restKindName(kind))
-        )
+        showAppNotification(title: L10n.tr("app.name"), body: BlockedActionCopy.quitMessage(for: kind))
         logger.log("Termination blocked during strict \(kind.rawValue)")
         rebuildMenu()
         return .terminateCancel
@@ -458,7 +479,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let resetItem = actionItem(L10n.tr("menu.reset"), #selector(resetBreaks))
-        resetItem.isEnabled = TerminationPolicy.canTerminate(state: engine.state, settings: settings)
+        if let message = BlockedActionCopy.resetScheduleMessage(state: engine.state, settings: settings) {
+            resetItem.isEnabled = false
+            resetItem.toolTip = message
+        } else {
+            resetItem.isEnabled = true
+        }
         menu.addItem(resetItem)
         menu.addItem(.separator())
         menu.addItem(actionItem(L10n.tr("menu.preferences"), #selector(openPreferences)))
@@ -475,7 +501,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(.separator())
         let quitItem = NSMenuItem(title: L10n.tr("menu.quit"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
-        quitItem.isEnabled = TerminationPolicy.canTerminate(state: engine.state, settings: settings)
+        if let message = BlockedActionCopy.quitMessage(state: engine.state, settings: settings) {
+            quitItem.isEnabled = false
+            quitItem.toolTip = message
+        } else {
+            quitItem.isEnabled = true
+        }
         quitItem.image = menuItemImage("power")
         menu.addItem(quitItem)
         setStatusMenu(menu, on: item)
@@ -992,7 +1023,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         if let kind = TerminationPolicy.strictActiveRestKind(state: engine.state, settings: settings) {
             showAppNotification(
                 title: L10n.tr("app.name"),
-                body: L10n.format("notification.resetBlocked", MenuStatusPresenter.restKindName(kind))
+                body: BlockedActionCopy.resetScheduleMessage(for: kind)
             )
             logger.log("Reset blocked during strict \(kind.rawValue)")
             rebuildMenu()
@@ -1006,7 +1037,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         pendingBodyBreakIdea = nil
         activeBodyBreakIdeas.removeAll()
         cancelAutomationTasks()
-        logger.log("Breaks reset")
+        logger.log("Schedule reset")
         rebuildMenu()
     }
 

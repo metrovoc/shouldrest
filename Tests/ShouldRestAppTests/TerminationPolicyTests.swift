@@ -31,6 +31,24 @@ final class TerminationPolicyTests: XCTestCase {
         XCTAssertTrue(TerminationPolicy.canTerminate(state: state, settings: .defaults))
     }
 
+    func testBlockedActionCopyExplainsDisabledMenuActions() {
+        L10n.languageOverride = "en"
+        defer { L10n.languageOverride = nil }
+
+        let state = RestEngineState(activeSession: session(kind: .eyeGate))
+
+        XCTAssertEqual(
+            BlockedActionCopy.quitMessage(state: state, settings: .defaults),
+            "Finish Eye Gate before quitting."
+        )
+        XCTAssertEqual(
+            BlockedActionCopy.resetScheduleMessage(state: state, settings: .defaults),
+            "Finish Eye Gate before resetting the schedule."
+        )
+        XCTAssertNil(BlockedActionCopy.quitMessage(state: RestEngineState(), settings: .defaults))
+        XCTAssertNil(BlockedActionCopy.resetScheduleMessage(state: RestEngineState(), settings: .defaults))
+    }
+
     private func session(kind: RestKind) -> RestSession {
         RestSession(
             kind: kind,

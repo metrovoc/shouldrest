@@ -15,7 +15,7 @@
 "menu.pause5h" = "5 小时";
 "menu.pauseUntilMorning" = "暂停到早晨";
 "menu.pauseIndefinitely" = "无限期暂停";
-"menu.reset" = "重置";
+"menu.reset" = "重置计划";
 "menu.preferences" = "偏好设置...";
 "menu.checkUpdates" = "检查更新";
 "menu.downloadLatest" = "下载最新版本";
@@ -37,7 +37,7 @@
 "notification.emergencyHold" = "%d 秒后可使用紧急退出。";
 "notification.resumingBreaks" = "正在恢复休息";
 "notification.quitBlocked" = "请先完成%@，再退出。";
-"notification.resetBlocked" = "请先完成%@，再重置休息。";
+"notification.resetBlocked" = "请先完成%@，再重置计划。";
 "status.noRests" = "没有启用的休息计划";
 "status.pausedIndefinitely" = "已无限期暂停";
 "status.pausedUntil" = "暂停到 %@";
@@ -206,7 +206,7 @@
 "prefs.skipToBodyBreak" = "跳到活动休息";
 "prefs.endBodyBreak" = "结束当前休息";
 "prefs.emergencyEyeGate" = "紧急退出快捷键";
-"prefs.reset" = "重置";
+"prefs.reset" = "重置计划";
 "prefs.sectionOperations" = "操作";
 "prefs.pauseUntilMorningMode" = "暂停到早晨方式";
 "prefs.pauseUntilMorningHour" = "恢复时间";
