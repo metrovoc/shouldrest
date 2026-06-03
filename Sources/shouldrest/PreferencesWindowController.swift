@@ -4,6 +4,19 @@ import Foundation
 import ShouldRestCore
 import UniformTypeIdentifiers
 
+final class FlippedView: NSView {
+    override var isFlipped: Bool {
+        true
+    }
+}
+
+private struct NumberInput {
+    var field: NSTextField
+    var stepper: NSStepper
+    var min: Double
+    var max: Double
+}
+
 @MainActor
 final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate {
     private var settings: RestSettings
@@ -13,6 +26,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let soundPlayer = SoundPlayer()
     private var isLoadingSettings = false
     private var autosaveTask: Task<Void, Never>?
+    private var numberInputs: [NumberInput] = []
 
     private let eyeEnabled = NSButton(checkboxWithTitle: L10n.tr("prefs.enableEyeGate"), target: nil, action: nil)
     private let eyeInterval = NSTextField()
@@ -55,6 +69,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let appExclusionAppliesEye = NSButton(checkboxWithTitle: L10n.tr("prefs.appliesEye"), target: nil, action: nil)
     private let appExclusionAppliesBody = NSButton(checkboxWithTitle: L10n.tr("prefs.appliesBody"), target: nil, action: nil)
     private let appExclusionsJSON = NSTextField()
+    private let appExclusionsAdvancedButton = NSButton()
+    private var appExclusionsJSONRow: NSView?
 
     private let themeSource = NSPopUpButton()
     private let trayStyle = NSPopUpButton()
@@ -76,6 +92,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let customBodyTitle = NSTextField()
     private let customBodyText = NSTextField()
     private let customBodyIdeasJSON = NSTextField()
+    private let customBodyIdeasAdvancedButton = NSButton()
+    private var customBodyIdeasJSONRow: NSView?
     private let localImagePath = NSTextField()
     private let localImageChooseButton = NSButton()
     private let localImageClearButton = NSButton()
@@ -152,6 +170,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         configurePopups()
         configureFieldWidths()
         configureImagePickerControls()
+        configureAdvancedDisclosureButtons()
         configureSoundPreviewButtons()
         configureEnablementGuards()
         configureAutosave()
@@ -175,37 +194,37 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         scheduleStack.addArrangedSubview(adminMessageLabel)
         scheduleStack.addArrangedSubview(section(L10n.tr("prefs.sectionEyeGate"), symbolName: "timer"))
         scheduleStack.addArrangedSubview(eyeEnabled)
-        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.everyMinutes"), eyeInterval))
-        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.durationSeconds"), eyeDuration))
+        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.everyMinutes"), eyeInterval, unit: L10n.tr("prefs.unit.minutes"), min: 1, max: 240))
+        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.durationSeconds"), eyeDuration, unit: L10n.tr("prefs.unit.seconds"), min: 1, max: 300))
         scheduleStack.addArrangedSubview(row(L10n.tr("prefs.overlayColor"), eyeColor))
         scheduleStack.addArrangedSubview(eyeNotify)
-        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.notificationLead"), eyeLead))
+        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.notificationLead"), eyeLead, unit: L10n.tr("prefs.unit.seconds"), min: 0, max: 3600))
         scheduleStack.addArrangedSubview(eyeManualFinish)
         scheduleStack.addArrangedSubview(separator())
         scheduleStack.addArrangedSubview(section(L10n.tr("prefs.sectionBodyBreak"), symbolName: "figure.walk"))
         scheduleStack.addArrangedSubview(bodyEnabled)
-        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.bodyIntervalMinutes"), bodyInterval))
-        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.durationMinutes"), bodyDuration))
-        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.afterEyeGates"), bodyAfterEyeGates))
+        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.bodyIntervalMinutes"), bodyInterval, unit: L10n.tr("prefs.unit.minutes"), min: 1, max: 720))
+        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.durationMinutes"), bodyDuration, unit: L10n.tr("prefs.unit.minutes"), min: 1, max: 180))
+        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.afterEyeGates"), bodyAfterEyeGates, unit: L10n.tr("prefs.unit.eyeGates"), min: 1, max: 99))
         scheduleStack.addArrangedSubview(row(L10n.tr("prefs.overlayColor"), bodyColor))
         scheduleStack.addArrangedSubview(bodyNotify)
-        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.notificationLead"), bodyLead))
-        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.postponeMinutes"), bodyPostponeMinutes))
-        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.maxPostpones"), bodyPostponeLimit))
-        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.postponeWindowPercent"), bodyPostponeWindowPercent))
+        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.notificationLead"), bodyLead, unit: L10n.tr("prefs.unit.seconds"), min: 0, max: 3600))
+        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.postponeMinutes"), bodyPostponeMinutes, unit: L10n.tr("prefs.unit.minutes"), min: 1, max: 120))
+        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.maxPostpones"), bodyPostponeLimit, unit: L10n.tr("prefs.unit.times"), min: 0, max: 20))
+        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.postponeWindowPercent"), bodyPostponeWindowPercent, unit: L10n.tr("prefs.unit.percent"), min: 0, max: 100))
         scheduleStack.addArrangedSubview(bodyAllowSkip)
         scheduleStack.addArrangedSubview(bodyManualFinish)
         scheduleStack.addArrangedSubview(bodyCoversAllDisplays)
         scheduleStack.addArrangedSubview(row(L10n.tr("prefs.bodyCoveredDisplay"), bodyCoveredDisplay))
         scheduleStack.addArrangedSubview(row(L10n.tr("prefs.bodyContentDisplay"), bodyContentDisplay))
         scheduleStack.addArrangedSubview(bodyBlankSecondaryDisplays)
-        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.configuredDisplayIndex"), bodyConfiguredDisplayIndex))
+        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.configuredDisplayIndex"), bodyConfiguredDisplayIndex, unit: "", min: 0, max: 16))
         addTab(to: tabView, title: L10n.tr("prefs.tabSchedule"), stack: scheduleStack)
 
         let contextStack = contentStack()
         contextStack.addArrangedSubview(section(L10n.tr("prefs.sectionContext"), symbolName: "scope"))
         contextStack.addArrangedSubview(naturalBreaks)
-        contextStack.addArrangedSubview(row(L10n.tr("prefs.naturalIdleMinutes"), naturalIdleMinutes))
+        contextStack.addArrangedSubview(numberRow(L10n.tr("prefs.naturalIdleMinutes"), naturalIdleMinutes, unit: L10n.tr("prefs.unit.minutes"), min: 1, max: 120))
         contextStack.addArrangedSubview(focusMonitor)
         contextStack.addArrangedSubview(focusDefersBody)
         contextStack.addArrangedSubview(workingHoursEnabled)
@@ -219,7 +238,10 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         contextStack.addArrangedSubview(row(L10n.tr("prefs.mode"), appExclusionMode))
         contextStack.addArrangedSubview(appExclusionAppliesEye)
         contextStack.addArrangedSubview(appExclusionAppliesBody)
-        contextStack.addArrangedSubview(row(L10n.tr("prefs.advancedRulesJSON"), appExclusionsJSON))
+        contextStack.addArrangedSubview(appExclusionsAdvancedButton)
+        let appExclusionsJSONRow = row(L10n.tr("prefs.advancedRulesJSON"), appExclusionsJSON)
+        self.appExclusionsJSONRow = appExclusionsJSONRow
+        contextStack.addArrangedSubview(appExclusionsJSONRow)
         addTab(to: tabView, title: L10n.tr("prefs.tabContext"), stack: contextStack)
 
         let appearanceStack = contentStack()
@@ -241,7 +263,10 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         appearanceStack.addArrangedSubview(useBuiltInIdeas)
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.title"), customBodyTitle))
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.text"), customBodyText))
-        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.advancedIdeasJSON"), customBodyIdeasJSON))
+        appearanceStack.addArrangedSubview(customBodyIdeasAdvancedButton)
+        let customBodyIdeasJSONRow = row(L10n.tr("prefs.advancedIdeasJSON"), customBodyIdeasJSON)
+        self.customBodyIdeasJSONRow = customBodyIdeasJSONRow
+        appearanceStack.addArrangedSubview(customBodyIdeasJSONRow)
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.localImagePath"), localImagePickerRow()))
         addTab(to: tabView, title: L10n.tr("prefs.tabAppearance"), stack: appearanceStack)
 
@@ -271,7 +296,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         advancedStack.addArrangedSubview(notifyNewVersion)
         advancedStack.addArrangedSubview(showOnboardingNextLaunch)
         advancedStack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningMode"), pauseUntilMorningMode))
-        advancedStack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningHour"), pauseUntilMorningHour))
+        advancedStack.addArrangedSubview(numberRow(L10n.tr("prefs.pauseUntilMorningHour"), pauseUntilMorningHour, unit: L10n.tr("prefs.unit.hour"), min: 0, max: 23))
         advancedStack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningLatitude"), pauseUntilMorningLatitude))
         advancedStack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningLongitude"), pauseUntilMorningLongitude))
         advancedStack.addArrangedSubview(pauseForSuspendOrLock)
@@ -337,7 +362,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         scrollView.hasVerticalScroller = true
         scrollView.drawsBackground = false
 
-        let documentView = NSView()
+        let documentView = FlippedView()
         documentView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.documentView = documentView
         documentView.addSubview(stack)
@@ -415,6 +440,41 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             customPreferencesMessage, appExclusionsJSON
         ]
         wideFields.forEach { $0.widthAnchor.constraint(equalToConstant: 360).isActive = true }
+    }
+
+    private func configureAdvancedDisclosureButtons() {
+        configureDisclosureButton(
+            appExclusionsAdvancedButton,
+            identifier: "appExclusions",
+            expanded: false
+        )
+        configureDisclosureButton(
+            customBodyIdeasAdvancedButton,
+            identifier: "customIdeas",
+            expanded: false
+        )
+    }
+
+    private func configureDisclosureButton(_ button: NSButton, identifier: String, expanded: Bool) {
+        button.identifier = NSUserInterfaceItemIdentifier(identifier)
+        button.target = self
+        button.action = #selector(toggleAdvancedDisclosure(_:))
+        button.bezelStyle = .inline
+        button.isBordered = false
+        button.imagePosition = .imageLeading
+        button.contentTintColor = .secondaryLabelColor
+        updateDisclosureButton(button, expanded: expanded)
+    }
+
+    private func updateDisclosureButton(_ button: NSButton, expanded: Bool) {
+        let isCustomIdeas = button.identifier?.rawValue == "customIdeas"
+        button.title = expanded
+            ? (isCustomIdeas ? L10n.tr("prefs.hideAdvancedIdeas") : L10n.tr("prefs.hideAdvancedRules"))
+            : (isCustomIdeas ? L10n.tr("prefs.showAdvancedIdeas") : L10n.tr("prefs.showAdvancedRules"))
+        button.image = NSImage(
+            systemSymbolName: expanded ? "chevron.down" : "chevron.right",
+            accessibilityDescription: nil
+        )
     }
 
     private func configureImagePickerControls() {
@@ -555,6 +615,11 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         appExclusionAppliesEye.state = state(exclusion?.appliesTo.contains(.eyeGate) ?? false)
         appExclusionAppliesBody.state = state(exclusion?.appliesTo.contains(.bodyBreak) ?? true)
         appExclusionsJSON.stringValue = encodedAppExclusions(settings.appExclusions)
+        setAdvancedDisclosure(
+            row: appExclusionsJSONRow,
+            button: appExclusionsAdvancedButton,
+            expanded: !appExclusionsJSON.stringValue.isEmpty
+        )
 
         selectPopup(themeSource, rawValue: settings.presentation.themeSource.rawValue)
         selectPopup(trayStyle, rawValue: settings.presentation.trayIconStyle.rawValue)
@@ -574,6 +639,11 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         customBodyTitle.stringValue = custom?.title ?? ""
         customBodyText.stringValue = custom?.body ?? ""
         customBodyIdeasJSON.stringValue = encodedCustomIdeas(settings.contentLibrary.customBodyBreakIdeas)
+        setAdvancedDisclosure(
+            row: customBodyIdeasJSONRow,
+            button: customBodyIdeasAdvancedButton,
+            expanded: !customBodyIdeasJSON.stringValue.isEmpty
+        )
         localImagePath.stringValue = settings.contentLibrary.localImagePaths.first ?? ""
 
         shortcutPauseToggle.shortcutValue = settings.shortcuts.pauseToggle
@@ -604,6 +674,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         hideSettingsPath.state = state(settings.admin.hideSettingsFileLocation)
         hideStrictPreferences.state = state(settings.admin.hideStrictPreferences)
         customPreferencesMessage.stringValue = settings.admin.customPreferencesMessage
+        syncNumberSteppersFromFields()
         applyAdminVisibility()
     }
 
@@ -781,12 +852,39 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         scheduleAutosave()
     }
 
+    @objc private func toggleAdvancedDisclosure(_ sender: NSButton) {
+        switch sender.identifier?.rawValue {
+        case "appExclusions":
+            setAdvancedDisclosure(
+                row: appExclusionsJSONRow,
+                button: appExclusionsAdvancedButton,
+                expanded: appExclusionsJSONRow?.isHidden ?? true
+            )
+        case "customIdeas":
+            setAdvancedDisclosure(
+                row: customBodyIdeasJSONRow,
+                button: customBodyIdeasAdvancedButton,
+                expanded: customBodyIdeasJSONRow?.isHidden ?? true
+            )
+        default:
+            break
+        }
+    }
+
+    private func setAdvancedDisclosure(row: NSView?, button: NSButton, expanded: Bool) {
+        row?.isHidden = !expanded
+        updateDisclosureButton(button, expanded: expanded)
+    }
+
     func controlTextDidChange(_ obj: Notification) {
         guard !isLoadingSettings else { return }
         saveStatusLabel.stringValue = L10n.tr("prefs.autosaveEditing")
     }
 
     func controlTextDidEndEditing(_ obj: Notification) {
+        if let field = obj.object as? NSTextField {
+            syncNumberStepper(for: field)
+        }
         scheduleAutosave()
     }
 
@@ -823,6 +921,12 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     @objc private func clearLocalImagePressed() {
         localImagePath.stringValue = ""
+        scheduleAutosave()
+    }
+
+    @objc private func numberStepperChanged(_ sender: NSStepper) {
+        guard let input = numberInputs.first(where: { $0.stepper === sender }) else { return }
+        input.field.stringValue = String(Int(sender.doubleValue.rounded()))
         scheduleAutosave()
     }
 
@@ -979,6 +1083,35 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         return stack
     }
 
+    private func numberRow(
+        _ title: String,
+        _ field: NSTextField,
+        unit: String,
+        min: Double,
+        max: Double
+    ) -> NSStackView {
+        field.alignment = .right
+
+        let stepper = NSStepper()
+        stepper.minValue = min
+        stepper.maxValue = max
+        stepper.increment = 1
+        stepper.target = self
+        stepper.action = #selector(numberStepperChanged(_:))
+
+        numberInputs.append(NumberInput(field: field, stepper: stepper, min: min, max: max))
+
+        let unitLabel = NSTextField(labelWithString: unit)
+        unitLabel.textColor = .secondaryLabelColor
+        unitLabel.widthAnchor.constraint(equalToConstant: unit.isEmpty ? 0 : 58).isActive = true
+
+        let inputStack = NSStackView(views: [field, stepper, unitLabel])
+        inputStack.orientation = .horizontal
+        inputStack.spacing = 8
+        inputStack.alignment = .centerY
+        return row(title, inputStack)
+    }
+
     private func soundPickerRow(_ popup: NSPopUpButton, _ previewButton: NSButton) -> NSStackView {
         let stack = NSStackView(views: [popup, previewButton])
         stack.orientation = .horizontal
@@ -1019,6 +1152,17 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     private func intValue(_ field: NSTextField) -> Int {
         Int(field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
+    }
+
+    private func syncNumberSteppersFromFields() {
+        numberInputs.forEach { syncNumberStepper(for: $0.field) }
+    }
+
+    private func syncNumberStepper(for field: NSTextField) {
+        guard let input = numberInputs.first(where: { $0.field === field }) else { return }
+        let value = min(input.max, max(input.min, Double(intValue(field))))
+        input.stepper.doubleValue = value
+        field.stringValue = String(Int(value.rounded()))
     }
 
     private func doubleValue(_ field: NSTextField, fallback: Double) -> Double {
