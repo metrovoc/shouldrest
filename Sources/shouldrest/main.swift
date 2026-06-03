@@ -1635,6 +1635,10 @@ final class RestOverlayView: NSView {
         true
     }
 
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        true
+    }
+
     override func hitTest(_ point: NSPoint) -> NSView? {
         if emergencyHitTarget(at: point) != nil {
             return self
@@ -1671,10 +1675,30 @@ final class RestOverlayView: NSView {
             return .cancel
         }
         if !emergencyButton.isHidden,
-           emergencyButton.frame.insetBy(dx: -18, dy: -12).contains(point) {
+           emergencyActivationFrame().contains(point) {
             return .emergency
         }
         return nil
+    }
+
+    private func emergencyActivationFrame() -> NSRect {
+        let buttonFrame = emergencyButton.frame.insetBy(dx: -24, dy: -16)
+        let safetyFrame = NSRect(
+            x: max(bounds.minX, bounds.maxX - 260),
+            y: bounds.minY,
+            width: min(260, bounds.width),
+            height: min(88, bounds.height)
+        )
+        if isEmergencyConfirming {
+            let confirmationFrame = NSRect(
+                x: max(bounds.minX, bounds.maxX - 380),
+                y: bounds.minY,
+                width: min(380, bounds.width),
+                height: min(128, bounds.height)
+            )
+            return buttonFrame.union(safetyFrame).union(confirmationFrame)
+        }
+        return buttonFrame.union(safetyFrame)
     }
 
     func configure(
@@ -1773,7 +1797,10 @@ final class RestOverlayView: NSView {
 
         if !isEmergencyConfirming {
             isEmergencyConfirming = true
-            emergencyConfirmationProgress = 0
+            emergencyConfirmationProgress = 1
+            if emergencyConfirmationProgress >= emergencyConfirmationSteps {
+                return .confirmed(emergencyConfirmationSteps)
+            }
             updateEmergencyConfirmationUI()
             return .waitingForConfirmation
         }
