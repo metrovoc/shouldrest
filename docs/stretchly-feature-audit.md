@@ -127,7 +127,7 @@ ShouldRest must implement or exceed these Stretchly capabilities except where ex
 - Open at login.
 - Update checks with disable switch.
 - Debug info: settings path, logs path, support path, Body Break image paths, runtime state, timer state.
-- Admin controls for update UI, strict preferences, settings path, and custom preferences message.
+- Admin controls for update UI, strict preferences, settings/support/image paths, and custom preferences message.
 
 ## Current Implementation Checkpoint
 

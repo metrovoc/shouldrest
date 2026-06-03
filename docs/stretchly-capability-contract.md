@@ -89,4 +89,4 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 - First-run onboarding plus an option to show the welcome window on the next launch.
 - Version/update checks with disable switch.
 - Debug panel or command with settings path, log path, support path, Body Break image paths, runtime state, and timer state.
-- Corporate/admin controls: hide update UI, hide strict preferences, hide settings file path, custom preferences message.
+- Corporate/admin controls: hide update UI, hide strict preferences, hide settings/support/image paths, custom preferences message.
