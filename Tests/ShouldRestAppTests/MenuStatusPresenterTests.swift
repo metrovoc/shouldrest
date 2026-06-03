@@ -1,3 +1,4 @@
+import AppKit
 import XCTest
 import ShouldRestCore
 @testable import shouldrest
@@ -39,7 +40,8 @@ final class MenuStatusPresenterTests: XCTestCase {
         let engine = RestEngine(settings: .defaults, now: start)
 
         XCTAssertEqual(MenuStatusPresenter.menuBarTitle(state: engine.state, settings: engine.settings, now: start), "")
-        XCTAssertEqual(MenuStatusPresenter.menuBarSymbolName(state: engine.state), "timer")
+        XCTAssertEqual(MenuStatusPresenter.menuBarSymbolName(state: engine.state), "circle.lefthalf.filled")
+        XCTAssertNotNil(NSImage(systemSymbolName: MenuStatusPresenter.menuBarSymbolName(state: engine.state), accessibilityDescription: nil))
     }
 
     func testDefaultMenuBarPresentationStaysIconOnlyAcrossStates() {
@@ -116,7 +118,7 @@ final class MenuStatusPresenterTests: XCTestCase {
         )
 
         XCTAssertEqual(MenuStatusPresenter.menuBarTitle(state: state, settings: settings, now: start.addingTimeInterval(5)), "E 15s")
-        XCTAssertEqual(MenuStatusPresenter.menuBarSymbolName(state: state), "timer")
+        XCTAssertEqual(MenuStatusPresenter.menuBarSymbolName(state: state), "circle.lefthalf.filled")
     }
 
     func testMenuBarPausedStateStaysIconOnlyInCountdownStyles() {

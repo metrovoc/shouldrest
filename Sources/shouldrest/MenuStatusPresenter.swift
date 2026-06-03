@@ -79,7 +79,7 @@ enum MenuStatusPresenter {
     private static func symbolName(for kind: RestKind) -> String {
         switch kind {
         case .eyeGate:
-            return "timer"
+            return "circle.lefthalf.filled"
         case .bodyBreak:
             return "figure.walk"
         }

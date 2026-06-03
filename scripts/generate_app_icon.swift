@@ -64,32 +64,35 @@ func drawIcon(pixels: Int) throws -> Data {
     NSColor(red: 0.03, green: 0.19, blue: 0.20, alpha: 1).setFill()
     inner.fill()
 
-    let eyeRect = NSRect(x: size * 0.18, y: size * 0.34, width: size * 0.64, height: size * 0.32)
-    let eye = NSBezierPath()
-    eye.move(to: NSPoint(x: eyeRect.minX, y: eyeRect.midY))
-    eye.curve(
-        to: NSPoint(x: eyeRect.maxX, y: eyeRect.midY),
-        controlPoint1: NSPoint(x: eyeRect.minX + eyeRect.width * 0.23, y: eyeRect.maxY),
-        controlPoint2: NSPoint(x: eyeRect.maxX - eyeRect.width * 0.23, y: eyeRect.maxY)
+    let ringRect = NSRect(x: size * 0.22, y: size * 0.24, width: size * 0.56, height: size * 0.56)
+    let ring = NSBezierPath(ovalIn: ringRect)
+    NSColor(red: 0.70, green: 0.96, blue: 0.92, alpha: 1).setFill()
+    ring.fill()
+
+    let centerRect = ringRect.insetBy(dx: size * 0.075, dy: size * 0.075)
+    let center = NSBezierPath(ovalIn: centerRect)
+    NSColor(red: 0.03, green: 0.19, blue: 0.20, alpha: 1).setFill()
+    center.fill()
+
+    let leftBar = NSBezierPath(
+        roundedRect: NSRect(x: size * 0.405, y: size * 0.37, width: size * 0.07, height: size * 0.28),
+        xRadius: size * 0.032,
+        yRadius: size * 0.032
     )
-    eye.curve(
-        to: NSPoint(x: eyeRect.minX, y: eyeRect.midY),
-        controlPoint1: NSPoint(x: eyeRect.maxX - eyeRect.width * 0.23, y: eyeRect.minY),
-        controlPoint2: NSPoint(x: eyeRect.minX + eyeRect.width * 0.23, y: eyeRect.minY)
+    let rightBar = NSBezierPath(
+        roundedRect: NSRect(x: size * 0.525, y: size * 0.37, width: size * 0.07, height: size * 0.28),
+        xRadius: size * 0.032,
+        yRadius: size * 0.032
     )
     NSColor(red: 0.70, green: 0.96, blue: 0.92, alpha: 1).setFill()
-    eye.fill()
+    leftBar.fill()
+    rightBar.fill()
 
-    let pupilRect = NSRect(x: size * 0.39, y: size * 0.31, width: size * 0.22, height: size * 0.38)
-    let pupil = NSBezierPath(ovalIn: pupilRect)
-    NSColor(red: 0.02, green: 0.12, blue: 0.14, alpha: 1).setFill()
-    pupil.fill()
+    let cadenceDot = NSBezierPath(ovalIn: NSRect(x: size * 0.65, y: size * 0.64, width: size * 0.12, height: size * 0.12))
+    NSColor(red: 0.44, green: 0.88, blue: 0.72, alpha: 1).setFill()
+    cadenceDot.fill()
 
-    let highlight = NSBezierPath(ovalIn: NSRect(x: size * 0.47, y: size * 0.53, width: size * 0.08, height: size * 0.08))
-    NSColor.white.withAlphaComponent(0.92).setFill()
-    highlight.fill()
-
-    let restBar = NSBezierPath(roundedRect: NSRect(x: size * 0.28, y: size * 0.21, width: size * 0.44, height: size * 0.07), xRadius: size * 0.035, yRadius: size * 0.035)
+    let restBar = NSBezierPath(roundedRect: NSRect(x: size * 0.30, y: size * 0.20, width: size * 0.40, height: size * 0.065), xRadius: size * 0.032, yRadius: size * 0.032)
     NSColor(red: 0.44, green: 0.88, blue: 0.72, alpha: 1).setFill()
     restBar.fill()
 
