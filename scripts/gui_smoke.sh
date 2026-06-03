@@ -24,8 +24,13 @@ fi
 
 support_dir="$(mktemp -d "${TMPDIR:-/tmp}/shouldrest-smoke.XXXXXX")"
 pid=""
+automation_pid=""
 
 cleanup() {
+  if [[ -n "$automation_pid" ]] && kill -0 "$automation_pid" 2>/dev/null; then
+    kill "$automation_pid" 2>/dev/null || true
+    wait "$automation_pid" 2>/dev/null || true
+  fi
   if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
     kill "$pid" 2>/dev/null || true
     for _ in {1..20}; do
@@ -47,6 +52,7 @@ SHOULDREST_SUPPORT_DIR="$support_dir" "$executable" > "$support_dir/stdout.log" 
 pid="$!"
 
 attempts=$((timeout_seconds * 2))
+welcome_seen=0
 for ((attempt = 1; attempt <= attempts; attempt++)); do
   if ! kill -0 "$pid" 2>/dev/null; then
     echo "ShouldRest exited before the welcome window appeared." >&2
@@ -62,18 +68,59 @@ for ((attempt = 1; attempt <= attempts; attempt++)); do
       cat "$support_dir/logs/shouldrest.log" >&2 || true
       exit 1
     fi
-    echo "GUI smoke OK: first-run welcome window appeared with temporary support directory."
-    exit 0
+    welcome_seen=1
+    break
   fi
 
   sleep 0.5
 done
 
-echo "Timed out waiting for first-run welcome window." >&2
-echo "Observed ShouldRest windows:" >&2
-swift scripts/list_windows.swift >&2 || true
-echo "stdout:" >&2
-cat "$support_dir/stdout.log" >&2 || true
-echo "stderr:" >&2
-cat "$support_dir/stderr.log" >&2 || true
-exit 1
+if [[ "$welcome_seen" != "1" ]]; then
+  echo "Timed out waiting for first-run welcome window." >&2
+  echo "Observed ShouldRest windows:" >&2
+  swift scripts/list_windows.swift >&2 || true
+  echo "stdout:" >&2
+  cat "$support_dir/stdout.log" >&2 || true
+  echo "stderr:" >&2
+  cat "$support_dir/stderr.log" >&2 || true
+  exit 1
+fi
+
+SHOULDREST_SUPPORT_DIR="$support_dir" "$executable" preferences >> "$support_dir/stdout.log" 2>> "$support_dir/stderr.log" &
+automation_pid="$!"
+
+preferences_seen=0
+for ((attempt = 1; attempt <= attempts; attempt++)); do
+  if ! kill -0 "$pid" 2>/dev/null; then
+    echo "ShouldRest exited before the preferences window appeared." >&2
+    cat "$support_dir/stdout.log" >&2 || true
+    cat "$support_dir/stderr.log" >&2 || true
+    exit 1
+  fi
+
+  windows="$(swift scripts/list_windows.swift || true)"
+  if grep -Eq 'name=(ShouldRest Preferences|ShouldRest 偏好设置)' <<< "$windows"; then
+    if ! grep -Eq "Handled (automation|launch automation) command preferences" "$support_dir/logs/shouldrest.log" 2>/dev/null; then
+      echo "Preferences window appeared, but smoke log did not confirm preferences automation." >&2
+      cat "$support_dir/logs/shouldrest.log" >&2 || true
+      exit 1
+    fi
+    preferences_seen=1
+    break
+  fi
+
+  sleep 0.5
+done
+
+if [[ "$preferences_seen" != "1" ]]; then
+  echo "Timed out waiting for preferences window." >&2
+  echo "Observed ShouldRest windows:" >&2
+  swift scripts/list_windows.swift >&2 || true
+  echo "stdout:" >&2
+  cat "$support_dir/stdout.log" >&2 || true
+  echo "stderr:" >&2
+  cat "$support_dir/stderr.log" >&2 || true
+  exit 1
+fi
+
+echo "GUI smoke OK: first-run welcome and preferences windows appeared with temporary support directory."
