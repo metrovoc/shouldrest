@@ -17,6 +17,7 @@
 "menu.pauseIndefinitely" = "无限期暂停";
 "menu.reset" = "重置计划";
 "menu.preferences" = "偏好设置...";
+"menu.support" = "帮助与支持";
 "menu.checkUpdates" = "检查更新";
 "menu.downloadLatest" = "下载最新版本";
 "menu.copyDebug" = "复制调试信息";

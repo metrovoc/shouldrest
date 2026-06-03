@@ -495,16 +495,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(resetItem)
         menu.addItem(.separator())
         menu.addItem(actionItem(L10n.tr("menu.preferences"), #selector(openPreferences)))
-        if !settings.admin.disableAppUpdateFeatures {
-            menu.addItem(actionItem(L10n.tr("menu.checkUpdates"), #selector(checkForUpdatesNow)))
-        }
-        menu.addItem(actionItem(L10n.tr("menu.copyDebug"), #selector(copyDebugInfo)))
-        menu.addItem(actionItem(L10n.tr("menu.debugPanel"), #selector(openDebugPanel)))
-        menu.addItem(actionItem(L10n.tr("menu.about"), #selector(showAboutPanel)))
-
-        if !settings.admin.hideSettingsFileLocation {
-            menu.addItem(settingsFileMenuItem())
-        }
+        menu.addItem(supportMenuItem())
 
         menu.addItem(.separator())
         let quitItem = NSMenuItem(title: L10n.tr("menu.quit"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
@@ -584,6 +575,26 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         let copyItem = actionItem(L10n.tr("menu.copySettingsPath"), #selector(copySettingsPath))
         copyItem.toolTip = settingsStore.fileURL.path
         submenu.addItem(copyItem)
+
+        item.submenu = submenu
+        return item
+    }
+
+    private func supportMenuItem() -> NSMenuItem {
+        let item = NSMenuItem(title: L10n.tr("menu.support"), action: nil, keyEquivalent: "")
+        item.image = menuItemImage("questionmark.circle")
+
+        let submenu = NSMenu()
+        if !settings.admin.disableAppUpdateFeatures {
+            submenu.addItem(actionItem(L10n.tr("menu.checkUpdates"), #selector(checkForUpdatesNow)))
+        }
+        submenu.addItem(actionItem(L10n.tr("menu.about"), #selector(showAboutPanel)))
+        submenu.addItem(.separator())
+        submenu.addItem(actionItem(L10n.tr("menu.copyDebug"), #selector(copyDebugInfo)))
+        submenu.addItem(actionItem(L10n.tr("menu.debugPanel"), #selector(openDebugPanel)))
+        if !settings.admin.hideSettingsFileLocation {
+            submenu.addItem(settingsFileMenuItem())
+        }
 
         item.submenu = submenu
         return item

@@ -17,6 +17,7 @@
 "menu.pauseIndefinitely" = "Indefinitely";
 "menu.reset" = "Reset Schedule";
 "menu.preferences" = "Preferences...";
+"menu.support" = "Help & Support";
 "menu.checkUpdates" = "Check for Updates";
 "menu.downloadLatest" = "Download Latest Version";
 "menu.copyDebug" = "Copy Debug Info";

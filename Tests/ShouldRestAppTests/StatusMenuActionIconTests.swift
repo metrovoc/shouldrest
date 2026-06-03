@@ -12,6 +12,7 @@ final class StatusMenuActionIconTests: XCTestCase {
             "resumeBreaks": "play.circle",
             "resetBreaks": "arrow.counterclockwise",
             "openPreferences": "gearshape",
+            "checkForUpdatesNow": "arrow.triangle.2.circlepath",
             "copyDebugInfo": "doc.on.doc",
             "openDebugPanel": "stethoscope",
             "showAboutPanel": "info.circle",
