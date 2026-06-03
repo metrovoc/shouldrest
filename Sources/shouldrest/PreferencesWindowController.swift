@@ -319,6 +319,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         ])
         configurePopup(trayStyle, options: [
             (TrayIconStyle.default.rawValue, L10n.tr("prefs.trayStyle.default")),
+            (TrayIconStyle.appName.rawValue, L10n.tr("prefs.trayStyle.appName")),
             (TrayIconStyle.timeToBreak.rawValue, L10n.tr("prefs.trayStyle.timeToBreak")),
             (TrayIconStyle.progress.rawValue, L10n.tr("prefs.trayStyle.progress"))
         ])

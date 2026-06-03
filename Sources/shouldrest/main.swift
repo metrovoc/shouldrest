@@ -150,11 +150,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     private func createStatusItem() {
         guard statusItem == nil else { return }
-        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        item.button?.image = NSImage(systemSymbolName: "eye", accessibilityDescription: L10n.tr("app.name"))
-        item.button?.image?.isTemplate = true
-        item.button?.imagePosition = .imageLeading
-        item.button?.title = "ShouldRest"
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         item.button?.toolTip = MenuStatusPresenter.tooltip(state: engine.state, settings: settings)
         statusItem = item
         rebuildMenu()
@@ -278,10 +274,11 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     private func rebuildMenu() {
         guard let item = statusItem else { return }
-        item.button?.image = NSImage(systemSymbolName: "eye", accessibilityDescription: L10n.tr("app.name"))
-        item.button?.image?.isTemplate = true
-        item.button?.imagePosition = .imageLeading
-        item.button?.title = menuBarTitle()
+        let title = menuBarTitle()
+        item.length = title.isEmpty ? NSStatusItem.squareLength : NSStatusItem.variableLength
+        item.button?.image = menuBarImage()
+        item.button?.imagePosition = title.isEmpty ? .imageOnly : .imageLeading
+        item.button?.title = title
         item.button?.toolTip = MenuStatusPresenter.tooltip(state: engine.state, settings: settings)
 
         let menu = NSMenu()
@@ -383,6 +380,15 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func menuBarTitle() -> String {
+        switch settings.presentation.trayIconStyle {
+        case .default:
+            return ""
+        case .appName:
+            break
+        case .timeToBreak, .progress:
+            break
+        }
+
         if engine.state.activeSession != nil {
             return "Rest"
         }
@@ -398,12 +404,37 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         let seconds = max(0, Int(scheduled.dueAt.timeIntervalSinceNow))
         switch settings.presentation.trayIconStyle {
         case .default:
+            return ""
+        case .appName:
             return L10n.tr("app.name")
         case .timeToBreak:
             return seconds >= 60 ? "\(seconds / 60)m" : "\(seconds)s"
         case .progress:
             return scheduled.kind == .eyeGate ? "Eye \(seconds / 60)m" : "Body \(seconds / 60)m"
         }
+    }
+
+    private func menuBarImage() -> NSImage? {
+        if let active = engine.state.activeSession {
+            return active.kind == .bodyBreak ? symbolMenuBarImage("figure.walk") : symbolMenuBarImage("timer")
+        } else if engine.state.pause != nil {
+            return symbolMenuBarImage("pause.circle")
+        } else if engine.state.activeDeferral != nil {
+            return symbolMenuBarImage("clock")
+        } else if engine.state.scheduled?.kind == .bodyBreak {
+            return symbolMenuBarImage("figure.walk")
+        }
+
+        return symbolMenuBarImage("timer")
+    }
+
+    private func symbolMenuBarImage(_ symbolName: String) -> NSImage? {
+        let configuration = NSImage.SymbolConfiguration(pointSize: 15, weight: .medium)
+        let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: L10n.tr("app.name"))?
+            .withSymbolConfiguration(configuration)
+            ?? NSImage(systemSymbolName: "circle", accessibilityDescription: L10n.tr("app.name"))
+        image?.isTemplate = true
+        return image
     }
 
     private func disabledItem(_ title: String) -> NSMenuItem {

@@ -487,6 +487,7 @@ public enum ThemeSource: String, Codable, CaseIterable, Equatable, Sendable {
 
 public enum TrayIconStyle: String, Codable, CaseIterable, Equatable, Sendable {
     case `default`
+    case appName
     case timeToBreak
     case progress
 }

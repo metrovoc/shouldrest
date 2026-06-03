@@ -125,7 +125,8 @@
 "prefs.theme.light" = "浅色";
 "prefs.theme.dark" = "深色";
 "prefs.menuBarStyle" = "菜单栏样式";
-"prefs.trayStyle.default" = "图标和应用名";
+"prefs.trayStyle.default" = "仅图标";
+"prefs.trayStyle.appName" = "图标和应用名";
 "prefs.trayStyle.timeToBreak" = "图标和倒计时";
 "prefs.trayStyle.progress" = "图标和休息类型";
 "prefs.showMenuBarItem" = "显示菜单栏项目";

@@ -125,7 +125,8 @@
 "prefs.theme.light" = "Light";
 "prefs.theme.dark" = "Dark";
 "prefs.menuBarStyle" = "Menu bar style";
-"prefs.trayStyle.default" = "Icon and app name";
+"prefs.trayStyle.default" = "Icon only";
+"prefs.trayStyle.appName" = "Icon and app name";
 "prefs.trayStyle.timeToBreak" = "Icon and countdown";
 "prefs.trayStyle.progress" = "Icon and rest type";
 "prefs.showMenuBarItem" = "Show menu bar item";
