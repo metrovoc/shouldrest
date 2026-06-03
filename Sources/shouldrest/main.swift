@@ -129,14 +129,14 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             if shouldAwaitManualFinish {
                 if manualAwaitingSessionID != active.id {
                     manualAwaitingSessionID = active.id
-                    soundPlayer.play(settings.rule(for: active.kind).finishSound)
+                    playRestSound(settings.rule(for: active.kind).finishSound)
                     logger.log("Entered manual finish phase for \(active.kind.rawValue)")
                 }
                 rebuildMenu()
                 return
             }
             if elapsed >= active.duration {
-                soundPlayer.play(settings.rule(for: active.kind).finishSound)
+                playRestSound(settings.rule(for: active.kind).finishSound)
                 _ = engine.completeActive(now: now, reason: .completed)
                 overlayController.dismiss()
                 manualAwaitingSessionID = nil
@@ -158,7 +158,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         switch result {
         case .started(let session):
             bindPendingBodyBreakIdea(to: session)
-            soundPlayer.play(settings.rule(for: session.kind).startSound)
+            playRestSound(settings.rule(for: session.kind).startSound)
             overlayController.present(session: session, settings: overlaySettings(for: session), now: now)
             logger.log("Started \(session.kind.rawValue)")
         case .notificationDue(let kind):
@@ -365,7 +365,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func takeEyeGateNow() {
         if case .started(let session) = engine.takeNow(.eyeGate) {
-            soundPlayer.play(settings.rule(for: session.kind).startSound)
+            playRestSound(settings.rule(for: session.kind).startSound)
             overlayController.present(session: session, settings: settings, now: Date())
             logger.log("Manual Eye Gate started")
         }
@@ -383,7 +383,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             if let idea = effectiveIdea {
                 activeBodyBreakIdeas[session.id] = idea
             }
-            soundPlayer.play(settings.rule(for: session.kind).startSound)
+            playRestSound(settings.rule(for: session.kind).startSound)
             overlayController.present(session: session, settings: overlaySettings(for: session), now: Date())
             logger.log("Manual Body Break started")
         }
@@ -419,7 +419,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         if case .completed = engine.completeActive(reason: .manual) {
-            soundPlayer.play(settings.rule(for: active.kind).finishSound)
+            playRestSound(settings.rule(for: active.kind).finishSound)
             logger.log("Manually finished \(active.kind.rawValue)")
             clearActiveBodyBreakIdea(for: active)
             overlayController.dismiss()
@@ -494,7 +494,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             heldDuration: elapsed
         )
         if case .completed(let session, _) = result {
-            soundPlayer.play(settings.rule(for: session.kind).finishSound)
+            playRestSound(settings.rule(for: session.kind).finishSound)
             overlayController.dismiss()
             manualAwaitingSessionID = nil
             logger.log("Emergency override completed for \(session.kind.rawValue)")
@@ -518,6 +518,11 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         return true
+    }
+
+    private func playRestSound(_ policy: SoundPolicy) {
+        guard !settings.notifications.silentNotifications else { return }
+        soundPlayer.play(policy)
     }
 
     @objc private func resumeBreaks() {
