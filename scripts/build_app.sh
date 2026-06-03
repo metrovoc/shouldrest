@@ -23,6 +23,7 @@ fi
 RESOURCE_BUNDLE="$(find "$ROOT/.build" -path '*release*' -iname '*shouldrest.bundle' -type d | head -n 1)"
 if [[ -n "${RESOURCE_BUNDLE:-}" ]]; then
     cp -R "$RESOURCE_BUNDLE" "$RESOURCES/"
+    find "$RESOURCE_BUNDLE" -maxdepth 1 -type d -name "*.lproj" -exec cp -R {} "$RESOURCES/" \;
 fi
 
 chmod +x "$MACOS/shouldrest"
