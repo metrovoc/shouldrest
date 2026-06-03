@@ -68,6 +68,7 @@ final class PreferencesWindowController: NSWindowController {
     private let shortcutEyeNow = NSTextField()
     private let shortcutBodyNow = NSTextField()
     private let shortcutSkipBody = NSTextField()
+    private let shortcutEmergencyEye = NSTextField()
     private let shortcutReset = NSTextField()
 
     private let openAtLogin = NSButton(checkboxWithTitle: L10n.tr("prefs.openAtLogin"), target: nil, action: nil)
@@ -221,6 +222,7 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(row(L10n.tr("prefs.eyeGateNow"), shortcutEyeNow))
         stack.addArrangedSubview(row(L10n.tr("prefs.bodyBreakNow"), shortcutBodyNow))
         stack.addArrangedSubview(row(L10n.tr("prefs.skipToBodyBreak"), shortcutSkipBody))
+        stack.addArrangedSubview(row(L10n.tr("prefs.emergencyEyeGate"), shortcutEmergencyEye))
         stack.addArrangedSubview(row(L10n.tr("prefs.reset"), shortcutReset))
 
         stack.addArrangedSubview(separator())
@@ -273,7 +275,7 @@ final class PreferencesWindowController: NSWindowController {
             eyeColor, bodyColor, bodyStartSound, bodyFinishSound, customBodyTitle,
             customBodyText, localImagePath, shortcutPauseToggle, shortcutPause30,
             shortcutPause1h, shortcutPause2h, shortcutPause5h, shortcutPauseUntilMorning,
-            shortcutEyeNow, shortcutBodyNow, shortcutSkipBody, shortcutReset,
+            shortcutEyeNow, shortcutBodyNow, shortcutSkipBody, shortcutEmergencyEye, shortcutReset,
             appExclusionName, appExclusionTerms, updateFeedURL,
             customPreferencesMessage, appExclusionsJSON
         ]
@@ -346,6 +348,7 @@ final class PreferencesWindowController: NSWindowController {
         shortcutEyeNow.stringValue = settings.shortcuts.takeEyeGateNow
         shortcutBodyNow.stringValue = settings.shortcuts.takeBodyBreakNow
         shortcutSkipBody.stringValue = settings.shortcuts.skipToNextBodyBreak
+        shortcutEmergencyEye.stringValue = settings.shortcuts.emergencyEyeGateOverride ?? ""
         shortcutReset.stringValue = settings.shortcuts.reset
 
         openAtLogin.state = state(settings.operations.openAtLogin)
@@ -421,6 +424,7 @@ final class PreferencesWindowController: NSWindowController {
         next.shortcuts.takeEyeGateNow = shortcutEyeNow.stringValue
         next.shortcuts.takeBodyBreakNow = shortcutBodyNow.stringValue
         next.shortcuts.skipToNextBodyBreak = shortcutSkipBody.stringValue
+        next.shortcuts.emergencyEyeGateOverride = shortcutEmergencyEye.stringValue
         next.shortcuts.reset = shortcutReset.stringValue
 
         next.operations.openAtLogin = isOn(openAtLogin)

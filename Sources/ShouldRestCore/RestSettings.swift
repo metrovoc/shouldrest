@@ -475,6 +475,7 @@ public struct ShortcutSettings: Codable, Equatable, Sendable {
     public var takeEyeGateNow: String
     public var takeBodyBreakNow: String
     public var skipToNextBodyBreak: String
+    public var emergencyEyeGateOverride: String?
     public var reset: String
 
     public init(
@@ -487,6 +488,7 @@ public struct ShortcutSettings: Codable, Equatable, Sendable {
         takeEyeGateNow: String,
         takeBodyBreakNow: String,
         skipToNextBodyBreak: String,
+        emergencyEyeGateOverride: String? = nil,
         reset: String
     ) {
         self.pauseToggle = pauseToggle
@@ -498,6 +500,7 @@ public struct ShortcutSettings: Codable, Equatable, Sendable {
         self.takeEyeGateNow = takeEyeGateNow
         self.takeBodyBreakNow = takeBodyBreakNow
         self.skipToNextBodyBreak = skipToNextBodyBreak
+        self.emergencyEyeGateOverride = emergencyEyeGateOverride
         self.reset = reset
     }
 

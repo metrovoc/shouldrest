@@ -300,6 +300,27 @@ final class RestEngineTests: XCTestCase {
         XCTAssertNil(profile.configuredDisplayIndex)
     }
 
+    func testShortcutSettingsDecodesLegacyMissingEmergencyShortcut() throws {
+        let legacyJSON = #"""
+        {
+          "pauseToggle": "",
+          "pauseFor30Minutes": "",
+          "pauseFor1Hour": "",
+          "pauseFor2Hours": "",
+          "pauseFor5Hours": "",
+          "pauseUntilMorning": "",
+          "takeEyeGateNow": "",
+          "takeBodyBreakNow": "",
+          "skipToNextBodyBreak": "",
+          "reset": ""
+        }
+        """#.data(using: .utf8)!
+
+        let shortcuts = try JSONDecoder().decode(ShortcutSettings.self, from: legacyJSON)
+
+        XCTAssertNil(shortcuts.emergencyEyeGateOverride)
+    }
+
     func testWorkingHoursSupportsDayAndOvernightWindows() throws {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0)!

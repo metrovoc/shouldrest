@@ -118,6 +118,7 @@
 "prefs.eyeGateNow" = "立即 Eye Gate";
 "prefs.bodyBreakNow" = "立即 Body Break";
 "prefs.skipToBodyBreak" = "跳到 Body Break";
+"prefs.emergencyEyeGate" = "紧急覆盖 Eye Gate";
 "prefs.reset" = "重置";
 "prefs.sectionOperations" = "操作与管理员";
 "prefs.updateFeedURL" = "更新源 URL";

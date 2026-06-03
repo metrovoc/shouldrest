@@ -670,6 +670,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         registerShortcut(settings.shortcuts.skipToNextBodyBreak) { [weak self] in
             self?.takeBodyBreakNow()
         }
+        registerShortcut(settings.shortcuts.emergencyEyeGateOverride ?? "") { [weak self] in
+            self?.emergencyOverrideEyeGate()
+        }
         registerShortcut(settings.shortcuts.reset) { [weak self] in
             self?.resetBreaks()
         }
