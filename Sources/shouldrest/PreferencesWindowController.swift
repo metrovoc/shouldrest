@@ -2412,6 +2412,9 @@ final class ShortcutRecorderButton: NSButton {
     var shortcutValue: String = "" {
         didSet {
             if !isRecording {
+                if restoreRequiredFallbackIfNeeded() {
+                    return
+                }
                 updateDisplay()
             }
         }
@@ -2422,10 +2425,7 @@ final class ShortcutRecorderButton: NSButton {
     var requiredFallbackShortcutValue: String? {
         didSet {
             if !isRecording,
-               shortcutValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-               let requiredFallbackShortcutValue {
-                shortcutValue = requiredFallbackShortcutValue
-            } else if !isRecording {
+               !restoreRequiredFallbackIfNeeded() {
                 updateDisplay()
             }
         }
@@ -2498,14 +2498,21 @@ final class ShortcutRecorderButton: NSButton {
 
     private func updateDisplay() {
         if shortcutValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            if let requiredFallbackShortcutValue {
-                applyDisplayState(.assigned(ShortcutDisplay.string(requiredFallbackShortcutValue)))
-            } else {
-                applyDisplayState(.unset)
-            }
+            applyDisplayState(.unset)
         } else {
             applyDisplayState(.assigned(ShortcutDisplay.string(shortcutValue)))
         }
+    }
+
+    @discardableResult
+    private func restoreRequiredFallbackIfNeeded() -> Bool {
+        guard let requiredFallbackShortcutValue,
+              !requiredFallbackShortcutValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              shortcutValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return false
+        }
+        shortcutValue = requiredFallbackShortcutValue
+        return true
     }
 
     private enum DisplayState {
@@ -2523,7 +2530,9 @@ final class ShortcutRecorderButton: NSButton {
             setSymbol("keyboard.badge.ellipsis", fallback: "keyboard")
         case .recording:
             title = L10n.tr("shortcut.recording")
-            toolTip = L10n.tr("shortcut.recordingHelp")
+            toolTip = requiredFallbackShortcutValue == nil
+                ? L10n.tr("shortcut.recordingHelp")
+                : L10n.tr("shortcut.requiredRecordingHelp")
             contentTintColor = .controlAccentColor
             setSymbol("record.circle", fallback: "keyboard")
         case .assigned(let display):

@@ -36,7 +36,14 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(button.title, "⌘1")
         XCTAssertEqual(button.toolTip, L10n.tr("shortcut.requiredHelp"))
 
+        button.shortcutValue = ""
+        XCTAssertEqual(button.shortcutValue, ShortcutSettings.defaultEmergencyEyeGateOverride)
+        XCTAssertEqual(button.title, "⌘⌥E")
+        XCTAssertEqual(button.toolTip, L10n.tr("shortcut.requiredHelp"))
+
+        button.shortcutValue = "Cmd+1"
         button.performClick(nil)
+        XCTAssertEqual(button.toolTip, L10n.tr("shortcut.requiredRecordingHelp"))
         button.keyDown(with: try keyEvent(keyCode: kVK_Delete))
 
         XCTAssertEqual(button.shortcutValue, ShortcutSettings.defaultEmergencyEyeGateOverride)
@@ -232,6 +239,7 @@ final class PreferencesWindowShortcutTests: XCTestCase {
 
         XCTAssertEqual(emergencyShortcut.toolTip, L10n.tr("shortcut.requiredHelp"))
         emergencyShortcut.performClick(nil)
+        XCTAssertEqual(emergencyShortcut.toolTip, L10n.tr("shortcut.requiredRecordingHelp"))
         emergencyShortcut.keyDown(with: try keyEvent(keyCode: kVK_Delete))
         waitUntilSavedSettingsArrive(savedSettings)
 
