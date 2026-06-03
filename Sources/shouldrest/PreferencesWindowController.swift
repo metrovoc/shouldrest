@@ -114,7 +114,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private var appExclusionsJSONRow: NSView?
 
     private let themeSource = NSPopUpButton()
-    private let trayStyle = NSPopUpButton()
     private let languageIdentifier = NSPopUpButton()
     private let currentTimeInBodyBreak = NSButton(checkboxWithTitle: L10n.tr("prefs.currentTimeBody"), target: nil, action: nil)
     private let breakHealth = NSButton(checkboxWithTitle: L10n.tr("prefs.breakHealth"), target: nil, action: nil)
@@ -757,13 +756,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             (ThemeSource.light.rawValue, L10n.tr("prefs.theme.light")),
             (ThemeSource.dark.rawValue, L10n.tr("prefs.theme.dark"))
         ])
-        configurePopup(trayStyle, options: [
-            (TrayIconStyle.default.rawValue, L10n.tr("prefs.trayStyle.default")),
-            (TrayIconStyle.appName.rawValue, L10n.tr("prefs.trayStyle.appName")),
-            (TrayIconStyle.timeToBreak.rawValue, L10n.tr("prefs.trayStyle.timeToBreak")),
-            (TrayIconStyle.progress.rawValue, L10n.tr("prefs.trayStyle.progress"))
-        ])
-        trayStyle.identifier = NSUserInterfaceItemIdentifier("prefs.trayStyle")
         configurePopup(pauseUntilMorningMode, options: [
             (MorningPauseMode.hour.rawValue, L10n.tr("prefs.morningMode.hour")),
             (MorningPauseMode.sunrise.rawValue, L10n.tr("prefs.morningMode.sunrise"))
@@ -804,7 +796,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
         let wideFields: [NSView] = [
             eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, customBodyTitle,
-            localImagePath, languageIdentifier, trayStyle, shortcutPauseToggle,
+            localImagePath, languageIdentifier, shortcutPauseToggle,
             shortcutPause30, shortcutPause1h, shortcutPause2h, shortcutPause5h, shortcutPauseUntilMorning,
             shortcutNextScheduled, shortcutEyeNow, shortcutBodyNow, shortcutEndBody,
             shortcutEmergencyEye, shortcutReset,
@@ -1017,7 +1009,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         let controls: [NSControl] = [
             eyeColor, bodyColor, eyeNotify, eyeManualFinish, eyeEmergencyOverride, bodyNotify, bodyAllowSkip, bodyManualFinish, bodyCoversAllDisplays,
             bodyBlankSecondaryDisplays, naturalBreaks, focusMonitor, focusDefersBody, workingHoursEnabled,
-            appExclusionEnabled, appExclusionAppliesEye, appExclusionAppliesBody, themeSource, trayStyle,
+            appExclusionEnabled, appExclusionAppliesEye, appExclusionAppliesBody, themeSource,
             languageIdentifier, currentTimeInBodyBreak, breakHealth, silentNotifications,
             eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, useBuiltInIdeas, openAtLogin,
             checkUpdates, notifyNewVersion, showOnboardingNextLaunch, pauseUntilMorningMode, pauseForSuspendOrLock,
@@ -1150,7 +1142,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         )
 
         selectPopup(themeSource, rawValue: settings.presentation.themeSource.rawValue)
-        selectPopup(trayStyle, rawValue: settings.presentation.trayIconStyle.rawValue)
         selectLanguageOption(LanguageOption(identifier: settings.presentation.languageIdentifier))
         currentTimeInBodyBreak.state = state(settings.presentation.showCurrentTimeDuringBodyBreak)
         breakHealth.state = state(settings.presentation.breakHealthMode)
@@ -1287,7 +1278,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
         next.appExclusions = appExclusionsEnabled ? (advancedAppExclusions ?? savedAppExclusions()) : []
         next.presentation.themeSource = selected(ThemeSource.self, from: themeSource, fallback: .system)
-        next.presentation.trayIconStyle = selected(TrayIconStyle.self, from: trayStyle, fallback: .default)
+        next.presentation.trayIconStyle = .default
         next.presentation.showMenuBarItem = true
         next.presentation.languageIdentifier = selectedLanguageOption().identifier
         next.presentation.showCurrentTimeDuringBodyBreak = isOn(currentTimeInBodyBreak)
@@ -1526,7 +1517,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         appExclusionAppliesEye.isEnabled = appExclusionAppliesEyeVisible
         appExclusionAppliesBody.isEnabled = appExclusionAppliesBodyVisible
 
-        trayStyle.isEnabled = true
         updateUpdatePreferencesVisibility()
 
         let morningMode = selected(MorningPauseMode.self, from: pauseUntilMorningMode, fallback: .hour)

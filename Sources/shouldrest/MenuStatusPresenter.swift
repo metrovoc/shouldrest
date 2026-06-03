@@ -47,21 +47,8 @@ enum MenuStatusPresenter {
         )
     }
 
-    static func menuBarTitle(state: RestEngineState, settings: RestSettings, now: Date = Date()) -> String {
-        switch settings.presentation.trayIconStyle {
-        case .default:
-            return ""
-        case .appName:
-            return "SR"
-        case .timeToBreak:
-            return compactMenuBarDuration(state: state, now: now) ?? ""
-        case .progress:
-            guard let duration = compactMenuBarDuration(state: state, now: now),
-                  let kind = state.activeSession?.kind ?? state.scheduled?.kind else {
-                return ""
-            }
-            return "\(compactRestKindName(kind)) \(duration)"
-        }
+    static func menuBarTitle(state _: RestEngineState, settings _: RestSettings, now _: Date = Date()) -> String {
+        ""
     }
 
     static func menuBarSymbolName(state: RestEngineState) -> String {
@@ -104,15 +91,6 @@ enum MenuStatusPresenter {
         }
     }
 
-    private static func compactRestKindName(_ kind: RestKind) -> String {
-        switch kind {
-        case .eyeGate:
-            return L10n.tr("kind.eyeGateShort")
-        case .bodyBreak:
-            return L10n.tr("kind.bodyBreakShort")
-        }
-    }
-
     private static func icon(for kind: RestKind) -> MenuBarIcon {
         switch kind {
         case .eyeGate:
@@ -120,32 +98,6 @@ enum MenuStatusPresenter {
         case .bodyBreak:
             return .systemSymbol("figure.walk")
         }
-    }
-
-    private static func compactMenuBarDuration(state: RestEngineState, now: Date) -> String? {
-        if let active = state.activeSession {
-            if isManualFinishReady(active, now: now) {
-                return L10n.tr("status.readyCompact")
-            }
-            let seconds = max(0, Int(ceil(active.duration - now.timeIntervalSince(active.startedAt))))
-            return compactDuration(seconds: seconds)
-        }
-        guard state.pause == nil, state.activeDeferral == nil else {
-            return nil
-        }
-        guard let scheduled = state.scheduled else { return nil }
-        let seconds = max(0, Int(ceil(scheduled.dueAt.timeIntervalSince(now))))
-        return compactDuration(seconds: seconds)
-    }
-
-    private static func compactDuration(seconds: Int) -> String {
-        if seconds < 60 {
-            return "\(seconds)s"
-        }
-        if seconds < 60 * 60 {
-            return "\(Int(ceil(Double(seconds) / 60.0)))m"
-        }
-        return "\(Int(ceil(Double(seconds) / 3600.0)))h"
     }
 
     private static func primaryStatusText(state: RestEngineState, now: Date) -> String {

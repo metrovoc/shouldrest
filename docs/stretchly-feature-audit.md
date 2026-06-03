@@ -144,7 +144,7 @@ It is intended to catch gaps that are easy to miss when a behavior is exposed on
 | `pauseBreaksUntilMorningShortcut` | Implemented, sharing fixed-hour/sunrise pause-until-morning logic. |
 | `screen` | Implemented for Body Break display targeting; Eye Gate forces all-display coverage. |
 | `breakContentScreen` | Implemented for Body Break content display and secondary blanking. |
-| `trayIconStyle` | Implemented as menu-bar default, time-to-break, and progress styles. |
+| `trayIconStyle` | Explicit divergence: legacy values decode for compatibility, but ShouldRest forces an icon-only menu bar to avoid long status-item occupancy. |
 | `currentTimeInBreaks` | Implemented for Body Break only; Eye Gate intentionally avoids screen-reading content. |
 | `showTrayIcon` | Implemented as optional menu-bar item visibility. |
 | `skipToNextScheduledBreakShortcut` | Implemented as "take next scheduled rest now". |

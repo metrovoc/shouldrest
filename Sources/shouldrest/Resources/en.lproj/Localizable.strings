@@ -154,11 +154,6 @@
 "prefs.theme.system" = "Follow System";
 "prefs.theme.light" = "Light";
 "prefs.theme.dark" = "Dark";
-"prefs.menuBarStyle" = "Menu bar style";
-"prefs.trayStyle.default" = "Icon only - shortest";
-"prefs.trayStyle.appName" = "Short name - SR";
-"prefs.trayStyle.timeToBreak" = "Countdown - 20m";
-"prefs.trayStyle.progress" = "Type + countdown - E 20s";
 "prefs.language" = "Interface language";
 "prefs.language.system" = "System language";
 "prefs.language.english" = "English";

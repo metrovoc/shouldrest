@@ -12,6 +12,11 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         try selectAppearanceTab(in: contentView)
 
         XCTAssertNil(findView(withIdentifier: "prefs.trayStyle", in: contentView) as? NSPopUpButton)
+        let visibleTexts = visibleTexts(in: contentView)
+        XCTAssertFalse(visibleTexts.contains("Menu bar style"))
+        XCTAssertFalse(visibleTexts.contains("Icon only - shortest"))
+        XCTAssertFalse(visibleTexts.contains("菜单栏样式"))
+        XCTAssertFalse(visibleTexts.contains("仅图标 - 最短"))
     }
 
     func testDisabledBodyBreakHidesBodyOnlyAppearanceControls() throws {
