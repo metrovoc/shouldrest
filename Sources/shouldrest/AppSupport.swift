@@ -21,7 +21,7 @@ enum AppPaths {
 }
 
 enum AppVersion {
-    static let current = "0.1.37"
+    static let current = "0.1.38"
 }
 
 final class AppLogger {

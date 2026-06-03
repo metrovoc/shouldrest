@@ -159,6 +159,9 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let pauseUntilMorningHour = NSTextField()
     private let pauseUntilMorningLatitude = NSTextField()
     private let pauseUntilMorningLongitude = NSTextField()
+    private var pauseUntilMorningHourRow: NSView?
+    private var pauseUntilMorningLatitudeRow: NSView?
+    private var pauseUntilMorningLongitudeRow: NSView?
     private let pauseForSuspendOrLock = NSButton(checkboxWithTitle: L10n.tr("prefs.pauseForSuspendOrLock"), target: nil, action: nil)
     private let updateFeedURL = NSTextField()
     private var updateFeedURLRow: NSView?
@@ -402,10 +405,29 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         advancedStack.addArrangedSubview(checkUpdates)
         advancedStack.addArrangedSubview(notifyNewVersion)
         advancedStack.addArrangedSubview(showOnboardingNextLaunch)
-        advancedStack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningMode"), pauseUntilMorningMode))
-        advancedStack.addArrangedSubview(numberRow(L10n.tr("prefs.pauseUntilMorningHour"), pauseUntilMorningHour, unit: L10n.tr("prefs.unit.hour"), min: 0, max: 23))
-        advancedStack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningLatitude"), pauseUntilMorningLatitude))
-        advancedStack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningLongitude"), pauseUntilMorningLongitude))
+        let pauseUntilMorningModeRow = row(L10n.tr("prefs.pauseUntilMorningMode"), pauseUntilMorningMode)
+        advancedStack.addArrangedSubview(pauseUntilMorningModeRow)
+        let pauseUntilMorningHourRow = numberRow(
+            L10n.tr("prefs.pauseUntilMorningHour"),
+            pauseUntilMorningHour,
+            unit: L10n.tr("prefs.unit.hour"),
+            min: 0,
+            max: 23,
+            identifier: "pauseUntilMorningHour"
+        )
+        pauseUntilMorningHourRow.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningHourRow")
+        self.pauseUntilMorningHourRow = pauseUntilMorningHourRow
+        advancedStack.addArrangedSubview(pauseUntilMorningHourRow)
+        let pauseUntilMorningLatitudeRow = row(L10n.tr("prefs.pauseUntilMorningLatitude"), pauseUntilMorningLatitude)
+        pauseUntilMorningLatitude.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningLatitudeField")
+        pauseUntilMorningLatitudeRow.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningLatitudeRow")
+        self.pauseUntilMorningLatitudeRow = pauseUntilMorningLatitudeRow
+        advancedStack.addArrangedSubview(pauseUntilMorningLatitudeRow)
+        let pauseUntilMorningLongitudeRow = row(L10n.tr("prefs.pauseUntilMorningLongitude"), pauseUntilMorningLongitude)
+        pauseUntilMorningLongitude.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningLongitudeField")
+        pauseUntilMorningLongitudeRow.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningLongitudeRow")
+        self.pauseUntilMorningLongitudeRow = pauseUntilMorningLongitudeRow
+        advancedStack.addArrangedSubview(pauseUntilMorningLongitudeRow)
         advancedStack.addArrangedSubview(pauseForSuspendOrLock)
         let updateFeedURLRow = row(L10n.tr("prefs.updateFeedURL"), updateFeedURL)
         self.updateFeedURLRow = updateFeedURLRow
@@ -565,6 +587,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             (MorningPauseMode.hour.rawValue, L10n.tr("prefs.morningMode.hour")),
             (MorningPauseMode.sunrise.rawValue, L10n.tr("prefs.morningMode.sunrise"))
         ])
+        pauseUntilMorningMode.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningMode")
         for option in LanguageOption.allCases {
             languageIdentifier.addItem(withTitle: option.title)
             languageIdentifier.lastItem?.representedObject = option.popupValue
@@ -1256,9 +1279,13 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         notifyNewVersion.isEnabled = isOn(checkUpdates)
 
         let morningMode = selected(MorningPauseMode.self, from: pauseUntilMorningMode, fallback: .hour)
-        setNumberInputEnabled(pauseUntilMorningHour, morningMode == .hour)
-        pauseUntilMorningLatitude.isEnabled = morningMode == .sunrise
-        pauseUntilMorningLongitude.isEnabled = morningMode == .sunrise
+        let usesSunrise = morningMode == .sunrise
+        pauseUntilMorningHourRow?.isHidden = usesSunrise
+        pauseUntilMorningLatitudeRow?.isHidden = !usesSunrise
+        pauseUntilMorningLongitudeRow?.isHidden = !usesSunrise
+        setNumberInputEnabled(pauseUntilMorningHour, !usesSunrise)
+        pauseUntilMorningLatitude.isEnabled = usesSunrise
+        pauseUntilMorningLongitude.isEnabled = usesSunrise
 
         localImageClearButton.isEnabled = !localImagePath.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
