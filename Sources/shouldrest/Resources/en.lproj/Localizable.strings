@@ -117,8 +117,8 @@
 "prefs.configuredDisplayIndex" = "Configured display index";
 "prefs.sectionContext" = "Context";
 "prefs.naturalIdleMinutes" = "Credit idle after";
-"prefs.workingStart" = "Working start HH:mm";
-"prefs.workingEnd" = "Working end HH:mm";
+"prefs.workingStart" = "Working day starts";
+"prefs.workingEnd" = "Working day ends";
 "prefs.sectionExclusion" = "Primary App Exclusion";
 "prefs.name" = "Name";
 "prefs.matchTerms" = "Match terms, comma-separated";
@@ -155,7 +155,7 @@
 "prefs.sound.ticToc" = "Tic Toc";
 "prefs.sound.reverie" = "Reverie";
 "prefs.sound.custom" = "Custom (%@)";
-"prefs.volume" = "Volume 0...1";
+"prefs.volume" = "Sound volume";
 "prefs.sectionCustomIdea" = "Custom Body Break Idea";
 "prefs.useBuiltInIdeas" = "Use built-in rest ideas";
 "prefs.title" = "Title";

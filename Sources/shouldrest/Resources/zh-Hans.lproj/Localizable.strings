@@ -117,8 +117,8 @@
 "prefs.configuredDisplayIndex" = "配置显示器索引";
 "prefs.sectionContext" = "上下文";
 "prefs.naturalIdleMinutes" = "空闲达到";
-"prefs.workingStart" = "工作开始 HH:mm";
-"prefs.workingEnd" = "工作结束 HH:mm";
+"prefs.workingStart" = "工作日开始";
+"prefs.workingEnd" = "工作日结束";
 "prefs.sectionExclusion" = "主要应用排除";
 "prefs.name" = "名称";
 "prefs.matchTerms" = "匹配词，逗号分隔";
@@ -155,7 +155,7 @@
 "prefs.sound.ticToc" = "滴答";
 "prefs.sound.reverie" = "白日梦";
 "prefs.sound.custom" = "自定义（%@）";
-"prefs.volume" = "音量 0...1";
+"prefs.volume" = "声音音量";
 "prefs.sectionCustomIdea" = "自定义 Body Break 内容";
 "prefs.useBuiltInIdeas" = "使用内置休息提示";
 "prefs.title" = "标题";

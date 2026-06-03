@@ -61,6 +61,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let workingHoursEnabled = NSButton(checkboxWithTitle: L10n.tr("prefs.workingHours"), target: nil, action: nil)
     private let workingStart = NSTextField()
     private let workingEnd = NSTextField()
+    private let workingStartPicker = NSDatePicker()
+    private let workingEndPicker = NSDatePicker()
 
     private let appExclusionEnabled = NSButton(checkboxWithTitle: L10n.tr("prefs.enablePrimaryExclusion"), target: nil, action: nil)
     private let appExclusionName = NSTextField()
@@ -88,6 +90,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let bodyStartSoundPreview = NSButton()
     private let bodyFinishSoundPreview = NSButton()
     private let soundVolume = NSTextField()
+    private let soundVolumeSlider = NSSlider()
+    private let soundVolumeValueLabel = NSTextField(labelWithString: "")
 
     private let customBodyTitle = NSTextField()
     private let customBodyText = NSTextField()
@@ -171,6 +175,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         configureFieldWidths()
         configureImagePickerControls()
         configureAdvancedDisclosureButtons()
+        configureTimePickers()
+        configureSoundVolumeControls()
         configureSoundPreviewButtons()
         configureEnablementGuards()
         configureAutosave()
@@ -228,8 +234,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         contextStack.addArrangedSubview(focusMonitor)
         contextStack.addArrangedSubview(focusDefersBody)
         contextStack.addArrangedSubview(workingHoursEnabled)
-        contextStack.addArrangedSubview(row(L10n.tr("prefs.workingStart"), workingStart))
-        contextStack.addArrangedSubview(row(L10n.tr("prefs.workingEnd"), workingEnd))
+        contextStack.addArrangedSubview(row(L10n.tr("prefs.workingStart"), workingStartPicker))
+        contextStack.addArrangedSubview(row(L10n.tr("prefs.workingEnd"), workingEndPicker))
         contextStack.addArrangedSubview(separator())
         contextStack.addArrangedSubview(section(L10n.tr("prefs.sectionExclusion"), symbolName: "app.badge"))
         contextStack.addArrangedSubview(appExclusionEnabled)
@@ -257,7 +263,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.eyeFinishSound"), soundPickerRow(eyeFinishSound, eyeFinishSoundPreview)))
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.bodyStartSound"), soundPickerRow(bodyStartSound, bodyStartSoundPreview)))
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.bodyFinishSound"), soundPickerRow(bodyFinishSound, bodyFinishSoundPreview)))
-        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.volume"), soundVolume))
+        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.volume"), soundVolumeRow()))
         appearanceStack.addArrangedSubview(separator())
         appearanceStack.addArrangedSubview(section(L10n.tr("prefs.sectionCustomIdea"), symbolName: "text.bubble"))
         appearanceStack.addArrangedSubview(useBuiltInIdeas)
@@ -420,8 +426,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private func configureFieldWidths() {
         let compactFields = [
             eyeInterval, eyeDuration, bodyInterval, bodyDuration, bodyAfterEyeGates, eyeLead, bodyLead,
-            bodyPostponeMinutes, bodyPostponeLimit, bodyPostponeWindowPercent, naturalIdleMinutes, workingStart,
-            workingEnd, soundVolume, bodyConfiguredDisplayIndex, pauseUntilMorningHour,
+            bodyPostponeMinutes, bodyPostponeLimit, bodyPostponeWindowPercent, naturalIdleMinutes,
+            bodyConfiguredDisplayIndex, pauseUntilMorningHour,
             pauseUntilMorningLatitude, pauseUntilMorningLongitude
         ]
         compactFields.forEach { $0.widthAnchor.constraint(equalToConstant: 110).isActive = true }
@@ -453,6 +459,26 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             identifier: "customIdeas",
             expanded: false
         )
+    }
+
+    private func configureTimePickers() {
+        [workingStartPicker, workingEndPicker].forEach { picker in
+            picker.datePickerElements = [.hourMinute]
+            picker.datePickerMode = .single
+            picker.datePickerStyle = .textFieldAndStepper
+            picker.widthAnchor.constraint(equalToConstant: 130).isActive = true
+        }
+    }
+
+    private func configureSoundVolumeControls() {
+        soundVolumeSlider.minValue = 0
+        soundVolumeSlider.maxValue = 1
+        soundVolumeSlider.numberOfTickMarks = 5
+        soundVolumeSlider.allowsTickMarkValuesOnly = false
+        soundVolumeSlider.widthAnchor.constraint(equalToConstant: 190).isActive = true
+        soundVolumeValueLabel.textColor = .secondaryLabelColor
+        soundVolumeValueLabel.alignment = .right
+        soundVolumeValueLabel.widthAnchor.constraint(equalToConstant: 54).isActive = true
     }
 
     private func configureDisclosureButton(_ button: NSButton, identifier: String, expanded: Bool) {
@@ -506,7 +532,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         let textFields = [
             eyeInterval, eyeDuration, eyeLead, bodyInterval, bodyDuration, bodyAfterEyeGates,
             bodyLead, bodyPostponeMinutes, bodyPostponeLimit, bodyPostponeWindowPercent, naturalIdleMinutes,
-            workingStart, workingEnd, appExclusionName, appExclusionTerms, appExclusionsJSON, soundVolume,
+            appExclusionName, appExclusionTerms, appExclusionsJSON,
             customBodyTitle, customBodyText, customBodyIdeasJSON, localImagePath, bodyConfiguredDisplayIndex,
             pauseUntilMorningHour, pauseUntilMorningLatitude, pauseUntilMorningLongitude, updateFeedURL,
             customPreferencesMessage
@@ -524,7 +550,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             showMenuBarItem, languageIdentifier, currentTimeInBodyBreak, breakHealth, silentNotifications,
             eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, useBuiltInIdeas, openAtLogin,
             checkUpdates, notifyNewVersion, showOnboardingNextLaunch, pauseUntilMorningMode, pauseForSuspendOrLock,
-            disableUpdateFeatures, hideSettingsPath, hideStrictPreferences, bodyCoveredDisplay, bodyContentDisplay
+            disableUpdateFeatures, hideSettingsPath, hideStrictPreferences, bodyCoveredDisplay, bodyContentDisplay,
+            workingStartPicker, workingEndPicker, soundVolumeSlider
         ]
         controls.forEach { control in
             control.target = self
@@ -606,6 +633,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         workingHoursEnabled.state = state(settings.workingHours.isEnabled)
         workingStart.stringValue = Self.timeString(minutes: settings.workingHours.startMinuteOfDay)
         workingEnd.stringValue = Self.timeString(minutes: settings.workingHours.endMinuteOfDay)
+        workingStartPicker.dateValue = Self.dateForTimePicker(minutes: settings.workingHours.startMinuteOfDay)
+        workingEndPicker.dateValue = Self.dateForTimePicker(minutes: settings.workingHours.endMinuteOfDay)
 
         let exclusion = settings.appExclusions.first
         appExclusionEnabled.state = state(exclusion?.isEnabled ?? false)
@@ -632,7 +661,10 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         selectSoundOption(SoundOption(name: soundName(settings.eyeGate.finishSound)), in: eyeFinishSound)
         selectSoundOption(SoundOption(name: soundName(settings.bodyBreak.startSound)), in: bodyStartSound)
         selectSoundOption(SoundOption(name: soundName(settings.bodyBreak.finishSound)), in: bodyFinishSound)
-        soundVolume.stringValue = String(preferredSoundVolume())
+        let volume = preferredSoundVolume()
+        soundVolume.stringValue = String(volume)
+        soundVolumeSlider.doubleValue = volume
+        updateSoundVolumeLabel()
 
         let custom = settings.contentLibrary.customBodyBreakIdeas.first
         useBuiltInIdeas.state = state(settings.contentLibrary.useBuiltInIdeas)
@@ -675,6 +707,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         hideStrictPreferences.state = state(settings.admin.hideStrictPreferences)
         customPreferencesMessage.stringValue = settings.admin.customPreferencesMessage
         syncNumberSteppersFromFields()
+        updateDependentControlEnablement()
         applyAdminVisibility()
     }
 
@@ -743,8 +776,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         next.focusMode.deferBodyBreak = isOn(focusDefersBody)
         next.workingHours = WorkingHoursSettings(
             isEnabled: isOn(workingHoursEnabled),
-            startMinuteOfDay: Self.minutes(fromTimeString: workingStart.stringValue, fallback: 9 * 60),
-            endMinuteOfDay: Self.minutes(fromTimeString: workingEnd.stringValue, fallback: 18 * 60)
+            startMinuteOfDay: Self.minutes(fromTimePicker: workingStartPicker, fallback: 9 * 60),
+            endMinuteOfDay: Self.minutes(fromTimePicker: workingEndPicker, fallback: 18 * 60)
         )
 
         next.appExclusions = advancedAppExclusions ?? savedAppExclusions()
@@ -755,7 +788,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         next.presentation.showCurrentTimeDuringBodyBreak = isOn(currentTimeInBodyBreak)
         next.presentation.breakHealthMode = isOn(breakHealth)
         next.notifications.silentNotifications = isOn(silentNotifications)
-        let volume = min(1, max(0, doubleValue(soundVolume, fallback: 1)))
+        let volume = min(1, max(0, soundVolumeSlider.doubleValue))
         next.eyeGate.startSound = soundPolicy(from: eyeStartSound, volume: volume)
         next.eyeGate.finishSound = soundPolicy(from: eyeFinishSound, volume: volume)
         next.bodyBreak.startSound = soundPolicy(from: bodyStartSound, volume: volume)
@@ -820,6 +853,55 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         updateFeedURLRow?.isHidden = hideUpdateControls
     }
 
+    private func updateDependentControlEnablement() {
+        let eyeGateEnabled = isOn(eyeEnabled)
+        setNumberInputEnabled(eyeInterval, eyeGateEnabled)
+        setNumberInputEnabled(eyeDuration, eyeGateEnabled)
+        eyeColor.isEnabled = eyeGateEnabled
+        eyeNotify.isEnabled = eyeGateEnabled
+        setNumberInputEnabled(eyeLead, eyeGateEnabled && isOn(eyeNotify))
+        eyeManualFinish.isEnabled = eyeGateEnabled
+
+        let bodyBreakEnabled = isOn(bodyEnabled)
+        [
+            bodyColor, bodyNotify, bodyAllowSkip, bodyManualFinish, bodyCoversAllDisplays,
+            bodyCoveredDisplay, bodyContentDisplay, bodyBlankSecondaryDisplays
+        ].forEach { $0.isEnabled = bodyBreakEnabled }
+        [
+            bodyInterval, bodyDuration, bodyAfterEyeGates, bodyLead, bodyPostponeMinutes,
+            bodyPostponeLimit, bodyPostponeWindowPercent, bodyConfiguredDisplayIndex
+        ].forEach { setNumberInputEnabled($0, bodyBreakEnabled) }
+        setNumberInputEnabled(bodyLead, bodyBreakEnabled && isOn(bodyNotify))
+        let usesConfiguredDisplay = selected(DisplaySelection.self, from: bodyCoveredDisplay, fallback: .primary) == .configured ||
+            selected(DisplaySelection.self, from: bodyContentDisplay, fallback: .all) == .configured
+        setNumberInputEnabled(bodyConfiguredDisplayIndex, bodyBreakEnabled && usesConfiguredDisplay)
+
+        setNumberInputEnabled(naturalIdleMinutes, isOn(naturalBreaks))
+        workingStartPicker.isEnabled = isOn(workingHoursEnabled)
+        workingEndPicker.isEnabled = isOn(workingHoursEnabled)
+
+        let exclusionEnabled = isOn(appExclusionEnabled)
+        [
+            appExclusionName, appExclusionTerms, appExclusionMode,
+            appExclusionAppliesEye, appExclusionAppliesBody
+        ].forEach { $0.isEnabled = exclusionEnabled }
+
+        trayStyle.isEnabled = isOn(showMenuBarItem)
+        notifyNewVersion.isEnabled = isOn(checkUpdates)
+
+        let morningMode = selected(MorningPauseMode.self, from: pauseUntilMorningMode, fallback: .hour)
+        setNumberInputEnabled(pauseUntilMorningHour, morningMode == .hour)
+        pauseUntilMorningLatitude.isEnabled = morningMode == .sunrise
+        pauseUntilMorningLongitude.isEnabled = morningMode == .sunrise
+
+        localImageClearButton.isEnabled = !localImagePath.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private func setNumberInputEnabled(_ field: NSTextField, _ enabled: Bool) {
+        field.isEnabled = enabled
+        numberInputs.first(where: { $0.field === field })?.stepper.isEnabled = enabled
+    }
+
     @objc private func restoreDefaultsPressed() {
         guard confirmRestoreDefaults() else { return }
         settings = .restoredDefaults
@@ -840,15 +922,22 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     @objc private func restEnablementChanged(_ sender: NSButton) {
         guard !isOn(eyeEnabled), !isOn(bodyEnabled) else {
+            updateDependentControlEnablement()
             scheduleAutosave()
             return
         }
         sender.state = .on
         showCannotDisableBothRestsAlert()
+        updateDependentControlEnablement()
         scheduleAutosave()
     }
 
     @objc private func controlChanged(_ sender: Any) {
+        if let slider = sender as? NSSlider, slider === soundVolumeSlider {
+            soundVolume.stringValue = String(soundVolumeSlider.doubleValue)
+            updateSoundVolumeLabel()
+        }
+        updateDependentControlEnablement()
         scheduleAutosave()
     }
 
@@ -885,6 +974,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         if let field = obj.object as? NSTextField {
             syncNumberStepper(for: field)
         }
+        updateDependentControlEnablement()
         scheduleAutosave()
     }
 
@@ -901,7 +991,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     @objc private func previewSound(_ sender: NSButton) {
         guard let popup = soundPopup(for: sender.identifier?.rawValue) else { return }
-        let volume = min(1, max(0, doubleValue(soundVolume, fallback: 1)))
+        let volume = min(1, max(0, soundVolumeSlider.doubleValue))
         soundPlayer.play(soundPolicy(from: popup, volume: volume))
     }
 
@@ -915,18 +1005,21 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
         if panel.runModal() == .OK, let url = panel.url {
             localImagePath.stringValue = url.path
+            updateDependentControlEnablement()
             scheduleAutosave()
         }
     }
 
     @objc private func clearLocalImagePressed() {
         localImagePath.stringValue = ""
+        updateDependentControlEnablement()
         scheduleAutosave()
     }
 
     @objc private func numberStepperChanged(_ sender: NSStepper) {
         guard let input = numberInputs.first(where: { $0.stepper === sender }) else { return }
         input.field.stringValue = String(Int(sender.doubleValue.rounded()))
+        updateDependentControlEnablement()
         scheduleAutosave()
     }
 
@@ -1120,6 +1213,14 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         return stack
     }
 
+    private func soundVolumeRow() -> NSStackView {
+        let stack = NSStackView(views: [soundVolumeSlider, soundVolumeValueLabel])
+        stack.orientation = .horizontal
+        stack.spacing = 10
+        stack.alignment = .centerY
+        return stack
+    }
+
     private func localImagePickerRow() -> NSStackView {
         let stack = NSStackView(views: [localImagePath, localImageChooseButton, localImageClearButton])
         stack.orientation = .horizontal
@@ -1191,6 +1292,11 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             value += 360
         }
         return value
+    }
+
+    private func updateSoundVolumeLabel() {
+        let value = min(1, max(0, soundVolumeSlider.doubleValue))
+        soundVolumeValueLabel.stringValue = "\(Int(round(value * 100)))%"
     }
 
     private func selected<T: RawRepresentable>(_ type: T.Type, from popup: NSPopUpButton, fallback: T) -> T where T.RawValue == String {
@@ -1286,6 +1392,28 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         let hour = minutes / 60
         let minute = minutes % 60
         return String(format: "%02d:%02d", hour, minute)
+    }
+
+    private static func dateForTimePicker(minutes: Int) -> Date {
+        var components = DateComponents()
+        components.calendar = Calendar.current
+        components.year = 2001
+        components.month = 1
+        components.day = 1
+        components.hour = minutes / 60
+        components.minute = minutes % 60
+        return components.date ?? Date(timeIntervalSinceReferenceDate: 0)
+    }
+
+    private static func minutes(fromTimePicker picker: NSDatePicker, fallback: Int) -> Int {
+        let components = Calendar.current.dateComponents([.hour, .minute], from: picker.dateValue)
+        guard let hour = components.hour,
+              let minute = components.minute,
+              (0...23).contains(hour),
+              (0...59).contains(minute) else {
+            return fallback
+        }
+        return hour * 60 + minute
     }
 
     private static func minutes(fromTimeString value: String, fallback: Int) -> Int {
