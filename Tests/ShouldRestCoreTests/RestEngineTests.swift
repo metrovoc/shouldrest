@@ -47,7 +47,10 @@ final class RestEngineTests: XCTestCase {
     func testEyeGateEmergencyOverrideIsTrackedAsMissedRest() {
         var engine = RestEngine(settings: .defaults, now: start)
         _ = engine.takeNow(.eyeGate, now: start)
-        let result = engine.emergencyOverride(now: start.addingTimeInterval(3))
+        let result = engine.emergencyOverride(
+            now: start.addingTimeInterval(3),
+            completedConfirmationSteps: 2
+        )
 
         guard case .completed(let session, let reason) = result else {
             return XCTFail("Expected emergency override completion")
@@ -58,6 +61,23 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.statistics.skippedEyeGates, 1)
         XCTAssertEqual(engine.state.dangerScore, 1)
         XCTAssertEqual(engine.state.eyeGatesSinceBodyBreak, 0)
+    }
+
+    func testEyeGateEmergencyOverrideRequiresHoldAndConfirmationFriction() {
+        var engine = RestEngine(settings: .defaults, now: start)
+        _ = engine.takeNow(.eyeGate, now: start)
+
+        XCTAssertEqual(
+            engine.emergencyOverride(now: start.addingTimeInterval(2), completedConfirmationSteps: 2),
+            .denied(.emergencyOverrideHoldIncomplete)
+        )
+        XCTAssertEqual(engine.state.activeSession?.kind, .eyeGate)
+
+        XCTAssertEqual(
+            engine.emergencyOverride(now: start.addingTimeInterval(3), completedConfirmationSteps: 1),
+            .denied(.emergencyOverrideConfirmationIncomplete)
+        )
+        XCTAssertEqual(engine.state.activeSession?.kind, .eyeGate)
     }
 
     func testBodyBreakCanBePostponedWithinPolicy() {

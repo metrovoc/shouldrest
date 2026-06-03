@@ -313,15 +313,27 @@ public struct RestEngine: Equatable, Sendable {
     }
 
     @discardableResult
-    public mutating func emergencyOverride(now: Date = Date()) -> RestEngineResult {
+    public mutating func emergencyOverride(
+        now: Date = Date(),
+        completedConfirmationSteps: Int = 0,
+        heldDuration: TimeInterval? = nil
+    ) -> RestEngineResult {
         guard let session = state.activeSession else {
             return .denied(.noActiveSession)
         }
         guard session.kind == .eyeGate else {
             return skipActive(now: now)
         }
-        guard settings.eyeGate.emergencyOverride.isEnabled else {
+        let policy = settings.eyeGate.emergencyOverride
+        guard policy.isEnabled else {
             return .denied(.emergencyOverrideDisabled)
+        }
+        let observedHoldDuration = max(0, heldDuration ?? now.timeIntervalSince(session.startedAt))
+        guard observedHoldDuration >= policy.minimumHoldDuration else {
+            return .denied(.emergencyOverrideHoldIncomplete)
+        }
+        guard completedConfirmationSteps >= policy.confirmationSteps else {
+            return .denied(.emergencyOverrideConfirmationIncomplete)
         }
         return completeActive(now: now, reason: .emergencyOverride)
     }

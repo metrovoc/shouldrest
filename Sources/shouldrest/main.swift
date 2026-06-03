@@ -187,6 +187,13 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(.separator())
         }
 
+        if let active = engine.state.activeSession,
+           active.kind == .eyeGate,
+           settings.eyeGate.emergencyOverride.isEnabled {
+            menu.addItem(actionItem(L10n.tr("menu.emergencyOverride"), #selector(emergencyOverrideEyeGate)))
+            menu.addItem(.separator())
+        }
+
         if let active = engine.state.activeSession, active.kind == .bodyBreak {
             menu.addItem(actionItem(L10n.tr("menu.postponeBodyBreak"), #selector(postponeBodyBreak)))
             menu.addItem(actionItem(L10n.tr("menu.finishBodyBreak"), #selector(finishActiveBreak)))
@@ -345,6 +352,58 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         manualAwaitingSessionID = nil
         logger.log("Body Break skipped")
         rebuildMenu()
+    }
+
+    @objc private func emergencyOverrideEyeGate() {
+        guard let active = engine.state.activeSession, active.kind == .eyeGate else { return }
+
+        let policy = settings.eyeGate.emergencyOverride
+        let elapsed = Date().timeIntervalSince(active.startedAt)
+        guard elapsed >= policy.minimumHoldDuration else {
+            let remaining = Int(ceil(policy.minimumHoldDuration - elapsed))
+            showAppNotification(
+                title: L10n.tr("app.name"),
+                body: L10n.format("notification.emergencyHold", remaining)
+            )
+            logger.log("Emergency override denied: hold incomplete")
+            return
+        }
+
+        guard confirmEmergencyOverride(steps: policy.confirmationSteps) else {
+            logger.log("Emergency override cancelled during confirmation")
+            return
+        }
+
+        let result = engine.emergencyOverride(
+            now: Date(),
+            completedConfirmationSteps: policy.confirmationSteps,
+            heldDuration: elapsed
+        )
+        if case .completed(let session, _) = result {
+            soundPlayer.play(settings.rule(for: session.kind).finishSound)
+            overlayController.dismiss()
+            manualAwaitingSessionID = nil
+            logger.log("Emergency override completed for \(session.kind.rawValue)")
+        } else {
+            logger.log("Emergency override denied result=\(result)")
+        }
+        rebuildMenu()
+    }
+
+    private func confirmEmergencyOverride(steps: Int) -> Bool {
+        guard steps > 0 else { return true }
+        for step in 1...steps {
+            let alert = NSAlert()
+            alert.messageText = L10n.format("emergency.confirmTitle", step, steps)
+            alert.informativeText = L10n.tr("emergency.confirmBody")
+            alert.addButton(withTitle: L10n.tr("emergency.continue"))
+            alert.addButton(withTitle: L10n.tr("emergency.cancel"))
+            alert.window.level = .screenSaver
+            guard alert.runModal() == .alertFirstButtonReturn else {
+                return false
+            }
+        }
+        return true
     }
 
     @objc private func resumeBreaks() {

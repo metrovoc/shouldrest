@@ -44,6 +44,8 @@ public enum ActionDenial: Equatable, Sendable {
     case eyeGateCannotBeSkipped
     case eyeGateCannotBePostponed
     case emergencyOverrideDisabled
+    case emergencyOverrideHoldIncomplete
+    case emergencyOverrideConfirmationIncomplete
     case postponeLimitReached
     case postponeWindowExpired
 }

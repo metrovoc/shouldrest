@@ -4,6 +4,7 @@
 "menu.postponeBodyBreak" = "推迟 Body Break";
 "menu.finishBodyBreak" = "完成 Body Break";
 "menu.skipBodyBreak" = "跳过 Body Break";
+"menu.emergencyOverride" = "紧急覆盖 Eye Gate";
 "menu.resume" = "恢复";
 "menu.pause" = "暂停";
 "menu.pause30" = "30 分钟";
@@ -27,6 +28,7 @@
 "notification.updateCurrent" = "ShouldRest 已是最新。";
 "notification.updateNoFeed" = "未配置更新源。";
 "notification.updateFailed" = "更新检查失败：%@";
+"notification.emergencyHold" = "%d 秒后可使用紧急覆盖。";
 "status.noRests" = "没有启用的休息计划";
 "status.pausedIndefinitely" = "已无限期暂停";
 "status.pausedUntil" = "暂停到 %@";
@@ -38,6 +40,10 @@
 "deferral.outsideWorkingHours" = "非工作时间";
 "deferral.focusMode" = "Focus / 勿扰模式";
 "deferral.appExclusion" = "应用排除：%@";
+"emergency.confirmTitle" = "紧急覆盖确认 %d / %d";
+"emergency.confirmBody" = "只在真正中断时使用。此次会计为未完成的 Eye Gate。";
+"emergency.continue" = "继续";
+"emergency.cancel" = "取消";
 "overlay.eyeTitle" = "看向远处";
 "overlay.eyeBody" = "让眼睛休息";
 "overlay.bodyTitle" = "身体休息";

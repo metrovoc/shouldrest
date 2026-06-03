@@ -4,6 +4,7 @@
 "menu.postponeBodyBreak" = "Postpone Body Break";
 "menu.finishBodyBreak" = "Finish Body Break";
 "menu.skipBodyBreak" = "Skip Body Break";
+"menu.emergencyOverride" = "Emergency Override Eye Gate";
 "menu.resume" = "Resume";
 "menu.pause" = "Pause";
 "menu.pause30" = "30 Minutes";
@@ -27,6 +28,7 @@
 "notification.updateCurrent" = "ShouldRest is up to date.";
 "notification.updateNoFeed" = "No update feed is configured.";
 "notification.updateFailed" = "Update check failed: %@";
+"notification.emergencyHold" = "Emergency override is available in %d seconds.";
 "status.noRests" = "No enabled rests";
 "status.pausedIndefinitely" = "Paused indefinitely";
 "status.pausedUntil" = "Paused until %@";
@@ -38,6 +40,10 @@
 "deferral.outsideWorkingHours" = "outside working hours";
 "deferral.focusMode" = "Focus / Do Not Disturb";
 "deferral.appExclusion" = "app exclusion: %@";
+"emergency.confirmTitle" = "Emergency override confirmation %d of %d";
+"emergency.confirmBody" = "Use this only for a genuine interruption. This counts as a missed Eye Gate.";
+"emergency.continue" = "Continue";
+"emergency.cancel" = "Cancel";
 "overlay.eyeTitle" = "Look away";
 "overlay.eyeBody" = "Rest your eyes";
 "overlay.bodyTitle" = "Body Break";

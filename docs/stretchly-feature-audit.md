@@ -175,6 +175,7 @@ Implemented now:
 - Complete global-shortcut preference surface for pause toggle, pause durations, pause until morning, immediate rests, Body Break skip-to-next, and reset; pause-until-morning shortcut is registered at runtime.
 - Notification sound policy honors the silent-notifications setting for both pre-break and update notifications.
 - Break-health danger is visible in the menu status surface, not only in debug output.
+- Eye Gate emergency override is frictional in core and app surfaces: minimum hold duration and required confirmation steps are enforced before the override is counted as a missed Eye Gate.
 
 Still to implement:
 - Developer ID signing identity selection, notarization, and installer/distribution polish.
