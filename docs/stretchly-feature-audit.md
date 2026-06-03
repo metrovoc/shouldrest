@@ -198,6 +198,7 @@ Implemented now:
 - Preference surface for editing multiple custom Body Break ideas through a sanitized advanced JSON array, matching Stretchly's settings-file idea customization while keeping Eye Gate content minimal.
 - Advanced JSON preference editors validate non-empty input and stop saving on parse errors instead of silently falling back to simplified form fields; single-rule/single-idea configurations stay editable through the simplified form instead of being shadowed by auto-filled JSON.
 - Separate preference controls for Eye Gate and Body Break start/finish sounds, with shared configurable sound volume.
+- Stretchly-compatible built-in sound resources (`crystal-glass`, `wind-chime`, `tic-toc`, `reverie`, `silence`) with preference-level selectors, preview buttons, and third-party attribution notices bundled in app resources.
 - Complete global-shortcut preference surface for pause toggle, pause durations, pause until morning, immediate rests, Body Break skip-to-next, active rest finish, and reset; pause-until-morning shortcut is registered at runtime.
 - Stretchly-style skip-to-next-scheduled menu action and shortcut: it immediately starts whichever rest kind is currently scheduled next, while separate Eye Gate now and Body Break now actions remain available.
 - Preferences, settings persistence, and engine entry points prevent configurations with both rest types disabled, matching Stretchly's schedule guard while closing file and automation bypasses.

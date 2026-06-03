@@ -1552,18 +1552,34 @@ final class RestOverlayView: NSView {
     }
 }
 
-final class SoundPlayer {
+final class SoundPlayer: NSObject, NSSoundDelegate {
+    private var activeSounds: [NSSound] = []
+
     func play(_ policy: SoundPolicy) {
         switch policy {
         case .silent:
             return
         case .named(let name, let volume):
-            guard let sound = NSSound(named: NSSound.Name(name)) ?? NSSound(named: .init("Glass")) else {
+            guard let sound = bundledSound(named: name) ?? NSSound(named: NSSound.Name(name)) ?? NSSound(named: .init("Glass")) else {
                 return
             }
             sound.volume = Float(min(1, max(0, volume)))
+            sound.delegate = self
+            activeSounds.append(sound)
             sound.play()
         }
+    }
+
+    func sound(_ sound: NSSound, didFinishPlaying finishedPlaying: Bool) {
+        activeSounds.removeAll { $0 === sound }
+    }
+
+    private func bundledSound(named name: String) -> NSSound? {
+        let option = SoundOption(name: name)
+        guard let url = option.bundledResourceURL else {
+            return nil
+        }
+        return NSSound(contentsOf: url, byReference: false)
     }
 }
 

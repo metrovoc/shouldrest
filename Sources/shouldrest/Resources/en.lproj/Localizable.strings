@@ -127,6 +127,13 @@
 "prefs.bodyStartSound" = "Body start sound";
 "prefs.bodyFinishSound" = "Body finish sound";
 "prefs.finishSound" = "Finish sound";
+"prefs.previewSound" = "Preview";
+"prefs.sound.silence" = "Silence";
+"prefs.sound.crystalGlass" = "Crystal Glass";
+"prefs.sound.windChime" = "Wind Chime";
+"prefs.sound.ticToc" = "Tic Toc";
+"prefs.sound.reverie" = "Reverie";
+"prefs.sound.custom" = "Custom (%@)";
 "prefs.volume" = "Volume 0...1";
 "prefs.sectionCustomIdea" = "Custom Body Break Idea";
 "prefs.useBuiltInIdeas" = "Use built-in rest ideas";

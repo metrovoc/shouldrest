@@ -69,7 +69,7 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 - Light, dark, and system appearance.
 - System language with optional in-app language override for bundled English and Simplified Chinese translations; unsupported legacy locale identifiers fall back to System language.
 - Configurable colors for rest surfaces.
-- Optional sounds at start and finish.
+- Optional sounds at start and finish, including Stretchly-compatible built-in sound choices and preference-level preview.
 - Configurable sound volume.
 - Tray/menu-bar status styles: default, time-to-break, and progress.
 - Optional current time during Body Break.

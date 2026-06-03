@@ -127,6 +127,13 @@
 "prefs.bodyStartSound" = "Body Break 开始声音";
 "prefs.bodyFinishSound" = "Body Break 结束声音";
 "prefs.finishSound" = "结束声音";
+"prefs.previewSound" = "试听";
+"prefs.sound.silence" = "静音";
+"prefs.sound.crystalGlass" = "水晶玻璃";
+"prefs.sound.windChime" = "风铃";
+"prefs.sound.ticToc" = "滴答";
+"prefs.sound.reverie" = "白日梦";
+"prefs.sound.custom" = "自定义（%@）";
 "prefs.volume" = "音量 0...1";
 "prefs.sectionCustomIdea" = "自定义 Body Break 内容";
 "prefs.useBuiltInIdeas" = "使用内置休息提示";
