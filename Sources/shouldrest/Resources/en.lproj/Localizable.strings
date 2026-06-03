@@ -36,8 +36,8 @@
 "notification.shortcutsUnavailable" = "Some shortcuts could not be registered: %@.";
 "notification.emergencyHold" = "Emergency exit is available in %d seconds.";
 "notification.resumingBreaks" = "Resuming breaks";
-"notification.quitBlocked" = "Cannot quit during strict %@.";
-"notification.resetBlocked" = "Cannot reset during strict %@.";
+"notification.quitBlocked" = "Finish %@ before quitting.";
+"notification.resetBlocked" = "Finish %@ before resetting breaks.";
 "status.noRests" = "No enabled rests";
 "status.pausedIndefinitely" = "Paused indefinitely";
 "status.pausedUntil" = "Paused until %@";

@@ -36,8 +36,8 @@
 "notification.shortcutsUnavailable" = "部分快捷键无法注册：%@。";
 "notification.emergencyHold" = "%d 秒后可使用紧急退出。";
 "notification.resumingBreaks" = "正在恢复休息";
-"notification.quitBlocked" = "严格 %@ 期间不能退出。";
-"notification.resetBlocked" = "严格 %@ 期间不能重置。";
+"notification.quitBlocked" = "请先完成%@，再退出。";
+"notification.resetBlocked" = "请先完成%@，再重置休息。";
 "status.noRests" = "没有启用的休息计划";
 "status.pausedIndefinitely" = "已无限期暂停";
 "status.pausedUntil" = "暂停到 %@";

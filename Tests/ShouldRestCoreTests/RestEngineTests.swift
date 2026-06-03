@@ -558,7 +558,7 @@ final class RestEngineTests: XCTestCase {
         disabled.endBodyBreak = ""
         disabled.emergencyEyeGateOverride = ""
         XCTAssertEqual(disabled.resolvedEndBodyBreakShortcut, "")
-        XCTAssertEqual(disabled.resolvedEmergencyEyeGateOverride, "")
+        XCTAssertEqual(disabled.resolvedEmergencyEyeGateOverride, ShortcutSettings.defaultEmergencyEyeGateOverride)
     }
 
     func testShortcutSettingsResolvesLegacyBodyBreakNowAlias() {
@@ -628,6 +628,10 @@ final class RestEngineTests: XCTestCase {
 
         XCTAssertEqual(loaded.eyeGate.emergencyOverride.confirmationSteps, 0)
         XCTAssertEqual(loaded.bodyBreak.emergencyOverride.confirmationSteps, 0)
+        let migratedData = try Data(contentsOf: url)
+        let migratedRaw = try JSONDecoder().decode(RestSettings.self, from: migratedData)
+        XCTAssertEqual(migratedRaw.eyeGate.emergencyOverride.confirmationSteps, 0)
+        XCTAssertEqual(migratedRaw.bodyBreak.emergencyOverride.confirmationSteps, 0)
 
         try store.save(legacy)
         let savedData = try Data(contentsOf: url)
@@ -635,6 +639,26 @@ final class RestEngineTests: XCTestCase {
 
         XCTAssertEqual(savedRaw.eyeGate.emergencyOverride.confirmationSteps, 0)
         XCTAssertEqual(savedRaw.bodyBreak.emergencyOverride.confirmationSteps, 0)
+    }
+
+    func testSettingsStoreMigratesBlankEmergencyShortcutToDefault() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let url = directory.appendingPathComponent("settings.json")
+        let store = SettingsStore(fileURL: url)
+        var legacy = RestSettings.defaults
+        legacy.shortcuts.emergencyEyeGateOverride = ""
+
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try JSONEncoder().encode(legacy).write(to: url, options: [.atomic])
+
+        let loaded = try store.load()
+
+        XCTAssertEqual(loaded.shortcuts.emergencyEyeGateOverride, ShortcutSettings.defaultEmergencyEyeGateOverride)
+        XCTAssertEqual(loaded.shortcuts.resolvedEmergencyEyeGateOverride, ShortcutSettings.defaultEmergencyEyeGateOverride)
+        let migratedData = try Data(contentsOf: url)
+        let migratedRaw = try JSONDecoder().decode(RestSettings.self, from: migratedData)
+        XCTAssertEqual(migratedRaw.shortcuts.emergencyEyeGateOverride, ShortcutSettings.defaultEmergencyEyeGateOverride)
     }
 
     func testEnforcementProfileDecodesLegacyDisplaySettings() throws {

@@ -41,6 +41,22 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(englishValues.contains("available after"))
     }
 
+    func testBlockedActionNotificationsUseUserActionLanguage() {
+        defer { L10n.languageOverride = nil }
+
+        L10n.languageOverride = "en"
+        XCTAssertEqual(L10n.format("notification.quitBlocked", "Eye Gate"), "Finish Eye Gate before quitting.")
+        XCTAssertEqual(L10n.format("notification.resetBlocked", "Eye Gate"), "Finish Eye Gate before resetting breaks.")
+        XCTAssertFalse(L10n.tr("notification.quitBlocked").localizedCaseInsensitiveContains("strict"))
+        XCTAssertFalse(L10n.tr("notification.resetBlocked").localizedCaseInsensitiveContains("strict"))
+
+        L10n.languageOverride = "zh-Hans"
+        XCTAssertEqual(L10n.format("notification.quitBlocked", "护眼休息"), "请先完成护眼休息，再退出。")
+        XCTAssertEqual(L10n.format("notification.resetBlocked", "护眼休息"), "请先完成护眼休息，再重置休息。")
+        XCTAssertFalse(L10n.tr("notification.quitBlocked").contains("严格"))
+        XCTAssertFalse(L10n.tr("notification.resetBlocked").contains("严格"))
+    }
+
     private func simplifiedChineseLocalizedValues() throws -> [String] {
         try localizedValues(language: "zh-Hans")
     }

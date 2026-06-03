@@ -88,6 +88,10 @@ public struct RestSettings: Codable, Equatable, Sendable {
         var copy = enforcingAtLeastOneEnabledRest()
         copy.eyeGate.emergencyOverride.confirmationSteps = 0
         copy.bodyBreak.emergencyOverride.confirmationSteps = 0
+        if let emergencyShortcut = copy.shortcuts.emergencyEyeGateOverride,
+           emergencyShortcut.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            copy.shortcuts.emergencyEyeGateOverride = ShortcutSettings.defaultEmergencyEyeGateOverride
+        }
         return copy
     }
 }
@@ -522,7 +526,11 @@ public struct ShortcutSettings: Codable, Equatable, Sendable {
     }
 
     public var resolvedEmergencyEyeGateOverride: String {
-        emergencyEyeGateOverride ?? Self.defaultEmergencyEyeGateOverride
+        guard let emergencyEyeGateOverride,
+              !emergencyEyeGateOverride.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return Self.defaultEmergencyEyeGateOverride
+        }
+        return emergencyEyeGateOverride
     }
 
     public var resolvedTakeBodyBreakNowShortcut: String {

@@ -17,7 +17,12 @@ public struct SettingsStore: Sendable {
             return .defaults
         }
         let data = try Data(contentsOf: fileURL)
-        return try decoder.decode(RestSettings.self, from: data).normalizedForCurrentDesign()
+        let decoded = try decoder.decode(RestSettings.self, from: data)
+        let normalized = decoded.normalizedForCurrentDesign()
+        if decoded != normalized {
+            try save(normalized)
+        }
+        return normalized
     }
 
     public func save(_ settings: RestSettings) throws {

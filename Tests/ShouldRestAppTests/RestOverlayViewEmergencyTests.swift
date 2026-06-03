@@ -23,6 +23,19 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertTrue(didRequestEmergency)
     }
 
+    func testOverlayEmergencyButtonClickRequestsExitWithoutExternalConfirmation() throws {
+        let view = configuredEyeGateOverlay()
+        var requestCount = 0
+        view.onEmergencyOverrideRequested = {
+            requestCount += 1
+        }
+
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        button.performClick(nil)
+
+        XCTAssertEqual(requestCount, 1)
+    }
+
     func testEscapeKeyTriggersEmergencyInsideOverlay() throws {
         let view = configuredEyeGateOverlay()
         var didRequestEmergency = false
