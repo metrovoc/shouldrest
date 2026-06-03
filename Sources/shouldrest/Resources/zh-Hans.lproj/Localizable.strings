@@ -32,6 +32,8 @@
 "notification.updateFailed" = "更新检查失败：%@";
 "notification.emergencyHold" = "%d 秒后可使用紧急覆盖。";
 "notification.resumingBreaks" = "正在恢复休息";
+"notification.quitBlocked" = "严格 %@ 期间不能退出。";
+"notification.resetBlocked" = "严格 %@ 期间不能重置。";
 "status.noRests" = "没有启用的休息计划";
 "status.pausedIndefinitely" = "已无限期暂停";
 "status.pausedUntil" = "暂停到 %@";

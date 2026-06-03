@@ -43,6 +43,7 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 - Strict behavior for Eye Gate by default.
 - Body Break postpone and skip policies with limits.
 - Manual-finish mode for Body Break and optional completed Eye Gate.
+- Application termination and reset bypasses are blocked during strict active rests.
 
 ### Context Awareness
 

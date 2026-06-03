@@ -92,6 +92,7 @@ ShouldRest must implement or exceed these Stretchly capabilities except where ex
 - Default strict Eye Gate.
 - Bounded Body Break postpone and skip.
 - Manual-finish support for Body Break and optional completed Eye Gate.
+- Strict active rests prevent application termination and reset bypasses.
 
 ### Context
 
@@ -167,6 +168,7 @@ Implemented now:
 - Debug panel with runtime state, timer state, settings/log/support paths, and Body Break image paths; admin path hiding removes all of those filesystem paths from copied/panel debug output and CLI path commands.
 - Global shortcut registration for pause, pause durations, take-now, Body Break skip-to-next, and reset.
 - Stretchly-style active rest finish shortcut: default `CmdOrCtrl+X`, registered only while a rest is active. For Body Break, after the required duration it finishes, during the postpone window it postpones, and otherwise it uses the Body Break skip policy. For Eye Gate, it can only finish an already-completed manual-finish phase and never acts as early skip/postpone.
+- Stretchly-style strict break bypass guard: active Eye Gate and strict Body Break disable Quit/Reset menu items, cancel `applicationShouldTerminate`, and reject reset requests from shortcuts or automation, preserving the overlay instead of letting app termination or reset bypass the rest.
 - URL-style automation parser plus Apple Event URL handler for bundled app registration.
 - Body Break manual-finish phase that lowers overlay level after the required duration and waits for user completion.
 - Optional Eye Gate manual-finish phase that waits after the required duration without allowing early skip/postpone; its overlay remains at native screen-saver level and can be completed from the menu or active finish shortcut.

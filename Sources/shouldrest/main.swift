@@ -24,6 +24,22 @@ enum AppNotificationUserInfo {
     }
 }
 
+enum TerminationPolicy {
+    static func strictActiveRestKind(state: RestEngineState, settings: RestSettings) -> RestKind? {
+        guard let active = state.activeSession else { return nil }
+        switch active.kind {
+        case .eyeGate:
+            return .eyeGate
+        case .bodyBreak:
+            return settings.bodyBreak.ordinarySkipEnabled ? nil : .bodyBreak
+        }
+    }
+
+    static func canTerminate(state: RestEngineState, settings: RestSettings) -> Bool {
+        strictActiveRestKind(state: state, settings: settings) == nil
+    }
+}
+
 @MainActor
 final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private let settingsStore: SettingsStore
@@ -113,6 +129,19 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         unregisterActiveBreakShortcut()
         overlayController.dismiss()
         logger.log("Application terminated")
+    }
+
+    func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard let kind = TerminationPolicy.strictActiveRestKind(state: engine.state, settings: settings) else {
+            return .terminateNow
+        }
+        showAppNotification(
+            title: L10n.tr("app.name"),
+            body: L10n.format("notification.quitBlocked", MenuStatusPresenter.restKindName(kind))
+        )
+        logger.log("Termination blocked during strict \(kind.rawValue)")
+        rebuildMenu()
+        return .terminateCancel
     }
 
     @objc private func screenParametersChanged() {
@@ -316,7 +345,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(pauseItem)
         }
 
-        menu.addItem(actionItem(L10n.tr("menu.reset"), #selector(resetBreaks)))
+        let resetItem = actionItem(L10n.tr("menu.reset"), #selector(resetBreaks))
+        resetItem.isEnabled = TerminationPolicy.canTerminate(state: engine.state, settings: settings)
+        menu.addItem(resetItem)
         menu.addItem(.separator())
         menu.addItem(actionItem(L10n.tr("menu.preferences"), #selector(openPreferences)))
         if !settings.admin.disableAppUpdateFeatures {
@@ -333,7 +364,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
 
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: L10n.tr("menu.quit"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        let quitItem = NSMenuItem(title: L10n.tr("menu.quit"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        quitItem.isEnabled = TerminationPolicy.canTerminate(state: engine.state, settings: settings)
+        menu.addItem(quitItem)
         item.menu = menu
     }
 
@@ -662,6 +695,15 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func resetBreaks() {
+        if let kind = TerminationPolicy.strictActiveRestKind(state: engine.state, settings: settings) {
+            showAppNotification(
+                title: L10n.tr("app.name"),
+                body: L10n.format("notification.resetBlocked", MenuStatusPresenter.restKindName(kind))
+            )
+            logger.log("Reset blocked during strict \(kind.rawValue)")
+            rebuildMenu()
+            return
+        }
         _ = engine.reset()
         unregisterActiveBreakShortcut()
         overlayController.dismiss()

@@ -32,6 +32,8 @@
 "notification.updateFailed" = "Update check failed: %@";
 "notification.emergencyHold" = "Emergency override is available in %d seconds.";
 "notification.resumingBreaks" = "Resuming breaks";
+"notification.quitBlocked" = "Cannot quit during strict %@.";
+"notification.resetBlocked" = "Cannot reset during strict %@.";
 "status.noRests" = "No enabled rests";
 "status.pausedIndefinitely" = "Paused indefinitely";
 "status.pausedUntil" = "Paused until %@";
