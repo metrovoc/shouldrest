@@ -148,5 +148,33 @@ final class RestEngineTests: XCTestCase {
 
         XCTAssertEqual(result, .deferred(.bodyBreak, .appExclusion("Presentation")))
     }
-}
 
+    func testContentSanitizerRemovesScriptsAndDangerousAttributes() {
+        let unsafe = #"""
+        <p onclick="alert(1)">Stretch</p>
+        <script>alert("x")</script>
+        <a href="javascript:alert(1)">bad</a>
+        <img src="data:text/html;base64,abc">
+        """#
+
+        let sanitized = ContentSanitizer.sanitizeRichText(unsafe)
+
+        XCTAssertFalse(sanitized.localizedCaseInsensitiveContains("script"))
+        XCTAssertFalse(sanitized.localizedCaseInsensitiveContains("onclick"))
+        XCTAssertFalse(sanitized.localizedCaseInsensitiveContains("javascript:"))
+        XCTAssertFalse(sanitized.localizedCaseInsensitiveContains("data:"))
+        XCTAssertTrue(sanitized.contains("Stretch"))
+    }
+
+    func testSettingsStoreRoundTripsDefaults() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let url = directory.appendingPathComponent("settings.json")
+        let store = SettingsStore(fileURL: url)
+
+        try store.save(.defaults)
+        let loaded = try store.load()
+
+        XCTAssertEqual(loaded, .defaults)
+    }
+}

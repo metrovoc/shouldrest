@@ -7,22 +7,20 @@ import UserNotifications
 @MainActor
 final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private let settingsStore: SettingsStore
+    private let logger = AppLogger()
     private var settings: RestSettings
     private var engine: RestEngine
     private let overlayController = OverlayController()
     private let focusDetector = FocusModeDetector()
     private let soundPlayer = SoundPlayer()
+    private var preferencesWindowController: PreferencesWindowController?
     private var statusItem: NSStatusItem?
     private var tickTimer: Timer?
     private var lastFocusCheck = Date.distantPast
     private var focusModeActive = false
 
     override init() {
-        let storeURL = FileManager.default
-            .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("ShouldRest", isDirectory: true)
-            .appendingPathComponent("settings.json")
-        let store = SettingsStore(fileURL: storeURL)
+        let store = SettingsStore(fileURL: AppPaths.settingsURL)
         self.settingsStore = store
         self.settings = (try? store.load()) ?? .defaults
         self.engine = RestEngine(settings: settings)
@@ -39,17 +37,25 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             name: NSApplication.didChangeScreenParametersNotification,
             object: nil
         )
+        DistributedNotificationCenter.default().addObserver(
+            self,
+            selector: #selector(handleAutomation(_:)),
+            name: .shouldRestAutomation,
+            object: nil
+        )
         tickTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.tick()
             }
         }
+        logger.log("Application launched")
         tick()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         tickTimer?.invalidate()
         overlayController.dismiss()
+        logger.log("Application terminated")
     }
 
     @objc private func screenParametersChanged() {
@@ -77,6 +83,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 soundPlayer.play(settings.rule(for: active.kind).finishSound)
                 _ = engine.completeActive(now: now, reason: .completed)
                 overlayController.dismiss()
+                logger.log("Completed \(active.kind.rawValue)")
                 rebuildMenu()
                 return
             }
@@ -89,8 +96,10 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         case .started(let session):
             soundPlayer.play(settings.rule(for: session.kind).startSound)
             overlayController.present(session: session, settings: settings, now: now)
+            logger.log("Started \(session.kind.rawValue)")
         case .notificationDue(let kind):
             showNotification(for: kind)
+            logger.log("Notification due for \(kind.rawValue)")
         default:
             break
         }
@@ -156,6 +165,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(actionItem("Reset", #selector(resetBreaks)))
         menu.addItem(.separator())
+        menu.addItem(actionItem("Preferences...", #selector(openPreferences)))
         menu.addItem(actionItem("Save Settings", #selector(saveSettings)))
         menu.addItem(actionItem("Copy Debug Info", #selector(copyDebugInfo)))
 
@@ -224,6 +234,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         if case .started(let session) = engine.takeNow(.eyeGate) {
             soundPlayer.play(settings.rule(for: session.kind).startSound)
             overlayController.present(session: session, settings: settings, now: Date())
+            logger.log("Manual Eye Gate started")
         }
         rebuildMenu()
     }
@@ -232,6 +243,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         if case .started(let session) = engine.takeNow(.bodyBreak) {
             soundPlayer.play(settings.rule(for: session.kind).startSound)
             overlayController.present(session: session, settings: settings, now: Date())
+            logger.log("Manual Body Break started")
         }
         rebuildMenu()
     }
@@ -239,6 +251,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     @objc private func postponeBodyBreak() {
         if case .postponed = engine.postponeActive() {
             overlayController.dismiss()
+            logger.log("Body Break postponed")
         }
         rebuildMenu()
     }
@@ -246,6 +259,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     @objc private func finishActiveBreak() {
         if let active = engine.state.activeSession {
             soundPlayer.play(settings.rule(for: active.kind).finishSound)
+            logger.log("Manually finished \(active.kind.rawValue)")
         }
         _ = engine.completeActive(reason: .manual)
         overlayController.dismiss()
@@ -255,11 +269,13 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     @objc private func skipBodyBreak() {
         _ = engine.skipActive()
         overlayController.dismiss()
+        logger.log("Body Break skipped")
         rebuildMenu()
     }
 
     @objc private func resumeBreaks() {
         _ = engine.resume()
+        logger.log("Breaks resumed")
         rebuildMenu()
     }
 
@@ -294,6 +310,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func pause(for duration: TimeInterval?, reason: PauseReason) {
         if case .paused = engine.pause(for: duration, reason: reason) {
             overlayController.dismiss()
+            logger.log("Breaks paused reason=\(reason.rawValue) duration=\(String(describing: duration))")
         }
         rebuildMenu()
     }
@@ -301,17 +318,38 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     @objc private func resetBreaks() {
         _ = engine.reset()
         overlayController.dismiss()
+        logger.log("Breaks reset")
         rebuildMenu()
     }
 
+    @objc private func openPreferences() {
+        if preferencesWindowController == nil {
+            preferencesWindowController = PreferencesWindowController(settings: settings) { [weak self] nextSettings in
+                Task { @MainActor in
+                    self?.applySettings(nextSettings)
+                }
+            }
+        }
+        preferencesWindowController?.update(settings: settings)
+        preferencesWindowController?.showWindow(nil)
+        preferencesWindowController?.window?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+    }
+
     @objc private func saveSettings() {
-        try? settingsStore.save(settings)
+        do {
+            try settingsStore.save(settings)
+            logger.log("Settings saved")
+        } catch {
+            logger.log("Settings save failed: \(error.localizedDescription)")
+        }
         rebuildMenu()
     }
 
     @objc private func copyDebugInfo() {
         let lines = [
             "settingsPath=\(settingsStore.fileURL.path)",
+            "logPath=\(logger.fileURL.path)",
             "scheduled=\(String(describing: engine.state.scheduled))",
             "activeSession=\(String(describing: engine.state.activeSession))",
             "pause=\(String(describing: engine.state.pause))",
@@ -322,6 +360,54 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         ]
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(lines.joined(separator: "\n"), forType: .string)
+        logger.log("Debug info copied")
+    }
+
+    private func applySettings(_ nextSettings: RestSettings) {
+        settings = nextSettings
+        engine.updateSettings(nextSettings)
+        do {
+            try settingsStore.save(nextSettings)
+            logger.log("Preferences saved")
+        } catch {
+            logger.log("Preferences save failed: \(error.localizedDescription)")
+        }
+        rebuildMenu()
+    }
+
+    @objc private func handleAutomation(_ notification: Notification) {
+        guard let rawCommand = notification.object as? String,
+              let command = AutomationCommand(rawValue: rawCommand) else {
+            return
+        }
+
+        switch command {
+        case .pause:
+            pause(for: automationDuration(from: notification.userInfo), reason: .user)
+        case .resume:
+            resumeBreaks()
+        case .reset:
+            resetBreaks()
+        case .eye:
+            takeEyeGateNow()
+        case .body:
+            takeBodyBreakNow()
+        case .preferences:
+            openPreferences()
+        case .debug:
+            copyDebugInfo()
+        }
+        logger.log("Handled automation command \(command.rawValue)")
+    }
+
+    private func automationDuration(from userInfo: [AnyHashable: Any]?) -> TimeInterval? {
+        if let duration = userInfo?["duration"] as? TimeInterval {
+            return duration
+        }
+        if let duration = userInfo?["duration"] as? NSNumber {
+            return duration.doubleValue
+        }
+        return nil
     }
 }
 
@@ -641,7 +727,9 @@ extension Array {
     }
 }
 
-let app = NSApplication.shared
-let delegate = ShouldRestAppDelegate()
-app.delegate = delegate
-app.run()
+if !CommandLineAutomation.handle(arguments: CommandLine.arguments) {
+    let app = NSApplication.shared
+    let delegate = ShouldRestAppDelegate()
+    app.delegate = delegate
+    app.run()
+}

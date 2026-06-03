@@ -142,16 +142,20 @@ Implemented now:
 - UserNotifications-based pre-break notifications.
 - Start/finish sound playback.
 - Copyable debug snapshot from the menu.
+- Native preferences window for core cadence, enablement, Focus policy, and tray style.
+- CLI command surface for help, version, settings/log paths, pause/resume/reset, take-now, preferences, and debug requests.
+- Distributed notification bridge for CLI-to-running-app automation.
+- Local log file.
+- Custom rich-text sanitizer for Body Break content.
+- Settings-store round-trip coverage.
 
 Still to implement:
 
-- Preferences UI.
 - Global shortcuts.
-- CLI/URL automation.
-- Custom content sanitization.
+- URL automation.
 - Open-at-login integration.
 - Update check and admin policy UI.
-- Logs/debug panel.
+- Full debug panel.
 - Full manual-finish overlay interaction model.
 - Suspend/lock correction hooks.
 - Localization files.

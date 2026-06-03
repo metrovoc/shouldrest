@@ -1,0 +1,182 @@
+import AppKit
+import Foundation
+
+enum AppPaths {
+    static let supportDirectory = FileManager.default
+        .urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        .appendingPathComponent("ShouldRest", isDirectory: true)
+
+    static let settingsURL = supportDirectory.appendingPathComponent("settings.json")
+    static let logURL = supportDirectory.appendingPathComponent("logs/shouldrest.log")
+}
+
+final class AppLogger {
+    let fileURL: URL
+    private let formatter = ISO8601DateFormatter()
+
+    init(fileURL: URL = AppPaths.logURL) {
+        self.fileURL = fileURL
+    }
+
+    func log(_ message: String) {
+        let line = "\(formatter.string(from: Date())) \(message)\n"
+        do {
+            try FileManager.default.createDirectory(
+                at: fileURL.deletingLastPathComponent(),
+                withIntermediateDirectories: true
+            )
+            if FileManager.default.fileExists(atPath: fileURL.path),
+               let handle = try? FileHandle(forWritingTo: fileURL) {
+                try handle.seekToEnd()
+                if let data = line.data(using: String.Encoding.utf8) {
+                    try handle.write(contentsOf: data)
+                }
+                try handle.close()
+            } else {
+                try line.write(to: fileURL, atomically: true, encoding: String.Encoding.utf8)
+            }
+        } catch {
+            NSLog("ShouldRest log write failed: \(error.localizedDescription)")
+        }
+    }
+}
+
+extension Notification.Name {
+    static let shouldRestAutomation = Notification.Name("dev.shouldrest.automation")
+}
+
+enum AutomationCommand: String {
+    case pause
+    case resume
+    case reset
+    case eye
+    case body
+    case preferences
+    case debug
+}
+
+enum CommandLineAutomation {
+    static func handle(arguments: [String]) -> Bool {
+        let args = Array(arguments.dropFirst())
+        guard let command = args.first else {
+            return false
+        }
+
+        switch command {
+        case "help", "--help", "-h":
+            print(helpText)
+            return true
+        case "version", "--version", "-v":
+            print("ShouldRest 0.1.0")
+            return true
+        case "settings":
+            print(AppPaths.settingsURL.path)
+            return true
+        case "logs":
+            print(AppPaths.logURL.path)
+            return true
+        case "debug":
+            post(.debug)
+            print("Requested debug info from running ShouldRest.")
+            return true
+        case "pause":
+            let duration = durationArgument(args)
+            post(.pause, duration: duration)
+            print("Requested pause\(duration.map { " for \(Int($0)) seconds" } ?? " indefinitely").")
+            return true
+        case "resume":
+            post(.resume)
+            print("Requested resume.")
+            return true
+        case "reset":
+            post(.reset)
+            print("Requested reset.")
+            return true
+        case "eye":
+            post(.eye)
+            print("Requested Eye Gate now.")
+            return true
+        case "body":
+            post(.body)
+            print("Requested Body Break now.")
+            return true
+        case "preferences":
+            post(.preferences)
+            print("Requested preferences window.")
+            return true
+        default:
+            print("Unknown command: \(command)\n\n\(helpText)")
+            return true
+        }
+    }
+
+    private static func post(_ command: AutomationCommand, duration: TimeInterval? = nil) {
+        var userInfo: [String: Any] = [:]
+        if let duration {
+            userInfo["duration"] = duration
+        }
+        DistributedNotificationCenter.default().postNotificationName(
+            .shouldRestAutomation,
+            object: command.rawValue,
+            userInfo: userInfo,
+            deliverImmediately: true
+        )
+    }
+
+    private static func durationArgument(_ args: [String]) -> TimeInterval? {
+        guard let index = args.firstIndex(where: { $0 == "-d" || $0 == "--duration" }),
+              args.indices.contains(index + 1) else {
+            return nil
+        }
+        return parseDuration(args[index + 1])
+    }
+
+    private static func parseDuration(_ input: String) -> TimeInterval? {
+        if input == "indefinitely" {
+            return nil
+        }
+        if input == "until-morning" {
+            let calendar = Calendar.current
+            let now = Date()
+            let tomorrow = calendar.date(byAdding: .day, value: 1, to: now) ?? now.addingTimeInterval(24 * 60 * 60)
+            let morning = calendar.date(bySettingHour: 6, minute: 0, second: 0, of: tomorrow) ?? tomorrow
+            return morning.timeIntervalSince(now)
+        }
+        if let minutes = Int(input), minutes > 0 {
+            return TimeInterval(minutes * 60)
+        }
+
+        let pattern = #"^(?:(\d+)h)?(?:(\d+)m)?$"#
+        guard let regex = try? NSRegularExpression(pattern: pattern),
+              let match = regex.firstMatch(in: input, range: NSRange(input.startIndex..., in: input)),
+              match.range.location != NSNotFound,
+              match.range.length > 0 else {
+            return nil
+        }
+
+        func number(at index: Int) -> Int {
+            guard let range = Range(match.range(at: index), in: input) else { return 0 }
+            return Int(input[range]) ?? 0
+        }
+
+        let seconds = (number(at: 1) * 60 * 60) + (number(at: 2) * 60)
+        return seconds > 0 ? TimeInterval(seconds) : nil
+    }
+
+    private static let helpText = """
+    Usage: shouldrest <command> [options]
+
+    Commands:
+      help                         Show this help.
+      version                      Show version.
+      settings                     Print settings path.
+      logs                         Print log path.
+      pause [-d duration]          Pause breaks. Duration: indefinitely, until-morning, 60, 1h, 1h20m.
+      resume                       Resume breaks.
+      reset                        Reset schedule and health.
+      eye                          Start Eye Gate now.
+      body                         Start Body Break now.
+      preferences                  Open preferences in the running app.
+      debug                        Copy debug info in the running app.
+    """
+}
