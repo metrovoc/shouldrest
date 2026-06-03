@@ -69,6 +69,9 @@
 "overlay.emergencyOverrideHelp" = "只在真正中断时使用。仍需确认，并计为未完成的 Eye Gate。";
 "overlay.emergencyConfirmStep" = "确认 %d/%d";
 "overlay.emergencyConfirmHelp" = "再次触发紧急、按 Return 或 Space。此次计为未完成的 Eye Gate。";
+"overlay.bodyPostpone" = "推迟";
+"overlay.bodySkip" = "跳过";
+"overlay.bodyFinish" = "完成";
 "preferences.title" = "ShouldRest 偏好设置";
 "debug.title" = "ShouldRest 调试";
 "prefs.enableEyeGate" = "启用 Eye Gate";

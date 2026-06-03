@@ -69,6 +69,9 @@
 "overlay.emergencyOverrideHelp" = "Use only for a genuine interruption. It still requires confirmation and counts as a missed Eye Gate.";
 "overlay.emergencyConfirmStep" = "Confirm %d/%d";
 "overlay.emergencyConfirmHelp" = "Press Emergency again, Return, or Space. Counts as a missed Eye Gate.";
+"overlay.bodyPostpone" = "Postpone";
+"overlay.bodySkip" = "Skip";
+"overlay.bodyFinish" = "Finish";
 "preferences.title" = "ShouldRest Preferences";
 "debug.title" = "ShouldRest Debug";
 "prefs.enableEyeGate" = "Enable Eye Gate";
