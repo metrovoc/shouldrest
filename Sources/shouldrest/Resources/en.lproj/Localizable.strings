@@ -142,9 +142,9 @@
 "prefs.theme.dark" = "Dark";
 "prefs.menuBarStyle" = "Menu bar style";
 "prefs.trayStyle.default" = "Icon only";
-"prefs.trayStyle.appName" = "Icon and app name";
-"prefs.trayStyle.timeToBreak" = "Icon and countdown";
-"prefs.trayStyle.progress" = "Icon and rest type";
+"prefs.trayStyle.appName" = "Icon and compact name";
+"prefs.trayStyle.timeToBreak" = "Icon and time";
+"prefs.trayStyle.progress" = "Icon, type, and time";
 "prefs.language" = "Language override";
 "prefs.language.system" = "System language";
 "prefs.language.english" = "English";

@@ -19,7 +19,7 @@ enum MenuStatusPresenter {
         case .default:
             return ""
         case .appName:
-            return L10n.tr("app.name")
+            return "SR"
         case .timeToBreak:
             return compactMenuBarDuration(state: state, now: now) ?? ""
         case .progress:
@@ -79,7 +79,7 @@ enum MenuStatusPresenter {
     private static func symbolName(for kind: RestKind) -> String {
         switch kind {
         case .eyeGate:
-            return "sun.horizon"
+            return "sun.max"
         case .bodyBreak:
             return "figure.walk"
         }

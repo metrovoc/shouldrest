@@ -39,7 +39,15 @@ final class MenuStatusPresenterTests: XCTestCase {
         let engine = RestEngine(settings: .defaults, now: start)
 
         XCTAssertEqual(MenuStatusPresenter.menuBarTitle(state: engine.state, settings: engine.settings, now: start), "")
-        XCTAssertEqual(MenuStatusPresenter.menuBarSymbolName(state: engine.state), "sun.horizon")
+        XCTAssertEqual(MenuStatusPresenter.menuBarSymbolName(state: engine.state), "sun.max")
+    }
+
+    func testAppNameMenuBarStyleUsesCompactBrandMark() {
+        var settings = RestSettings.defaults
+        settings.presentation.trayIconStyle = .appName
+        let engine = RestEngine(settings: settings, now: start)
+
+        XCTAssertEqual(MenuStatusPresenter.menuBarTitle(state: engine.state, settings: settings, now: start), "SR")
     }
 
     func testMenuBarCountdownUsesCompactDuration() {
@@ -75,7 +83,7 @@ final class MenuStatusPresenterTests: XCTestCase {
         )
 
         XCTAssertEqual(MenuStatusPresenter.menuBarTitle(state: state, settings: settings, now: start.addingTimeInterval(5)), "E 15s")
-        XCTAssertEqual(MenuStatusPresenter.menuBarSymbolName(state: state), "sun.horizon")
+        XCTAssertEqual(MenuStatusPresenter.menuBarSymbolName(state: state), "sun.max")
     }
 
     func testMenuBarPausedStateStaysIconOnlyInCountdownStyles() {

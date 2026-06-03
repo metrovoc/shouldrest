@@ -142,9 +142,9 @@
 "prefs.theme.dark" = "深色";
 "prefs.menuBarStyle" = "菜单栏样式";
 "prefs.trayStyle.default" = "仅图标";
-"prefs.trayStyle.appName" = "图标和应用名";
-"prefs.trayStyle.timeToBreak" = "图标和倒计时";
-"prefs.trayStyle.progress" = "图标和休息类型";
+"prefs.trayStyle.appName" = "图标和短名称";
+"prefs.trayStyle.timeToBreak" = "图标和时间";
+"prefs.trayStyle.progress" = "图标、类型和时间";
 "prefs.language" = "语言覆盖";
 "prefs.language.system" = "跟随系统语言";
 "prefs.language.english" = "英语";
