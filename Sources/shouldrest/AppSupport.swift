@@ -62,6 +62,15 @@ enum CommandLineAutomation {
             return false
         }
 
+        if command.hasPrefix("shouldrest://") {
+            guard post(urlString: command) else {
+                print("Invalid ShouldRest URL: \(command)")
+                return true
+            }
+            print("Requested automation URL: \(command)")
+            return true
+        }
+
         switch command {
         case "help", "--help", "-h":
             print(helpText)
@@ -78,6 +87,13 @@ enum CommandLineAutomation {
         case "debug":
             post(.debug)
             print("Requested debug info from running ShouldRest.")
+            return true
+        case "url":
+            guard args.indices.contains(1), post(urlString: args[1]) else {
+                print("Usage: shouldrest url shouldrest://pause?duration=30m")
+                return true
+            }
+            print("Requested automation URL: \(args[1])")
             return true
         case "pause":
             let duration = durationArgument(args)
@@ -123,6 +139,45 @@ enum CommandLineAutomation {
         )
     }
 
+    @discardableResult
+    static func post(urlString: String) -> Bool {
+        guard let url = URL(string: urlString),
+              url.scheme == "shouldrest",
+              let command = command(from: url) else {
+            return false
+        }
+        post(command.command, duration: command.duration)
+        return true
+    }
+
+    static func command(from url: URL) -> (command: AutomationCommand, duration: TimeInterval?)? {
+        let name = url.host ?? url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
+        let command: AutomationCommand
+        switch name {
+        case "pause":
+            command = .pause
+        case "resume":
+            command = .resume
+        case "reset":
+            command = .reset
+        case "eye":
+            command = .eye
+        case "body":
+            command = .body
+        case "preferences":
+            command = .preferences
+        case "debug":
+            command = .debug
+        default:
+            return nil
+        }
+
+        let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
+        let durationValue = components?.queryItems?.first(where: { $0.name == "duration" })?.value
+        let duration = durationValue.flatMap(parseDuration)
+        return (command, duration)
+    }
+
     private static func durationArgument(_ args: [String]) -> TimeInterval? {
         guard let index = args.firstIndex(where: { $0 == "-d" || $0 == "--duration" }),
               args.indices.contains(index + 1) else {
@@ -131,7 +186,7 @@ enum CommandLineAutomation {
         return parseDuration(args[index + 1])
     }
 
-    private static func parseDuration(_ input: String) -> TimeInterval? {
+    static func parseDuration(_ input: String) -> TimeInterval? {
         if input == "indefinitely" {
             return nil
         }
@@ -178,5 +233,6 @@ enum CommandLineAutomation {
       body                         Start Body Break now.
       preferences                  Open preferences in the running app.
       debug                        Copy debug info in the running app.
+      url shouldrest://<command>    Send URL-style automation.
     """
 }

@@ -152,10 +152,10 @@ Implemented now:
 - Sleep, wake, lock, and unlock correction hooks.
 - Debug panel with runtime state and paths.
 - Global shortcut registration for pause, pause durations, take-now, Body Break skip-to-next, and reset.
+- URL-style automation parser plus Apple Event URL handler for bundled app registration.
 
 Still to implement:
 
-- URL automation.
 - Update check and admin policy UI.
 - Full manual-finish overlay interaction model.
 - Suspend/lock correction hooks.

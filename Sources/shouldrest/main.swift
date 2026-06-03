@@ -1,4 +1,5 @@
 import AppKit
+import Carbon
 import Foundation
 import IOKit
 import ShouldRestCore
@@ -45,6 +46,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             selector: #selector(handleAutomation(_:)),
             name: .shouldRestAutomation,
             object: nil
+        )
+        NSAppleEventManager.shared().setEventHandler(
+            self,
+            andSelector: #selector(handleURLEvent(_:withReplyEvent:)),
+            forEventClass: AEEventClass(kInternetEventClass),
+            andEventID: AEEventID(kAEGetURL)
         )
         let workspaceNotifications = NSWorkspace.shared.notificationCenter
         workspaceNotifications.addObserver(self, selector: #selector(systemWillPause), name: NSWorkspace.willSleepNotification, object: nil)
@@ -411,6 +418,15 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             openDebugPanel()
         }
         logger.log("Handled automation command \(command.rawValue)")
+    }
+
+    @objc private func handleURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent replyEvent: NSAppleEventDescriptor) {
+        guard let urlString = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue,
+              CommandLineAutomation.post(urlString: urlString) else {
+            logger.log("Ignored invalid automation URL event")
+            return
+        }
+        logger.log("Handled automation URL \(urlString)")
     }
 
     private func automationDuration(from userInfo: [AnyHashable: Any]?) -> TimeInterval? {
