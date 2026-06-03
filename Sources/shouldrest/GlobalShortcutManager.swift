@@ -95,7 +95,7 @@ final class GlobalShortcutManager {
     }
 }
 
-private struct ParsedShortcut {
+struct ParsedShortcut: Equatable {
     var keyCode: UInt32
     var modifiers: UInt32
 

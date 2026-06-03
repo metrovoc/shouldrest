@@ -277,6 +277,7 @@ Implemented now:
 - Stretchly-compatible `pauseForSuspendOrLock` preference: enabled by default, with an opt-out path that preserves schedule state and lets natural rest credit absorb sleep/lock idle time.
 - Debug panel with runtime state, timer state, settings/log/support paths, and Body Break image paths; admin path hiding removes all of those filesystem paths from copied/panel debug output and CLI path commands.
 - Global shortcut registration for pause, pause durations, take-now, Body Break skip-to-next, and reset.
+- Global shortcut parser tests cover Stretchly-style `CmdOrCtrl+X`, modifier aliases, whitespace/case normalization, and invalid shortcut rejection.
 - Stretchly-style active rest finish shortcut: default `CmdOrCtrl+X`, registered only while a rest is active. For Body Break, after the required duration it finishes, during the postpone window it postpones, and otherwise it uses the Body Break skip policy. For Eye Gate, it can only finish an already-completed manual-finish phase and never acts as early skip/postpone.
 - Stretchly-style strict break bypass guard: active Eye Gate and strict Body Break disable Quit/Reset menu items, cancel `applicationShouldTerminate`, and reject reset requests from shortcuts or automation, preserving the overlay instead of letting app termination or reset bypass the rest.
 - URL-style automation parser plus Apple Event URL handler for bundled app registration.
