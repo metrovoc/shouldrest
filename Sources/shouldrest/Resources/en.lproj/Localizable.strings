@@ -234,8 +234,9 @@
 "prefs.restoreDefaultsCancel" = "Cancel";
 "prefs.invalidJSONTitle" = "Invalid JSON";
 "prefs.invalidJSONBody" = "%@: %@";
+"shortcut.notSet" = "Not set";
 "shortcut.record" = "Record Shortcut";
-"shortcut.recording" = "Press shortcut...";
+"shortcut.recording" = "Recording...";
 "shortcut.recordHelp" = "Click, then press a shortcut. Delete clears it.";
 "shortcut.recordingHelp" = "Press Command, Control, or Option with a key. Esc cancels; Delete clears.";
 "shortcut.clearHelp" = "Click to replace this shortcut. Delete clears it while recording.";

@@ -1860,7 +1860,6 @@ final class ShortcutRecorderButton: NSButton {
         super.init(frame: frameRect)
         setButtonType(.momentaryPushIn)
         bezelStyle = .rounded
-        image = NSImage(systemSymbolName: "keyboard", accessibilityDescription: nil)
         imagePosition = .imageLeading
         target = self
         action = #selector(beginRecording)
@@ -1881,8 +1880,7 @@ final class ShortcutRecorderButton: NSButton {
 
     @objc private func beginRecording() {
         isRecording = true
-        title = L10n.tr("shortcut.recording")
-        toolTip = L10n.tr("shortcut.recordingHelp")
+        applyDisplayState(.recording)
         window?.makeFirstResponder(self)
     }
 
@@ -1919,12 +1917,41 @@ final class ShortcutRecorderButton: NSButton {
 
     private func updateDisplay() {
         if shortcutValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            title = L10n.tr("shortcut.record")
-            toolTip = L10n.tr("shortcut.recordHelp")
+            applyDisplayState(.unset)
         } else {
-            title = ShortcutDisplay.string(shortcutValue)
-            toolTip = L10n.tr("shortcut.clearHelp")
+            applyDisplayState(.assigned(ShortcutDisplay.string(shortcutValue)))
         }
+    }
+
+    private enum DisplayState {
+        case unset
+        case recording
+        case assigned(String)
+    }
+
+    private func applyDisplayState(_ state: DisplayState) {
+        switch state {
+        case .unset:
+            title = L10n.tr("shortcut.notSet")
+            toolTip = L10n.tr("shortcut.recordHelp")
+            contentTintColor = .secondaryLabelColor
+            setSymbol("keyboard.badge.ellipsis", fallback: "keyboard")
+        case .recording:
+            title = L10n.tr("shortcut.recording")
+            toolTip = L10n.tr("shortcut.recordingHelp")
+            contentTintColor = .controlAccentColor
+            setSymbol("record.circle", fallback: "keyboard")
+        case .assigned(let display):
+            title = display
+            toolTip = L10n.tr("shortcut.clearHelp")
+            contentTintColor = nil
+            setSymbol("keyboard")
+        }
+    }
+
+    private func setSymbol(_ symbolName: String, fallback: String? = nil) {
+        image = NSImage(systemSymbolName: symbolName, accessibilityDescription: symbolName)
+            ?? fallback.flatMap { NSImage(systemSymbolName: $0, accessibilityDescription: $0) }
     }
 
     private static func shortcutString(from event: NSEvent) -> String? {

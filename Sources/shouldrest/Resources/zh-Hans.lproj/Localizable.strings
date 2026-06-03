@@ -234,8 +234,9 @@
 "prefs.restoreDefaultsCancel" = "取消";
 "prefs.invalidJSONTitle" = "JSON 无效";
 "prefs.invalidJSONBody" = "%@：%@";
+"shortcut.notSet" = "未设置";
 "shortcut.record" = "录制快捷键";
-"shortcut.recording" = "按下快捷键...";
+"shortcut.recording" = "录制中...";
 "shortcut.recordHelp" = "点击后按快捷键。Delete 可清空。";
 "shortcut.recordingHelp" = "按 Command、Control 或 Option 加一个按键。Esc 取消；Delete 清空。";
 "shortcut.clearHelp" = "点击可替换该快捷键。录制中按 Delete 清空。";

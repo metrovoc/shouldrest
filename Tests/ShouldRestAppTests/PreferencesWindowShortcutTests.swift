@@ -5,6 +5,38 @@ import XCTest
 
 @MainActor
 final class PreferencesWindowShortcutTests: XCTestCase {
+    func testShortcutRecorderUsesCompactStatefulDisplay() {
+        let button = ShortcutRecorderButton()
+
+        XCTAssertEqual(button.title, L10n.tr("shortcut.notSet"))
+        XCTAssertEqual(button.toolTip, L10n.tr("shortcut.recordHelp"))
+        XCTAssertNotNil(button.image)
+        XCTAssertEqual(button.imagePosition, .imageLeading)
+
+        button.shortcutValue = "CmdOrCtrl+Option+E"
+        XCTAssertEqual(button.title, "⌘⌥E")
+        XCTAssertEqual(button.toolTip, L10n.tr("shortcut.clearHelp"))
+        XCTAssertNotNil(button.image)
+
+        button.performClick(nil)
+        XCTAssertEqual(button.title, L10n.tr("shortcut.recording"))
+        XCTAssertEqual(button.toolTip, L10n.tr("shortcut.recordingHelp"))
+        XCTAssertNotNil(button.image)
+    }
+
+    func testUnsetShortcutsDoNotRepeatRecordInstructionAsButtonText() throws {
+        let settings = RestSettings.defaults
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectShortcutsTab(in: contentView)
+        let visibleTexts = visibleTexts(in: contentView)
+
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("shortcut.notSet")))
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("shortcut.record")))
+        XCTAssertTrue(visibleTexts.contains("⌘⌥E"))
+    }
+
     func testDuplicateShortcutsShowVisibleConflictWarning() throws {
         var settings = RestSettings.defaults
         settings.shortcuts.takeEyeGateNow = "Cmd+1"
