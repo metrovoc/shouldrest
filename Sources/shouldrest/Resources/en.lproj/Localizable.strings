@@ -4,6 +4,7 @@
 "menu.takeNextScheduledRestNow" = "Take Next Scheduled Rest Now";
 "menu.postponeBodyBreak" = "Postpone Body Break";
 "menu.finishBodyBreak" = "Finish Body Break";
+"menu.finishEyeGate" = "Finish Eye Gate";
 "menu.skipBodyBreak" = "Skip Body Break";
 "menu.emergencyOverride" = "Emergency Override Eye Gate";
 "menu.resume" = "Resume";
@@ -55,13 +56,14 @@
 "overlay.bodyTitle" = "Body Break";
 "overlay.bodyBody" = "Stand up, breathe, and move";
 "overlay.completeTitle" = "Break complete";
-"overlay.completeBody" = "Use the menu to finish when ready";
+"overlay.completeBody" = "Finish when ready";
 "overlay.ready" = "ready";
 "preferences.title" = "ShouldRest Preferences";
 "debug.title" = "ShouldRest Debug";
 "prefs.enableEyeGate" = "Enable Eye Gate";
 "prefs.cannotDisableBothRests" = "At least one rest type must stay enabled.";
 "prefs.notifyEyeGate" = "Notify before Eye Gate";
+"prefs.eyeManualFinish" = "Manual finish after Eye Gate duration";
 "prefs.enableBodyBreak" = "Enable Body Break";
 "prefs.notifyBodyBreak" = "Notify before Body Break";
 "prefs.manualFinish" = "Manual finish after Body Break duration";
@@ -137,7 +139,7 @@
 "prefs.eyeGateNow" = "Eye Gate now";
 "prefs.bodyBreakNow" = "Body Break now";
 "prefs.skipToBodyBreak" = "Skip to Body Break";
-"prefs.endBodyBreak" = "End active Body Break";
+"prefs.endBodyBreak" = "End active rest";
 "prefs.emergencyEyeGate" = "Emergency Eye Gate override";
 "prefs.reset" = "Reset";
 "prefs.sectionOperations" = "Operations And Admin";

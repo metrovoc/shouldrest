@@ -78,6 +78,25 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.activeSession?.kind, .eyeGate)
     }
 
+    func testEyeGateManualFinishDoesNotEnableOrdinaryDismissal() {
+        var settings = RestSettings.defaults
+        settings.eyeGate.manualFinishEnabled = true
+        var engine = RestEngine(settings: settings, now: start)
+
+        _ = engine.takeNow(.eyeGate, now: start)
+
+        XCTAssertTrue(engine.state.activeSession?.manualFinishEnabled ?? false)
+        XCTAssertEqual(engine.postponeActive(now: start.addingTimeInterval(1)), .denied(.eyeGateCannotBePostponed))
+        XCTAssertEqual(engine.skipActive(now: start.addingTimeInterval(1)), .denied(.eyeGateCannotBeSkipped))
+
+        let result = engine.completeActive(now: start.addingTimeInterval(settings.eyeGate.duration), reason: .manual)
+        guard case .completed(let session, let reason) = result else {
+            return XCTFail("Expected manually completed Eye Gate")
+        }
+        XCTAssertEqual(session.kind, .eyeGate)
+        XCTAssertEqual(reason, .manual)
+    }
+
     func testEyeGateEmergencyOverrideIsTrackedAsMissedRest() {
         var engine = RestEngine(settings: .defaults, now: start)
         _ = engine.takeNow(.eyeGate, now: start)

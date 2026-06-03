@@ -4,6 +4,7 @@
 "menu.takeNextScheduledRestNow" = "立即执行下一项计划休息";
 "menu.postponeBodyBreak" = "推迟 Body Break";
 "menu.finishBodyBreak" = "完成 Body Break";
+"menu.finishEyeGate" = "完成 Eye Gate";
 "menu.skipBodyBreak" = "跳过 Body Break";
 "menu.emergencyOverride" = "紧急覆盖 Eye Gate";
 "menu.resume" = "恢复";
@@ -55,13 +56,14 @@
 "overlay.bodyTitle" = "身体休息";
 "overlay.bodyBody" = "站起来，呼吸，活动一下";
 "overlay.completeTitle" = "休息完成";
-"overlay.completeBody" = "准备好后从菜单结束";
+"overlay.completeBody" = "准备好后结束休息";
 "overlay.ready" = "ready";
 "preferences.title" = "ShouldRest 偏好设置";
 "debug.title" = "ShouldRest 调试";
 "prefs.enableEyeGate" = "启用 Eye Gate";
 "prefs.cannotDisableBothRests" = "至少需要保留一种休息类型。";
 "prefs.notifyEyeGate" = "Eye Gate 前通知";
+"prefs.eyeManualFinish" = "Eye Gate 到时后手动完成";
 "prefs.enableBodyBreak" = "启用 Body Break";
 "prefs.notifyBodyBreak" = "Body Break 前通知";
 "prefs.manualFinish" = "Body Break 到时后手动完成";
@@ -137,7 +139,7 @@
 "prefs.eyeGateNow" = "立即 Eye Gate";
 "prefs.bodyBreakNow" = "立即 Body Break";
 "prefs.skipToBodyBreak" = "跳到 Body Break";
-"prefs.endBodyBreak" = "结束当前 Body Break";
+"prefs.endBodyBreak" = "结束当前活动休息";
 "prefs.emergencyEyeGate" = "紧急覆盖 Eye Gate";
 "prefs.reset" = "重置";
 "prefs.sectionOperations" = "操作与管理员";

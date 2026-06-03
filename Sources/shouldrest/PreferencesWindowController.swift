@@ -14,6 +14,7 @@ final class PreferencesWindowController: NSWindowController {
     private let eyeColor = NSTextField()
     private let eyeNotify = NSButton(checkboxWithTitle: L10n.tr("prefs.notifyEyeGate"), target: nil, action: nil)
     private let eyeLead = NSTextField()
+    private let eyeManualFinish = NSButton(checkboxWithTitle: L10n.tr("prefs.eyeManualFinish"), target: nil, action: nil)
 
     private let bodyEnabled = NSButton(checkboxWithTitle: L10n.tr("prefs.enableBodyBreak"), target: nil, action: nil)
     private let bodyInterval = NSTextField()
@@ -180,6 +181,7 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(row(L10n.tr("prefs.overlayColor"), eyeColor))
         stack.addArrangedSubview(eyeNotify)
         stack.addArrangedSubview(row(L10n.tr("prefs.notificationLead"), eyeLead))
+        stack.addArrangedSubview(eyeManualFinish)
 
         stack.addArrangedSubview(separator())
         stack.addArrangedSubview(section(L10n.tr("prefs.sectionBodyBreak")))
@@ -347,6 +349,7 @@ final class PreferencesWindowController: NSWindowController {
         eyeColor.stringValue = settings.eyeGate.colorHex
         eyeNotify.state = state(settings.notifications.eyeGateEnabled)
         eyeLead.stringValue = String(Int(settings.notifications.eyeGateLeadTime))
+        eyeManualFinish.state = state(settings.eyeGate.manualFinishEnabled)
 
         bodyEnabled.state = state(settings.bodyBreak.isEnabled)
         bodyInterval.stringValue = String(Int(settings.bodyBreak.interval / 60))
@@ -452,6 +455,7 @@ final class PreferencesWindowController: NSWindowController {
         next.eyeGate.colorHex = normalizedHex(eyeColor.stringValue, fallback: RestSettings.defaults.eyeGate.colorHex)
         next.notifications.eyeGateEnabled = isOn(eyeNotify)
         next.notifications.eyeGateLeadTime = TimeInterval(max(0, intValue(eyeLead)))
+        next.eyeGate.manualFinishEnabled = isOn(eyeManualFinish)
 
         next.bodyBreak.isEnabled = isOn(bodyEnabled)
         if !next.eyeGate.isEnabled && !next.bodyBreak.isEnabled {
@@ -541,6 +545,13 @@ final class PreferencesWindowController: NSWindowController {
         next.admin.hideSettingsFileLocation = isOn(hideSettingsPath)
         next.admin.hideStrictPreferences = isOn(hideStrictPreferences)
         next.admin.customPreferencesMessage = customPreferencesMessage.stringValue
+
+        if next.eyeGate.manualFinishEnabled,
+           !next.presentation.resolvedShowMenuBarItem,
+           next.shortcuts.resolvedEndBodyBreakShortcut.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            next.presentation.showMenuBarItem = true
+            showMenuBarItem.state = .on
+        }
 
         settings = next
         applyAdminVisibility()

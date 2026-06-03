@@ -42,7 +42,7 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 - Main-display content with secondary-display blanking.
 - Strict behavior for Eye Gate by default.
 - Body Break postpone and skip policies with limits.
-- Manual-finish mode for long breaks.
+- Manual-finish mode for Body Break and optional completed Eye Gate.
 
 ### Context Awareness
 
@@ -60,7 +60,7 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 - Open at login.
 - Pause durations: 30 minutes, 1 hour, 2 hours, 5 hours, until morning, indefinitely.
 - Pause-until-morning supports both a fixed hour and sunrise from configured coordinates.
-- Global shortcuts for pause/resume, immediate break, next scheduled rest, active Body Break end, and reset; the default Body Break end shortcut matches Stretchly's `CmdOrCtrl+X` but is registered only while a Body Break is active.
+- Global shortcuts for pause/resume, immediate break, next scheduled rest, active rest finish, and reset; the default active finish shortcut matches Stretchly's `CmdOrCtrl+X`, is registered only while a compatible rest is active, and never ends Eye Gate early.
 - CLI or URL-style automation surface, including Stretchly-style `mini`/`long` aliases, pause toggle, delayed take-now, and one-shot Body Break title/body/wait/noskip customization.
 
 ### Presentation

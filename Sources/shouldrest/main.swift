@@ -265,11 +265,19 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(.separator())
         }
 
-        if let active = engine.state.activeSession,
-           active.kind == .eyeGate,
-           settings.eyeGate.emergencyOverride.isEnabled {
-            menu.addItem(actionItem(L10n.tr("menu.emergencyOverride"), #selector(emergencyOverrideEyeGate)))
-            menu.addItem(.separator())
+        if let active = engine.state.activeSession, active.kind == .eyeGate {
+            var addedEyeGateAction = false
+            if Date().timeIntervalSince(active.startedAt) >= active.duration, active.manualFinishEnabled {
+                menu.addItem(actionItem(L10n.tr("menu.finishEyeGate"), #selector(finishActiveBreak)))
+                addedEyeGateAction = true
+            }
+            if settings.eyeGate.emergencyOverride.isEnabled {
+                menu.addItem(actionItem(L10n.tr("menu.emergencyOverride"), #selector(emergencyOverrideEyeGate)))
+                addedEyeGateAction = true
+            }
+            if addedEyeGateAction {
+                menu.addItem(.separator())
+            }
         }
 
         if let active = engine.state.activeSession, active.kind == .bodyBreak {
@@ -469,14 +477,18 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         rebuildMenu()
     }
 
-    @objc private func endBodyBreakFromShortcut() {
+    @objc private func endActiveBreakFromShortcut() {
         let now = Date()
-        guard let active = engine.state.activeSession, active.kind == .bodyBreak else { return }
+        guard let active = engine.state.activeSession else { return }
 
         if now.timeIntervalSince(active.startedAt) >= active.duration {
-            finishActiveBreak()
+            if active.kind == .bodyBreak || active.manualFinishEnabled {
+                finishActiveBreak()
+            }
             return
         }
+
+        guard active.kind == .bodyBreak else { return }
 
         if case .postponed = engine.postponeActive(now: now) {
             unregisterActiveBreakShortcut()
@@ -557,7 +569,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     private func refreshActiveBreakShortcut() {
         guard let active = engine.state.activeSession,
-              active.kind == .bodyBreak else {
+              active.kind == .bodyBreak || active.manualFinishEnabled else {
             unregisterActiveBreakShortcut()
             return
         }
@@ -578,13 +590,13 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         activeBreakShortcutValue = shortcut
         activeBreakShortcutRegistered = activeBreakShortcuts.register(shortcut: shortcut) { [weak self] in
             Task { @MainActor in
-                self?.endBodyBreakFromShortcut()
+                self?.endActiveBreakFromShortcut()
             }
         }
         if activeBreakShortcutRegistered {
-            logger.log("Active Body Break end shortcut registered shortcut=\(shortcut)")
+            logger.log("Active rest end shortcut registered kind=\(active.kind.rawValue) shortcut=\(shortcut)")
         } else {
-            logger.log("Active Body Break end shortcut unavailable shortcut=\(shortcut)")
+            logger.log("Active rest end shortcut unavailable kind=\(active.kind.rawValue) shortcut=\(shortcut)")
         }
     }
 
@@ -600,9 +612,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         activeBreakShortcutValue = nil
         activeBreakShortcutRegistered = false
         if wasRegistered {
-            logger.log("Active Body Break end shortcut unregistered")
+            logger.log("Active rest end shortcut unregistered")
         } else {
-            logger.log("Active Body Break end shortcut state cleared")
+            logger.log("Active rest end shortcut state cleared")
         }
     }
 
@@ -1186,7 +1198,13 @@ final class OverlayController {
                 showsContent: isContentScreen,
                 manualAwaiting: manualAwaiting
             )
-            windows[id]?.level = manualAwaiting ? .modalPanel : windowLevel(for: session, settings: settings)
+            let level: NSWindow.Level
+            if manualAwaiting && session.kind == .bodyBreak {
+                level = .modalPanel
+            } else {
+                level = windowLevel(for: session, settings: settings)
+            }
+            windows[id]?.level = level
             windows[id]?.orderFrontRegardless()
         }
     }
