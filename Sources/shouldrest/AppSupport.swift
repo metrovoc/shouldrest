@@ -61,10 +61,58 @@ enum AutomationCommand: String {
     case debug
 }
 
+struct AutomationRequest {
+    var command: AutomationCommand
+    var duration: TimeInterval?
+    var title: String?
+    var text: String?
+    var noSkip: Bool
+
+    init(
+        command: AutomationCommand,
+        duration: TimeInterval? = nil,
+        title: String? = nil,
+        text: String? = nil,
+        noSkip: Bool = false
+    ) {
+        self.command = command
+        self.duration = duration
+        self.title = title
+        self.text = text
+        self.noSkip = noSkip
+    }
+
+    var userInfo: [AnyHashable: Any] {
+        var userInfo: [AnyHashable: Any] = [:]
+        if let duration {
+            userInfo["duration"] = duration
+        }
+        if let title, !title.isEmpty {
+            userInfo["title"] = title
+        }
+        if let text, !text.isEmpty {
+            userInfo["text"] = text
+        }
+        if noSkip {
+            userInfo["noSkip"] = true
+        }
+        return userInfo
+    }
+}
+
+@MainActor
 enum CommandLineAutomation {
     private enum DurationParseResult {
         case valid(TimeInterval?)
         case invalid
+    }
+
+    private static let appBundleIdentifier = "dev.shouldrest.app"
+    private static var pendingLaunchRequest: AutomationRequest?
+
+    static func consumeLaunchRequest() -> AutomationRequest? {
+        defer { pendingLaunchRequest = nil }
+        return pendingLaunchRequest
     }
 
     static func handle(arguments: [String]) -> Bool {
@@ -74,12 +122,11 @@ enum CommandLineAutomation {
         }
 
         if command.hasPrefix("shouldrest://") {
-            guard post(urlString: command) else {
+            guard let request = request(fromURLString: command) else {
                 print("Invalid ShouldRest URL: \(command)")
                 return true
             }
-            print("Requested automation URL: \(command)")
-            return true
+            return dispatchOrQueue(request, message: "Requested automation URL: \(command)")
         }
 
         switch command {
@@ -100,41 +147,36 @@ enum CommandLineAutomation {
             print(AppPaths.logURL.path)
             return true
         case "debug":
-            post(.debug)
-            print("Requested debug info from running ShouldRest.")
-            return true
+            return dispatchOrQueue(
+                AutomationRequest(command: .debug),
+                message: "Requested debug info from running ShouldRest."
+            )
         case "url":
             guard args.indices.contains(1) else {
                 print("Usage: shouldrest url shouldrest://pause?duration=30m")
                 return true
             }
-            guard post(urlString: args[1]) else {
+            guard let request = request(fromURLString: args[1]) else {
                 print("Invalid ShouldRest URL: \(args[1])")
                 return true
             }
-            print("Requested automation URL: \(args[1])")
-            return true
+            return dispatchOrQueue(request, message: "Requested automation URL: \(args[1])")
         case "pause":
             let request = durationArgument(args)
             if let invalid = request.invalid {
                 print("Invalid pause duration: \(invalid)")
                 return true
             }
-            post(.pause, duration: request.duration)
-            print("Requested pause\(request.duration.map { " for \(Int($0)) seconds" } ?? " indefinitely").")
-            return true
+            return dispatchOrQueue(
+                AutomationRequest(command: .pause, duration: request.duration),
+                message: "Requested pause\(request.duration.map { " for \(Int($0)) seconds" } ?? " indefinitely")."
+            )
         case "resume":
-            post(.resume)
-            print("Requested resume.")
-            return true
+            return dispatchOrQueue(AutomationRequest(command: .resume), message: "Requested resume.")
         case "toggle":
-            post(.toggle)
-            print("Requested pause toggle.")
-            return true
+            return dispatchOrQueue(AutomationRequest(command: .toggle), message: "Requested pause toggle.")
         case "reset":
-            post(.reset)
-            print("Requested reset.")
-            return true
+            return dispatchOrQueue(AutomationRequest(command: .reset), message: "Requested reset.")
         case "eye", "mini":
             let request = restRequest(args)
             if let invalid = request.invalidWait {
@@ -144,8 +186,10 @@ enum CommandLineAutomation {
             if request.noSkip, request.wait == nil {
                 print("Eye Gate content customization is not supported; no Eye Gate was started.")
             } else {
-                post(.eye, duration: request.wait, noSkip: request.noSkip)
-                print("Requested Eye Gate\(request.wait.map { " after \(Int($0)) seconds" } ?? " now").")
+                return dispatchOrQueue(
+                    AutomationRequest(command: .eye, duration: request.wait, noSkip: request.noSkip),
+                    message: "Requested Eye Gate\(request.wait.map { " after \(Int($0)) seconds" } ?? " now")."
+                )
             }
             return true
         case "body", "long":
@@ -154,75 +198,70 @@ enum CommandLineAutomation {
                 print("Invalid wait duration: \(invalid)")
                 return true
             }
-            post(.body, duration: request.wait, title: request.title, text: request.text, noSkip: request.noSkip)
+            let automationRequest = AutomationRequest(
+                command: .body,
+                duration: request.wait,
+                title: request.title,
+                text: request.text,
+                noSkip: request.noSkip
+            )
             if request.noSkip, request.wait == nil {
-                print("Requested next Body Break content.")
+                return dispatchOrQueue(automationRequest, message: "Requested next Body Break content.")
             } else {
-                print("Requested Body Break\(request.wait.map { " after \(Int($0)) seconds" } ?? " now").")
+                return dispatchOrQueue(
+                    automationRequest,
+                    message: "Requested Body Break\(request.wait.map { " after \(Int($0)) seconds" } ?? " now")."
+                )
             }
-            return true
         case "preferences":
-            post(.preferences)
-            print("Requested preferences window.")
-            return true
+            return dispatchOrQueue(
+                AutomationRequest(command: .preferences),
+                message: "Requested preferences window."
+            )
         default:
             print("Unknown command: \(command)\n\n\(helpText)")
             return true
         }
     }
 
-    private static func post(
-        _ command: AutomationCommand,
-        duration: TimeInterval? = nil,
-        title: String? = nil,
-        text: String? = nil,
-        noSkip: Bool = false
-    ) {
-        var userInfo: [String: Any] = [:]
-        if let duration {
-            userInfo["duration"] = duration
+    private static func dispatchOrQueue(_ request: AutomationRequest, message: String) -> Bool {
+        if hasOtherRunningAppInstance() {
+            post(request)
+            print(message)
+            return true
         }
-        if let title, !title.isEmpty {
-            userInfo["title"] = title
-        }
-        if let text, !text.isEmpty {
-            userInfo["text"] = text
-        }
-        if noSkip {
-            userInfo["noSkip"] = true
-        }
+
+        pendingLaunchRequest = request
+        print("Starting ShouldRest. \(message)")
+        return false
+    }
+
+    private static func post(_ request: AutomationRequest) {
         DistributedNotificationCenter.default().postNotificationName(
             .shouldRestAutomation,
-            object: command.rawValue,
-            userInfo: userInfo,
+            object: request.command.rawValue,
+            userInfo: request.userInfo,
             deliverImmediately: true
         )
     }
 
     @discardableResult
     static func post(urlString: String) -> Bool {
-        guard let url = URL(string: urlString),
-              url.scheme == "shouldrest",
-              let command = command(from: url) else {
+        guard let request = request(fromURLString: urlString) else {
             return false
         }
-        post(
-            command.command,
-            duration: command.duration,
-            title: command.title,
-            text: command.text,
-            noSkip: command.noSkip
-        )
+        post(request)
         return true
     }
 
-    static func command(from url: URL) -> (
-        command: AutomationCommand,
-        duration: TimeInterval?,
-        title: String?,
-        text: String?,
-        noSkip: Bool
-    )? {
+    private static func request(fromURLString urlString: String) -> AutomationRequest? {
+        guard let url = URL(string: urlString), url.scheme == "shouldrest" else {
+            return nil
+        }
+        return request(from: url)
+    }
+
+    static func request(from url: URL) -> AutomationRequest? {
         let name = url.host ?? url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         let command: AutomationCommand
         switch name {
@@ -264,7 +303,7 @@ enum CommandLineAutomation {
             }
             duration = parsed
         }
-        return (command, duration, title, text, noSkip)
+        return AutomationRequest(command: command, duration: duration, title: title, text: text, noSkip: noSkip)
     }
 
     private static func durationArgument(_ args: [String]) -> (duration: TimeInterval?, invalid: String?) {
@@ -369,6 +408,15 @@ enum CommandLineAutomation {
 
     private static func configuredSettings() -> RestSettings? {
         try? SettingsStore(fileURL: AppPaths.settingsURL).load()
+    }
+
+    private static func hasOtherRunningAppInstance() -> Bool {
+        let currentProcessID = ProcessInfo.processInfo.processIdentifier
+        return NSRunningApplication
+            .runningApplications(withBundleIdentifier: appBundleIdentifier)
+            .contains { app in
+                app.processIdentifier != currentProcessID && !app.isTerminated
+            }
     }
 
     private static var helpText: String {

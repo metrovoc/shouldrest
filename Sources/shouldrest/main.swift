@@ -79,6 +79,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         scheduleAutomaticUpdateCheck()
         tick()
         showOnboardingIfNeeded()
+        runPendingLaunchAutomation()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -677,10 +678,20 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
               let command = AutomationCommand(rawValue: rawCommand) else {
             return
         }
+        performAutomation(command, userInfo: notification.userInfo)
+        logger.log("Handled automation command \(command.rawValue)")
+    }
 
+    private func runPendingLaunchAutomation() {
+        guard let request = CommandLineAutomation.consumeLaunchRequest() else { return }
+        performAutomation(request.command, userInfo: request.userInfo)
+        logger.log("Handled launch automation command \(request.command.rawValue)")
+    }
+
+    private func performAutomation(_ command: AutomationCommand, userInfo: [AnyHashable: Any]?) {
         switch command {
         case .pause:
-            pause(for: automationDuration(from: notification.userInfo), reason: .user)
+            pause(for: automationDuration(from: userInfo), reason: .user)
         case .resume:
             resumeBreaks()
         case .toggle:
@@ -692,15 +703,14 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         case .reset:
             resetBreaks()
         case .eye:
-            handleEyeGateAutomation(notification.userInfo)
+            handleEyeGateAutomation(userInfo)
         case .body:
-            handleBodyBreakAutomation(notification.userInfo)
+            handleBodyBreakAutomation(userInfo)
         case .preferences:
             openPreferences()
         case .debug:
             copyDebugInfo()
         }
-        logger.log("Handled automation command \(command.rawValue)")
     }
 
     @objc private func handleURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent replyEvent: NSAppleEventDescriptor) {
