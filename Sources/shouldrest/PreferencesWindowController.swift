@@ -87,7 +87,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let appExclusionMode = NSPopUpButton()
     private let appExclusionAppliesEye = NSButton(checkboxWithTitle: L10n.tr("prefs.appliesEye"), target: nil, action: nil)
     private let appExclusionAppliesBody = NSButton(checkboxWithTitle: L10n.tr("prefs.appliesBody"), target: nil, action: nil)
-    private let appExclusionsJSON = NSTextField()
+    private let appExclusionsJSONEditor = NSTextView()
+    private let appExclusionsJSONScrollView = NSScrollView()
     private let appExclusionsAdvancedButton = NSButton()
     private var appExclusionsJSONRow: NSView?
 
@@ -113,7 +114,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let customBodyTitle = NSTextField()
     private let customBodyTextEditor = NSTextView()
     private let customBodyTextScrollView = NSScrollView()
-    private let customBodyIdeasJSON = NSTextField()
+    private let customBodyIdeasJSONEditor = NSTextView()
+    private let customBodyIdeasJSONScrollView = NSScrollView()
     private let customBodyIdeasAdvancedButton = NSButton()
     private var customBodyIdeasJSONRow: NSView?
     private let localImagePath = NSTextField()
@@ -297,7 +299,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         contextStack.addArrangedSubview(appExclusionAppliesEye)
         contextStack.addArrangedSubview(appExclusionAppliesBody)
         contextStack.addArrangedSubview(appExclusionsAdvancedButton)
-        let appExclusionsJSONRow = row(L10n.tr("prefs.advancedRulesJSON"), appExclusionsJSON)
+        let appExclusionsJSONRow = multilineRow(L10n.tr("prefs.advancedRulesJSON"), appExclusionsJSONScrollView)
         self.appExclusionsJSONRow = appExclusionsJSONRow
         contextStack.addArrangedSubview(appExclusionsJSONRow)
         addTab(to: tabView, title: L10n.tr("prefs.tabContext"), stack: contextStack)
@@ -323,7 +325,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.title"), customBodyTitle))
         appearanceStack.addArrangedSubview(multilineRow(L10n.tr("prefs.text"), customBodyTextScrollView))
         appearanceStack.addArrangedSubview(customBodyIdeasAdvancedButton)
-        let customBodyIdeasJSONRow = row(L10n.tr("prefs.advancedIdeasJSON"), customBodyIdeasJSON)
+        let customBodyIdeasJSONRow = multilineRow(L10n.tr("prefs.advancedIdeasJSON"), customBodyIdeasJSONScrollView)
         self.customBodyIdeasJSONRow = customBodyIdeasJSONRow
         appearanceStack.addArrangedSubview(customBodyIdeasJSONRow)
         addTab(to: tabView, title: L10n.tr("prefs.tabAppearance"), stack: appearanceStack)
@@ -502,12 +504,12 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
         let wideFields: [NSView] = [
             eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, customBodyTitle,
-            customBodyIdeasJSON, localImagePath, languageIdentifier, shortcutPauseToggle,
+            localImagePath, languageIdentifier, shortcutPauseToggle,
             shortcutPause30, shortcutPause1h, shortcutPause2h, shortcutPause5h, shortcutPauseUntilMorning,
             shortcutNextScheduled, shortcutEyeNow, shortcutBodyNow, shortcutSkipBody, shortcutEndBody,
             shortcutEmergencyEye, shortcutReset,
             appExclusionName, appExclusionTerms, bodyConfiguredDisplay, updateFeedURL,
-            customPreferencesMessage, appExclusionsJSON
+            customPreferencesMessage
         ]
         wideFields.forEach { $0.widthAnchor.constraint(equalToConstant: 360).isActive = true }
     }
@@ -567,23 +569,55 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     }
 
     private func configureCustomBodyTextEditor() {
-        customBodyTextEditor.isRichText = false
-        customBodyTextEditor.isAutomaticQuoteSubstitutionEnabled = false
-        customBodyTextEditor.isAutomaticDashSubstitutionEnabled = false
-        customBodyTextEditor.font = .systemFont(ofSize: NSFont.systemFontSize)
-        customBodyTextEditor.textContainerInset = NSSize(width: 8, height: 6)
-        customBodyTextEditor.isHorizontallyResizable = false
-        customBodyTextEditor.isVerticallyResizable = true
-        customBodyTextEditor.autoresizingMask = [.width]
-        customBodyTextEditor.textContainer?.widthTracksTextView = true
-        customBodyTextEditor.textContainer?.containerSize = NSSize(width: 360, height: CGFloat.greatestFiniteMagnitude)
+        configureTextEditor(
+            customBodyTextEditor,
+            in: customBodyTextScrollView,
+            identifier: "customBodyTextEditor",
+            font: .systemFont(ofSize: NSFont.systemFontSize),
+            height: 96
+        )
+        configureTextEditor(
+            appExclusionsJSONEditor,
+            in: appExclusionsJSONScrollView,
+            identifier: "appExclusionsJSONEditor",
+            font: .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular),
+            height: 148
+        )
+        configureTextEditor(
+            customBodyIdeasJSONEditor,
+            in: customBodyIdeasJSONScrollView,
+            identifier: "customBodyIdeasJSONEditor",
+            font: .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular),
+            height: 148
+        )
+    }
 
-        customBodyTextScrollView.borderType = .bezelBorder
-        customBodyTextScrollView.hasVerticalScroller = true
-        customBodyTextScrollView.drawsBackground = true
-        customBodyTextScrollView.documentView = customBodyTextEditor
-        customBodyTextScrollView.widthAnchor.constraint(equalToConstant: 360).isActive = true
-        customBodyTextScrollView.heightAnchor.constraint(equalToConstant: 96).isActive = true
+    private func configureTextEditor(
+        _ editor: NSTextView,
+        in scrollView: NSScrollView,
+        identifier: String,
+        font: NSFont,
+        height: CGFloat
+    ) {
+        editor.identifier = NSUserInterfaceItemIdentifier(identifier)
+        editor.isRichText = false
+        editor.isAutomaticQuoteSubstitutionEnabled = false
+        editor.isAutomaticDashSubstitutionEnabled = false
+        editor.font = font
+        editor.textContainerInset = NSSize(width: 8, height: 6)
+        editor.isHorizontallyResizable = false
+        editor.isVerticallyResizable = true
+        editor.autoresizingMask = [.width]
+        editor.textContainer?.widthTracksTextView = true
+        editor.textContainer?.containerSize = NSSize(width: 360, height: CGFloat.greatestFiniteMagnitude)
+
+        scrollView.identifier = NSUserInterfaceItemIdentifier("\(identifier)ScrollView")
+        scrollView.borderType = .bezelBorder
+        scrollView.hasVerticalScroller = true
+        scrollView.drawsBackground = true
+        scrollView.documentView = editor
+        scrollView.widthAnchor.constraint(equalToConstant: 360).isActive = true
+        scrollView.heightAnchor.constraint(equalToConstant: height).isActive = true
     }
 
     private func configureAppExclusionTokenField() {
@@ -667,8 +701,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             eyeInterval, eyeDuration, eyeLead, bodyInterval, bodyDuration, bodyAfterEyeGates,
             eyeEmergencyHoldSeconds, eyeEmergencyConfirmations,
             bodyLead, bodyPostponeMinutes, bodyPostponeLimit, bodyPostponeWindowPercent, naturalIdleMinutes,
-            appExclusionName, appExclusionTerms, appExclusionsJSON,
-            customBodyTitle, customBodyIdeasJSON, localImagePath,
+            appExclusionName, appExclusionTerms,
+            customBodyTitle, localImagePath,
             pauseUntilMorningHour, pauseUntilMorningLatitude, pauseUntilMorningLongitude, updateFeedURL,
             customPreferencesMessage
         ]
@@ -677,7 +711,9 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             field.target = self
             field.action = #selector(controlChanged(_:))
         }
-        customBodyTextEditor.delegate = self
+        [customBodyTextEditor, appExclusionsJSONEditor, customBodyIdeasJSONEditor].forEach { editor in
+            editor.delegate = self
+        }
 
         let controls: [NSControl] = [
             eyeColor, bodyColor, eyeNotify, eyeManualFinish, eyeEmergencyOverride, bodyNotify, bodyAllowSkip, bodyManualFinish, bodyCoversAllDisplays,
@@ -805,11 +841,11 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         selectPopup(appExclusionMode, rawValue: (exclusion?.mode ?? .pauseWhenMatched).rawValue)
         appExclusionAppliesEye.state = state(exclusion?.appliesTo.contains(.eyeGate) ?? false)
         appExclusionAppliesBody.state = state(exclusion?.appliesTo.contains(.bodyBreak) ?? true)
-        appExclusionsJSON.stringValue = encodedAppExclusions(settings.appExclusions)
+        appExclusionsJSONEditor.string = encodedAppExclusions(settings.appExclusions)
         setAdvancedDisclosure(
             row: appExclusionsJSONRow,
             button: appExclusionsAdvancedButton,
-            expanded: !appExclusionsJSON.stringValue.isEmpty
+            expanded: !appExclusionsJSONEditor.string.isEmpty
         )
 
         selectPopup(themeSource, rawValue: settings.presentation.themeSource.rawValue)
@@ -831,11 +867,11 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         useBuiltInIdeas.state = state(settings.contentLibrary.useBuiltInIdeas)
         customBodyTitle.stringValue = custom?.title ?? ""
         customBodyTextEditor.string = custom?.body ?? ""
-        customBodyIdeasJSON.stringValue = encodedCustomIdeas(settings.contentLibrary.customBodyBreakIdeas)
+        customBodyIdeasJSONEditor.string = encodedCustomIdeas(settings.contentLibrary.customBodyBreakIdeas)
         setAdvancedDisclosure(
             row: customBodyIdeasJSONRow,
             button: customBodyIdeasAdvancedButton,
-            expanded: !customBodyIdeasJSON.stringValue.isEmpty
+            expanded: !customBodyIdeasJSONEditor.string.isEmpty
         )
         localImagePath.stringValue = settings.contentLibrary.localImagePaths.first ?? ""
         updateLocalImagePreview()
@@ -1380,7 +1416,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     }
 
     private func decodedAdvancedAppExclusions() throws -> [AppExclusionRule]? {
-        let raw = appExclusionsJSON.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        let raw = appExclusionsJSONEditor.string.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !raw.isEmpty, let data = raw.data(using: .utf8) else { return nil }
         do {
             return try JSONDecoder().decode([AppExclusionRule].self, from: data)
@@ -1391,7 +1427,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     private func encodedAppExclusions(_ rules: [AppExclusionRule]) -> String {
         guard rules.count > 1,
-              let data = try? JSONEncoder().encode(rules),
+              let data = try? prettyJSONEncoder().encode(rules),
               let string = String(data: data, encoding: .utf8) else {
             return ""
         }
@@ -1414,7 +1450,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     }
 
     private func decodedAdvancedCustomIdeas() throws -> [RestIdea]? {
-        let raw = customBodyIdeasJSON.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        let raw = customBodyIdeasJSONEditor.string.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !raw.isEmpty, let data = raw.data(using: .utf8) else { return nil }
         do {
             let decoded = try JSONDecoder().decode([RestIdea].self, from: data)
@@ -1437,11 +1473,17 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private func encodedCustomIdeas(_ ideas: [RestIdea]) -> String {
         let bodyIdeas = ideas.filter { $0.kind == .bodyBreak }
         guard bodyIdeas.count > 1,
-              let data = try? JSONEncoder().encode(bodyIdeas),
+              let data = try? prettyJSONEncoder().encode(bodyIdeas),
               let string = String(data: data, encoding: .utf8) else {
             return ""
         }
         return string
+    }
+
+    private func prettyJSONEncoder() -> JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        return encoder
     }
 
     private func savedLocalImagePaths() -> [String] {
