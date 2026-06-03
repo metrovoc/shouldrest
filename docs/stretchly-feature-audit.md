@@ -188,6 +188,7 @@ Implemented now:
 - Separate preference controls for Eye Gate and Body Break start/finish sounds, with shared configurable sound volume.
 - Complete global-shortcut preference surface for pause toggle, pause durations, pause until morning, immediate rests, Body Break skip-to-next, and reset; pause-until-morning shortcut is registered at runtime.
 - Stretchly-style skip-to-next-scheduled menu action and shortcut: it immediately starts whichever rest kind is currently scheduled next, while separate Eye Gate now and Body Break now actions remain available.
+- Preferences, settings persistence, and engine entry points prevent configurations with both rest types disabled, matching Stretchly's schedule guard while closing file and automation bypasses.
 - Configurable pause-until-morning hour, shared by menu/global-shortcut and CLI/URL automation; early-morning pauses now resume the same morning instead of always tomorrow.
 - Stretchly-style sunrise pause-until-morning mode with configurable latitude/longitude, shared by menu/global-shortcut and CLI/URL automation, with fixed-hour fallback when sunrise cannot be calculated.
 - Notification sound policy honors the silent-notifications setting for both pre-break and update notifications.

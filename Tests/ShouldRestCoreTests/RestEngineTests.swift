@@ -47,6 +47,28 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.scheduled?.dueAt, start.addingTimeInterval(45 * 60))
     }
 
+    func testEngineKeepsAtLeastOneRestEnabled() {
+        var settings = RestSettings.defaults
+        settings.eyeGate.isEnabled = false
+        settings.bodyBreak.isEnabled = false
+
+        var engine = RestEngine(settings: settings, now: start)
+
+        XCTAssertTrue(engine.settings.eyeGate.isEnabled)
+        XCTAssertFalse(engine.settings.bodyBreak.isEnabled)
+        XCTAssertEqual(engine.state.scheduled?.kind, .eyeGate)
+
+        var updated = RestSettings.defaults
+        updated.eyeGate.isEnabled = false
+        updated.bodyBreak.isEnabled = false
+        updated.presentation.breakHealthMode = false
+        engine.updateSettings(updated, now: start.addingTimeInterval(60))
+
+        XCTAssertTrue(engine.settings.eyeGate.isEnabled)
+        XCTAssertFalse(engine.settings.bodyBreak.isEnabled)
+        XCTAssertEqual(engine.state.scheduled?.kind, .eyeGate)
+    }
+
     func testEyeGateCannotUseOrdinaryPostponeOrSkip() {
         var engine = RestEngine(settings: .defaults, now: start)
         _ = engine.takeNow(.eyeGate, now: start)
@@ -364,6 +386,30 @@ final class RestEngineTests: XCTestCase {
         let loaded = try store.load()
 
         XCTAssertEqual(loaded, .defaults)
+    }
+
+    func testSettingsStoreKeepsAtLeastOneRestEnabled() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let url = directory.appendingPathComponent("settings.json")
+        let store = SettingsStore(fileURL: url)
+
+        var settings = RestSettings.defaults
+        settings.eyeGate.isEnabled = false
+        settings.bodyBreak.isEnabled = false
+
+        try store.save(settings)
+        let saved = try store.load()
+
+        XCTAssertTrue(saved.eyeGate.isEnabled)
+        XCTAssertFalse(saved.bodyBreak.isEnabled)
+
+        let rawData = try JSONEncoder().encode(settings)
+        try rawData.write(to: url, options: [.atomic])
+        let loaded = try store.load()
+
+        XCTAssertTrue(loaded.eyeGate.isEnabled)
+        XCTAssertFalse(loaded.bodyBreak.isEnabled)
     }
 
     func testEnforcementProfileDecodesLegacyDisplaySettings() throws {

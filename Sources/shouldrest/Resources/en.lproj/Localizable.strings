@@ -55,6 +55,7 @@
 "preferences.title" = "ShouldRest Preferences";
 "debug.title" = "ShouldRest Debug";
 "prefs.enableEyeGate" = "Enable Eye Gate";
+"prefs.cannotDisableBothRests" = "At least one rest type must stay enabled.";
 "prefs.notifyEyeGate" = "Notify before Eye Gate";
 "prefs.enableBodyBreak" = "Enable Body Break";
 "prefs.notifyBodyBreak" = "Notify before Body Break";

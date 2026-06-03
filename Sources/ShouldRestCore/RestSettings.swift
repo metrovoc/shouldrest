@@ -69,6 +69,13 @@ public struct RestSettings: Codable, Equatable, Sendable {
             bodyBreak
         }
     }
+
+    public func enforcingAtLeastOneEnabledRest() -> RestSettings {
+        guard !eyeGate.isEnabled, !bodyBreak.isEnabled else { return self }
+        var copy = self
+        copy.eyeGate.isEnabled = true
+        return copy
+    }
 }
 
 public struct RestRule: Codable, Equatable, Sendable {

@@ -176,14 +176,15 @@ public struct RestEngine: Equatable, Sendable {
     public private(set) var state: RestEngineState
 
     public init(settings: RestSettings = .defaults, now: Date = Date()) {
-        self.settings = settings
+        self.settings = settings.enforcingAtLeastOneEnabledRest()
         self.state = RestEngineState()
         scheduleNextRest(from: now)
     }
 
     public mutating func updateSettings(_ settings: RestSettings, now: Date = Date()) {
-        self.settings = settings
-        if !settings.presentation.breakHealthMode {
+        let enforcedSettings = settings.enforcingAtLeastOneEnabledRest()
+        self.settings = enforcedSettings
+        if !enforcedSettings.presentation.breakHealthMode {
             state.dangerScore = 0
         }
         if state.activeSession == nil && state.pause == nil {

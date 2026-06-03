@@ -160,6 +160,7 @@ final class PreferencesWindowController: NSWindowController {
 
         configurePopups()
         configureFieldWidths()
+        configureEnablementGuards()
 
         adminMessageLabel.lineBreakMode = .byWordWrapping
         adminMessageLabel.widthAnchor.constraint(equalToConstant: 620).isActive = true
@@ -317,6 +318,13 @@ final class PreferencesWindowController: NSWindowController {
         wideFields.forEach { $0.widthAnchor.constraint(equalToConstant: 320).isActive = true }
     }
 
+    private func configureEnablementGuards() {
+        eyeEnabled.target = self
+        eyeEnabled.action = #selector(restEnablementChanged(_:))
+        bodyEnabled.target = self
+        bodyEnabled.action = #selector(restEnablementChanged(_:))
+    }
+
     private func loadSettings() {
         adminMessageLabel.stringValue = settings.admin.customPreferencesMessage
         adminMessageLabel.isHidden = settings.admin.customPreferencesMessage.isEmpty
@@ -423,6 +431,11 @@ final class PreferencesWindowController: NSWindowController {
         next.notifications.eyeGateLeadTime = TimeInterval(max(0, intValue(eyeLead)))
 
         next.bodyBreak.isEnabled = isOn(bodyEnabled)
+        if !next.eyeGate.isEnabled && !next.bodyBreak.isEnabled {
+            next.eyeGate.isEnabled = true
+            eyeEnabled.state = .on
+            showCannotDisableBothRestsAlert()
+        }
         next.bodyBreak.interval = TimeInterval(max(1, intValue(bodyInterval)) * 60)
         next.bodyBreak.duration = TimeInterval(max(1, intValue(bodyDuration)) * 60)
         next.bodyBreakAfterEyeGates = max(1, intValue(bodyAfterEyeGates))
@@ -511,6 +524,19 @@ final class PreferencesWindowController: NSWindowController {
         settings = .defaults
         loadSettings()
         onSave(.defaults)
+    }
+
+    @objc private func restEnablementChanged(_ sender: NSButton) {
+        guard !isOn(eyeEnabled), !isOn(bodyEnabled) else { return }
+        sender.state = .on
+        showCannotDisableBothRestsAlert()
+    }
+
+    private func showCannotDisableBothRestsAlert() {
+        let alert = NSAlert()
+        alert.messageText = L10n.tr("prefs.cannotDisableBothRests")
+        alert.alertStyle = .warning
+        alert.runModal()
     }
 
     private func savedAppExclusions() -> [AppExclusionRule] {

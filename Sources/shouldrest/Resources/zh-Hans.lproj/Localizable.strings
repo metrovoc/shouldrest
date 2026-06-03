@@ -55,6 +55,7 @@
 "preferences.title" = "ShouldRest 偏好设置";
 "debug.title" = "ShouldRest 调试";
 "prefs.enableEyeGate" = "启用 Eye Gate";
+"prefs.cannotDisableBothRests" = "至少需要保留一种休息类型。";
 "prefs.notifyEyeGate" = "Eye Gate 前通知";
 "prefs.enableBodyBreak" = "启用 Body Break";
 "prefs.notifyBodyBreak" = "Body Break 前通知";
