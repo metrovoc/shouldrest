@@ -201,6 +201,7 @@ Implemented now:
 - Stretchly-style automatic resume notification is shown when a timed user pause or pause-until-morning expires; explicit manual resume paths stay quiet.
 - Break-health danger is visible in the menu status surface, not only in debug output.
 - Menu status uses localized rest-kind names and shows the Stretchly-style Body Break countdown in Eye Gate units when both rest kinds are enabled.
+- Menu bar tooltip mirrors the Stretchly tray tooltip structure: product header plus dynamic status lines.
 - Disabling break-health mode resets accumulated danger, matching Stretchly's runtime setting behavior.
 - Eye Gate emergency override is frictional in core and app surfaces: minimum hold duration and required confirmation steps are enforced before the override is counted as a missed Eye Gate, with a configurable global shortcut for screen-covering situations.
 - Admin strict-preference hiding now removes both the Body Break ordinary-skip control and the Eye Gate emergency-override shortcut row from Preferences while preserving their stored values.

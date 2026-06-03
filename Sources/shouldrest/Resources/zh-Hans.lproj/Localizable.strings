@@ -40,6 +40,7 @@
 "status.deferredShort" = "已延后";
 "status.deferred" = "%@ 已延后：%@";
 "status.health" = "休息健康危险值：%d/10";
+"status.tooltipHeader" = "ShouldRest - 休息提醒应用";
 "kind.eyeGate" = "Eye Gate";
 "kind.bodyBreak" = "Body Break";
 "deferral.outsideWorkingHours" = "非工作时间";

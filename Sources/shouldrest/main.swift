@@ -103,6 +103,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         guard statusItem == nil else { return }
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         item.button?.title = "ShouldRest"
+        item.button?.toolTip = MenuStatusPresenter.tooltip(state: engine.state, settings: settings)
         statusItem = item
         rebuildMenu()
     }
@@ -220,6 +221,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func rebuildMenu() {
         guard let item = statusItem else { return }
         item.button?.title = menuBarTitle()
+        item.button?.toolTip = MenuStatusPresenter.tooltip(state: engine.state, settings: settings)
 
         let menu = NSMenu()
         if !settings.admin.disableAppUpdateFeatures, latestReleaseURL != nil {

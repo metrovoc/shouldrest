@@ -10,6 +10,10 @@ enum MenuStatusPresenter {
         return lines
     }
 
+    static func tooltip(state: RestEngineState, settings: RestSettings, now: Date = Date()) -> String {
+        L10n.tr("status.tooltipHeader") + "\n\n" + lines(state: state, settings: settings, now: now).joined(separator: "\n")
+    }
+
     static func deferralReasonText(_ reason: ContextDeferralReason) -> String {
         switch reason {
         case .outsideWorkingHours:

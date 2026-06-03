@@ -25,6 +25,16 @@ final class MenuStatusPresenterTests: XCTestCase {
         XCTAssertEqual(lines[1], "Next Body Break after 2 Eye Gate(s)")
     }
 
+    func testTooltipIncludesHeaderAndStatusLines() {
+        let engine = RestEngine(settings: .defaults, now: start)
+
+        let tooltip = MenuStatusPresenter.tooltip(state: engine.state, settings: engine.settings, now: start)
+
+        XCTAssertTrue(tooltip.hasPrefix("ShouldRest - The rest reminder app\n\n"))
+        XCTAssertTrue(tooltip.contains("Next: Eye Gate"))
+        XCTAssertTrue(tooltip.contains("Next Body Break after 2 Eye Gate(s)"))
+    }
+
     func testBodyBreakCountdownCountsScheduledEyeGateTowardBodyBreak() {
         var engine = RestEngine(settings: .defaults, now: start)
         _ = engine.takeNow(.eyeGate, now: start)
