@@ -60,8 +60,14 @@ final class PreferencesWindowController: NSWindowController {
     private let localImagePath = NSTextField()
 
     private let shortcutPauseToggle = NSTextField()
+    private let shortcutPause30 = NSTextField()
+    private let shortcutPause1h = NSTextField()
+    private let shortcutPause2h = NSTextField()
+    private let shortcutPause5h = NSTextField()
+    private let shortcutPauseUntilMorning = NSTextField()
     private let shortcutEyeNow = NSTextField()
     private let shortcutBodyNow = NSTextField()
+    private let shortcutSkipBody = NSTextField()
     private let shortcutReset = NSTextField()
 
     private let openAtLogin = NSButton(checkboxWithTitle: L10n.tr("prefs.openAtLogin"), target: nil, action: nil)
@@ -207,8 +213,14 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(separator())
         stack.addArrangedSubview(section(L10n.tr("prefs.sectionShortcuts")))
         stack.addArrangedSubview(row(L10n.tr("prefs.pauseToggle"), shortcutPauseToggle))
+        stack.addArrangedSubview(row(L10n.tr("prefs.pause30Shortcut"), shortcutPause30))
+        stack.addArrangedSubview(row(L10n.tr("prefs.pause1hShortcut"), shortcutPause1h))
+        stack.addArrangedSubview(row(L10n.tr("prefs.pause2hShortcut"), shortcutPause2h))
+        stack.addArrangedSubview(row(L10n.tr("prefs.pause5hShortcut"), shortcutPause5h))
+        stack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningShortcut"), shortcutPauseUntilMorning))
         stack.addArrangedSubview(row(L10n.tr("prefs.eyeGateNow"), shortcutEyeNow))
         stack.addArrangedSubview(row(L10n.tr("prefs.bodyBreakNow"), shortcutBodyNow))
+        stack.addArrangedSubview(row(L10n.tr("prefs.skipToBodyBreak"), shortcutSkipBody))
         stack.addArrangedSubview(row(L10n.tr("prefs.reset"), shortcutReset))
 
         stack.addArrangedSubview(separator())
@@ -259,8 +271,10 @@ final class PreferencesWindowController: NSWindowController {
 
         let wideFields = [
             eyeColor, bodyColor, bodyStartSound, bodyFinishSound, customBodyTitle,
-            customBodyText, localImagePath, shortcutPauseToggle, shortcutEyeNow, shortcutBodyNow,
-            shortcutReset, appExclusionName, appExclusionTerms, updateFeedURL,
+            customBodyText, localImagePath, shortcutPauseToggle, shortcutPause30,
+            shortcutPause1h, shortcutPause2h, shortcutPause5h, shortcutPauseUntilMorning,
+            shortcutEyeNow, shortcutBodyNow, shortcutSkipBody, shortcutReset,
+            appExclusionName, appExclusionTerms, updateFeedURL,
             customPreferencesMessage, appExclusionsJSON
         ]
         wideFields.forEach { $0.widthAnchor.constraint(equalToConstant: 320).isActive = true }
@@ -324,8 +338,14 @@ final class PreferencesWindowController: NSWindowController {
         localImagePath.stringValue = settings.contentLibrary.localImagePaths.first ?? ""
 
         shortcutPauseToggle.stringValue = settings.shortcuts.pauseToggle
+        shortcutPause30.stringValue = settings.shortcuts.pauseFor30Minutes
+        shortcutPause1h.stringValue = settings.shortcuts.pauseFor1Hour
+        shortcutPause2h.stringValue = settings.shortcuts.pauseFor2Hours
+        shortcutPause5h.stringValue = settings.shortcuts.pauseFor5Hours
+        shortcutPauseUntilMorning.stringValue = settings.shortcuts.pauseUntilMorning
         shortcutEyeNow.stringValue = settings.shortcuts.takeEyeGateNow
         shortcutBodyNow.stringValue = settings.shortcuts.takeBodyBreakNow
+        shortcutSkipBody.stringValue = settings.shortcuts.skipToNextBodyBreak
         shortcutReset.stringValue = settings.shortcuts.reset
 
         openAtLogin.state = state(settings.operations.openAtLogin)
@@ -393,8 +413,14 @@ final class PreferencesWindowController: NSWindowController {
         next.contentLibrary.localImagePaths = savedLocalImagePaths()
         next.bodyBreak.content = next.contentLibrary.localImagePaths.isEmpty ? .richRestIdea : .localImage
         next.shortcuts.pauseToggle = shortcutPauseToggle.stringValue
+        next.shortcuts.pauseFor30Minutes = shortcutPause30.stringValue
+        next.shortcuts.pauseFor1Hour = shortcutPause1h.stringValue
+        next.shortcuts.pauseFor2Hours = shortcutPause2h.stringValue
+        next.shortcuts.pauseFor5Hours = shortcutPause5h.stringValue
+        next.shortcuts.pauseUntilMorning = shortcutPauseUntilMorning.stringValue
         next.shortcuts.takeEyeGateNow = shortcutEyeNow.stringValue
         next.shortcuts.takeBodyBreakNow = shortcutBodyNow.stringValue
+        next.shortcuts.skipToNextBodyBreak = shortcutSkipBody.stringValue
         next.shortcuts.reset = shortcutReset.stringValue
 
         next.operations.openAtLogin = isOn(openAtLogin)

@@ -103,8 +103,14 @@
 "prefs.localImagePath" = "本地图片路径";
 "prefs.sectionShortcuts" = "全局快捷键";
 "prefs.pauseToggle" = "暂停切换";
+"prefs.pause30Shortcut" = "暂停 30 分钟";
+"prefs.pause1hShortcut" = "暂停 1 小时";
+"prefs.pause2hShortcut" = "暂停 2 小时";
+"prefs.pause5hShortcut" = "暂停 5 小时";
+"prefs.pauseUntilMorningShortcut" = "暂停到早晨";
 "prefs.eyeGateNow" = "立即 Eye Gate";
 "prefs.bodyBreakNow" = "立即 Body Break";
+"prefs.skipToBodyBreak" = "跳到 Body Break";
 "prefs.reset" = "重置";
 "prefs.sectionOperations" = "操作与管理员";
 "prefs.updateFeedURL" = "更新源 URL";

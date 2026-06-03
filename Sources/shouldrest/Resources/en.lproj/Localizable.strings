@@ -103,8 +103,14 @@
 "prefs.localImagePath" = "Local image path";
 "prefs.sectionShortcuts" = "Global Shortcuts";
 "prefs.pauseToggle" = "Pause toggle";
+"prefs.pause30Shortcut" = "Pause 30 minutes";
+"prefs.pause1hShortcut" = "Pause 1 hour";
+"prefs.pause2hShortcut" = "Pause 2 hours";
+"prefs.pause5hShortcut" = "Pause 5 hours";
+"prefs.pauseUntilMorningShortcut" = "Pause until morning";
 "prefs.eyeGateNow" = "Eye Gate now";
 "prefs.bodyBreakNow" = "Body Break now";
+"prefs.skipToBodyBreak" = "Skip to Body Break";
 "prefs.reset" = "Reset";
 "prefs.sectionOperations" = "Operations And Admin";
 "prefs.updateFeedURL" = "Update feed URL";

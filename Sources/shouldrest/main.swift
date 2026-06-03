@@ -597,6 +597,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         registerShortcut(settings.shortcuts.pauseFor5Hours) { [weak self] in
             self?.pause(for: 5 * 60 * 60, reason: .user)
         }
+        registerShortcut(settings.shortcuts.pauseUntilMorning) { [weak self] in
+            self?.pauseUntilMorning()
+        }
         registerShortcut(settings.shortcuts.takeEyeGateNow) { [weak self] in
             self?.takeEyeGateNow()
         }
