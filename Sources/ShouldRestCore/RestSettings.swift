@@ -492,6 +492,8 @@ public enum TrayIconStyle: String, Codable, CaseIterable, Equatable, Sendable {
 }
 
 public struct ShortcutSettings: Codable, Equatable, Sendable {
+    public static let defaultEndBodyBreakShortcut = "CmdOrCtrl+X"
+
     public var pauseToggle: String
     public var pauseFor30Minutes: String
     public var pauseFor1Hour: String
@@ -505,6 +507,10 @@ public struct ShortcutSettings: Codable, Equatable, Sendable {
     public var endBodyBreak: String?
     public var emergencyEyeGateOverride: String?
     public var reset: String
+
+    public var resolvedEndBodyBreakShortcut: String {
+        endBodyBreak ?? Self.defaultEndBodyBreakShortcut
+    }
 
     public init(
         pauseToggle: String,
@@ -546,6 +552,7 @@ public struct ShortcutSettings: Codable, Equatable, Sendable {
         takeEyeGateNow: "",
         takeBodyBreakNow: "",
         skipToNextBodyBreak: "",
+        endBodyBreak: defaultEndBodyBreakShortcut,
         reset: ""
     )
 }

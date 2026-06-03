@@ -413,7 +413,7 @@ final class PreferencesWindowController: NSWindowController {
         shortcutEyeNow.stringValue = settings.shortcuts.takeEyeGateNow
         shortcutBodyNow.stringValue = settings.shortcuts.takeBodyBreakNow
         shortcutSkipBody.stringValue = settings.shortcuts.skipToNextBodyBreak
-        shortcutEndBody.stringValue = settings.shortcuts.endBodyBreak ?? ""
+        shortcutEndBody.stringValue = settings.shortcuts.resolvedEndBodyBreakShortcut
         shortcutEmergencyEye.stringValue = settings.shortcuts.emergencyEyeGateOverride ?? ""
         shortcutReset.stringValue = settings.shortcuts.reset
 

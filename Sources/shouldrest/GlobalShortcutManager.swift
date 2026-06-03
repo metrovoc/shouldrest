@@ -2,18 +2,25 @@ import Carbon
 import Foundation
 
 final class GlobalShortcutManager {
+    static func signature(_ raw: String) -> OSType {
+        let bytes = Array(raw.utf8)
+        precondition(bytes.count == 4, "Hot key signatures must be exactly four ASCII characters")
+        return OSType(
+            UInt32(bytes[0]) << 24 |
+            UInt32(bytes[1]) << 16 |
+            UInt32(bytes[2]) << 8 |
+            UInt32(bytes[3])
+        )
+    }
+
     private var hotKeys: [UInt32: EventHotKeyRef] = [:]
     private var handlers: [UInt32: @Sendable () -> Void] = [:]
     private var eventHandler: EventHandlerRef?
     private var nextID: UInt32 = 1
-    private let signature = OSType(
-        UInt32(Character("S").asciiValue!) << 24 |
-        UInt32(Character("R").asciiValue!) << 16 |
-        UInt32(Character("S").asciiValue!) << 8 |
-        UInt32(Character("T").asciiValue!)
-    )
+    private let signature: OSType
 
-    init() {
+    init(signature: OSType = GlobalShortcutManager.signature("SRST")) {
+        self.signature = signature
         var spec = EventTypeSpec(
             eventClass: OSType(kEventClassKeyboard),
             eventKind: UInt32(kEventHotKeyPressed)
@@ -34,6 +41,7 @@ final class GlobalShortcutManager {
                 )
                 guard status == noErr else { return status }
                 let manager = Unmanaged<GlobalShortcutManager>.fromOpaque(userData).takeUnretainedValue()
+                guard hotKeyID.signature == manager.signature else { return noErr }
                 manager.invoke(id: hotKeyID.id)
                 return noErr
             },
@@ -51,8 +59,9 @@ final class GlobalShortcutManager {
         }
     }
 
-    func register(shortcut: String, handler: @escaping @Sendable () -> Void) {
-        guard let parsed = ParsedShortcut(shortcut) else { return }
+    @discardableResult
+    func register(shortcut: String, handler: @escaping @Sendable () -> Void) -> Bool {
+        guard let parsed = ParsedShortcut(shortcut) else { return false }
         let id = nextID
         nextID += 1
 
@@ -66,9 +75,10 @@ final class GlobalShortcutManager {
             0,
             &hotKeyRef
         )
-        guard status == noErr, let hotKeyRef else { return }
+        guard status == noErr, let hotKeyRef else { return false }
         hotKeys[id] = hotKeyRef
         handlers[id] = handler
+        return true
     }
 
     func unregisterAll() {

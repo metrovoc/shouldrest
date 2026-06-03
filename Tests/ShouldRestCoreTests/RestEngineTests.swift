@@ -388,6 +388,16 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(loaded, .defaults)
     }
 
+    func testShortcutSettingsDefaultsToStretchlyStyleEndBreakShortcut() {
+        XCTAssertEqual(ShortcutSettings.defaultEndBodyBreakShortcut, "CmdOrCtrl+X")
+        XCTAssertEqual(ShortcutSettings.defaults.endBodyBreak, ShortcutSettings.defaultEndBodyBreakShortcut)
+        XCTAssertEqual(ShortcutSettings.defaults.resolvedEndBodyBreakShortcut, ShortcutSettings.defaultEndBodyBreakShortcut)
+
+        var disabled = ShortcutSettings.defaults
+        disabled.endBodyBreak = ""
+        XCTAssertEqual(disabled.resolvedEndBodyBreakShortcut, "")
+    }
+
     func testRestoredDefaultsDoNotReopenFirstRunOnboarding() {
         let restored = RestSettings.restoredDefaults
 
@@ -461,6 +471,7 @@ final class RestEngineTests: XCTestCase {
         XCTAssertNil(shortcuts.emergencyEyeGateOverride)
         XCTAssertNil(shortcuts.endBodyBreak)
         XCTAssertNil(shortcuts.skipToNextScheduledRest)
+        XCTAssertEqual(shortcuts.resolvedEndBodyBreakShortcut, ShortcutSettings.defaultEndBodyBreakShortcut)
     }
 
     func testOperationsSettingsCalculatesUntilMorningUsingConfiguredHour() throws {

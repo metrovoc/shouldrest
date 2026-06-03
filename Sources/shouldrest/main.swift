@@ -15,6 +15,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private let focusDetector = FocusModeDetector()
     private let soundPlayer = SoundPlayer()
     private let globalShortcuts = GlobalShortcutManager()
+    private let activeBreakShortcuts = GlobalShortcutManager(signature: GlobalShortcutManager.signature("SRAB"))
     private let updateChecker = UpdateChecker()
     private var preferencesWindowController: PreferencesWindowController?
     private var debugWindowController: DebugWindowController?
@@ -30,6 +31,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private var latestReleaseURL: URL?
     private var pendingBodyBreakIdea: RestIdea?
     private var activeBodyBreakIdeas: [UUID: RestIdea] = [:]
+    private var activeBreakShortcutSessionID: UUID?
+    private var activeBreakShortcutValue: String?
+    private var activeBreakShortcutRegistered = false
     private var automationTasks: [UUID: Task<Void, Never>] = [:]
 
     override init() {
@@ -86,6 +90,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         tickTimer?.invalidate()
         updateCheckTimer?.invalidate()
+        unregisterActiveBreakShortcut()
         overlayController.dismiss()
         logger.log("Application terminated")
     }
@@ -120,6 +125,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
 
         if let active = engine.state.activeSession {
+            refreshActiveBreakShortcut()
             let elapsed = now.timeIntervalSince(active.startedAt)
             let shouldAwaitManualFinish = elapsed >= active.duration && active.manualFinishEnabled
             overlayController.update(
@@ -140,6 +146,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             if elapsed >= active.duration {
                 playRestSound(settings.rule(for: active.kind).finishSound)
                 _ = engine.completeActive(now: now, reason: .completed)
+                unregisterActiveBreakShortcut()
                 overlayController.dismiss()
                 manualAwaitingSessionID = nil
                 clearActiveBodyBreakIdea(for: active)
@@ -151,6 +158,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
+        unregisterActiveBreakShortcut()
         let expiredPause = engine.state.pause.flatMap { pause in
             pause.isActive(at: now) ? nil : pause
         }
@@ -168,6 +176,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             bindPendingBodyBreakIdea(to: session)
             playRestSound(settings.rule(for: session.kind).startSound)
             overlayController.present(session: session, settings: overlaySettings(for: session), now: now)
+            refreshActiveBreakShortcut()
             logger.log("Started \(session.kind.rawValue)")
         case .notificationDue(let kind):
             showNotification(for: kind)
@@ -375,6 +384,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         if case .started(let session) = engine.takeNow(.eyeGate) {
             playRestSound(settings.rule(for: session.kind).startSound)
             overlayController.present(session: session, settings: settings, now: Date())
+            refreshActiveBreakShortcut()
             logger.log("Manual Eye Gate started")
         }
         rebuildMenu()
@@ -393,6 +403,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             }
             playRestSound(settings.rule(for: session.kind).startSound)
             overlayController.present(session: session, settings: overlaySettings(for: session), now: Date())
+            refreshActiveBreakShortcut()
             logger.log("Manual Body Break started")
         }
         rebuildMenu()
@@ -411,6 +422,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     @objc private func postponeBodyBreak() {
         let active = engine.state.activeSession
         if case .postponed = engine.postponeActive() {
+            unregisterActiveBreakShortcut()
             overlayController.dismiss()
             if let active {
                 clearActiveBodyBreakIdea(for: active)
@@ -429,6 +441,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         if case .completed = engine.completeActive(reason: .manual) {
             playRestSound(settings.rule(for: active.kind).finishSound)
             logger.log("Manually finished \(active.kind.rawValue)")
+            unregisterActiveBreakShortcut()
             clearActiveBodyBreakIdea(for: active)
             overlayController.dismiss()
             manualAwaitingSessionID = nil
@@ -444,6 +457,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         if case .completed = engine.skipActive() {
+            unregisterActiveBreakShortcut()
             clearActiveBodyBreakIdea(for: active)
             overlayController.dismiss()
             manualAwaitingSessionID = nil
@@ -464,10 +478,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
 
         if case .postponed = engine.postponeActive(now: now) {
+            unregisterActiveBreakShortcut()
             overlayController.dismiss()
             clearActiveBodyBreakIdea(for: active)
             logger.log("Body Break postponed by end shortcut")
         } else if case .completed = engine.skipActive(now: now) {
+            unregisterActiveBreakShortcut()
             overlayController.dismiss()
             manualAwaitingSessionID = nil
             clearActiveBodyBreakIdea(for: active)
@@ -538,6 +554,57 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         showAppNotification(title: L10n.tr("app.name"), body: L10n.tr("notification.resumingBreaks"))
     }
 
+    private func refreshActiveBreakShortcut() {
+        guard let active = engine.state.activeSession,
+              active.kind == .bodyBreak else {
+            unregisterActiveBreakShortcut()
+            return
+        }
+
+        let shortcut = settings.shortcuts.resolvedEndBodyBreakShortcut.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !shortcut.isEmpty else {
+            unregisterActiveBreakShortcut()
+            return
+        }
+
+        guard activeBreakShortcutSessionID != active.id ||
+              activeBreakShortcutValue != shortcut else {
+            return
+        }
+
+        activeBreakShortcuts.unregisterAll()
+        activeBreakShortcutSessionID = active.id
+        activeBreakShortcutValue = shortcut
+        activeBreakShortcutRegistered = activeBreakShortcuts.register(shortcut: shortcut) { [weak self] in
+            Task { @MainActor in
+                self?.endBodyBreakFromShortcut()
+            }
+        }
+        if activeBreakShortcutRegistered {
+            logger.log("Active Body Break end shortcut registered shortcut=\(shortcut)")
+        } else {
+            logger.log("Active Body Break end shortcut unavailable shortcut=\(shortcut)")
+        }
+    }
+
+    private func unregisterActiveBreakShortcut() {
+        guard activeBreakShortcutSessionID != nil ||
+              activeBreakShortcutValue != nil ||
+              activeBreakShortcutRegistered else {
+            return
+        }
+        let wasRegistered = activeBreakShortcutRegistered
+        activeBreakShortcuts.unregisterAll()
+        activeBreakShortcutSessionID = nil
+        activeBreakShortcutValue = nil
+        activeBreakShortcutRegistered = false
+        if wasRegistered {
+            logger.log("Active Body Break end shortcut unregistered")
+        } else {
+            logger.log("Active Body Break end shortcut state cleared")
+        }
+    }
+
     @objc private func resumeBreaks() {
         _ = engine.resume()
         logger.log("Breaks resumed")
@@ -571,6 +638,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func pause(for duration: TimeInterval?, reason: PauseReason) {
         let active = engine.state.activeSession
         if case .paused = engine.pause(for: duration, reason: reason) {
+            unregisterActiveBreakShortcut()
             overlayController.dismiss()
             if let active {
                 clearActiveBodyBreakIdea(for: active)
@@ -582,6 +650,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func resetBreaks() {
         _ = engine.reset()
+        unregisterActiveBreakShortcut()
         overlayController.dismiss()
         manualAwaitingSessionID = nil
         pendingBodyBreakIdea = nil
@@ -681,6 +750,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         applyOpenAtLoginSetting()
         applyMenuBarVisibility()
         configureGlobalShortcuts()
+        refreshActiveBreakShortcut()
         scheduleAutomaticUpdateCheck()
         do {
             try settingsStore.save(nextSettings)
@@ -880,6 +950,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                case .paused = engine.pause(for: nil, reason: .suspendOrLock) {
                 pausedForSuspendOrLock = true
             }
+            unregisterActiveBreakShortcut()
             overlayController.dismiss()
             logger.log("System pause detected")
         } else {
@@ -898,6 +969,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
         let result = engine.evaluate(now: now, context: RestContext(idleDuration: idleDuration))
         handleEngineResult(result, now: now)
+        refreshActiveBreakShortcut()
         logger.log("System resume detected idleDuration=\(idleDuration)")
         rebuildMenu()
     }
@@ -965,9 +1037,6 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
         registerShortcut(settings.shortcuts.skipToNextBodyBreak) { [weak self] in
             self?.takeBodyBreakNow()
-        }
-        registerShortcut(settings.shortcuts.endBodyBreak ?? "") { [weak self] in
-            self?.endBodyBreakFromShortcut()
         }
         registerShortcut(settings.shortcuts.emergencyEyeGateOverride ?? "") { [weak self] in
             self?.emergencyOverrideEyeGate()
@@ -1224,8 +1293,7 @@ final class OverlayWindow: NSWindow {
             contentRect: screen.frame,
             styleMask: [.borderless],
             backing: .buffered,
-            defer: false,
-            screen: screen
+            defer: false
         )
         contentView = overlayView
         level = settings.rule(for: session.kind).enforcement.usesScreenSaverLevel ? .screenSaver : .modalPanel

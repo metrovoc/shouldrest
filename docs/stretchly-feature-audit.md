@@ -106,6 +106,7 @@ ShouldRest must implement or exceed these Stretchly capabilities except where ex
 - Menu bar status item.
 - Pause for 30 minutes, 1 hour, 2 hours, 5 hours, until morning, or indefinitely.
 - Global shortcuts.
+- Stretchly default `CmdOrCtrl+X` end-break shortcut semantics for Body Break only, registered only while a Body Break is active.
 - CLI or URL-style automation.
 - Debug/status command.
 
@@ -164,7 +165,7 @@ Implemented now:
 - Stretchly-compatible `pauseForSuspendOrLock` preference: enabled by default, with an opt-out path that preserves schedule state and lets natural rest credit absorb sleep/lock idle time.
 - Debug panel with runtime state, timer state, settings/log/support paths, and Body Break image paths.
 - Global shortcut registration for pause, pause durations, take-now, Body Break skip-to-next, and reset.
-- Stretchly-style end-break shortcut for Body Break only: after the required duration it finishes, during the postpone window it postpones, and otherwise it uses the Body Break skip policy. Eye Gate intentionally ignores this shortcut.
+- Stretchly-style end-break shortcut for Body Break only: default `CmdOrCtrl+X`, registered only while a Body Break is active, after the required duration it finishes, during the postpone window it postpones, and otherwise it uses the Body Break skip policy. Eye Gate intentionally ignores this shortcut.
 - URL-style automation parser plus Apple Event URL handler for bundled app registration.
 - Body Break manual-finish phase that lowers overlay level after the required duration and waits for user completion.
 - Configurable active working-hours windows, including overnight windows.
@@ -190,7 +191,7 @@ Implemented now:
 - Preference surface for editing multiple custom Body Break ideas through a sanitized advanced JSON array, matching Stretchly's settings-file idea customization while keeping Eye Gate content minimal.
 - Advanced JSON preference editors validate non-empty input and stop saving on parse errors instead of silently falling back to simplified form fields; single-rule/single-idea configurations stay editable through the simplified form instead of being shadowed by auto-filled JSON.
 - Separate preference controls for Eye Gate and Body Break start/finish sounds, with shared configurable sound volume.
-- Complete global-shortcut preference surface for pause toggle, pause durations, pause until morning, immediate rests, Body Break skip-to-next, and reset; pause-until-morning shortcut is registered at runtime.
+- Complete global-shortcut preference surface for pause toggle, pause durations, pause until morning, immediate rests, Body Break skip-to-next, active Body Break end, and reset; pause-until-morning shortcut is registered at runtime.
 - Stretchly-style skip-to-next-scheduled menu action and shortcut: it immediately starts whichever rest kind is currently scheduled next, while separate Eye Gate now and Body Break now actions remain available.
 - Preferences, settings persistence, and engine entry points prevent configurations with both rest types disabled, matching Stretchly's schedule guard while closing file and automation bypasses.
 - Configurable pause-until-morning hour, shared by menu/global-shortcut and CLI/URL automation; early-morning pauses now resume the same morning instead of always tomorrow.
