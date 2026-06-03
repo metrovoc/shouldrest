@@ -3,7 +3,7 @@ import ShouldRestCore
 
 enum EmergencyOverrideDecision: Equatable {
     case unavailable
-    case armed(remainingSeconds: Int)
+    case waiting(remainingSeconds: Int)
     case complete(heldDuration: TimeInterval)
 }
 
@@ -11,7 +11,7 @@ struct EmergencyOverrideCoordinator {
     private(set) var armedSessionID: UUID?
 
     func isArmed(for session: RestSession) -> Bool {
-        armedSessionID == session.id
+        false
     }
 
     mutating func request(
@@ -26,8 +26,8 @@ struct EmergencyOverrideCoordinator {
 
         let heldDuration = max(0, now.timeIntervalSince(session.startedAt))
         guard heldDuration >= policy.minimumHoldDuration else {
-            armedSessionID = session.id
-            return .armed(remainingSeconds: Int(ceil(policy.minimumHoldDuration - heldDuration)))
+            armedSessionID = nil
+            return .waiting(remainingSeconds: Int(ceil(policy.minimumHoldDuration - heldDuration)))
         }
 
         armedSessionID = nil
@@ -39,17 +39,7 @@ struct EmergencyOverrideCoordinator {
         policy: EmergencyOverridePolicy,
         now: Date
     ) -> EmergencyOverrideDecision? {
-        guard armedSessionID == session.id else { return nil }
-        guard session.kind == .eyeGate, policy.isEnabled else {
-            armedSessionID = nil
-            return .unavailable
-        }
-
-        let heldDuration = max(0, now.timeIntervalSince(session.startedAt))
-        guard heldDuration >= policy.minimumHoldDuration else { return nil }
-
-        armedSessionID = nil
-        return .complete(heldDuration: heldDuration)
+        nil
     }
 
     mutating func clear(sessionID: UUID? = nil) {

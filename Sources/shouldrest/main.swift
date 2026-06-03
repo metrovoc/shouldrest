@@ -733,17 +733,17 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         now: Date
     ) {
         switch decision {
-        case .armed(let remainingSeconds):
+        case .waiting(let remainingSeconds):
             overlayController.update(
                 session: session,
                 settings: overlaySettings(for: session),
                 now: now,
                 manualAwaiting: false,
                 emergencyOverrideAction: overlayEmergencyOverrideAction(for: session),
-                emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: session),
+                emergencyOverrideArmed: false,
                 bodyActions: nil
             )
-            logger.log("Emergency override armed for \(session.kind.rawValue), completing in \(remainingSeconds)s")
+            logger.log("Emergency override waiting for \(session.kind.rawValue), available in \(remainingSeconds)s")
             rebuildMenu()
         case .complete(let heldDuration):
             completeEmergencyOverrideEyeGate(
@@ -2122,7 +2122,6 @@ final class RestOverlayView: NSView {
 
     @objc private func emergencyOverridePressed() {
         if let remainingSeconds = emergencyRemainingSeconds, remainingSeconds > 0 {
-            onEmergencyOverrideConfirmed?()
             return
         }
 
@@ -2217,8 +2216,6 @@ final class RestOverlayView: NSView {
         setEmergencyButtonTitle(
             remainingSeconds == 0
                 ? L10n.tr("overlay.emergencyOverride")
-                : emergencyOverrideArmed
-                    ? L10n.format("overlay.emergencyOverrideArmed", remainingSeconds)
                 : L10n.format("overlay.emergencyOverrideIn", remainingSeconds),
             style: style
         )

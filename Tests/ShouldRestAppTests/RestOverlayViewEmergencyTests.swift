@@ -107,7 +107,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertTrue(didRequestEmergency)
     }
 
-    func testEarlyEmergencyTriggerArmsInsideOverlayInsteadOfExternalConfirmation() throws {
+    func testEarlyEmergencyTriggerWaitsInsideOverlayInsteadOfExternalConfirmation() throws {
         let view = configuredEyeGateOverlay(
             remainingSeconds: 2,
             isArmed: false
@@ -119,7 +119,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         view.performEmergencyOverrideKeyCommand()
 
-        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(requestCount, 0)
 
         view.configure(
             session: eyeGateSession(),
@@ -128,11 +128,11 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             showsContent: true,
             manualAwaiting: false,
             emergencyOverrideRemainingSeconds: 2,
-            emergencyOverrideArmed: true
+            emergencyOverrideArmed: false
         )
 
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
-        XCTAssertEqual(button.attributedTitle.string, L10n.format("overlay.emergencyOverrideArmed", 2))
+        XCTAssertEqual(button.attributedTitle.string, L10n.format("overlay.emergencyOverrideIn", 2))
     }
 
     func testEmergencyAffordanceUsesDimRedGhostStyle() throws {

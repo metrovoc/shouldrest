@@ -6,31 +6,26 @@ import XCTest
 final class EmergencyOverrideCoordinatorTests: XCTestCase {
     private let start = Date(timeIntervalSinceReferenceDate: 1_000)
 
-    func testRequestBeforeHoldArmsAndCompletesAutomaticallyWhenReady() {
+    func testRequestBeforeHoldOnlyWaitsAndNeverCreatesConfirmationState() {
         let session = eyeGateSession()
         let policy = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 0, minimumHoldDuration: 3)
         var coordinator = EmergencyOverrideCoordinator()
 
         XCTAssertEqual(
             coordinator.request(session: session, policy: policy, now: start.addingTimeInterval(1)),
-            .armed(remainingSeconds: 2)
+            .waiting(remainingSeconds: 2)
         )
-        XCTAssertTrue(coordinator.isArmed(for: session))
+        XCTAssertFalse(coordinator.isArmed(for: session))
         XCTAssertNil(coordinator.completionIfArmedAndReady(
             session: session,
             policy: policy,
             now: start.addingTimeInterval(2)
         ))
-
-        XCTAssertEqual(
-            coordinator.completionIfArmedAndReady(
-                session: session,
-                policy: policy,
-                now: start.addingTimeInterval(3)
-            ),
-            .complete(heldDuration: 3)
-        )
-        XCTAssertFalse(coordinator.isArmed(for: session))
+        XCTAssertNil(coordinator.completionIfArmedAndReady(
+            session: session,
+            policy: policy,
+            now: start.addingTimeInterval(3)
+        ))
     }
 
     func testRequestAfterHoldCompletesImmediatelyWithoutLegacyConfirmationSteps() {
@@ -51,7 +46,7 @@ final class EmergencyOverrideCoordinatorTests: XCTestCase {
         var coordinator = EmergencyOverrideCoordinator()
 
         _ = coordinator.request(session: session, policy: enabled, now: start.addingTimeInterval(1))
-        XCTAssertTrue(coordinator.isArmed(for: session))
+        XCTAssertFalse(coordinator.isArmed(for: session))
 
         XCTAssertEqual(
             coordinator.request(session: session, policy: disabled, now: start.addingTimeInterval(1)),
