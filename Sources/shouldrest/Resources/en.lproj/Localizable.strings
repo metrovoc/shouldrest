@@ -99,7 +99,7 @@
 "prefs.monitorFocus" = "Monitor Focus / Do Not Disturb";
 "prefs.focusDefersBody" = "Focus mode defers Body Break";
 "prefs.workingHours" = "Use active working hours";
-"prefs.enablePrimaryExclusion" = "Enable primary app exclusion";
+"prefs.enablePrimaryExclusion" = "Enable app exclusions";
 "prefs.appliesEye" = "Applies to Eye Gate";
 "prefs.appliesBody" = "Applies to Body Break";
 "prefs.currentTimeBody" = "Show current time during Body Break";
@@ -139,7 +139,7 @@
 "prefs.naturalIdleMinutes" = "Credit idle after";
 "prefs.workingStart" = "Working day starts";
 "prefs.workingEnd" = "Working day ends";
-"prefs.sectionExclusion" = "Primary App Exclusion";
+"prefs.sectionExclusion" = "App Exclusions";
 "prefs.name" = "Name";
 "prefs.matchTerms" = "Match terms";
 "prefs.matchTermsPlaceholder" = "Add app names or bundle IDs";

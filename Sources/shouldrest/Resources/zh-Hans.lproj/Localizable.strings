@@ -99,7 +99,7 @@
 "prefs.monitorFocus" = "监测专注 / 勿扰模式";
 "prefs.focusDefersBody" = "专注模式延后活动休息";
 "prefs.workingHours" = "使用工作时间窗口";
-"prefs.enablePrimaryExclusion" = "启用主要应用排除规则";
+"prefs.enablePrimaryExclusion" = "启用应用排除规则";
 "prefs.appliesEye" = "适用于护眼休息";
 "prefs.appliesBody" = "适用于活动休息";
 "prefs.currentTimeBody" = "活动休息中显示当前时间";
@@ -139,7 +139,7 @@
 "prefs.naturalIdleMinutes" = "空闲达到";
 "prefs.workingStart" = "工作日开始";
 "prefs.workingEnd" = "工作日结束";
-"prefs.sectionExclusion" = "主要应用排除";
+"prefs.sectionExclusion" = "应用排除规则";
 "prefs.name" = "名称";
 "prefs.matchTerms" = "匹配词";
 "prefs.matchTermsPlaceholder" = "添加应用名称或 Bundle ID";

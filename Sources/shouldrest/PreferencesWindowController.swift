@@ -1200,10 +1200,11 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     @discardableResult
     private func saveCurrentSettings(showAlerts: Bool) -> Bool {
+        let appExclusionsEnabled = isOn(appExclusionEnabled)
         let advancedAppExclusions: [AppExclusionRule]?
         let advancedCustomIdeas: [RestIdea]?
         do {
-            advancedAppExclusions = try decodedAdvancedAppExclusions()
+            advancedAppExclusions = appExclusionsEnabled ? try decodedAdvancedAppExclusions() : nil
             advancedCustomIdeas = try decodedAdvancedCustomIdeas()
         } catch {
             if showAlerts {
@@ -1268,7 +1269,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             endMinuteOfDay: Self.minutes(fromTimePicker: workingEndPicker, fallback: 18 * 60)
         )
 
-        next.appExclusions = advancedAppExclusions ?? savedAppExclusions()
+        next.appExclusions = appExclusionsEnabled ? (advancedAppExclusions ?? savedAppExclusions()) : []
         next.presentation.themeSource = selected(ThemeSource.self, from: themeSource, fallback: .system)
         next.presentation.trayIconStyle = selected(TrayIconStyle.self, from: trayStyle, fallback: .default)
         next.presentation.showMenuBarItem = true
@@ -1493,6 +1494,16 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         let appExclusionAppliesBodyVisible = exclusionEnabled && bodyBreakEnabled
         appExclusionAppliesEye.isHidden = !appExclusionAppliesEyeVisible
         appExclusionAppliesBody.isHidden = !appExclusionAppliesBodyVisible
+        let hasVisibleExclusionTarget =
+            (appExclusionAppliesEyeVisible && isOn(appExclusionAppliesEye)) ||
+            (appExclusionAppliesBodyVisible && isOn(appExclusionAppliesBody))
+        if exclusionEnabled && !hasVisibleExclusionTarget {
+            if appExclusionAppliesBodyVisible {
+                appExclusionAppliesBody.state = .on
+            } else if appExclusionAppliesEyeVisible {
+                appExclusionAppliesEye.state = .on
+            }
+        }
         if !exclusionEnabled {
             setAdvancedDisclosure(row: appExclusionsJSONRow, button: appExclusionsAdvancedButton, expanded: false)
         }
@@ -1797,14 +1808,20 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         guard isOn(appExclusionEnabled), !terms.isEmpty else { return [] }
 
         var appliesTo: Set<RestKind> = []
-        if isOn(appExclusionAppliesEye) {
+        let eyeGateEnabled = isOn(eyeEnabled)
+        let bodyBreakEnabled = isOn(bodyEnabled)
+        if eyeGateEnabled && isOn(appExclusionAppliesEye) {
             appliesTo.insert(.eyeGate)
         }
-        if isOn(appExclusionAppliesBody) {
+        if bodyBreakEnabled && isOn(appExclusionAppliesBody) {
             appliesTo.insert(.bodyBreak)
         }
         if appliesTo.isEmpty {
-            appliesTo.insert(.bodyBreak)
+            if bodyBreakEnabled {
+                appliesTo.insert(.bodyBreak)
+            } else if eyeGateEnabled {
+                appliesTo.insert(.eyeGate)
+            }
         }
 
         let mode = selected(AppExclusionRule.Mode.self, from: appExclusionMode, fallback: .pauseWhenMatched)

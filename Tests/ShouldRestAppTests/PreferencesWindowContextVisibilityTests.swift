@@ -201,6 +201,32 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.appliesBody")))
     }
 
+    func testEyeOnlyModeDefaultsNewAppExclusionToEyeGateAndAutosaves() throws {
+        var settings = RestSettings.defaults
+        settings.eyeGate.isEnabled = true
+        settings.bodyBreak.isEnabled = false
+        settings.appExclusions = []
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+        let checkbox = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionEnabled", in: contentView) as? NSButton)
+        let terms = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionTermsField", in: contentView) as? NSTokenField)
+        let appliesEye = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionAppliesEye", in: contentView) as? NSButton)
+        let appliesBody = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionAppliesBody", in: contentView) as? NSButton)
+        terms.objectValue = ["zoom"]
+        checkbox.state = .on
+
+        XCTAssertTrue(sendAction(from: checkbox))
+
+        XCTAssertFalse(appliesEye.isHidden)
+        XCTAssertTrue(appliesBody.isHidden)
+        XCTAssertEqual(appliesEye.state, .on)
+        waitUntilSavedSettingsArrive(savedSettings)
+        XCTAssertEqual(savedSettings.value?.appExclusions.first?.appliesTo, Set([RestKind.eyeGate]))
+    }
+
     private func selectContextTab(in view: NSView) throws {
         let tabView = try XCTUnwrap(firstTabView(in: view))
         tabView.selectTabViewItem(withIdentifier: L10n.tr("prefs.tabContext"))

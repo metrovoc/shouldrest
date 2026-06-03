@@ -60,6 +60,42 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertTrue(ideasEditor.string.contains("Stretch"))
     }
 
+    func testTurningOffAppExclusionsIgnoresHiddenAdvancedRulesAndAutosaves() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "alpha",
+                name: "Alpha",
+                matchTerms: ["alpha.app"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            ),
+            AppExclusionRule(
+                id: "beta",
+                name: "Beta",
+                matchTerms: ["beta.app"],
+                mode: .resumeOnlyWhenMatched,
+                appliesTo: [.eyeGate],
+                isEnabled: true
+            )
+        ]
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let checkbox = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionEnabled", in: contentView) as? NSButton)
+        let editor = try XCTUnwrap(view(withIdentifier: "appExclusionsJSONEditor", in: contentView) as? NSTextView)
+
+        XCTAssertEqual(checkbox.state, .on)
+        XCTAssertFalse(editor.string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+        checkbox.state = .off
+        XCTAssertTrue(sendAction(from: checkbox))
+
+        waitUntilSavedSettingsArrive(savedSettings)
+        XCTAssertEqual(savedSettings.value?.appExclusions, [])
+    }
+
     private func view(withIdentifier identifier: String, in view: NSView) -> NSView? {
         if view.identifier?.rawValue == identifier {
             return view
@@ -84,4 +120,20 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         }
         return nil
     }
+
+    private func sendAction(from control: NSControl) -> Bool {
+        guard let action = control.action else { return false }
+        return NSApplication.shared.sendAction(action, to: control.target, from: control)
+    }
+
+    private func waitUntilSavedSettingsArrive(_ settings: SavedSettingsBox) {
+        let deadline = Date().addingTimeInterval(2)
+        while settings.value == nil && Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.05))
+        }
+    }
+}
+
+private final class SavedSettingsBox {
+    var value: RestSettings?
 }
