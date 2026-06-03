@@ -770,10 +770,16 @@ final class RestOverlayView: NSView {
     private let titleLabel = NSTextField(labelWithString: "")
     private let detailLabel = NSTextField(labelWithString: "")
     private let countdownLabel = NSTextField(labelWithString: "")
+    private let imageView = NSImageView()
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true
+
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.imageScaling = .scaleProportionallyUpOrDown
+        imageView.isHidden = true
+        addSubview(imageView)
 
         [titleLabel, detailLabel, countdownLabel].forEach { label in
             label.translatesAutoresizingMaskIntoConstraints = false
@@ -788,6 +794,10 @@ final class RestOverlayView: NSView {
         countdownLabel.font = .monospacedDigitSystemFont(ofSize: 28, weight: .medium)
 
         NSLayoutConstraint.activate([
+            imageView.centerXAnchor.constraint(equalTo: centerXAnchor),
+            imageView.bottomAnchor.constraint(equalTo: titleLabel.topAnchor, constant: -24),
+            imageView.widthAnchor.constraint(lessThanOrEqualTo: widthAnchor, multiplier: 0.38),
+            imageView.heightAnchor.constraint(lessThanOrEqualTo: heightAnchor, multiplier: 0.32),
             titleLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
             titleLabel.centerYAnchor.constraint(equalTo: centerYAnchor, constant: -34),
             titleLabel.widthAnchor.constraint(lessThanOrEqualTo: widthAnchor, multiplier: 0.7),
@@ -816,6 +826,8 @@ final class RestOverlayView: NSView {
         titleLabel.isHidden = !showsContent
         detailLabel.isHidden = !showsContent
         countdownLabel.isHidden = !showsContent
+        imageView.isHidden = true
+        imageView.image = nil
 
         guard showsContent else { return }
 
@@ -837,8 +849,21 @@ final class RestOverlayView: NSView {
             let idea = ideas[safe: index]
             titleLabel.stringValue = idea?.title ?? L10n.tr("overlay.bodyTitle")
             detailLabel.stringValue = idea?.body ?? L10n.tr("overlay.bodyBody")
+            if let image = localBodyBreakImage(settings: settings) {
+                imageView.image = image
+                imageView.isHidden = false
+            }
         }
         countdownLabel.stringValue = "\(remainingSeconds)s"
+    }
+
+    private func localBodyBreakImage(settings: RestSettings) -> NSImage? {
+        guard settings.bodyBreak.content == .localImage,
+              let path = settings.contentLibrary.localImagePaths.first,
+              URL(string: path)?.scheme == nil else {
+            return nil
+        }
+        return NSImage(contentsOfFile: path)
     }
 }
 

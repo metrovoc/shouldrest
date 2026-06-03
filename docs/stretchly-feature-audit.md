@@ -160,10 +160,10 @@ Implemented now:
 - Configurable active working-hours windows, including overnight windows.
 - Update feed checks with manual menu action, launch-time checks, admin disable switch, and update notifications.
 - SwiftPM localization resource bundle with English and Simplified Chinese strings for core menu, notification, status, debug, preferences, and overlay surfaces.
+- Safe local image Body Break content path support and overlay renderer.
+- Reproducible `.app` packaging script with `shouldrest://` URL-scheme Info.plist registration and localization resource bundling.
 
 Still to implement:
 
-- Safe local image Body Break content picker and renderer.
 - Multi-rule app exclusion editor; current UI edits the primary rule while JSON supports more.
-- Bundled `.app` Info.plist URL-scheme registration for `shouldrest://`.
 - Broader localization coverage for every preference label and CLI help line.

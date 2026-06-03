@@ -57,15 +57,18 @@ public enum BuiltInRestIdeas {
 public struct ContentLibrarySettings: Codable, Equatable, Sendable {
     public var useBuiltInIdeas: Bool
     public var customBodyBreakIdeas: [RestIdea]
+    public var localImagePaths: [String]
 
-    public init(useBuiltInIdeas: Bool, customBodyBreakIdeas: [RestIdea]) {
+    public init(useBuiltInIdeas: Bool, customBodyBreakIdeas: [RestIdea], localImagePaths: [String]) {
         self.useBuiltInIdeas = useBuiltInIdeas
         self.customBodyBreakIdeas = customBodyBreakIdeas
+        self.localImagePaths = localImagePaths
     }
 
     public static let defaults = ContentLibrarySettings(
         useBuiltInIdeas: true,
-        customBodyBreakIdeas: []
+        customBodyBreakIdeas: [],
+        localImagePaths: []
     )
 
     public func ideas(for kind: RestKind) -> [RestIdea] {
@@ -80,4 +83,3 @@ public struct ContentLibrarySettings: Codable, Equatable, Sendable {
         return (builtIns + customBodyBreakIdeas.filter { $0.kind == kind }).filter(\.isEnabled)
     }
 }
-

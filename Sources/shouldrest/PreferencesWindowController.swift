@@ -50,6 +50,7 @@ final class PreferencesWindowController: NSWindowController {
 
     private let customBodyTitle = NSTextField()
     private let customBodyText = NSTextField()
+    private let localImagePath = NSTextField()
 
     private let shortcutPauseToggle = NSTextField()
     private let shortcutEyeNow = NSTextField()
@@ -181,6 +182,7 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(section("Custom Body Break Idea"))
         stack.addArrangedSubview(row("Title", customBodyTitle))
         stack.addArrangedSubview(row("Text", customBodyText))
+        stack.addArrangedSubview(row("Local image path", localImagePath))
 
         stack.addArrangedSubview(separator())
         stack.addArrangedSubview(section("Global Shortcuts"))
@@ -225,7 +227,7 @@ final class PreferencesWindowController: NSWindowController {
 
         let wideFields = [
             eyeColor, bodyColor, bodyStartSound, bodyFinishSound, customBodyTitle,
-            customBodyText, shortcutPauseToggle, shortcutEyeNow, shortcutBodyNow,
+            customBodyText, localImagePath, shortcutPauseToggle, shortcutEyeNow, shortcutBodyNow,
             shortcutReset, appExclusionName, appExclusionTerms, updateFeedURL,
             customPreferencesMessage
         ]
@@ -278,6 +280,7 @@ final class PreferencesWindowController: NSWindowController {
         let custom = settings.contentLibrary.customBodyBreakIdeas.first
         customBodyTitle.stringValue = custom?.title ?? ""
         customBodyText.stringValue = custom?.body ?? ""
+        localImagePath.stringValue = settings.contentLibrary.localImagePaths.first ?? ""
 
         shortcutPauseToggle.stringValue = settings.shortcuts.pauseToggle
         shortcutEyeNow.stringValue = settings.shortcuts.takeEyeGateNow
@@ -341,6 +344,8 @@ final class PreferencesWindowController: NSWindowController {
         next.eyeGate.finishSound = next.bodyBreak.finishSound
 
         next.contentLibrary.customBodyBreakIdeas = savedCustomIdeas()
+        next.contentLibrary.localImagePaths = savedLocalImagePaths()
+        next.bodyBreak.content = next.contentLibrary.localImagePaths.isEmpty ? .richRestIdea : .localImage
         next.shortcuts.pauseToggle = shortcutPauseToggle.stringValue
         next.shortcuts.takeEyeGateNow = shortcutEyeNow.stringValue
         next.shortcuts.takeBodyBreakNow = shortcutBodyNow.stringValue
@@ -409,6 +414,12 @@ final class PreferencesWindowController: NSWindowController {
                 isEnabled: true
             )
         ]
+    }
+
+    private func savedLocalImagePaths() -> [String] {
+        let path = localImagePath.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !path.isEmpty, URL(string: path)?.scheme == nil else { return [] }
+        return [path]
     }
 
     private func section(_ title: String) -> NSTextField {
