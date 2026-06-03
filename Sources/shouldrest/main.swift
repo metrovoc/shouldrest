@@ -1071,8 +1071,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func applyLanguageSetting() {
-        L10n.languageOverride = settings.presentation.languageIdentifier
-        logger.log("Language applied override=\(settings.presentation.languageIdentifier ?? "system")")
+        let languageOverride = LanguageOption(identifier: settings.presentation.languageIdentifier).identifier
+        L10n.languageOverride = languageOverride
+        logger.log("Language applied override=\(languageOverride ?? "system")")
     }
 
     private func configureGlobalShortcuts() {

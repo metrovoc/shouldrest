@@ -67,7 +67,7 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 ### Presentation
 
 - Light, dark, and system appearance.
-- System language with optional in-app language override for bundled translations.
+- System language with optional in-app language override for bundled English and Simplified Chinese translations; unsupported legacy locale identifiers fall back to System language.
 - Configurable colors for rest surfaces.
 - Optional sounds at start and finish.
 - Configurable sound volume.

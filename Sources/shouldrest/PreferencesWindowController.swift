@@ -53,7 +53,7 @@ final class PreferencesWindowController: NSWindowController {
     private let themeSource = NSPopUpButton()
     private let trayStyle = NSPopUpButton()
     private let showMenuBarItem = NSButton(checkboxWithTitle: L10n.tr("prefs.showMenuBarItem"), target: nil, action: nil)
-    private let languageIdentifier = NSTextField()
+    private let languageIdentifier = NSPopUpButton()
     private let currentTimeInBodyBreak = NSButton(checkboxWithTitle: L10n.tr("prefs.currentTimeBody"), target: nil, action: nil)
     private let breakHealth = NSButton(checkboxWithTitle: L10n.tr("prefs.breakHealth"), target: nil, action: nil)
     private let silentNotifications = NSButton(checkboxWithTitle: L10n.tr("prefs.silentNotifications"), target: nil, action: nil)
@@ -297,6 +297,10 @@ final class PreferencesWindowController: NSWindowController {
         themeSource.addItems(withTitles: ThemeSource.allCases.map(\.rawValue))
         trayStyle.addItems(withTitles: TrayIconStyle.allCases.map(\.rawValue))
         pauseUntilMorningMode.addItems(withTitles: MorningPauseMode.allCases.map(\.rawValue))
+        for option in LanguageOption.allCases {
+            languageIdentifier.addItem(withTitle: option.title)
+            languageIdentifier.lastItem?.representedObject = option.popupValue
+        }
         bodyCoveredDisplay.addItems(withTitles: [
             DisplaySelection.primary.rawValue,
             DisplaySelection.cursor.rawValue,
@@ -320,7 +324,7 @@ final class PreferencesWindowController: NSWindowController {
         ]
         compactFields.forEach { $0.widthAnchor.constraint(equalToConstant: 110).isActive = true }
 
-        let wideFields = [
+        let wideFields: [NSView] = [
             eyeColor, bodyColor, eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, customBodyTitle,
             customBodyText, customBodyIdeasJSON, localImagePath, languageIdentifier, shortcutPauseToggle,
             shortcutPause30, shortcutPause1h, shortcutPause2h, shortcutPause5h, shortcutPauseUntilMorning,
@@ -389,7 +393,7 @@ final class PreferencesWindowController: NSWindowController {
         themeSource.selectItem(withTitle: settings.presentation.themeSource.rawValue)
         trayStyle.selectItem(withTitle: settings.presentation.trayIconStyle.rawValue)
         showMenuBarItem.state = state(settings.presentation.resolvedShowMenuBarItem)
-        languageIdentifier.stringValue = settings.presentation.languageIdentifier ?? ""
+        selectLanguageOption(LanguageOption(identifier: settings.presentation.languageIdentifier))
         currentTimeInBodyBreak.state = state(settings.presentation.showCurrentTimeDuringBodyBreak)
         breakHealth.state = state(settings.presentation.breakHealthMode)
         silentNotifications.state = state(settings.notifications.silentNotifications)
@@ -501,7 +505,7 @@ final class PreferencesWindowController: NSWindowController {
         next.presentation.themeSource = selected(ThemeSource.self, from: themeSource, fallback: .system)
         next.presentation.trayIconStyle = selected(TrayIconStyle.self, from: trayStyle, fallback: .default)
         next.presentation.showMenuBarItem = isOn(showMenuBarItem)
-        next.presentation.languageIdentifier = optionalString(languageIdentifier.stringValue)
+        next.presentation.languageIdentifier = selectedLanguageOption().identifier
         next.presentation.showCurrentTimeDuringBodyBreak = isOn(currentTimeInBodyBreak)
         next.presentation.breakHealthMode = isOn(breakHealth)
         next.notifications.silentNotifications = isOn(silentNotifications)
@@ -755,11 +759,6 @@ final class PreferencesWindowController: NSWindowController {
         Double(field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)) ?? fallback
     }
 
-    private func optionalString(_ raw: String) -> String? {
-        let value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        return value.isEmpty ? nil : value
-    }
-
     private func normalizedHex(_ raw: String, fallback: String) -> String {
         let value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         let candidate = value.hasPrefix("#") ? value : "#\(value)"
@@ -781,6 +780,18 @@ final class PreferencesWindowController: NSWindowController {
             return fallback
         }
         return value
+    }
+
+    private func selectLanguageOption(_ option: LanguageOption) {
+        guard let item = languageIdentifier.itemArray.first(where: { ($0.representedObject as? String) == option.popupValue }) else {
+            languageIdentifier.selectItem(at: 0)
+            return
+        }
+        languageIdentifier.select(item)
+    }
+
+    private func selectedLanguageOption() -> LanguageOption {
+        LanguageOption(popupValue: languageIdentifier.selectedItem?.representedObject as? String)
     }
 
     private func soundPolicy(name: String, volume: Double) -> SoundPolicy {

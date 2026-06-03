@@ -176,6 +176,7 @@ Implemented now:
 - Configurable active working-hours windows, including overnight windows.
 - Update feed checks with manual menu action, launch-time and 48-hour repeat checks, admin disable switch that hides normal update controls, automatic update notifications that open the release page when clicked, and explicit manual-check feedback even when automatic update notifications are disabled.
 - SwiftPM localization resource bundle with English and Simplified Chinese strings for core menu, notification, status, debug, preferences, and overlay surfaces.
+- Preference-level language selector for System language, English, and Simplified Chinese; unknown legacy locale identifiers fall back to System language instead of persisting an invalid override.
 - Safe local image Body Break content path support and overlay renderer.
 - Reproducible `.app` packaging script with `shouldrest://` URL-scheme Info.plist registration and localization resource bundling.
 - Advanced app-exclusion JSON editor for multi-rule configurations, plus primary-rule form controls for common cases.
@@ -187,7 +188,7 @@ Implemented now:
 - Floating/all-spaces presentation for onboarding, preferences, and debug utility windows.
 - AppKit theme application for system/light/dark preferences, admin preferences message display, and optional current time during Body Break.
 - Stretchly-compatible menu bar visibility preference: visible by default, hideable for CLI/URL-managed setups.
-- Language override setting for bundled translations, while defaulting to the macOS system language.
+- Language override setting for bundled translations, while defaulting to the macOS system language. Current bundled translations are English and Simplified Chinese; additional languages are an expansion path, not a current claim.
 - Packaged app build with default ad-hoc signing, optional Developer ID signing hook, optional hardened runtime hook, and strict `codesign` verification.
 - Release packaging automation for Developer ID identity selection, hardened-runtime app signing, DMG creation, optional DMG signing, optional Apple notarization, and stapling validation.
 - Continuous context-deferral state for Focus, working-hours, and app-exclusion gates: first deferral raises break-health danger, repeated ticks do not double-count, and the due rest starts immediately when context clears.
