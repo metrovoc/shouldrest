@@ -376,12 +376,22 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
 
         if engine.state.activeSession == nil {
-            menu.addItem(actionItem(L10n.tr("menu.takeEyeGateNow"), #selector(takeEyeGateNow)))
-            menu.addItem(actionItem(L10n.tr("menu.takeBodyBreakNow"), #selector(takeBodyBreakNow)))
+            var addedManualRestAction = false
+            if settings.eyeGate.isEnabled {
+                menu.addItem(actionItem(L10n.tr("menu.takeEyeGateNow"), #selector(takeEyeGateNow)))
+                addedManualRestAction = true
+            }
+            if settings.bodyBreak.isEnabled {
+                menu.addItem(actionItem(L10n.tr("menu.takeBodyBreakNow"), #selector(takeBodyBreakNow)))
+                addedManualRestAction = true
+            }
             if engine.state.scheduled != nil {
                 menu.addItem(actionItem(L10n.tr("menu.takeNextScheduledRestNow"), #selector(takeNextScheduledRestNow)))
+                addedManualRestAction = true
             }
-            menu.addItem(.separator())
+            if addedManualRestAction {
+                menu.addItem(.separator())
+            }
         }
 
         if let active = engine.state.activeSession, active.kind == .eyeGate {
@@ -1386,17 +1396,23 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         register(L10n.tr("prefs.nextScheduledRest"), settings.shortcuts.skipToNextScheduledRest ?? "") { [weak self] in
             self?.takeNextScheduledRestNow()
         }
-        register(L10n.tr("prefs.eyeGateNow"), settings.shortcuts.takeEyeGateNow) { [weak self] in
-            self?.takeEyeGateNow()
+        if settings.eyeGate.isEnabled {
+            register(L10n.tr("prefs.eyeGateNow"), settings.shortcuts.takeEyeGateNow) { [weak self] in
+                self?.takeEyeGateNow()
+            }
         }
-        register(L10n.tr("prefs.bodyBreakNow"), settings.shortcuts.takeBodyBreakNow) { [weak self] in
-            self?.takeBodyBreakNow()
+        if settings.bodyBreak.isEnabled {
+            register(L10n.tr("prefs.bodyBreakNow"), settings.shortcuts.takeBodyBreakNow) { [weak self] in
+                self?.takeBodyBreakNow()
+            }
+            register(L10n.tr("prefs.skipToBodyBreak"), settings.shortcuts.skipToNextBodyBreak) { [weak self] in
+                self?.takeBodyBreakNow()
+            }
         }
-        register(L10n.tr("prefs.skipToBodyBreak"), settings.shortcuts.skipToNextBodyBreak) { [weak self] in
-            self?.takeBodyBreakNow()
-        }
-        register(L10n.tr("prefs.emergencyEyeGate"), settings.shortcuts.resolvedEmergencyEyeGateOverride) { [weak self] in
-            self?.emergencyOverrideEyeGate()
+        if settings.eyeGate.isEnabled && settings.eyeGate.emergencyOverride.isEnabled {
+            register(L10n.tr("prefs.emergencyEyeGate"), settings.shortcuts.resolvedEmergencyEyeGateOverride) { [weak self] in
+                self?.emergencyOverrideEyeGate()
+            }
         }
         register(L10n.tr("prefs.reset"), settings.shortcuts.reset) { [weak self] in
             self?.resetBreaks()

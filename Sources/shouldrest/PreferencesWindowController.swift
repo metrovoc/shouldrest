@@ -165,6 +165,10 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let shortcutSkipBody = ShortcutRecorderButton()
     private let shortcutEndBody = ShortcutRecorderButton()
     private let shortcutEmergencyEye = ShortcutRecorderButton()
+    private var shortcutEyeNowRow: NSView?
+    private var shortcutBodyNowRow: NSView?
+    private var shortcutSkipBodyRow: NSView?
+    private var shortcutEndBodyRow: NSView?
     private var shortcutEmergencyEyeRow: NSView?
     private let shortcutReset = ShortcutRecorderButton()
     private let shortcutConflictRow = NSStackView()
@@ -523,11 +527,24 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.pause5hShortcut"), shortcutPause5h))
         shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningShortcut"), shortcutPauseUntilMorning))
         shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.nextScheduledRest"), shortcutNextScheduled))
-        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.eyeGateNow"), shortcutEyeNow))
-        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.bodyBreakNow"), shortcutBodyNow))
-        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.skipToBodyBreak"), shortcutSkipBody))
-        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.endBodyBreak"), shortcutEndBody))
+        let shortcutEyeNowRow = row(L10n.tr("prefs.eyeGateNow"), shortcutEyeNow)
+        shortcutEyeNowRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutEyeNowRow")
+        self.shortcutEyeNowRow = shortcutEyeNowRow
+        shortcutsStack.addArrangedSubview(shortcutEyeNowRow)
+        let shortcutBodyNowRow = row(L10n.tr("prefs.bodyBreakNow"), shortcutBodyNow)
+        shortcutBodyNowRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutBodyNowRow")
+        self.shortcutBodyNowRow = shortcutBodyNowRow
+        shortcutsStack.addArrangedSubview(shortcutBodyNowRow)
+        let shortcutSkipBodyRow = row(L10n.tr("prefs.skipToBodyBreak"), shortcutSkipBody)
+        shortcutSkipBodyRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutSkipBodyRow")
+        self.shortcutSkipBodyRow = shortcutSkipBodyRow
+        shortcutsStack.addArrangedSubview(shortcutSkipBodyRow)
+        let shortcutEndBodyRow = row(L10n.tr("prefs.endBodyBreak"), shortcutEndBody)
+        shortcutEndBodyRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutEndBodyRow")
+        self.shortcutEndBodyRow = shortcutEndBodyRow
+        shortcutsStack.addArrangedSubview(shortcutEndBodyRow)
         let shortcutEmergencyEyeRow = row(L10n.tr("prefs.emergencyEyeGate"), shortcutEmergencyEye)
+        shortcutEmergencyEyeRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutEmergencyEyeRow")
         self.shortcutEmergencyEyeRow = shortcutEmergencyEyeRow
         shortcutsStack.addArrangedSubview(shortcutEmergencyEyeRow)
         shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.reset"), shortcutReset))
@@ -1299,7 +1316,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     private func applyAdminVisibility() {
         updateDependentControlEnablement()
-        shortcutEmergencyEyeRow?.isHidden = settings.admin.hideStrictPreferences
 
         updateUpdatePreferencesVisibility()
         updateShortcutConflictWarning()
@@ -1353,15 +1369,19 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             (L10n.tr("prefs.pause2hShortcut"), shortcutPause2h),
             (L10n.tr("prefs.pause5hShortcut"), shortcutPause5h),
             (L10n.tr("prefs.pauseUntilMorningShortcut"), shortcutPauseUntilMorning),
-            (L10n.tr("prefs.nextScheduledRest"), shortcutNextScheduled),
-            (L10n.tr("prefs.eyeGateNow"), shortcutEyeNow),
-            (L10n.tr("prefs.bodyBreakNow"), shortcutBodyNow),
-            (L10n.tr("prefs.skipToBodyBreak"), shortcutSkipBody),
-            (L10n.tr("prefs.endBodyBreak"), shortcutEndBody)
+            (L10n.tr("prefs.nextScheduledRest"), shortcutNextScheduled)
         ]
-        if !(shortcutEmergencyEyeRow?.isHidden ?? false) {
-            entries.append((L10n.tr("prefs.emergencyEyeGate"), shortcutEmergencyEye))
+
+        func appendIfVisible(_ row: NSView?, _ title: String, _ recorder: ShortcutRecorderButton) {
+            guard !(row?.isHidden ?? false) else { return }
+            entries.append((title, recorder))
         }
+
+        appendIfVisible(shortcutEyeNowRow, L10n.tr("prefs.eyeGateNow"), shortcutEyeNow)
+        appendIfVisible(shortcutBodyNowRow, L10n.tr("prefs.bodyBreakNow"), shortcutBodyNow)
+        appendIfVisible(shortcutSkipBodyRow, L10n.tr("prefs.skipToBodyBreak"), shortcutSkipBody)
+        appendIfVisible(shortcutEndBodyRow, L10n.tr("prefs.endBodyBreak"), shortcutEndBody)
+        appendIfVisible(shortcutEmergencyEyeRow, L10n.tr("prefs.emergencyEyeGate"), shortcutEmergencyEye)
         entries.append((L10n.tr("prefs.reset"), shortcutReset))
         return entries
     }
@@ -1471,6 +1491,32 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         pauseUntilMorningLongitude.isEnabled = usesSunrise
 
         updateAppearanceBodyBreakVisibility(bodyBreakEnabled: bodyBreakEnabled)
+        updateShortcutPreferenceVisibility(
+            eyeGateEnabled: eyeGateEnabled,
+            bodyBreakEnabled: bodyBreakEnabled,
+            strictPreferencesHidden: strictPreferencesHidden
+        )
+    }
+
+    private func updateShortcutPreferenceVisibility(
+        eyeGateEnabled: Bool,
+        bodyBreakEnabled: Bool,
+        strictPreferencesHidden: Bool
+    ) {
+        shortcutEyeNowRow?.isHidden = !eyeGateEnabled
+        shortcutEyeNow.isEnabled = eyeGateEnabled
+
+        [shortcutBodyNowRow, shortcutSkipBodyRow, shortcutEndBodyRow].forEach {
+            $0?.isHidden = !bodyBreakEnabled
+        }
+        [shortcutBodyNow, shortcutSkipBody, shortcutEndBody].forEach {
+            $0.isEnabled = bodyBreakEnabled
+        }
+
+        let emergencyVisible = eyeGateEnabled && !strictPreferencesHidden && isOn(eyeEmergencyOverride)
+        shortcutEmergencyEyeRow?.isHidden = !emergencyVisible
+        shortcutEmergencyEye.isEnabled = emergencyVisible
+        updateShortcutConflictWarning()
     }
 
     private func updateAppearanceBodyBreakVisibility(bodyBreakEnabled: Bool) {
