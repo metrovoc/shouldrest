@@ -197,7 +197,7 @@ public struct EmergencyOverridePolicy: Codable, Equatable, Sendable {
 
     public static let defaults = EmergencyOverridePolicy(
         isEnabled: true,
-        confirmationSteps: 2,
+        confirmationSteps: 0,
         minimumHoldDuration: 3
     )
 

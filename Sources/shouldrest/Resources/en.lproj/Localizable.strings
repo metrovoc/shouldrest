@@ -52,10 +52,6 @@
 "deferral.outsideWorkingHours" = "outside working hours";
 "deferral.focusMode" = "Focus / Do Not Disturb";
 "deferral.appExclusion" = "app exclusion: %@";
-"emergency.confirmTitle" = "Emergency override confirmation %d of %d";
-"emergency.confirmBody" = "Use this only for a genuine interruption. This counts as a missed Eye Gate.";
-"emergency.continue" = "Continue";
-"emergency.cancel" = "Cancel";
 "overlay.eyeTitle" = "Look away";
 "overlay.eyeBody" = "Rest your eyes";
 "overlay.bodyTitle" = "Body Break";
@@ -65,9 +61,7 @@
 "overlay.ready" = "ready";
 "overlay.emergencyOverride" = "Emergency";
 "overlay.emergencyOverrideIn" = "Emergency in %ds";
-"overlay.emergencyOverrideHelp" = "Use only for a genuine interruption. It still requires confirmation and counts as a missed Eye Gate.";
-"overlay.emergencyConfirmStep" = "Confirm %d/%d";
-"overlay.emergencyConfirmHelp" = "Confirm inside this overlay: click anywhere, Return, Space, or the Emergency shortcut again. Counts as a missed Eye Gate.";
+"overlay.emergencyOverrideHelp" = "Use only for a genuine interruption. A single trigger counts as a missed Eye Gate.";
 "overlay.bodyPostpone" = "Postpone";
 "overlay.bodySkip" = "Skip";
 "overlay.bodyFinish" = "Finish";
@@ -79,7 +73,6 @@
 "prefs.eyeManualFinish" = "Manual finish after Eye Gate duration";
 "prefs.eyeEmergencyOverride" = "Enable Emergency override";
 "prefs.eyeEmergencyHold" = "Emergency available after";
-"prefs.eyeEmergencyConfirmations" = "Emergency confirmations";
 "prefs.enableBodyBreak" = "Enable Body Break";
 "prefs.notifyBodyBreak" = "Notify before Body Break";
 "prefs.manualFinish" = "Manual finish after Body Break duration";

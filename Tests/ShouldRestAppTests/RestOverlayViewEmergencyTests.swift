@@ -5,14 +5,13 @@ import XCTest
 
 @MainActor
 final class RestOverlayViewEmergencyTests: XCTestCase {
-    func testOverlayEmergencyConfirmationAdvancesWithoutAlertFallback() {
+    func testOverlayEmergencyCompletesOnFirstTriggerEvenWithLegacyConfirmationSteps() {
         let view = configuredEyeGateOverlay(confirmationSteps: 2)
 
-        XCTAssertEqual(view.advanceEmergencyOverrideConfirmationIfAvailable(), .waitingForConfirmation)
         XCTAssertEqual(view.advanceEmergencyOverrideConfirmationIfAvailable(), .confirmed(2))
     }
 
-    func testOverlayKeyboardCommandUsesEmergencyConfirmationStateMachine() {
+    func testOverlayKeyboardCommandCompletesEmergencyOnFirstTrigger() {
         let view = configuredEyeGateOverlay(confirmationSteps: 2)
         var confirmedSteps: Int?
         view.onEmergencyOverrideConfirmed = { steps in
@@ -20,41 +19,36 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         }
 
         view.performEmergencyOverrideKeyCommand()
-        XCTAssertNil(confirmedSteps)
-
-        view.performEmergencyOverrideKeyCommand()
         XCTAssertEqual(confirmedSteps, 2)
     }
 
-    func testEmergencyConfirmationExpandsOverlayLocalPanel() throws {
+    func testEmergencyTriggerDoesNotEnterClickConfirmationState() throws {
         let view = configuredEyeGateOverlay(confirmationSteps: 2)
         let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.panel"))
-        let hint = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.hint"))
 
         view.layoutSubtreeIfNeeded()
         let idleWidth = panel.frame.width
         XCTAssertFalse(panel.isHidden)
-        XCTAssertTrue(hint.isHidden)
+        XCTAssertNil(view.descendant(withIdentifier: "overlay.emergency.hint"))
 
-        XCTAssertEqual(view.advanceEmergencyOverrideConfirmationIfAvailable(), .waitingForConfirmation)
+        XCTAssertEqual(view.advanceEmergencyOverrideConfirmationIfAvailable(), .confirmed(2))
 
         view.layoutSubtreeIfNeeded()
         XCTAssertFalse(panel.isHidden)
-        XCTAssertFalse(hint.isHidden)
-        XCTAssertGreaterThan(panel.frame.width, idleWidth)
+        XCTAssertEqual(panel.frame.width, idleWidth)
         XCTAssertTrue(view.hitTest(NSPoint(x: panel.frame.midX, y: panel.frame.midY)) === view)
     }
 
-    func testEmergencyConfirmationTurnsWholeOverlayIntoConfirmSurface() {
+    func testEmergencyDoesNotTurnWholeOverlayIntoHiddenConfirmSurface() {
         let view = configuredEyeGateOverlay(confirmationSteps: 2)
 
         view.layoutSubtreeIfNeeded()
         XCTAssertFalse(view.hitTest(NSPoint(x: 400, y: 300)) === view)
 
-        XCTAssertEqual(view.advanceEmergencyOverrideConfirmationIfAvailable(), .waitingForConfirmation)
+        XCTAssertEqual(view.advanceEmergencyOverrideConfirmationIfAvailable(), .confirmed(2))
         view.layoutSubtreeIfNeeded()
 
-        XCTAssertTrue(view.hitTest(NSPoint(x: 400, y: 300)) === view)
+        XCTAssertFalse(view.hitTest(NSPoint(x: 400, y: 300)) === view)
     }
 
     func testEmergencyClickAreaRoutesToOverlayView() {

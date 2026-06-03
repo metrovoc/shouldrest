@@ -102,7 +102,7 @@ final class RestEngineTests: XCTestCase {
         _ = engine.takeNow(.eyeGate, now: start)
         let result = engine.emergencyOverride(
             now: start.addingTimeInterval(3),
-            completedConfirmationSteps: 2
+            completedConfirmationSteps: 0
         )
 
         guard case .completed(let session, let reason) = result else {
@@ -116,8 +116,14 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.eyeGatesSinceBodyBreak, 0)
     }
 
-    func testEyeGateEmergencyOverrideRequiresHoldAndConfirmationFriction() {
-        var engine = RestEngine(settings: .defaults, now: start)
+    func testEyeGateEmergencyOverrideRequiresHoldAndLegacyConfirmationFriction() {
+        var settings = RestSettings.defaults
+        settings.eyeGate.emergencyOverride = EmergencyOverridePolicy(
+            isEnabled: true,
+            confirmationSteps: 2,
+            minimumHoldDuration: 3
+        )
+        var engine = RestEngine(settings: settings, now: start)
         _ = engine.takeNow(.eyeGate, now: start)
 
         XCTAssertEqual(

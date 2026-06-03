@@ -12,7 +12,8 @@ final class PreferencesWindowEmergencyPolicyTests: XCTestCase {
 
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.eyeEmergencyOverride")))
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.eyeEmergencyHold")))
-        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.eyeEmergencyConfirmations")))
+        XCTAssertFalse(visibleTexts.contains { $0.localizedCaseInsensitiveContains("confirmation") })
+        XCTAssertFalse(visibleTexts.contains { $0.contains("确认次数") })
     }
 
     func testStrictAdminVisibilityHidesEyeGateEmergencyPolicyControls() throws {
@@ -24,7 +25,8 @@ final class PreferencesWindowEmergencyPolicyTests: XCTestCase {
 
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.eyeEmergencyOverride")))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.eyeEmergencyHold")))
-        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.eyeEmergencyConfirmations")))
+        XCTAssertFalse(visibleTexts.contains { $0.localizedCaseInsensitiveContains("confirmation") })
+        XCTAssertFalse(visibleTexts.contains { $0.contains("确认次数") })
     }
 
     private func visibleTexts(in view: NSView, ancestorHidden: Bool = false) -> [String] {

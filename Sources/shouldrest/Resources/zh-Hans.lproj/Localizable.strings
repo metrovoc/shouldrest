@@ -52,10 +52,6 @@
 "deferral.outsideWorkingHours" = "非工作时间";
 "deferral.focusMode" = "专注 / 勿扰模式";
 "deferral.appExclusion" = "应用排除：%@";
-"emergency.confirmTitle" = "紧急覆盖确认 %d / %d";
-"emergency.confirmBody" = "只在真正中断时使用。此次计为未完成的护眼休息。";
-"emergency.continue" = "继续";
-"emergency.cancel" = "取消";
 "overlay.eyeTitle" = "看向远处";
 "overlay.eyeBody" = "让眼睛休息";
 "overlay.bodyTitle" = "身体休息";
@@ -65,9 +61,7 @@
 "overlay.ready" = "就绪";
 "overlay.emergencyOverride" = "紧急";
 "overlay.emergencyOverrideIn" = "%d 秒后紧急";
-"overlay.emergencyOverrideHelp" = "只在真正中断时使用。仍需确认，并计为未完成的护眼休息。";
-"overlay.emergencyConfirmStep" = "确认 %d/%d";
-"overlay.emergencyConfirmHelp" = "在此覆盖层内确认：点击任意位置，或按回车、空格、再次按紧急快捷键。此次计为未完成的护眼休息。";
+"overlay.emergencyOverrideHelp" = "只在真正中断时使用。单次触发后计为未完成的护眼休息。";
 "overlay.bodyPostpone" = "推迟";
 "overlay.bodySkip" = "跳过";
 "overlay.bodyFinish" = "完成";
@@ -79,7 +73,6 @@
 "prefs.eyeManualFinish" = "护眼休息到时后手动完成";
 "prefs.eyeEmergencyOverride" = "启用紧急覆盖";
 "prefs.eyeEmergencyHold" = "紧急覆盖可用等待";
-"prefs.eyeEmergencyConfirmations" = "紧急覆盖确认次数";
 "prefs.enableBodyBreak" = "启用活动休息";
 "prefs.notifyBodyBreak" = "活动休息前通知";
 "prefs.manualFinish" = "活动休息到时后手动完成";
