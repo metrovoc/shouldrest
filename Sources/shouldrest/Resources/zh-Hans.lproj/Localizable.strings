@@ -176,6 +176,8 @@
 "prefs.chooseFile" = "选择...";
 "prefs.clear" = "清空";
 "prefs.noImageSelected" = "未选择图片";
+"prefs.imagePreviewEmpty" = "未选择图片";
+"prefs.imagePreviewUnavailable" = "%@ 无法预览";
 "prefs.sectionShortcuts" = "全局快捷键";
 "prefs.pauseToggle" = "暂停切换";
 "prefs.pause30Shortcut" = "暂停 30 分钟";

@@ -176,6 +176,8 @@
 "prefs.chooseFile" = "Choose...";
 "prefs.clear" = "Clear";
 "prefs.noImageSelected" = "No image selected";
+"prefs.imagePreviewEmpty" = "No image selected";
+"prefs.imagePreviewUnavailable" = "%@ cannot be previewed";
 "prefs.sectionShortcuts" = "Global Shortcuts";
 "prefs.pauseToggle" = "Pause toggle";
 "prefs.pause30Shortcut" = "Pause 30 minutes";

@@ -108,6 +108,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let localImagePath = NSTextField()
     private let localImageChooseButton = NSButton()
     private let localImageClearButton = NSButton()
+    private let localImagePreview = NSImageView()
+    private let localImagePreviewLabel = NSTextField(labelWithString: "")
     private let useBuiltInIdeas = NSButton(checkboxWithTitle: L10n.tr("prefs.useBuiltInIdeas"), target: nil, action: nil)
 
     private let shortcutPauseToggle = ShortcutRecorderButton()
@@ -589,6 +591,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private func configureImagePickerControls() {
         localImagePath.isEditable = false
         localImagePath.isSelectable = true
+        localImagePath.cell?.lineBreakMode = .byTruncatingMiddle
         localImagePath.placeholderString = L10n.tr("prefs.noImageSelected")
 
         localImageChooseButton.title = L10n.tr("prefs.chooseFile")
@@ -602,6 +605,22 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         localImageClearButton.imagePosition = .imageLeading
         localImageClearButton.target = self
         localImageClearButton.action = #selector(clearLocalImagePressed)
+
+        localImagePreview.identifier = NSUserInterfaceItemIdentifier("localImagePreview")
+        localImagePreview.translatesAutoresizingMaskIntoConstraints = false
+        localImagePreview.imageScaling = .scaleProportionallyUpOrDown
+        localImagePreview.wantsLayer = true
+        localImagePreview.layer?.cornerRadius = 6
+        localImagePreview.layer?.borderWidth = 1
+        localImagePreview.layer?.borderColor = NSColor.separatorColor.cgColor
+        localImagePreview.layer?.backgroundColor = NSColor.textBackgroundColor.withAlphaComponent(0.45).cgColor
+        localImagePreview.widthAnchor.constraint(equalToConstant: 92).isActive = true
+        localImagePreview.heightAnchor.constraint(equalToConstant: 62).isActive = true
+
+        localImagePreviewLabel.identifier = NSUserInterfaceItemIdentifier("localImagePreviewLabel")
+        localImagePreviewLabel.textColor = .secondaryLabelColor
+        localImagePreviewLabel.lineBreakMode = .byTruncatingMiddle
+        localImagePreviewLabel.widthAnchor.constraint(equalToConstant: 260).isActive = true
     }
 
     private func configureEnablementGuards() {
@@ -784,6 +803,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             expanded: !customBodyIdeasJSON.stringValue.isEmpty
         )
         localImagePath.stringValue = settings.contentLibrary.localImagePaths.first ?? ""
+        updateLocalImagePreview()
 
         shortcutPauseToggle.shortcutValue = settings.shortcuts.pauseToggle
         shortcutPause30.shortcutValue = settings.shortcuts.pauseFor30Minutes
@@ -1206,6 +1226,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
         if panel.runModal() == .OK, let url = panel.url {
             localImagePath.stringValue = url.path
+            updateLocalImagePreview()
             updateDependentControlEnablement()
             scheduleAutosave()
         }
@@ -1213,6 +1234,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     @objc private func clearLocalImagePressed() {
         localImagePath.stringValue = ""
+        updateLocalImagePreview()
         updateDependentControlEnablement()
         scheduleAutosave()
     }
@@ -1443,11 +1465,45 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     }
 
     private func localImagePickerRow() -> NSStackView {
-        let stack = NSStackView(views: [localImagePath, localImageChooseButton, localImageClearButton])
-        stack.orientation = .horizontal
+        let controls = NSStackView(views: [localImagePath, localImageChooseButton, localImageClearButton])
+        controls.orientation = .horizontal
+        controls.spacing = 8
+        controls.alignment = .centerY
+
+        let preview = NSStackView(views: [localImagePreview, localImagePreviewLabel])
+        preview.orientation = .horizontal
+        preview.spacing = 10
+        preview.alignment = .centerY
+
+        let stack = NSStackView(views: [controls, preview])
+        stack.orientation = .vertical
         stack.spacing = 8
-        stack.alignment = .centerY
+        stack.alignment = .leading
         return stack
+    }
+
+    private func updateLocalImagePreview() {
+        let path = localImagePath.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !path.isEmpty else {
+            localImagePreview.image = NSImage(systemSymbolName: "photo", accessibilityDescription: nil)
+            localImagePreview.contentTintColor = .tertiaryLabelColor
+            localImagePreviewLabel.stringValue = L10n.tr("prefs.imagePreviewEmpty")
+            localImagePreviewLabel.toolTip = nil
+            return
+        }
+
+        let url = URL(fileURLWithPath: path)
+        localImagePreviewLabel.toolTip = path
+        guard let image = NSImage(contentsOfFile: path) else {
+            localImagePreview.image = NSImage(systemSymbolName: "exclamationmark.triangle", accessibilityDescription: nil)
+            localImagePreview.contentTintColor = .systemOrange
+            localImagePreviewLabel.stringValue = L10n.format("prefs.imagePreviewUnavailable", url.lastPathComponent)
+            return
+        }
+
+        localImagePreview.image = image
+        localImagePreview.contentTintColor = nil
+        localImagePreviewLabel.stringValue = url.lastPathComponent
     }
 
     private func separator() -> NSBox {
