@@ -145,6 +145,9 @@
 "prefs.preferencesMessage" = "Preferences message";
 "prefs.save" = "Save";
 "prefs.restoreDefaults" = "Restore Defaults";
+"prefs.restoreDefaultsWarning" = "This will restore app defaults and all your settings will be lost.";
+"prefs.restoreDefaultsContinue" = "Continue";
+"prefs.restoreDefaultsCancel" = "Cancel";
 "cli.help" = "Usage: shouldrest <command> [options]\n\nCommands:\n  help                         Show this help.\n  version                      Show version.\n  settings                     Print settings path unless hidden by admin.\n  logs                         Print log path.\n  pause [-d duration]          Pause breaks. Duration: indefinitely, until-morning, 60, 1h, 1h20m.\n  resume                       Resume breaks.\n  toggle                       Pause or resume breaks.\n  reset                        Reset schedule and health.\n  eye|mini [-w wait] [-n]      Start Eye Gate now or after wait; readable content is not customizable.\n  body|long [-T title] [-t text] [-w wait] [-n]  Start or customize Body Break.\n  preferences                  Open preferences in the running app.\n  debug                        Copy debug info in the running app.\n  url shouldrest://<command>    Send URL-style automation.";
 "onboarding.title" = "Welcome to ShouldRest";
 "onboarding.heading" = "Start with the default rest cadence";

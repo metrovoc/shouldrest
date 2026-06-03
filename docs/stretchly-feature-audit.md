@@ -174,7 +174,7 @@ Implemented now:
 - Advanced app-exclusion JSON editor for multi-rule configurations, plus primary-rule form controls for common cases.
 - Localized preference labels and CLI help in the SwiftPM resource bundle.
 - First-run onboarding window that lets users accept the scientific defaults or open preferences, plus an Operations preference to show the welcome window on the next launch.
-- Restore Defaults uses product defaults without reopening first-run onboarding, matching Stretchly's restore behavior.
+- Restore Defaults asks for confirmation, then uses product defaults without reopening first-run onboarding, matching Stretchly's restore behavior.
 - Packaged-app GUI smoke check using CoreGraphics window enumeration; verified `Welcome to ShouldRest` appears on-screen in `dist/ShouldRest.app`.
 - Floating/all-spaces presentation for onboarding, preferences, and debug utility windows.
 - AppKit theme application for system/light/dark preferences, admin preferences message display, and optional current time during Body Break.

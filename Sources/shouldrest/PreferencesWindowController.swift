@@ -529,9 +529,20 @@ final class PreferencesWindowController: NSWindowController {
     }
 
     @objc private func restoreDefaultsPressed() {
+        guard confirmRestoreDefaults() else { return }
         settings = .restoredDefaults
         loadSettings()
         onSave(settings)
+    }
+
+    private func confirmRestoreDefaults() -> Bool {
+        let alert = NSAlert()
+        alert.messageText = L10n.tr("prefs.restoreDefaults")
+        alert.informativeText = L10n.tr("prefs.restoreDefaultsWarning")
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: L10n.tr("prefs.restoreDefaultsContinue"))
+        alert.addButton(withTitle: L10n.tr("prefs.restoreDefaultsCancel"))
+        return alert.runModal() == .alertFirstButtonReturn
     }
 
     @objc private func restEnablementChanged(_ sender: NSButton) {
