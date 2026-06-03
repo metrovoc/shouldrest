@@ -40,6 +40,12 @@ enum TerminationPolicy {
     }
 }
 
+enum StatusMenuPolicy {
+    static func showsOrdinaryControls(state: RestEngineState) -> Bool {
+        state.activeSession?.kind != .eyeGate
+    }
+}
+
 enum StatusMenuActionIcon {
     static func symbolName(forActionName actionName: String) -> String? {
         switch actionName.replacingOccurrences(of: ":", with: "") {
@@ -365,12 +371,13 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         item.button?.imagePosition = title.isEmpty ? .imageOnly : .imageLeading
         item.button?.title = title
         item.button?.toolTip = MenuStatusPresenter.tooltip(state: engine.state, settings: settings, now: now)
+        let showsOrdinaryControls = StatusMenuPolicy.showsOrdinaryControls(state: engine.state)
 
         let menu = NSMenu()
         menu.addItem(statusHeaderMenuItem(now: now))
         menu.addItem(.separator())
 
-        if !settings.admin.disableAppUpdateFeatures, latestReleaseURL != nil {
+        if showsOrdinaryControls, !settings.admin.disableAppUpdateFeatures, latestReleaseURL != nil {
             menu.addItem(actionItem(L10n.tr("menu.downloadLatest"), #selector(openLatestRelease)))
             menu.addItem(.separator())
         }
@@ -406,6 +413,10 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             }
             if addedEyeGateAction {
                 menu.addItem(.separator())
+            }
+            if !showsOrdinaryControls {
+                setStatusMenu(menu, on: item)
+                return
             }
         }
 
@@ -467,6 +478,13 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         quitItem.isEnabled = TerminationPolicy.canTerminate(state: engine.state, settings: settings)
         quitItem.image = menuItemImage("power")
         menu.addItem(quitItem)
+        setStatusMenu(menu, on: item)
+    }
+
+    private func setStatusMenu(_ menu: NSMenu, on item: NSStatusItem) {
+        while menu.items.last?.isSeparatorItem == true {
+            menu.removeItem(at: menu.items.count - 1)
+        }
         item.menu = menu
     }
 
