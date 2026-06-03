@@ -29,6 +29,8 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertFalse(try view(withIdentifier: "prefs.workingHours", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.workingStartRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.workingEndRow", in: contentView).isHidden)
+        XCTAssertFalse(try view(withIdentifier: "prefs.focusMonitor", in: contentView).isHidden)
+        XCTAssertFalse(try view(withIdentifier: "prefs.focusDefersBody", in: contentView).isHidden)
         XCTAssertFalse(try view(withIdentifier: "prefs.appExclusionEnabled", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.appExclusionNameRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.appExclusionTermsRow", in: contentView).isHidden)
@@ -44,6 +46,47 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.workingEnd")))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.matchTerms")))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.advancedRulesJSON")))
+    }
+
+    func testDisabledBodyBreakHidesFocusModeContextControls() throws {
+        var settings = RestSettings.defaults
+        settings.eyeGate.isEnabled = true
+        settings.bodyBreak.isEnabled = false
+        settings.focusMode.monitorFocusMode = true
+        settings.focusMode.deferBodyBreak = true
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+
+        XCTAssertTrue(try view(withIdentifier: "prefs.focusMonitor", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.focusDefersBody", in: contentView).isHidden)
+
+        let visibleTexts = visibleTexts(in: contentView)
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.monitorFocus")))
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.focusDefersBody")))
+    }
+
+    func testEnablingFocusMonitorShowsBodyDeferralAndAutosaves() throws {
+        var settings = RestSettings.defaults
+        settings.bodyBreak.isEnabled = true
+        settings.focusMode.monitorFocusMode = false
+        settings.focusMode.deferBodyBreak = true
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+        let focusMonitor = try XCTUnwrap(view(withIdentifier: "prefs.focusMonitor", in: contentView) as? NSButton)
+        XCTAssertFalse(focusMonitor.isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.focusDefersBody", in: contentView).isHidden)
+
+        focusMonitor.state = .on
+        XCTAssertTrue(sendAction(from: focusMonitor))
+
+        XCTAssertFalse(try view(withIdentifier: "prefs.focusDefersBody", in: contentView).isHidden)
+        waitUntilSavedSettingsArrive(savedSettings)
+        XCTAssertEqual(savedSettings.value?.focusMode.monitorFocusMode, true)
     }
 
     func testEnablingWorkingHoursShowsTimeRowsAndAutosaves() throws {

@@ -433,7 +433,9 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         naturalIdleMinutesRow.identifier = NSUserInterfaceItemIdentifier("prefs.naturalIdleMinutesRow")
         self.naturalIdleMinutesRow = naturalIdleMinutesRow
         contextStack.addArrangedSubview(naturalIdleMinutesRow)
+        focusMonitor.identifier = NSUserInterfaceItemIdentifier("prefs.focusMonitor")
         contextStack.addArrangedSubview(focusMonitor)
+        focusDefersBody.identifier = NSUserInterfaceItemIdentifier("prefs.focusDefersBody")
         contextStack.addArrangedSubview(focusDefersBody)
         workingHoursEnabled.identifier = NSUserInterfaceItemIdentifier("prefs.workingHours")
         contextStack.addArrangedSubview(workingHoursEnabled)
@@ -1464,6 +1466,13 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         let naturalBreaksEnabled = isOn(naturalBreaks)
         naturalIdleMinutesRow?.isHidden = !naturalBreaksEnabled
         setNumberInputEnabled(naturalIdleMinutes, naturalBreaksEnabled)
+
+        let focusMonitorVisible = bodyBreakEnabled
+        focusMonitor.isHidden = !focusMonitorVisible
+        focusMonitor.isEnabled = focusMonitorVisible
+        let focusDefersBodyVisible = focusMonitorVisible && isOn(focusMonitor)
+        focusDefersBody.isHidden = !focusDefersBodyVisible
+        focusDefersBody.isEnabled = focusDefersBodyVisible
 
         let workingHoursAreEnabled = isOn(workingHoursEnabled)
         workingStartRow?.isHidden = !workingHoursAreEnabled
