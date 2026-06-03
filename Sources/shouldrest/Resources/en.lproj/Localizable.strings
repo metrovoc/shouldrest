@@ -166,8 +166,8 @@
 "prefs.language.simplifiedChinese" = "Simplified Chinese";
 "prefs.eyeStartSound" = "Eye Gate start sound";
 "prefs.eyeFinishSound" = "Eye Gate finish sound";
-"prefs.bodyStartSound" = "Body start sound";
-"prefs.bodyFinishSound" = "Body finish sound";
+"prefs.bodyStartSound" = "Body Break start sound";
+"prefs.bodyFinishSound" = "Body Break finish sound";
 "prefs.finishSound" = "Finish sound";
 "prefs.previewSound" = "Preview";
 "prefs.previewSoundHelp" = "Play this sound once";
@@ -208,8 +208,8 @@
 "prefs.emergencyEyeGate" = "Emergency Exit shortcut";
 "prefs.reset" = "Reset";
 "prefs.sectionOperations" = "Operations";
-"prefs.pauseUntilMorningMode" = "Pause-until-morning mode";
-"prefs.pauseUntilMorningHour" = "Resume at hour";
+"prefs.pauseUntilMorningMode" = "Pause until morning";
+"prefs.pauseUntilMorningHour" = "Resume hour";
 "prefs.pauseUntilMorningLatitude" = "Sunrise latitude";
 "prefs.pauseUntilMorningLongitude" = "Sunrise longitude";
 "prefs.pauseForSuspendOrLock" = "Pause scheduler on sleep or lock";
@@ -234,7 +234,7 @@
 "prefs.displayPicker.item" = "Display %d (%d x %d%@)";
 "prefs.displayPicker.primarySuffix" = ", Primary";
 "prefs.displayPicker.unavailable" = "Display %d (not connected)";
-"prefs.morningMode.hour" = "Specific hour";
+"prefs.morningMode.hour" = "Fixed hour";
 "prefs.morningMode.sunrise" = "Local sunrise";
 "prefs.unit.minutes" = "min";
 "prefs.unit.seconds" = "sec";

@@ -208,8 +208,8 @@
 "prefs.emergencyEyeGate" = "紧急退出快捷键";
 "prefs.reset" = "重置";
 "prefs.sectionOperations" = "操作";
-"prefs.pauseUntilMorningMode" = "暂停到早晨模式";
-"prefs.pauseUntilMorningHour" = "恢复小时";
+"prefs.pauseUntilMorningMode" = "暂停到早晨方式";
+"prefs.pauseUntilMorningHour" = "恢复时间";
 "prefs.pauseUntilMorningLatitude" = "日出纬度";
 "prefs.pauseUntilMorningLongitude" = "日出经度";
 "prefs.pauseForSuspendOrLock" = "睡眠或锁屏时暂停调度";
@@ -234,7 +234,7 @@
 "prefs.displayPicker.item" = "显示器 %d（%d x %d%@）";
 "prefs.displayPicker.primarySuffix" = "，主显示器";
 "prefs.displayPicker.unavailable" = "显示器 %d（未连接）";
-"prefs.morningMode.hour" = "指定小时";
+"prefs.morningMode.hour" = "固定时间";
 "prefs.morningMode.sunrise" = "本地日出";
 "prefs.unit.minutes" = "分钟";
 "prefs.unit.seconds" = "秒";

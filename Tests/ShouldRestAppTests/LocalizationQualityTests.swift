@@ -39,6 +39,18 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(simplifiedChineseValues.contains("可用等待"))
         XCTAssertFalse(englishValues.contains("Language override"))
         XCTAssertFalse(englishValues.contains("available after"))
+        XCTAssertFalse(englishValues.contains("Body start sound"))
+        XCTAssertFalse(englishValues.contains("Body finish sound"))
+        XCTAssertFalse(englishValues.contains("Pause-until-morning mode"))
+        XCTAssertFalse(englishValues.contains("Resume at hour"))
+        XCTAssertFalse(simplifiedChineseValues.contains("恢复小时"))
+
+        XCTAssertTrue(englishValues.contains("Body Break start sound"))
+        XCTAssertTrue(englishValues.contains("Body Break finish sound"))
+        XCTAssertTrue(englishValues.contains("Pause until morning"))
+        XCTAssertTrue(englishValues.contains("Resume hour"))
+        XCTAssertTrue(simplifiedChineseValues.contains("暂停到早晨方式"))
+        XCTAssertTrue(simplifiedChineseValues.contains("恢复时间"))
     }
 
     func testBlockedActionNotificationsUseUserActionLanguage() {
