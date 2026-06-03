@@ -96,6 +96,7 @@ final class PreferencesWindowController: NSWindowController {
     private let pauseUntilMorningLongitude = NSTextField()
     private let pauseForSuspendOrLock = NSButton(checkboxWithTitle: L10n.tr("prefs.pauseForSuspendOrLock"), target: nil, action: nil)
     private let updateFeedURL = NSTextField()
+    private var updateFeedURLRow: NSView?
     private let disableUpdateFeatures = NSButton(checkboxWithTitle: L10n.tr("prefs.adminHideUpdates"), target: nil, action: nil)
     private let hideSettingsPath = NSButton(checkboxWithTitle: L10n.tr("prefs.adminHideSettingsPath"), target: nil, action: nil)
     private let hideStrictPreferences = NSButton(checkboxWithTitle: L10n.tr("prefs.adminHideStrict"), target: nil, action: nil)
@@ -269,7 +270,9 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningLatitude"), pauseUntilMorningLatitude))
         stack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningLongitude"), pauseUntilMorningLongitude))
         stack.addArrangedSubview(pauseForSuspendOrLock)
-        stack.addArrangedSubview(row(L10n.tr("prefs.updateFeedURL"), updateFeedURL))
+        let updateFeedURLRow = row(L10n.tr("prefs.updateFeedURL"), updateFeedURL)
+        self.updateFeedURLRow = updateFeedURLRow
+        stack.addArrangedSubview(updateFeedURLRow)
         stack.addArrangedSubview(disableUpdateFeatures)
         stack.addArrangedSubview(hideSettingsPath)
         stack.addArrangedSubview(hideStrictPreferences)
@@ -353,7 +356,6 @@ final class PreferencesWindowController: NSWindowController {
         bodyPostponeLimit.stringValue = String(settings.bodyBreak.postpone.maxCount)
         bodyPostponeWindowPercent.stringValue = String(Int(settings.bodyBreak.postpone.allowedDuringFirstPercent))
         bodyAllowSkip.state = state(settings.bodyBreak.ordinarySkipEnabled)
-        bodyAllowSkip.isHidden = settings.admin.hideStrictPreferences
         bodyManualFinish.state = state(settings.bodyBreak.manualFinishEnabled)
         bodyCoversAllDisplays.state = state(settings.bodyBreak.enforcement.coversAllDisplays)
         bodyCoveredDisplay.selectItem(withTitle: (settings.bodyBreak.enforcement.coveredDisplay ?? .primary).rawValue)
@@ -426,6 +428,7 @@ final class PreferencesWindowController: NSWindowController {
         hideSettingsPath.state = state(settings.admin.hideSettingsFileLocation)
         hideStrictPreferences.state = state(settings.admin.hideStrictPreferences)
         customPreferencesMessage.stringValue = settings.admin.customPreferencesMessage
+        applyAdminVisibility()
     }
 
     @objc private func savePressed() {
@@ -525,7 +528,17 @@ final class PreferencesWindowController: NSWindowController {
         next.admin.customPreferencesMessage = customPreferencesMessage.stringValue
 
         settings = next
+        applyAdminVisibility()
         onSave(next)
+    }
+
+    private func applyAdminVisibility() {
+        bodyAllowSkip.isHidden = settings.admin.hideStrictPreferences
+
+        let hideUpdateControls = settings.admin.disableAppUpdateFeatures
+        checkUpdates.isHidden = hideUpdateControls
+        notifyNewVersion.isHidden = hideUpdateControls
+        updateFeedURLRow?.isHidden = hideUpdateControls
     }
 
     @objc private func restoreDefaultsPressed() {
