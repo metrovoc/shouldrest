@@ -40,6 +40,55 @@ enum TerminationPolicy {
     }
 }
 
+enum StatusMenuActionIcon {
+    static func symbolName(forActionName actionName: String) -> String? {
+        switch actionName.replacingOccurrences(of: ":", with: "") {
+        case "openLatestRelease":
+            return "arrow.down.circle"
+        case "takeEyeGateNow":
+            return "timer"
+        case "takeBodyBreakNow":
+            return "figure.walk"
+        case "takeNextScheduledRestNow":
+            return "forward.end"
+        case "finishActiveBreak":
+            return "checkmark.circle"
+        case "emergencyOverrideEyeGate":
+            return "exclamationmark.triangle"
+        case "postponeBodyBreak":
+            return "clock.arrow.circlepath"
+        case "skipBodyBreak":
+            return "forward.end"
+        case "resumeBreaks":
+            return "play.circle"
+        case "pauseFor30Minutes", "pauseFor1Hour", "pauseFor2Hours", "pauseFor5Hours":
+            return "pause.circle"
+        case "pauseUntilMorning":
+            return "sunrise"
+        case "pauseIndefinitely":
+            return "infinity.circle"
+        case "resetBreaks":
+            return "arrow.counterclockwise"
+        case "openPreferences":
+            return "gearshape"
+        case "checkForUpdatesNow":
+            return "arrow.triangle.2.circlepath"
+        case "copyDebugInfo":
+            return "doc.on.doc"
+        case "openDebugPanel":
+            return "stethoscope"
+        case "showAboutPanel":
+            return "info.circle"
+        default:
+            return nil
+        }
+    }
+
+    static func symbolName(for selector: Selector) -> String? {
+        symbolName(forActionName: NSStringFromSelector(selector))
+    }
+}
+
 @MainActor
 final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private let settingsStore: SettingsStore
@@ -355,6 +404,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             pauseMenu.addItem(.separator())
             pauseMenu.addItem(actionItem(L10n.tr("menu.pauseIndefinitely"), #selector(pauseIndefinitely)))
             let pauseItem = NSMenuItem(title: L10n.tr("menu.pause"), action: nil, keyEquivalent: "")
+            pauseItem.image = menuItemImage("pause.circle")
             pauseItem.submenu = pauseMenu
             menu.addItem(pauseItem)
         }
@@ -380,6 +430,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(.separator())
         let quitItem = NSMenuItem(title: L10n.tr("menu.quit"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         quitItem.isEnabled = TerminationPolicy.canTerminate(state: engine.state, settings: settings)
+        quitItem.image = menuItemImage("power")
         menu.addItem(quitItem)
         item.menu = menu
     }
@@ -397,6 +448,14 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         return image
     }
 
+    private func menuItemImage(_ symbolName: String) -> NSImage? {
+        let configuration = NSImage.SymbolConfiguration(pointSize: 13, weight: .regular)
+        let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
+            .withSymbolConfiguration(configuration)
+        image?.isTemplate = true
+        return image
+    }
+
     private func disabledItem(_ title: String) -> NSMenuItem {
         let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
         item.isEnabled = false
@@ -406,6 +465,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func actionItem(_ title: String, _ action: Selector) -> NSMenuItem {
         let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
         item.target = self
+        if let symbolName = StatusMenuActionIcon.symbolName(for: action) {
+            item.image = menuItemImage(symbolName)
+        }
         return item
     }
 
