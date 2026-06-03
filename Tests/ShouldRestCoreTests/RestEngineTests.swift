@@ -196,6 +196,24 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.statistics.completedEyeGates, 1)
         XCTAssertEqual(engine.state.statistics.naturalEyeGates, 1)
         XCTAssertEqual(engine.state.eyeGatesSinceBodyBreak, 1)
+
+        let repeatedIdleResult = engine.evaluate(
+            now: start.addingTimeInterval(61),
+            context: RestContext(idleDuration: 21)
+        )
+        XCTAssertEqual(repeatedIdleResult, .noChange)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 1)
+
+        _ = engine.evaluate(
+            now: start.addingTimeInterval(62),
+            context: RestContext(idleDuration: 0)
+        )
+        let nextIdleResult = engine.evaluate(
+            now: start.addingTimeInterval(83),
+            context: RestContext(idleDuration: 20)
+        )
+        XCTAssertEqual(nextIdleResult, .naturalRestCredited(.eyeGate))
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 2)
     }
 
     func testFocusModeDefersBodyBreakButNotEyeGateByDefault() {

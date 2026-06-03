@@ -174,16 +174,21 @@ public enum RestEngineResult: Equatable, Sendable {
 public struct RestEngine: Equatable, Sendable {
     public private(set) var settings: RestSettings
     public private(set) var state: RestEngineState
+    private var hasCreditedNaturalRestInCurrentIdleEpisode: Bool
 
     public init(settings: RestSettings = .defaults, now: Date = Date()) {
         self.settings = settings.enforcingAtLeastOneEnabledRest()
         self.state = RestEngineState()
+        self.hasCreditedNaturalRestInCurrentIdleEpisode = false
         scheduleNextRest(from: now)
     }
 
     public mutating func updateSettings(_ settings: RestSettings, now: Date = Date()) {
         let enforcedSettings = settings.enforcingAtLeastOneEnabledRest()
         self.settings = enforcedSettings
+        if !enforcedSettings.naturalBreaks.isEnabled {
+            hasCreditedNaturalRestInCurrentIdleEpisode = false
+        }
         if !enforcedSettings.presentation.breakHealthMode {
             state.dangerScore = 0
         }
@@ -194,6 +199,10 @@ public struct RestEngine: Equatable, Sendable {
 
     @discardableResult
     public mutating func evaluate(now: Date = Date(), context: RestContext = RestContext()) -> RestEngineResult {
+        if !settings.naturalBreaks.isEnabled || context.idleDuration < naturalIdleEpisodeExitThreshold {
+            hasCreditedNaturalRestInCurrentIdleEpisode = false
+        }
+
         if let pause = state.pause {
             if pause.isActive(at: now) {
                 return .paused(pause)
@@ -203,7 +212,10 @@ public struct RestEngine: Equatable, Sendable {
         }
 
         if let active = state.activeSession {
-            if context.idleDuration >= active.duration, settings.naturalBreaks.isEnabled {
+            if context.idleDuration >= active.duration,
+               settings.naturalBreaks.isEnabled,
+               !hasCreditedNaturalRestInCurrentIdleEpisode {
+                hasCreditedNaturalRestInCurrentIdleEpisode = true
                 return completeActive(now: now, reason: .natural)
             }
             return .started(active)
@@ -388,6 +400,7 @@ public struct RestEngine: Equatable, Sendable {
     @discardableResult
     public mutating func reset(now: Date = Date()) -> RestEngineResult {
         state = RestEngineState()
+        hasCreditedNaturalRestInCurrentIdleEpisode = false
         scheduleNextRest(from: now)
         return .reset
     }
@@ -518,7 +531,8 @@ public struct RestEngine: Equatable, Sendable {
     }
 
     private mutating func creditNaturalRestIfPossible(context: RestContext, now: Date) -> RestEngineResult? {
-        guard context.idleDuration > 0 else {
+        guard context.idleDuration > 0,
+              !hasCreditedNaturalRestInCurrentIdleEpisode else {
             return nil
         }
 
@@ -527,6 +541,7 @@ public struct RestEngine: Equatable, Sendable {
             guard context.idleDuration >= rule.duration else {
                 return nil
             }
+            hasCreditedNaturalRestInCurrentIdleEpisode = true
             recordCompletion(kind: scheduled.kind, reason: .natural)
             state.postponesInCurrentCycle = 0
             scheduleNextRest(from: now)
@@ -539,6 +554,15 @@ public struct RestEngine: Equatable, Sendable {
         }
 
         return nil
+    }
+
+    private var naturalIdleEpisodeExitThreshold: TimeInterval {
+        RestKind.allCases
+            .map { settings.rule(for: $0) }
+            .filter(\.isEnabled)
+            .map(\.duration)
+            .min()
+            ?? settings.naturalBreaks.inactivityResetTime
     }
 
     private mutating func recordCompletion(kind: RestKind, reason: RestCompletionReason) {

@@ -47,7 +47,7 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 
 ### Context Awareness
 
-- Natural break detection using idle time.
+- Natural break detection using idle time, with at most one rest credited per idle episode before user activity resumes.
 - Suspend, lock, resume, and unlock correction.
 - Configurable pause-on-suspend-or-lock behavior.
 - Do Not Disturb / Focus awareness.

@@ -3,11 +3,15 @@ import XCTest
 
 @MainActor
 final class CommandLineAutomationTests: XCTestCase {
-    func testParsesStretchlyStyleDurations() {
+    func testParsesStretchlyStyleDurations() throws {
         XCTAssertEqual(CommandLineAutomation.parseDuration("60"), 60 * 60)
         XCTAssertEqual(CommandLineAutomation.parseDuration("1h"), 60 * 60)
         XCTAssertEqual(CommandLineAutomation.parseDuration("1h20m"), 80 * 60)
         XCTAssertEqual(CommandLineAutomation.parseDuration("20m"), 20 * 60)
+        let untilMorning = try XCTUnwrap(CommandLineAutomation.parseDuration("until-morning", morningHour: 6))
+        XCTAssertGreaterThan(untilMorning, 0)
+        XCTAssertLessThanOrEqual(untilMorning, 24 * 60 * 60)
+        XCTAssertNil(CommandLineAutomation.parseDuration("indefinitely"))
         XCTAssertNil(CommandLineAutomation.parseDuration("0"))
         XCTAssertNil(CommandLineAutomation.parseDuration("abc"))
     }
