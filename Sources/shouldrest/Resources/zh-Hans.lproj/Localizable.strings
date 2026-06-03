@@ -156,10 +156,10 @@
 "prefs.theme.light" = "浅色";
 "prefs.theme.dark" = "深色";
 "prefs.menuBarStyle" = "菜单栏样式";
-"prefs.trayStyle.default" = "紧凑图标";
-"prefs.trayStyle.appName" = "短名称";
-"prefs.trayStyle.timeToBreak" = "倒计时";
-"prefs.trayStyle.progress" = "类型 + 倒计时";
+"prefs.trayStyle.default" = "仅图标 - 最短";
+"prefs.trayStyle.appName" = "短名称 - SR";
+"prefs.trayStyle.timeToBreak" = "倒计时 - 20m";
+"prefs.trayStyle.progress" = "类型 + 倒计时 - E 20s";
 "prefs.language" = "界面语言";
 "prefs.language.system" = "跟随系统语言";
 "prefs.language.english" = "英语";

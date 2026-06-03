@@ -775,6 +775,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             (TrayIconStyle.timeToBreak.rawValue, L10n.tr("prefs.trayStyle.timeToBreak")),
             (TrayIconStyle.progress.rawValue, L10n.tr("prefs.trayStyle.progress"))
         ])
+        trayStyle.identifier = NSUserInterfaceItemIdentifier("prefs.trayStyle")
         configurePopup(pauseUntilMorningMode, options: [
             (MorningPauseMode.hour.rawValue, L10n.tr("prefs.morningMode.hour")),
             (MorningPauseMode.sunrise.rawValue, L10n.tr("prefs.morningMode.sunrise"))
@@ -816,7 +817,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
         let wideFields: [NSView] = [
             eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, customBodyTitle,
-            localImagePath, languageIdentifier, shortcutPauseToggle,
+            localImagePath, languageIdentifier, trayStyle, shortcutPauseToggle,
             shortcutPause30, shortcutPause1h, shortcutPause2h, shortcutPause5h, shortcutPauseUntilMorning,
             shortcutNextScheduled, shortcutEyeNow, shortcutBodyNow, shortcutEndBody,
             shortcutEmergencyEye, shortcutReset,

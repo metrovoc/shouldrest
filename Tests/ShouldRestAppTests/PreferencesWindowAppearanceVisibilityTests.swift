@@ -5,6 +5,39 @@ import XCTest
 
 @MainActor
 final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
+    func testMenuBarStyleOptionsShowConcreteLengthPreviews() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+        let popup = try XCTUnwrap(view(withIdentifier: "prefs.trayStyle", in: contentView) as? NSPopUpButton)
+        let titles = (0..<popup.numberOfItems).compactMap { popup.item(at: $0)?.title }
+
+        XCTAssertTrue(titles.contains(L10n.tr("prefs.trayStyle.default")))
+        XCTAssertTrue(titles.contains(L10n.tr("prefs.trayStyle.appName")))
+        XCTAssertTrue(titles.contains(L10n.tr("prefs.trayStyle.timeToBreak")))
+        XCTAssertTrue(titles.contains(L10n.tr("prefs.trayStyle.progress")))
+        XCTAssertTrue(titles.contains { $0.contains("shortest") || $0.contains("最短") })
+        XCTAssertTrue(titles.contains { $0.contains("SR") })
+        XCTAssertTrue(titles.contains { $0.contains("20m") })
+        XCTAssertTrue(titles.contains { $0.contains("E 20s") })
+        XCTAssertGreaterThanOrEqual(popup.constraints.first { $0.firstAttribute == .width }?.constant ?? 0, 320)
+    }
+
+    func testMenuBarStylePreviewTitlesKeepRawSavedValues() throws {
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+        let popup = try XCTUnwrap(view(withIdentifier: "prefs.trayStyle", in: contentView) as? NSPopUpButton)
+        selectPopup(popup, representedObject: TrayIconStyle.progress.rawValue)
+
+        XCTAssertTrue(sendAction(from: popup))
+        waitUntilSavedSettingsArrive(savedSettings)
+        XCTAssertEqual(savedSettings.value?.presentation.trayIconStyle, .progress)
+    }
+
     func testDisabledBodyBreakHidesBodyOnlyAppearanceControls() throws {
         var settings = RestSettings.defaults
         settings.bodyBreak.isEnabled = false
@@ -147,6 +180,13 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
     private func sendAction(from control: NSControl) -> Bool {
         guard let action = control.action else { return false }
         return NSApplication.shared.sendAction(action, to: control.target, from: control)
+    }
+
+    private func selectPopup(_ popup: NSPopUpButton, representedObject: String) {
+        for index in 0..<popup.numberOfItems where popup.item(at: index)?.representedObject as? String == representedObject {
+            popup.selectItem(at: index)
+            return
+        }
     }
 
     private func waitUntilSavedSettingsArrive(_ settings: SavedSettingsBox) {
