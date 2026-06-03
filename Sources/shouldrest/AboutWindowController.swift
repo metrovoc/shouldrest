@@ -252,7 +252,7 @@ final class AboutWindowController: NSWindowController {
         if let appIcon = NSApp.applicationIconImage {
             return appIcon
         }
-        return symbolImage("eye")
+        return RestGateIcon.fallbackAppImage(size: 72, accessibilityDescription: L10n.tr("app.name"))
     }
 
     private func symbolImage(_ name: String) -> NSImage {

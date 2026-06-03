@@ -2,6 +2,20 @@ import Foundation
 import ShouldRestCore
 
 enum MenuStatusPresenter {
+    enum MenuBarIcon: Equatable {
+        case restGate
+        case systemSymbol(String)
+
+        var fallbackSystemSymbolName: String {
+            switch self {
+            case .restGate:
+                return "pause.circle"
+            case .systemSymbol(let symbolName):
+                return symbolName
+            }
+        }
+    }
+
     static func lines(state: RestEngineState, settings: RestSettings, now: Date = Date()) -> [String] {
         var lines = [primaryStatusText(state: state, now: now)]
         if let bodyBreakStatus = nextBodyBreakStatusText(state: state, settings: settings) {
@@ -32,19 +46,23 @@ enum MenuStatusPresenter {
     }
 
     static func menuBarSymbolName(state: RestEngineState) -> String {
+        menuBarIcon(state: state).fallbackSystemSymbolName
+    }
+
+    static func menuBarIcon(state: RestEngineState) -> MenuBarIcon {
         if let active = state.activeSession {
-            return symbolName(for: active.kind)
+            return icon(for: active.kind)
         }
         if state.pause != nil {
-            return "pause.circle"
+            return .systemSymbol("pause.circle")
         }
         if state.activeDeferral != nil {
-            return "clock"
+            return .systemSymbol("clock")
         }
         if let scheduled = state.scheduled {
-            return symbolName(for: scheduled.kind)
+            return icon(for: scheduled.kind)
         }
-        return symbolName(for: .eyeGate)
+        return icon(for: .eyeGate)
     }
 
     static func deferralReasonText(_ reason: ContextDeferralReason) -> String {
@@ -76,12 +94,12 @@ enum MenuStatusPresenter {
         }
     }
 
-    private static func symbolName(for kind: RestKind) -> String {
+    private static func icon(for kind: RestKind) -> MenuBarIcon {
         switch kind {
         case .eyeGate:
-            return "circle.lefthalf.filled"
+            return .restGate
         case .bodyBreak:
-            return "figure.walk"
+            return .systemSymbol("figure.walk")
         }
     }
 

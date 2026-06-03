@@ -237,7 +237,7 @@ final class OnboardingWindowController: NSWindowController {
         if let appIcon = NSImage(named: "AppIcon") {
             return appIcon
         }
-        return symbolImage("circle.lefthalf.filled")
+        return RestGateIcon.fallbackAppImage(size: 64, accessibilityDescription: L10n.tr("app.name"))
     }
 
     private func symbolImage(_ symbolName: String) -> NSImage {

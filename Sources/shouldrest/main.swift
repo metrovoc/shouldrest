@@ -456,7 +456,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func menuBarImage() -> NSImage? {
-        symbolMenuBarImage(MenuStatusPresenter.menuBarSymbolName(state: engine.state))
+        switch MenuStatusPresenter.menuBarIcon(state: engine.state) {
+        case .restGate:
+            return RestGateIcon.menuBarImage(accessibilityDescription: L10n.tr("app.name"))
+        case .systemSymbol(let symbolName):
+            return symbolMenuBarImage(symbolName)
+        }
     }
 
     private func symbolMenuBarImage(_ symbolName: String) -> NSImage? {

@@ -40,8 +40,7 @@ final class MenuStatusPresenterTests: XCTestCase {
         let engine = RestEngine(settings: .defaults, now: start)
 
         XCTAssertEqual(MenuStatusPresenter.menuBarTitle(state: engine.state, settings: engine.settings, now: start), "")
-        XCTAssertEqual(MenuStatusPresenter.menuBarSymbolName(state: engine.state), "circle.lefthalf.filled")
-        XCTAssertNotNil(NSImage(systemSymbolName: MenuStatusPresenter.menuBarSymbolName(state: engine.state), accessibilityDescription: nil))
+        XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: engine.state), .restGate)
     }
 
     func testDefaultMenuBarPresentationStaysIconOnlyAcrossStates() {
@@ -101,7 +100,8 @@ final class MenuStatusPresenterTests: XCTestCase {
         )
 
         XCTAssertEqual(MenuStatusPresenter.menuBarTitle(state: state, settings: settings, now: start), "B 5m")
-        XCTAssertEqual(MenuStatusPresenter.menuBarSymbolName(state: state), "figure.walk")
+        XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: state), .systemSymbol("figure.walk"))
+        XCTAssertNotNil(NSImage(systemSymbolName: MenuStatusPresenter.menuBarSymbolName(state: state), accessibilityDescription: nil))
     }
 
     func testMenuBarActiveCountdownUsesRemainingBreakTime() {
@@ -118,7 +118,7 @@ final class MenuStatusPresenterTests: XCTestCase {
         )
 
         XCTAssertEqual(MenuStatusPresenter.menuBarTitle(state: state, settings: settings, now: start.addingTimeInterval(5)), "E 15s")
-        XCTAssertEqual(MenuStatusPresenter.menuBarSymbolName(state: state), "circle.lefthalf.filled")
+        XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: state), .restGate)
     }
 
     func testMenuBarPausedStateStaysIconOnlyInCountdownStyles() {
@@ -130,7 +130,8 @@ final class MenuStatusPresenterTests: XCTestCase {
         )
 
         XCTAssertEqual(MenuStatusPresenter.menuBarTitle(state: state, settings: settings, now: start), "")
-        XCTAssertEqual(MenuStatusPresenter.menuBarSymbolName(state: state), "pause.circle")
+        XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: state), .systemSymbol("pause.circle"))
+        XCTAssertNotNil(NSImage(systemSymbolName: MenuStatusPresenter.menuBarSymbolName(state: state), accessibilityDescription: nil))
     }
 
     func testBodyBreakCountdownCountsScheduledEyeGateTowardBodyBreak() {
