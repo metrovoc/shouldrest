@@ -31,7 +31,7 @@ public enum PauseReason: String, Codable, Equatable, Sendable {
     case focusMode
 }
 
-public enum ContextDeferralReason: Equatable, Sendable {
+public enum ContextDeferralReason: Codable, Equatable, Sendable {
     case outsideWorkingHours
     case focusMode
     case appExclusion(String)
@@ -47,4 +47,3 @@ public enum ActionDenial: Equatable, Sendable {
     case postponeLimitReached
     case postponeWindowExpired
 }
-

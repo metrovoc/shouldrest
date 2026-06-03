@@ -4,6 +4,7 @@ public struct RestEngineState: Codable, Equatable, Sendable {
     public var scheduled: ScheduledRest?
     public var activeSession: RestSession?
     public var pause: PauseState?
+    public var activeDeferral: RestDeferral?
     public var eyeGatesSinceBodyBreak: Int
     public var postponesInCurrentCycle: Int
     public var dangerScore: Int
@@ -13,6 +14,7 @@ public struct RestEngineState: Codable, Equatable, Sendable {
         scheduled: ScheduledRest? = nil,
         activeSession: RestSession? = nil,
         pause: PauseState? = nil,
+        activeDeferral: RestDeferral? = nil,
         eyeGatesSinceBodyBreak: Int = 0,
         postponesInCurrentCycle: Int = 0,
         dangerScore: Int = 0,
@@ -21,6 +23,7 @@ public struct RestEngineState: Codable, Equatable, Sendable {
         self.scheduled = scheduled
         self.activeSession = activeSession
         self.pause = pause
+        self.activeDeferral = activeDeferral
         self.eyeGatesSinceBodyBreak = eyeGatesSinceBodyBreak
         self.postponesInCurrentCycle = postponesInCurrentCycle
         self.dangerScore = dangerScore
@@ -86,6 +89,20 @@ public struct PauseState: Codable, Equatable, Sendable {
     public func isActive(at date: Date) -> Bool {
         guard let until else { return true }
         return date < until
+    }
+}
+
+public struct RestDeferral: Codable, Equatable, Sendable {
+    public var kind: RestKind
+    public var reason: ContextDeferralReason
+    public var startedAt: Date
+    public var lastSeenAt: Date
+
+    public init(kind: RestKind, reason: ContextDeferralReason, startedAt: Date, lastSeenAt: Date) {
+        self.kind = kind
+        self.reason = reason
+        self.startedAt = startedAt
+        self.lastSeenAt = lastSeenAt
     }
 }
 
@@ -214,7 +231,7 @@ public struct RestEngine: Equatable, Sendable {
         }
 
         if let reason = deferralReason(for: scheduled.kind, context: context) {
-            return .deferred(scheduled.kind, reason)
+            return deferScheduledRest(scheduled, reason: reason, now: now)
         }
 
         return startScheduledRest(scheduled, now: now)
@@ -322,6 +339,7 @@ public struct RestEngine: Equatable, Sendable {
         let pause = PauseState(reason: reason, startedAt: now, until: until)
         state.pause = pause
         state.scheduled = nil
+        state.activeDeferral = nil
         return .paused(pause)
     }
 
@@ -342,10 +360,12 @@ public struct RestEngine: Equatable, Sendable {
     private mutating func scheduleNextRest(from now: Date) {
         guard state.pause == nil, state.activeSession == nil, let kind = nextRestKind() else {
             state.scheduled = nil
+            state.activeDeferral = nil
             return
         }
         let dueAt = now.addingTimeInterval(intervalForNextRest(kind))
         state.scheduled = scheduledRest(kind: kind, dueAt: dueAt)
+        state.activeDeferral = nil
     }
 
     private func scheduledRest(kind: RestKind, dueAt: Date) -> ScheduledRest {
@@ -374,8 +394,31 @@ public struct RestEngine: Equatable, Sendable {
             manualFinishEnabled: rule.manualFinishEnabled
         )
         state.scheduled = nil
+        state.activeDeferral = nil
         state.activeSession = session
         return .started(session)
+    }
+
+    private mutating func deferScheduledRest(
+        _ scheduled: ScheduledRest,
+        reason: ContextDeferralReason,
+        now: Date
+    ) -> RestEngineResult {
+        if let activeDeferral = state.activeDeferral,
+           activeDeferral.kind == scheduled.kind,
+           activeDeferral.reason == reason {
+            state.activeDeferral?.lastSeenAt = now
+        } else {
+            state.activeDeferral = RestDeferral(
+                kind: scheduled.kind,
+                reason: reason,
+                startedAt: now,
+                lastSeenAt: now
+            )
+            increaseDanger(for: scheduled.kind)
+        }
+
+        return .deferred(scheduled.kind, reason)
     }
 
     private func nextRestKind() -> RestKind? {
@@ -519,4 +562,3 @@ public struct RestEngine: Equatable, Sendable {
         state.dangerScore = max(0, state.dangerScore - kind.defaultHealthWeight)
     }
 }
-

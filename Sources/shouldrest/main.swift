@@ -236,6 +236,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         if engine.state.pause != nil {
             return "Paused"
         }
+        if engine.state.activeDeferral != nil {
+            return L10n.tr("status.deferredShort")
+        }
         guard let scheduled = engine.state.scheduled else {
             return L10n.tr("app.name")
         }
@@ -261,10 +264,28 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             }
             return L10n.tr("status.pausedIndefinitely")
         }
+        if let deferral = engine.state.activeDeferral {
+            return L10n.format(
+                "status.deferred",
+                deferral.kind.rawValue,
+                deferralReasonText(deferral.reason)
+            )
+        }
         if let scheduled = engine.state.scheduled {
             return L10n.format("status.next", scheduled.kind.rawValue, scheduled.dueAt.formatted(date: .omitted, time: .shortened))
         }
         return L10n.tr("status.noRests")
+    }
+
+    private func deferralReasonText(_ reason: ContextDeferralReason) -> String {
+        switch reason {
+        case .outsideWorkingHours:
+            return L10n.tr("deferral.outsideWorkingHours")
+        case .focusMode:
+            return L10n.tr("deferral.focusMode")
+        case .appExclusion(let name):
+            return L10n.format("deferral.appExclusion", name)
+        }
     }
 
     private func disabledItem(_ title: String) -> NSMenuItem {
@@ -658,6 +679,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             "scheduled=\(String(describing: engine.state.scheduled))",
             "activeSession=\(String(describing: engine.state.activeSession))",
             "pause=\(String(describing: engine.state.pause))",
+            "activeDeferral=\(String(describing: engine.state.activeDeferral))",
             "dangerScore=\(engine.state.dangerScore)",
             "statistics=\(engine.state.statistics)",
             "focusModeActive=\(focusModeActive)",
@@ -690,8 +712,9 @@ final class OverlayController {
         self.settings = settings
         let remaining = max(0, Int(session.duration - now.timeIntervalSince(session.startedAt)))
         let contentScreen = selectedContentScreen(for: session, settings: settings)
+        let screens = coveredScreens(for: session, settings: settings, contentScreen: contentScreen)
 
-        for screen in NSScreen.screens {
+        for screen in screens {
             let id = screen.displayID
             let isContentScreen = shouldShowContent(on: screen, contentScreen: contentScreen, session: session, settings: settings)
             windows[id]?.setFrame(screen.frame, display: true)
@@ -710,13 +733,15 @@ final class OverlayController {
     func reconcile() {
         guard let session, let settings else { return }
 
-        let currentIDs = Set(NSScreen.screens.map(\.displayID))
-        for (id, window) in windows where !currentIDs.contains(id) {
+        let contentScreen = selectedContentScreen(for: session, settings: settings)
+        let screens = coveredScreens(for: session, settings: settings, contentScreen: contentScreen)
+        let targetIDs = Set(screens.map(\.displayID))
+        for (id, window) in windows where !targetIDs.contains(id) {
             window.close()
         }
-        windows = windows.filter { currentIDs.contains($0.key) }
+        windows = windows.filter { targetIDs.contains($0.key) }
 
-        for screen in NSScreen.screens {
+        for screen in screens {
             let id = screen.displayID
             if windows[id] == nil {
                 let window = OverlayWindow(screen: screen, session: session, settings: settings)
@@ -737,19 +762,26 @@ final class OverlayController {
     }
 
     private func selectedContentScreen(for session: RestSession, settings: RestSettings) -> NSScreen? {
-        let selection = settings.rule(for: session.kind).enforcement.contentDisplay
-        switch selection {
-        case .none:
-            return nil
-        case .all:
-            return nil
-        case .primary:
-            return NSScreen.screens.first
-        case .cursor:
-            return NSScreen.screens.first { NSMouseInRect(NSEvent.mouseLocation, $0.frame, false) } ?? NSScreen.screens.first
-        case .configured:
-            return NSScreen.screens.first
+        let enforcement = settings.rule(for: session.kind).enforcement
+        return screen(for: enforcement.contentDisplay, enforcement: enforcement)
+    }
+
+    private func coveredScreens(
+        for session: RestSession,
+        settings: RestSettings,
+        contentScreen: NSScreen?
+    ) -> [NSScreen] {
+        let allScreens = NSScreen.screens
+        guard !allScreens.isEmpty else { return [] }
+
+        let enforcement = settings.rule(for: session.kind).enforcement
+        if session.kind == .eyeGate || enforcement.coversAllDisplays {
+            return allScreens
         }
+
+        let fallbackSelection = contentScreen == nil ? DisplaySelection.primary : enforcement.contentDisplay
+        let selection = enforcement.coveredDisplay ?? fallbackSelection
+        return [screen(for: selection, enforcement: enforcement) ?? allScreens.first!]
     }
 
     private func shouldShowContent(
@@ -759,13 +791,36 @@ final class OverlayController {
         settings: RestSettings
     ) -> Bool {
         let enforcement = settings.rule(for: session.kind).enforcement
+        if enforcement.contentDisplay == .none {
+            return false
+        }
         if enforcement.contentDisplay == .all {
+            return true
+        }
+        if !enforcement.blankSecondaryDisplays {
             return true
         }
         guard let contentScreen else {
             return false
         }
         return screen.displayID == contentScreen.displayID
+    }
+
+    private func screen(for selection: DisplaySelection, enforcement: EnforcementProfile) -> NSScreen? {
+        switch selection {
+        case .none, .all:
+            return nil
+        case .primary:
+            return NSScreen.screens.first
+        case .cursor:
+            return NSScreen.screens.first { NSMouseInRect(NSEvent.mouseLocation, $0.frame, false) } ?? NSScreen.screens.first
+        case .configured:
+            if let index = enforcement.configuredDisplayIndex,
+               NSScreen.screens.indices.contains(index) {
+                return NSScreen.screens[index]
+            }
+            return NSScreen.screens.first
+        }
     }
 
     private func windowLevel(for session: RestSession, settings: RestSettings) -> NSWindow.Level {

@@ -24,6 +24,11 @@ final class PreferencesWindowController: NSWindowController {
     private let bodyPostponeMinutes = NSTextField()
     private let bodyPostponeLimit = NSTextField()
     private let bodyManualFinish = NSButton(checkboxWithTitle: L10n.tr("prefs.manualFinish"), target: nil, action: nil)
+    private let bodyCoversAllDisplays = NSButton(checkboxWithTitle: L10n.tr("prefs.bodyAllDisplays"), target: nil, action: nil)
+    private let bodyCoveredDisplay = NSPopUpButton()
+    private let bodyContentDisplay = NSPopUpButton()
+    private let bodyBlankSecondaryDisplays = NSButton(checkboxWithTitle: L10n.tr("prefs.bodyBlankSecondary"), target: nil, action: nil)
+    private let bodyConfiguredDisplayIndex = NSTextField()
 
     private let naturalBreaks = NSButton(checkboxWithTitle: L10n.tr("prefs.naturalBreaks"), target: nil, action: nil)
     private let naturalIdleMinutes = NSTextField()
@@ -156,6 +161,11 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(row(L10n.tr("prefs.postponeMinutes"), bodyPostponeMinutes))
         stack.addArrangedSubview(row(L10n.tr("prefs.maxPostpones"), bodyPostponeLimit))
         stack.addArrangedSubview(bodyManualFinish)
+        stack.addArrangedSubview(bodyCoversAllDisplays)
+        stack.addArrangedSubview(row(L10n.tr("prefs.bodyCoveredDisplay"), bodyCoveredDisplay))
+        stack.addArrangedSubview(row(L10n.tr("prefs.bodyContentDisplay"), bodyContentDisplay))
+        stack.addArrangedSubview(bodyBlankSecondaryDisplays)
+        stack.addArrangedSubview(row(L10n.tr("prefs.configuredDisplayIndex"), bodyConfiguredDisplayIndex))
 
         stack.addArrangedSubview(separator())
         stack.addArrangedSubview(section(L10n.tr("prefs.sectionContext")))
@@ -225,13 +235,25 @@ final class PreferencesWindowController: NSWindowController {
         appExclusionMode.addItems(withTitles: AppExclusionRule.Mode.allCases.map(\.rawValue))
         themeSource.addItems(withTitles: ThemeSource.allCases.map(\.rawValue))
         trayStyle.addItems(withTitles: TrayIconStyle.allCases.map(\.rawValue))
+        bodyCoveredDisplay.addItems(withTitles: [
+            DisplaySelection.primary.rawValue,
+            DisplaySelection.cursor.rawValue,
+            DisplaySelection.configured.rawValue
+        ])
+        bodyContentDisplay.addItems(withTitles: [
+            DisplaySelection.all.rawValue,
+            DisplaySelection.primary.rawValue,
+            DisplaySelection.cursor.rawValue,
+            DisplaySelection.configured.rawValue,
+            DisplaySelection.none.rawValue
+        ])
     }
 
     private func configureFieldWidths() {
         let compactFields = [
             eyeInterval, eyeDuration, bodyDuration, bodyAfterEyeGates, eyeLead, bodyLead,
             bodyPostponeMinutes, bodyPostponeLimit, naturalIdleMinutes, workingStart,
-            workingEnd, soundVolume
+            workingEnd, soundVolume, bodyConfiguredDisplayIndex
         ]
         compactFields.forEach { $0.widthAnchor.constraint(equalToConstant: 110).isActive = true }
 
@@ -264,6 +286,11 @@ final class PreferencesWindowController: NSWindowController {
         bodyPostponeMinutes.stringValue = String(Int(settings.bodyBreak.postpone.duration / 60))
         bodyPostponeLimit.stringValue = String(settings.bodyBreak.postpone.maxCount)
         bodyManualFinish.state = state(settings.bodyBreak.manualFinishEnabled)
+        bodyCoversAllDisplays.state = state(settings.bodyBreak.enforcement.coversAllDisplays)
+        bodyCoveredDisplay.selectItem(withTitle: (settings.bodyBreak.enforcement.coveredDisplay ?? .primary).rawValue)
+        bodyContentDisplay.selectItem(withTitle: settings.bodyBreak.enforcement.contentDisplay.rawValue)
+        bodyBlankSecondaryDisplays.state = state(settings.bodyBreak.enforcement.blankSecondaryDisplays)
+        bodyConfiguredDisplayIndex.stringValue = String(settings.bodyBreak.enforcement.configuredDisplayIndex ?? 0)
 
         naturalBreaks.state = state(settings.naturalBreaks.isEnabled)
         naturalIdleMinutes.stringValue = String(Int(settings.naturalBreaks.inactivityResetTime / 60))
@@ -333,6 +360,11 @@ final class PreferencesWindowController: NSWindowController {
             allowedDuringFirstPercent: next.bodyBreak.postpone.allowedDuringFirstPercent
         )
         next.bodyBreak.manualFinishEnabled = isOn(bodyManualFinish)
+        next.bodyBreak.enforcement.coversAllDisplays = isOn(bodyCoversAllDisplays)
+        next.bodyBreak.enforcement.coveredDisplay = selected(DisplaySelection.self, from: bodyCoveredDisplay, fallback: .primary)
+        next.bodyBreak.enforcement.contentDisplay = selected(DisplaySelection.self, from: bodyContentDisplay, fallback: .all)
+        next.bodyBreak.enforcement.blankSecondaryDisplays = isOn(bodyBlankSecondaryDisplays)
+        next.bodyBreak.enforcement.configuredDisplayIndex = max(0, intValue(bodyConfiguredDisplayIndex))
 
         next.naturalBreaks = NaturalBreakSettings(
             isEnabled: isOn(naturalBreaks),

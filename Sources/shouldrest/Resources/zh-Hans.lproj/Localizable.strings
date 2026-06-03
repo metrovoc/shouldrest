@@ -32,6 +32,11 @@
 "status.pausedUntil" = "暂停到 %@";
 "status.next" = "下一次：%@，时间 %@";
 "status.active" = "%@ 进行中，剩余 %d 秒";
+"status.deferredShort" = "已延后";
+"status.deferred" = "%@ 已延后：%@";
+"deferral.outsideWorkingHours" = "非工作时间";
+"deferral.focusMode" = "Focus / 勿扰模式";
+"deferral.appExclusion" = "应用排除：%@";
 "overlay.eyeTitle" = "看向远处";
 "overlay.eyeBody" = "让眼睛休息";
 "overlay.bodyTitle" = "身体休息";
@@ -72,6 +77,11 @@
 "prefs.afterEyeGates" = "经过 Eye Gate 次数";
 "prefs.postponeMinutes" = "推迟分钟数";
 "prefs.maxPostpones" = "最大推迟次数";
+"prefs.bodyAllDisplays" = "在所有显示器显示 Body Break";
+"prefs.bodyCoveredDisplay" = "单显示器目标";
+"prefs.bodyContentDisplay" = "内容显示器";
+"prefs.bodyBlankSecondary" = "空白非内容显示器";
+"prefs.configuredDisplayIndex" = "配置显示器索引";
 "prefs.sectionContext" = "上下文";
 "prefs.naturalIdleMinutes" = "自然空闲分钟数";
 "prefs.workingStart" = "工作开始 HH:mm";

@@ -123,6 +123,47 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(session.kind, .eyeGate)
     }
 
+    func testContinuousContextDeferralEscalatesOnceAndStartsImmediatelyWhenCleared() {
+        var engine = RestEngine(settings: .defaults, now: start)
+        _ = engine.takeNow(.eyeGate, now: start)
+        _ = engine.completeActive(now: start.addingTimeInterval(20), reason: .completed)
+        _ = engine.takeNow(.eyeGate, now: start.addingTimeInterval(40))
+        _ = engine.completeActive(now: start.addingTimeInterval(60), reason: .completed)
+
+        let bodyDue = engine.state.scheduled!.dueAt
+        let firstDeferral = engine.evaluate(
+            now: bodyDue,
+            context: RestContext(focusModeActive: true)
+        )
+
+        XCTAssertEqual(firstDeferral, .deferred(.bodyBreak, .focusMode))
+        XCTAssertEqual(engine.state.activeDeferral?.kind, .bodyBreak)
+        XCTAssertEqual(engine.state.activeDeferral?.reason, .focusMode)
+        XCTAssertEqual(engine.state.dangerScore, RestKind.bodyBreak.defaultHealthWeight)
+
+        let repeatedDeferral = engine.evaluate(
+            now: bodyDue.addingTimeInterval(10),
+            context: RestContext(focusModeActive: true)
+        )
+
+        XCTAssertEqual(repeatedDeferral, .deferred(.bodyBreak, .focusMode))
+        XCTAssertEqual(engine.state.dangerScore, RestKind.bodyBreak.defaultHealthWeight)
+        XCTAssertEqual(engine.state.activeDeferral?.startedAt, bodyDue)
+        XCTAssertEqual(engine.state.activeDeferral?.lastSeenAt, bodyDue.addingTimeInterval(10))
+
+        let resumed = engine.evaluate(
+            now: bodyDue.addingTimeInterval(11),
+            context: RestContext(focusModeActive: false)
+        )
+
+        guard case .started(let session) = resumed else {
+            return XCTFail("Expected deferred Body Break to start as soon as Focus clears")
+        }
+        XCTAssertEqual(session.kind, .bodyBreak)
+        XCTAssertEqual(session.scheduledAt, bodyDue)
+        XCTAssertNil(engine.state.activeDeferral)
+    }
+
     func testAppExclusionPauseCanTargetSpecificBreakKind() {
         let rule = AppExclusionRule(
             id: "presentation",
@@ -147,6 +188,44 @@ final class RestEngineTests: XCTestCase {
         )
 
         XCTAssertEqual(result, .deferred(.bodyBreak, .appExclusion("Presentation")))
+    }
+
+    func testResumeOnlyAppExclusionDefersUntilMatchedThenStarts() {
+        let rule = AppExclusionRule(
+            id: "deep-work",
+            name: "Deep Work",
+            matchTerms: ["Xcode"],
+            mode: .resumeOnlyWhenMatched,
+            appliesTo: [.bodyBreak],
+            isEnabled: true
+        )
+        var settings = RestSettings.defaults
+        settings.appExclusions = [rule]
+
+        var engine = RestEngine(settings: settings, now: start)
+        _ = engine.takeNow(.eyeGate, now: start)
+        _ = engine.completeActive(now: start.addingTimeInterval(20), reason: .completed)
+        _ = engine.takeNow(.eyeGate, now: start.addingTimeInterval(40))
+        _ = engine.completeActive(now: start.addingTimeInterval(60), reason: .completed)
+
+        let bodyDue = engine.state.scheduled!.dueAt
+        let waiting = engine.evaluate(
+            now: bodyDue,
+            context: RestContext(appExclusions: [AppExclusionEvaluation(rule: rule, isMatched: false)])
+        )
+        XCTAssertEqual(waiting, .deferred(.bodyBreak, .appExclusion("Deep Work")))
+        XCTAssertEqual(engine.state.activeDeferral?.reason, .appExclusion("Deep Work"))
+
+        let resumed = engine.evaluate(
+            now: bodyDue.addingTimeInterval(1),
+            context: RestContext(appExclusions: [AppExclusionEvaluation(rule: rule, isMatched: true)])
+        )
+
+        guard case .started(let session) = resumed else {
+            return XCTFail("Expected resume-only rule to start Body Break once matched")
+        }
+        XCTAssertEqual(session.kind, .bodyBreak)
+        XCTAssertNil(engine.state.activeDeferral)
     }
 
     func testContentSanitizerRemovesScriptsAndDangerousAttributes() {
@@ -176,6 +255,27 @@ final class RestEngineTests: XCTestCase {
         let loaded = try store.load()
 
         XCTAssertEqual(loaded, .defaults)
+    }
+
+    func testEnforcementProfileDecodesLegacyDisplaySettings() throws {
+        let legacyJSON = #"""
+        {
+          "coversAllDisplays": true,
+          "usesScreenSaverLevel": true,
+          "isOpaque": true,
+          "opacity": 1,
+          "allowRegularWindowMode": false,
+          "contentDisplay": "primary",
+          "blankSecondaryDisplays": true
+        }
+        """#.data(using: .utf8)!
+
+        let profile = try JSONDecoder().decode(EnforcementProfile.self, from: legacyJSON)
+
+        XCTAssertTrue(profile.coversAllDisplays)
+        XCTAssertNil(profile.coveredDisplay)
+        XCTAssertEqual(profile.contentDisplay, .primary)
+        XCTAssertNil(profile.configuredDisplayIndex)
     }
 
     func testWorkingHoursSupportsDayAndOvernightWindows() throws {

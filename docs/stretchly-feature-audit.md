@@ -169,6 +169,8 @@ Implemented now:
 - Floating/all-spaces presentation for onboarding, preferences, and debug utility windows.
 - AppKit theme application for system/light/dark preferences, admin preferences message display, and optional current time during Body Break.
 - Packaged app build with default ad-hoc signing, optional Developer ID signing hook, optional hardened runtime hook, and strict `codesign` verification.
+- Continuous context-deferral state for Focus, working-hours, and app-exclusion gates: first deferral raises break-health danger, repeated ticks do not double-count, and the due rest starts immediately when context clears.
+- Stretchly-style display targeting for Body Break: all displays or a selected single display, primary/cursor/configured-display selection, separate content-display selection, optional secondary-display blanking, and backward-compatible settings decoding. Eye Gate still forces all-display coverage.
 
 Still to implement:
 - Developer ID signing identity selection, notarization, and installer/distribution polish.

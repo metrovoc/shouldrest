@@ -200,8 +200,10 @@ public struct EnforcementProfile: Codable, Equatable, Sendable {
     public var isOpaque: Bool
     public var opacity: Double
     public var allowRegularWindowMode: Bool
+    public var coveredDisplay: DisplaySelection?
     public var contentDisplay: DisplaySelection
     public var blankSecondaryDisplays: Bool
+    public var configuredDisplayIndex: Int?
 
     public init(
         coversAllDisplays: Bool,
@@ -209,16 +211,20 @@ public struct EnforcementProfile: Codable, Equatable, Sendable {
         isOpaque: Bool,
         opacity: Double,
         allowRegularWindowMode: Bool,
+        coveredDisplay: DisplaySelection? = nil,
         contentDisplay: DisplaySelection,
-        blankSecondaryDisplays: Bool
+        blankSecondaryDisplays: Bool,
+        configuredDisplayIndex: Int? = nil
     ) {
         self.coversAllDisplays = coversAllDisplays
         self.usesScreenSaverLevel = usesScreenSaverLevel
         self.isOpaque = isOpaque
         self.opacity = min(1, max(0, opacity))
         self.allowRegularWindowMode = allowRegularWindowMode
+        self.coveredDisplay = coveredDisplay
         self.contentDisplay = contentDisplay
         self.blankSecondaryDisplays = blankSecondaryDisplays
+        self.configuredDisplayIndex = configuredDisplayIndex.map { max(0, $0) }
     }
 
     public static let eyeGateDefault = EnforcementProfile(

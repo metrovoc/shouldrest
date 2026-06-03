@@ -32,6 +32,11 @@
 "status.pausedUntil" = "Paused until %@";
 "status.next" = "Next: %@ at %@";
 "status.active" = "%@ active, %ds remaining";
+"status.deferredShort" = "Deferred";
+"status.deferred" = "%@ deferred: %@";
+"deferral.outsideWorkingHours" = "outside working hours";
+"deferral.focusMode" = "Focus / Do Not Disturb";
+"deferral.appExclusion" = "app exclusion: %@";
 "overlay.eyeTitle" = "Look away";
 "overlay.eyeBody" = "Rest your eyes";
 "overlay.bodyTitle" = "Body Break";
@@ -72,6 +77,11 @@
 "prefs.afterEyeGates" = "After Eye Gates";
 "prefs.postponeMinutes" = "Postpone minutes";
 "prefs.maxPostpones" = "Max postpones";
+"prefs.bodyAllDisplays" = "Show Body Break on all displays";
+"prefs.bodyCoveredDisplay" = "Single-display target";
+"prefs.bodyContentDisplay" = "Content display";
+"prefs.bodyBlankSecondary" = "Blank non-content displays";
+"prefs.configuredDisplayIndex" = "Configured display index";
 "prefs.sectionContext" = "Context";
 "prefs.naturalIdleMinutes" = "Natural idle minutes";
 "prefs.workingStart" = "Working start HH:mm";
