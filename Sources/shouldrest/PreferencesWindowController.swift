@@ -36,17 +36,38 @@ private enum PreferencesTabIcon {
     case systemSymbol(String)
 }
 
+private struct PreferencesSearchTarget {
+    var tabIdentifier: String
+    var title: String
+    var normalizedText: String
+    var view: NSView
+}
+
+private struct PreferencesHighlightSnapshot {
+    weak var view: NSView?
+    var wantsLayer: Bool
+    var backgroundColor: CGColor?
+    var borderColor: CGColor?
+    var borderWidth: CGFloat
+    var cornerRadius: CGFloat
+}
+
 @MainActor
-final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate, NSTextViewDelegate {
+final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate, NSSearchFieldDelegate, NSTextViewDelegate {
     private var settings: RestSettings
     private let onSave: (RestSettings) -> Void
     private let adminMessageLabel = NSTextField(labelWithString: "")
+    private let searchField = NSSearchField()
+    private let searchStatusLabel = NSTextField(labelWithString: "")
     private let saveStatusIcon = NSImageView()
     private let saveStatusLabel = NSTextField(labelWithString: "")
     private let soundPlayer = SoundPlayer()
     private var isLoadingSettings = false
     private var autosaveTask: Task<Void, Never>?
     private var numberInputs: [NumberInput] = []
+    private weak var preferencesTabView: NSTabView?
+    private var searchTargets: [PreferencesSearchTarget] = []
+    private var highlightedSearchTarget: PreferencesHighlightSnapshot?
 
     private let eyeEnabled = NSButton(checkboxWithTitle: L10n.tr("prefs.enableEyeGate"), target: nil, action: nil)
     private let eyeInterval = NSTextField()
@@ -243,6 +264,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         configureCustomBodyTextEditor()
         configureAppExclusionTokenField()
         configureSoundPreviewButtons()
+        configureSearchField()
         configureShortcutConflictWarning()
         configureShortcutRecorders()
         configureEnablementGuards()
@@ -261,6 +283,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
         let tabView = NSTabView()
         tabView.identifier = NSUserInterfaceItemIdentifier("prefs.tabView")
+        preferencesTabView = tabView
         tabView.translatesAutoresizingMaskIntoConstraints = false
         tabView.setContentHuggingPriority(.defaultLow, for: .vertical)
         tabView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
@@ -664,7 +687,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         subtitle.textColor = .secondaryLabelColor
         subtitle.lineBreakMode = .byWordWrapping
         subtitle.maximumNumberOfLines = 2
-        subtitle.widthAnchor.constraint(lessThanOrEqualToConstant: 460).isActive = true
+        subtitle.widthAnchor.constraint(lessThanOrEqualToConstant: 340).isActive = true
 
         let copy = NSStackView(views: [title, subtitle])
         copy.orientation = .vertical
@@ -679,11 +702,19 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         statusStack.setContentHuggingPriority(.required, for: .horizontal)
         statusStack.setContentCompressionResistancePriority(.required, for: .horizontal)
 
+        let searchStack = NSStackView(views: [searchField, searchStatusLabel])
+        searchStack.identifier = NSUserInterfaceItemIdentifier("prefs.headerSearch")
+        searchStack.orientation = .vertical
+        searchStack.spacing = 2
+        searchStack.alignment = .leading
+        searchStack.setContentHuggingPriority(.required, for: .horizontal)
+        searchStack.setContentCompressionResistancePriority(.required, for: .horizontal)
+
         let spacer = NSView()
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
         spacer.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
-        let header = NSStackView(views: [icon, copy, spacer, statusStack])
+        let header = NSStackView(views: [icon, copy, spacer, searchStack, statusStack])
         header.identifier = NSUserInterfaceItemIdentifier("prefs.header")
         header.orientation = .horizontal
         header.alignment = .centerY
@@ -730,6 +761,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         item.image = tabImage(icon, accessibilityDescription: title)
         item.view = scrollContainer(for: stack)
         tabView.addTabViewItem(item)
+        registerSearchTargets(in: stack, tabIdentifier: title)
     }
 
     private func tabImage(_ icon: PreferencesTabIcon, accessibilityDescription: String) -> NSImage {
@@ -879,6 +911,23 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         saveStatusLabel.textColor = .secondaryLabelColor
         saveStatusLabel.font = .systemFont(ofSize: 12)
         setSaveStatus(.ready)
+    }
+
+    private func configureSearchField() {
+        searchField.identifier = NSUserInterfaceItemIdentifier("prefs.searchField")
+        searchField.placeholderString = L10n.tr("prefs.searchPlaceholder")
+        searchField.sendsSearchStringImmediately = true
+        searchField.delegate = self
+        searchField.target = self
+        searchField.action = #selector(preferencesSearchChanged(_:))
+        searchField.widthAnchor.constraint(equalToConstant: 190).isActive = true
+
+        searchStatusLabel.identifier = NSUserInterfaceItemIdentifier("prefs.searchStatusLabel")
+        searchStatusLabel.font = .systemFont(ofSize: 11)
+        searchStatusLabel.textColor = .secondaryLabelColor
+        searchStatusLabel.lineBreakMode = .byTruncatingTail
+        searchStatusLabel.widthAnchor.constraint(equalToConstant: 190).isActive = true
+        searchStatusLabel.isHidden = true
     }
 
     private func configureCustomBodyTextEditor() {
@@ -1716,11 +1765,19 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     }
 
     func controlTextDidChange(_ obj: Notification) {
+        if let field = obj.object as? NSSearchField, field === searchField {
+            performPreferencesSearch(field.stringValue)
+            return
+        }
         guard !isLoadingSettings else { return }
         setSaveStatus(.editing)
     }
 
     func controlTextDidEndEditing(_ obj: Notification) {
+        if let field = obj.object as? NSSearchField, field === searchField {
+            performPreferencesSearch(field.stringValue)
+            return
+        }
         if let field = obj.object as? NSTextField {
             syncNumberControls(for: field)
         }
@@ -2122,6 +2179,116 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         stack.spacing = 10
         stack.alignment = .centerY
         return stack
+    }
+
+    private func registerSearchTargets(in stack: NSStackView, tabIdentifier: String) {
+        for view in stack.arrangedSubviews {
+            let text = searchableText(in: view).joined(separator: " ")
+            let normalizedText = Self.normalizedSearchText("\(tabIdentifier) \(text)")
+            guard !normalizedText.isEmpty else { continue }
+            searchTargets.append(PreferencesSearchTarget(
+                tabIdentifier: tabIdentifier,
+                title: bestSearchTargetTitle(in: view, fallback: tabIdentifier),
+                normalizedText: normalizedText,
+                view: view
+            ))
+        }
+    }
+
+    private func searchableText(in view: NSView) -> [String] {
+        var texts: [String] = []
+        if let button = view as? NSButton, !button.title.isEmpty {
+            texts.append(button.title)
+        } else if let popup = view as? NSPopUpButton, !popup.title.isEmpty {
+            texts.append(popup.title)
+        } else if let label = view as? NSTextField, !label.stringValue.isEmpty {
+            texts.append(label.stringValue)
+        }
+        for subview in view.subviews {
+            texts.append(contentsOf: searchableText(in: subview))
+        }
+        return texts
+    }
+
+    private func bestSearchTargetTitle(in view: NSView, fallback: String) -> String {
+        searchableText(in: view).first { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty } ?? fallback
+    }
+
+    @objc private func preferencesSearchChanged(_ sender: NSSearchField) {
+        performPreferencesSearch(sender.stringValue)
+    }
+
+    private func performPreferencesSearch(_ query: String) {
+        let normalizedQuery = Self.normalizedSearchText(query)
+        clearHighlightedSearchTarget()
+        guard !normalizedQuery.isEmpty else {
+            searchStatusLabel.stringValue = ""
+            searchStatusLabel.isHidden = true
+            return
+        }
+
+        guard let target = searchTargets.first(where: {
+            isSearchTargetVisible($0.view) && $0.normalizedText.contains(normalizedQuery)
+        }) else {
+            searchStatusLabel.stringValue = L10n.tr("prefs.searchNoResults")
+            searchStatusLabel.textColor = .systemOrange
+            searchStatusLabel.isHidden = false
+            return
+        }
+
+        preferencesTabView?.selectTabViewItem(withIdentifier: target.tabIdentifier)
+        target.view.scrollToVisible(target.view.bounds)
+        highlightSearchTarget(target.view)
+        searchStatusLabel.stringValue = L10n.format("prefs.searchMatched", target.tabIdentifier, target.title)
+        searchStatusLabel.textColor = .secondaryLabelColor
+        searchStatusLabel.isHidden = false
+    }
+
+    private static func normalizedSearchText(_ value: String) -> String {
+        value
+            .folding(options: [.caseInsensitive, .diacriticInsensitive, .widthInsensitive], locale: .current)
+            .components(separatedBy: CharacterSet.alphanumerics.inverted)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+    }
+
+    private func isSearchTargetVisible(_ view: NSView) -> Bool {
+        var current: NSView? = view
+        while let candidate = current {
+            if candidate.isHidden { return false }
+            current = candidate.superview
+        }
+        return true
+    }
+
+    private func highlightSearchTarget(_ view: NSView) {
+        highlightedSearchTarget = PreferencesHighlightSnapshot(
+            view: view,
+            wantsLayer: view.wantsLayer,
+            backgroundColor: view.layer?.backgroundColor,
+            borderColor: view.layer?.borderColor,
+            borderWidth: view.layer?.borderWidth ?? 0,
+            cornerRadius: view.layer?.cornerRadius ?? 0
+        )
+        view.wantsLayer = true
+        view.layer?.cornerRadius = 7
+        view.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.14).cgColor
+        view.layer?.borderColor = NSColor.controlAccentColor.withAlphaComponent(0.36).cgColor
+        view.layer?.borderWidth = 1
+    }
+
+    private func clearHighlightedSearchTarget() {
+        guard let highlightedSearchTarget,
+              let view = highlightedSearchTarget.view else {
+            self.highlightedSearchTarget = nil
+            return
+        }
+        view.layer?.backgroundColor = highlightedSearchTarget.backgroundColor
+        view.layer?.borderColor = highlightedSearchTarget.borderColor
+        view.layer?.borderWidth = highlightedSearchTarget.borderWidth
+        view.layer?.cornerRadius = highlightedSearchTarget.cornerRadius
+        view.wantsLayer = highlightedSearchTarget.wantsLayer
+        self.highlightedSearchTarget = nil
     }
 
     private func localImagePickerRow() -> NSStackView {
