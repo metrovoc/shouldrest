@@ -1139,8 +1139,16 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func debugInfo() -> String {
-        var lines = [
-            "logPath=\(logger.fileURL.path)",
+        var lines: [String] = []
+
+        if !settings.admin.hideSettingsFileLocation {
+            lines.append("logPath=\(logger.fileURL.path)")
+            lines.append("settingsPath=\(settingsStore.fileURL.path)")
+            lines.append("supportPath=\(AppPaths.supportDirectory.path)")
+            lines.append("bodyBreakImagePaths=\(settings.contentLibrary.localImagePaths)")
+        }
+
+        lines.append(contentsOf: [
             "scheduled=\(String(describing: engine.state.scheduled))",
             "activeSession=\(String(describing: engine.state.activeSession))",
             "pause=\(String(describing: engine.state.pause))",
@@ -1151,13 +1159,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             "idleSeconds=\(SystemIdleTime.seconds())",
             "openAtLogin=\(settings.operations.openAtLogin)",
             "loginItemAvailable=\(LoginItemManager.isAvailable)"
-        ]
-
-        if !settings.admin.hideSettingsFileLocation {
-            lines.insert("bodyBreakImagePaths=\(settings.contentLibrary.localImagePaths)", at: 1)
-            lines.insert("supportPath=\(AppPaths.supportDirectory.path)", at: 1)
-            lines.insert("settingsPath=\(settingsStore.fileURL.path)", at: 1)
-        }
+        ])
 
         return lines.joined(separator: "\n")
     }

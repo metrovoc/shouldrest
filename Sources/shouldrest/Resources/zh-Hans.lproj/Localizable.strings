@@ -82,7 +82,7 @@
 "prefs.notifyNewVersion" = "发现新版本时通知";
 "prefs.showOnboardingNextLaunch" = "下次启动时显示欢迎窗口";
 "prefs.adminHideUpdates" = "管理员：隐藏更新 UI";
-"prefs.adminHideSettingsPath" = "管理员：隐藏设置文件路径";
+"prefs.adminHideSettingsPath" = "管理员：隐藏设置、日志、支持与图片路径";
 "prefs.adminHideStrict" = "管理员：隐藏严格模式偏好";
 "prefs.sectionEyeGate" = "Eye Gate";
 "prefs.everyMinutes" = "每隔分钟数";

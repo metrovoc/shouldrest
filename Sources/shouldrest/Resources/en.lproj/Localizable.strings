@@ -82,7 +82,7 @@
 "prefs.notifyNewVersion" = "Notify when a new version is found";
 "prefs.showOnboardingNextLaunch" = "Show welcome window on next launch";
 "prefs.adminHideUpdates" = "Admin: hide update UI";
-"prefs.adminHideSettingsPath" = "Admin: hide settings file path";
+"prefs.adminHideSettingsPath" = "Admin: hide settings, log, support, and image paths";
 "prefs.adminHideStrict" = "Admin: hide strict preferences";
 "prefs.sectionEyeGate" = "Eye Gate";
 "prefs.everyMinutes" = "Every minutes";

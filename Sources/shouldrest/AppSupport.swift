@@ -144,7 +144,11 @@ enum CommandLineAutomation {
             }
             return true
         case "logs":
-            print(AppPaths.logURL.path)
+            if configuredSettings()?.admin.hideSettingsFileLocation == true {
+                print("Logs path hidden by administrator.")
+            } else {
+                print(AppPaths.logURL.path)
+            }
             return true
         case "debug":
             return dispatchOrQueue(
