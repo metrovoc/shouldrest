@@ -142,7 +142,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private var aboutWindowController: AboutWindowController?
     private var onboardingWindowController: OnboardingWindowController?
     private var statusItem: NSStatusItem?
-    private var tickTimer: Timer?
+    private var tickTimer: DispatchSourceTimer?
     private var updateCheckTimer: Timer?
     private var lastFocusCheck = Date.distantPast
     private var focusModeActive = false
@@ -198,11 +198,15 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         workspaceNotifications.addObserver(self, selector: #selector(systemDidResume), name: NSWorkspace.didWakeNotification, object: nil)
         workspaceNotifications.addObserver(self, selector: #selector(systemWillPause), name: NSWorkspace.sessionDidResignActiveNotification, object: nil)
         workspaceNotifications.addObserver(self, selector: #selector(systemDidResume), name: NSWorkspace.sessionDidBecomeActiveNotification, object: nil)
-        tickTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+        let timer = DispatchSource.makeTimerSource(queue: .main)
+        timer.schedule(deadline: .now() + 1, repeating: 1)
+        timer.setEventHandler { [weak self] in
             Task { @MainActor in
                 self?.tick()
             }
         }
+        timer.resume()
+        tickTimer = timer
         logger.log("Application launched")
         applyAppearanceSetting()
         applyOpenAtLoginSetting()
@@ -214,7 +218,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
-        tickTimer?.invalidate()
+        tickTimer?.cancel()
         updateCheckTimer?.invalidate()
         unregisterActiveBreakShortcut()
         unregisterEmergencyEscapeShortcut()
@@ -259,6 +263,10 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         if now.timeIntervalSince(lastFocusCheck) > 5 {
             focusModeActive = focusDetector.isFocusModeActive()
             lastFocusCheck = now
+        }
+
+        if consumeEmergencyAutomationSignalIfNeeded() {
+            return
         }
 
         if let active = engine.state.activeSession {
@@ -386,11 +394,10 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func rebuildMenu() {
         guard let item = statusItem else { return }
         let now = Date()
-        let title = MenuStatusPresenter.menuBarTitle(state: engine.state, settings: settings, now: now)
-        item.length = title.isEmpty ? NSStatusItem.squareLength : NSStatusItem.variableLength
+        item.length = NSStatusItem.squareLength
         item.button?.image = menuBarImage()
-        item.button?.imagePosition = title.isEmpty ? .imageOnly : .imageLeading
-        item.button?.title = title
+        item.button?.imagePosition = .imageOnly
+        item.button?.title = ""
         item.button?.toolTip = MenuStatusPresenter.tooltip(state: engine.state, settings: settings, now: now)
         let showsOrdinaryControls = StatusMenuPolicy.showsOrdinaryControls(state: engine.state)
 
@@ -535,7 +542,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func menuBarImage() -> NSImage? {
         switch MenuStatusPresenter.menuBarIcon(state: engine.state) {
         case .restGate:
-            return RestGateIcon.menuBarImage(accessibilityDescription: L10n.tr("app.name"))
+            return symbolMenuBarImage("viewfinder")
         case .systemSymbol(let symbolName):
             return symbolMenuBarImage(symbolName)
         }
@@ -801,6 +808,33 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         performEmergencyOverrideEyeGate()
     }
 
+    private func handleEmergencyAutomation() {
+        guard let active = engine.state.activeSession, active.kind == .eyeGate else {
+            logger.log("Emergency automation queued until active Eye Gate")
+            return
+        }
+        logger.log("Emergency automation executing during active Eye Gate")
+        _ = EmergencyAutomationSignal.consume()
+        let now = Date()
+        completeEmergencyOverrideEyeGate(
+            session: active,
+            now: now,
+            heldDuration: max(0, now.timeIntervalSince(active.startedAt)),
+            playSound: false
+        )
+    }
+
+    private func consumeEmergencyAutomationSignalIfNeeded() -> Bool {
+        guard EmergencyAutomationSignal.isPending() else { return false }
+        guard engine.state.activeSession?.kind == .eyeGate else {
+            return false
+        }
+        _ = EmergencyAutomationSignal.consume()
+        logger.log("Emergency automation signal consumed")
+        performEmergencyOverrideEyeGate()
+        return true
+    }
+
     private func performEmergencyOverrideEyeGate() {
         guard let active = engine.state.activeSession, active.kind == .eyeGate else { return }
 
@@ -832,11 +866,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             logger.log("Emergency override waiting for \(session.kind.rawValue), available in \(remainingSeconds)s")
             rebuildMenu()
         case .complete(let heldDuration):
-            completeEmergencyOverrideEyeGate(
-                session: session,
-                now: now,
-                heldDuration: heldDuration
-            )
+        completeEmergencyOverrideEyeGate(
+            session: session,
+            now: now,
+            heldDuration: heldDuration,
+            playSound: true
+        )
         case .unavailable:
             logger.log("Emergency override unavailable for \(session.kind.rawValue)")
             rebuildMenu()
@@ -846,14 +881,19 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func completeEmergencyOverrideEyeGate(
         session: RestSession,
         now: Date,
-        heldDuration: TimeInterval
+        heldDuration: TimeInterval,
+        playSound shouldPlaySound: Bool
     ) {
+        logger.log("Emergency override completing for \(session.kind.rawValue)")
         let result = engine.emergencyOverride(
             now: now,
             heldDuration: heldDuration
         )
+        logger.log("Emergency override engine result=\(result)")
         if case .completed(let completedSession, _) = result {
-            playRestSound(settings.rule(for: completedSession.kind).finishSound)
+            if shouldPlaySound {
+                playRestSound(settings.rule(for: completedSession.kind).finishSound)
+            }
             unregisterActiveBreakShortcut()
             unregisterEmergencyEscapeShortcut()
             overlayController.dismiss()
@@ -1213,6 +1253,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             handleEyeGateAutomation(userInfo)
         case .body:
             handleBodyBreakAutomation(userInfo)
+        case .emergency:
+            handleEmergencyAutomation()
         case .preferences:
             openPreferences()
         case .debug:
@@ -1845,8 +1887,7 @@ final class OverlayController {
         ) else {
             return nil
         }
-        let remaining = settings.eyeGate.emergencyOverride.minimumHoldDuration - now.timeIntervalSince(session.startedAt)
-        return max(0, Int(ceil(remaining)))
+        return 0
     }
 
     private func selectedContentScreen(for session: RestSession, settings: RestSettings) -> NSScreen? {

@@ -6,30 +6,21 @@ import XCTest
 final class EmergencyOverrideCoordinatorTests: XCTestCase {
     private let start = Date(timeIntervalSinceReferenceDate: 1_000)
 
-    func testRequestBeforeHoldArmsAndCompletesAutomaticallyWhenHoldExpires() {
+    func testRequestCompletesImmediatelyWithoutArmingOrWaiting() {
         let session = eyeGateSession()
         let policy = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 0, minimumHoldDuration: 3)
         var coordinator = EmergencyOverrideCoordinator()
 
         XCTAssertEqual(
             coordinator.request(session: session, policy: policy, now: start.addingTimeInterval(1)),
-            .waiting(remainingSeconds: 2)
+            .complete(heldDuration: 1)
         )
-        XCTAssertTrue(coordinator.isArmed(for: session))
+        XCTAssertFalse(coordinator.isArmed(for: session))
         XCTAssertNil(coordinator.completionIfArmedAndReady(
             session: session,
             policy: policy,
-            now: start.addingTimeInterval(2)
+            now: start.addingTimeInterval(3)
         ))
-        XCTAssertEqual(
-            coordinator.completionIfArmedAndReady(
-                session: session,
-                policy: policy,
-                now: start.addingTimeInterval(3)
-            ),
-            .complete(heldDuration: 3)
-        )
-        XCTAssertFalse(coordinator.isArmed(for: session))
     }
 
     func testRequestAfterHoldCompletesImmediatelyWithoutLegacyConfirmationSteps() {
@@ -64,32 +55,33 @@ final class EmergencyOverrideCoordinatorTests: XCTestCase {
         )
     }
 
-    func testArmedEmergencyClearsInsteadOfCompletingAfterEyeGateDuration() {
+    func testEmergencyIsUnavailableAfterEyeGateDurationEvenWithLegacyHold() {
         let session = eyeGateSession(duration: 20)
         let policy = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 0, minimumHoldDuration: 21)
         var coordinator = EmergencyOverrideCoordinator()
 
         XCTAssertEqual(
             coordinator.request(session: session, policy: policy, now: start.addingTimeInterval(18)),
-            .waiting(remainingSeconds: 3)
+            .complete(heldDuration: 18)
         )
-        XCTAssertTrue(coordinator.isArmed(for: session))
-        XCTAssertNil(coordinator.completionIfArmedAndReady(
-            session: session,
-            policy: policy,
-            now: start.addingTimeInterval(21)
-        ))
         XCTAssertFalse(coordinator.isArmed(for: session))
+        XCTAssertEqual(
+            coordinator.request(session: session, policy: policy, now: start.addingTimeInterval(20)),
+            .unavailable
+        )
     }
 
-    func testDisabledPolicyClearsArmedState() {
+    func testDisabledPolicyCannotLeaveArmedState() {
         let session = eyeGateSession()
         let enabled = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 0, minimumHoldDuration: 3)
         let disabled = EmergencyOverridePolicy.disabled
         var coordinator = EmergencyOverrideCoordinator()
 
-        _ = coordinator.request(session: session, policy: enabled, now: start.addingTimeInterval(1))
-        XCTAssertTrue(coordinator.isArmed(for: session))
+        XCTAssertEqual(
+            coordinator.request(session: session, policy: enabled, now: start.addingTimeInterval(1)),
+            .complete(heldDuration: 1)
+        )
+        XCTAssertFalse(coordinator.isArmed(for: session))
 
         XCTAssertEqual(
             coordinator.request(session: session, policy: disabled, now: start.addingTimeInterval(1)),

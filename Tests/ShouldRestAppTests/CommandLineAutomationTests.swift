@@ -3,6 +3,34 @@ import XCTest
 
 @MainActor
 final class CommandLineAutomationTests: XCTestCase {
+    func testEmergencyAutomationSignalWritesAndConsumesMarker() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let marker = directory.appendingPathComponent("emergency-request")
+
+        XCTAssertFalse(EmergencyAutomationSignal.consume(fileURL: marker))
+
+        try EmergencyAutomationSignal.write(fileURL: marker)
+
+        XCTAssertTrue(FileManager.default.fileExists(atPath: marker.path))
+        XCTAssertTrue(EmergencyAutomationSignal.isPending(fileURL: marker))
+        XCTAssertTrue(EmergencyAutomationSignal.consume(fileURL: marker))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: marker.path))
+        XCTAssertFalse(EmergencyAutomationSignal.consume(fileURL: marker))
+    }
+
+    func testEmergencyAutomationSignalExpiresStaleMarker() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let marker = directory.appendingPathComponent("emergency-request")
+        let now = Date()
+
+        try EmergencyAutomationSignal.write(fileURL: marker, now: now.addingTimeInterval(-11))
+
+        XCTAssertFalse(EmergencyAutomationSignal.isPending(fileURL: marker, now: now, maxAge: 10))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: marker.path))
+    }
+
     func testParsesStretchlyStyleDurations() throws {
         XCTAssertEqual(CommandLineAutomation.parseDuration("60"), 60 * 60)
         XCTAssertEqual(CommandLineAutomation.parseDuration("1h"), 60 * 60)
@@ -63,6 +91,17 @@ final class CommandLineAutomationTests: XCTestCase {
         let request = try XCTUnwrap(CommandLineAutomation.request(from: url))
 
         XCTAssertEqual(request.command, .about)
+        XCTAssertNil(request.duration)
+        XCTAssertNil(request.title)
+        XCTAssertNil(request.text)
+        XCTAssertFalse(request.noSkip)
+    }
+
+    func testParsesEmergencyExitURLAutomation() throws {
+        let url = try XCTUnwrap(URL(string: "shouldrest://emergency"))
+        let request = try XCTUnwrap(CommandLineAutomation.request(from: url))
+
+        XCTAssertEqual(request.command, .emergency)
         XCTAssertNil(request.duration)
         XCTAssertNil(request.title)
         XCTAssertNil(request.text)

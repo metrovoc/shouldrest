@@ -500,7 +500,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         let appearanceStack = contentStack()
         appearanceStack.addArrangedSubview(section(L10n.tr("prefs.sectionPresentation"), symbolName: "paintbrush"))
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.theme"), themeSource))
-        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.menuBarStyle"), trayStyle))
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.language"), languageIdentifier))
         currentTimeInBodyBreak.identifier = NSUserInterfaceItemIdentifier("prefs.currentTimeBody")
         appearanceStack.addArrangedSubview(currentTimeInBodyBreak)
@@ -1121,7 +1120,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         eyeLead.stringValue = String(Int(settings.notifications.eyeGateLeadTime))
         eyeManualFinish.state = state(settings.eyeGate.manualFinishEnabled)
         eyeEmergencyOverride.state = state(settings.eyeGate.emergencyOverride.isEnabled)
-        eyeEmergencyHoldSeconds.stringValue = String(Int(settings.eyeGate.emergencyOverride.minimumHoldDuration))
+        eyeEmergencyHoldSeconds.stringValue = "0"
 
         bodyEnabled.state = state(settings.bodyBreak.isEnabled)
         bodyInterval.stringValue = String(Int(settings.bodyBreak.interval / 60))
@@ -1258,7 +1257,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         next.eyeGate.emergencyOverride = EmergencyOverridePolicy(
             isEnabled: isOn(eyeEmergencyOverride),
             confirmationSteps: 0,
-            minimumHoldDuration: TimeInterval(max(0, intValue(eyeEmergencyHoldSeconds)))
+            minimumHoldDuration: 0
         )
 
         next.bodyBreak.isEnabled = isOn(bodyEnabled)
@@ -1450,9 +1449,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         eyeManualFinish.isEnabled = eyeGateEnabled
         eyeEmergencyOverride.isHidden = strictPreferencesHidden || !eyeGateEnabled
         eyeEmergencyOverride.isEnabled = eyeGateEnabled
-        let emergencyEnabled = eyeGateEnabled && !strictPreferencesHidden && isOn(eyeEmergencyOverride)
-        eyeEmergencyHoldRow?.isHidden = !emergencyEnabled
-        setNumberInputEnabled(eyeEmergencyHoldSeconds, emergencyEnabled)
+        eyeEmergencyHoldRow?.isHidden = true
+        setNumberInputEnabled(eyeEmergencyHoldSeconds, false)
 
         let bodyBreakEnabled = isOn(bodyEnabled)
         [

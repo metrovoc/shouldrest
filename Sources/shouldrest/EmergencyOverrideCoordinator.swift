@@ -32,14 +32,8 @@ struct EmergencyOverrideCoordinator {
             return .unavailable
         }
 
-        let heldDuration = max(0, now.timeIntervalSince(session.startedAt))
-        guard heldDuration >= policy.minimumHoldDuration else {
-            armedSessionID = session.id
-            return .waiting(remainingSeconds: Int(ceil(policy.minimumHoldDuration - heldDuration)))
-        }
-
         armedSessionID = nil
-        return .complete(heldDuration: heldDuration)
+        return .complete(heldDuration: max(0, now.timeIntervalSince(session.startedAt)))
     }
 
     mutating func completionIfArmedAndReady(
@@ -47,19 +41,8 @@ struct EmergencyOverrideCoordinator {
         policy: EmergencyOverridePolicy,
         now: Date
     ) -> EmergencyOverrideDecision? {
-        guard armedSessionID == session.id else { return nil }
-        guard Self.isAvailable(session: session, policy: policy, now: now) else {
-            armedSessionID = nil
-            return nil
-        }
-
-        let heldDuration = max(0, now.timeIntervalSince(session.startedAt))
-        guard heldDuration >= policy.minimumHoldDuration else {
-            return nil
-        }
-
-        armedSessionID = nil
-        return .complete(heldDuration: heldDuration)
+        clear(sessionID: session.id)
+        return nil
     }
 
     mutating func clear(sessionID: UUID? = nil) {

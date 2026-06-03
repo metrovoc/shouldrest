@@ -101,7 +101,7 @@ final class RestEngineTests: XCTestCase {
         var engine = RestEngine(settings: .defaults, now: start)
         _ = engine.takeNow(.eyeGate, now: start)
         let result = engine.emergencyOverride(
-            now: start.addingTimeInterval(3),
+            now: start,
             completedConfirmationSteps: 0
         )
 
@@ -116,7 +116,7 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.eyeGatesSinceBodyBreak, 0)
     }
 
-    func testEyeGateEmergencyOverrideRequiresHoldButIgnoresLegacyConfirmationSteps() {
+    func testEyeGateEmergencyOverrideIgnoresLegacyConfirmationAndHold() {
         var settings = RestSettings.defaults
         settings.eyeGate.emergencyOverride = EmergencyOverridePolicy(
             isEnabled: true,
@@ -126,17 +126,11 @@ final class RestEngineTests: XCTestCase {
         var engine = RestEngine(settings: settings, now: start)
         _ = engine.takeNow(.eyeGate, now: start)
 
-        XCTAssertEqual(
-            engine.emergencyOverride(now: start.addingTimeInterval(2), completedConfirmationSteps: 2),
-            .denied(.emergencyOverrideHoldIncomplete)
-        )
-        XCTAssertEqual(engine.state.activeSession?.kind, .eyeGate)
-
         guard case .completed(let session, let reason) = engine.emergencyOverride(
-            now: start.addingTimeInterval(3),
+            now: start.addingTimeInterval(1),
             completedConfirmationSteps: 0
         ) else {
-            return XCTFail("Expected emergency override without legacy confirmation")
+            return XCTFail("Expected emergency override without legacy confirmation or hold")
         }
         XCTAssertEqual(session.kind, .eyeGate)
         XCTAssertEqual(reason, .emergencyOverride)
@@ -628,10 +622,14 @@ final class RestEngineTests: XCTestCase {
 
         XCTAssertEqual(loaded.eyeGate.emergencyOverride.confirmationSteps, 0)
         XCTAssertEqual(loaded.bodyBreak.emergencyOverride.confirmationSteps, 0)
+        XCTAssertEqual(loaded.eyeGate.emergencyOverride.minimumHoldDuration, 0)
+        XCTAssertEqual(loaded.bodyBreak.emergencyOverride.minimumHoldDuration, 0)
         let migratedData = try Data(contentsOf: url)
         let migratedRaw = try JSONDecoder().decode(RestSettings.self, from: migratedData)
         XCTAssertEqual(migratedRaw.eyeGate.emergencyOverride.confirmationSteps, 0)
         XCTAssertEqual(migratedRaw.bodyBreak.emergencyOverride.confirmationSteps, 0)
+        XCTAssertEqual(migratedRaw.eyeGate.emergencyOverride.minimumHoldDuration, 0)
+        XCTAssertEqual(migratedRaw.bodyBreak.emergencyOverride.minimumHoldDuration, 0)
 
         try store.save(legacy)
         let savedData = try Data(contentsOf: url)
@@ -639,6 +637,8 @@ final class RestEngineTests: XCTestCase {
 
         XCTAssertEqual(savedRaw.eyeGate.emergencyOverride.confirmationSteps, 0)
         XCTAssertEqual(savedRaw.bodyBreak.emergencyOverride.confirmationSteps, 0)
+        XCTAssertEqual(savedRaw.eyeGate.emergencyOverride.minimumHoldDuration, 0)
+        XCTAssertEqual(savedRaw.bodyBreak.emergencyOverride.minimumHoldDuration, 0)
     }
 
     func testSettingsStoreMigratesBlankEmergencyShortcutToDefault() throws {

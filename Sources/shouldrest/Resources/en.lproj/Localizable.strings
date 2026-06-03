@@ -65,8 +65,8 @@
 "overlay.completeTitle" = "Break complete";
 "overlay.completeBody" = "Finish when ready";
 "overlay.ready" = "ready";
-"overlay.emergencyOverride" = "Emergency · Esc";
-"overlay.emergencyOverrideArmed" = "Auto exits in %ds";
+"overlay.emergencyOverride" = "Emergency Exit · Esc";
+"overlay.emergencyOverrideArmed" = "Exits in %ds";
 "overlay.emergencyOverrideHelp" = "Use only for a genuine interruption. During Eye Gate, Esc is handled inside the overlay and counts as a missed Eye Gate.";
 "overlay.bodyPostpone" = "Postpone";
 "overlay.bodySkip" = "Skip";
@@ -256,7 +256,7 @@
 "shortcut.clearHelp" = "Click to replace this shortcut. Delete clears it while recording.";
 "shortcut.requiredHelp" = "Click to replace this shortcut. Delete restores the default while recording.";
 "shortcut.requiredRecordingHelp" = "Press Command, Control, or Option with a key. Esc cancels; Delete restores the default.";
-"cli.help" = "Usage: shouldrest <command> [options]\n\nCommands:\n  help                         Show this help.\n  version                      Show version.\n  settings                     Print settings path unless hidden by admin.\n  logs                         Print log path.\n  pause [-d duration]          Pause breaks. Duration: indefinitely, until-morning, 60, 1h, 1h20m.\n  resume                       Resume breaks.\n  toggle                       Pause or resume breaks.\n  reset                        Reset schedule and health.\n  eye|mini [-w wait] [-n]      Start Eye Gate now or after wait; readable content is not customizable.\n  body|long [-T title] [-t text] [-w wait] [-n]  Start or customize Body Break.\n  preferences                  Open preferences in the running app.\n  debug                        Copy debug info in the running app.\n  debug-panel                  Open the debug panel in the running app.\n  about                        Open the about window in the running app.\n  url shouldrest://<command>    Send URL-style automation.";
+"cli.help" = "Usage: shouldrest <command> [options]\n\nCommands:\n  help                         Show this help.\n  version                      Show version.\n  settings                     Print settings path unless hidden by admin.\n  logs                         Print log path.\n  pause [-d duration]          Pause breaks. Duration: indefinitely, until-morning, 60, 1h, 1h20m.\n  resume                       Resume breaks.\n  toggle                       Pause or resume breaks.\n  reset                        Reset schedule and health.\n  eye|mini [-w wait] [-n]      Start Eye Gate now or after wait; readable content is not customizable.\n  body|long [-T title] [-t text] [-w wait] [-n]  Start or customize Body Break.\n  emergency                    Emergency Exit for an active Eye Gate.\n  preferences                  Open preferences in the running app.\n  debug                        Copy debug info in the running app.\n  debug-panel                  Open the debug panel in the running app.\n  about                        Open the about window in the running app.\n  url shouldrest://<command>    Send URL-style automation.";
 "onboarding.title" = "Welcome to ShouldRest";
 "onboarding.heading" = "Start with a stricter rest rhythm";
 "onboarding.subtitle" = "Short eye rests first. Movement breaks stay flexible.";
@@ -264,7 +264,7 @@
 "onboarding.eyeFeatureTitle" = "Short, frequent Eye Gates";
 "onboarding.eyeFeatureBody" = "Brief opaque breaks protect the habit from skip muscle memory and visual drift.";
 "onboarding.emergencyFeatureTitle" = "Emergency without deadlock";
-"onboarding.emergencyFeatureBody" = "Emergency Exit is owned by the overlay: Esc or the dim red Emergency affordance starts an internal countdown, with no separate confirmation window.";
+"onboarding.emergencyFeatureBody" = "Emergency Exit is owned by the overlay: Esc, the configured shortcut, or the dim red Emergency affordance exits from inside the overlay without asking you to click another window.";
 "onboarding.bodyFeatureTitle" = "Configurable Body Breaks";
 "onboarding.bodyFeatureBody" = "Longer movement breaks can use postpones, images, display rules, and manual finish.";
 "onboarding.learnMore" = "Learn More";

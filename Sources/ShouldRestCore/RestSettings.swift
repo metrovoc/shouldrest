@@ -87,7 +87,9 @@ public struct RestSettings: Codable, Equatable, Sendable {
     public func normalizedForCurrentDesign() -> RestSettings {
         var copy = enforcingAtLeastOneEnabledRest()
         copy.eyeGate.emergencyOverride.confirmationSteps = 0
+        copy.eyeGate.emergencyOverride.minimumHoldDuration = 0
         copy.bodyBreak.emergencyOverride.confirmationSteps = 0
+        copy.bodyBreak.emergencyOverride.minimumHoldDuration = 0
         if let emergencyShortcut = copy.shortcuts.emergencyEyeGateOverride,
            emergencyShortcut.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             copy.shortcuts.emergencyEyeGateOverride = ShortcutSettings.defaultEmergencyEyeGateOverride
@@ -209,7 +211,7 @@ public struct EmergencyOverridePolicy: Codable, Equatable, Sendable {
     public static let defaults = EmergencyOverridePolicy(
         isEnabled: true,
         confirmationSteps: 0,
-        minimumHoldDuration: 3
+        minimumHoldDuration: 0
     )
 
     public static let disabled = EmergencyOverridePolicy(

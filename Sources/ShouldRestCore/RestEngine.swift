@@ -363,10 +363,6 @@ public struct RestEngine: Equatable, Sendable {
         guard policy.isEnabled else {
             return .denied(.emergencyOverrideDisabled)
         }
-        let observedHoldDuration = max(0, heldDuration ?? now.timeIntervalSince(session.startedAt))
-        guard observedHoldDuration >= policy.minimumHoldDuration else {
-            return .denied(.emergencyOverrideHoldIncomplete)
-        }
         return completeActive(now: now, reason: .emergencyOverride)
     }
 

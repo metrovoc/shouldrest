@@ -53,6 +53,22 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(simplifiedChineseValues.contains("恢复时间"))
     }
 
+    func testEmergencyCopyDoesNotAdvertiseConfirmationOrCountdown() {
+        defer { L10n.languageOverride = nil }
+
+        L10n.languageOverride = "en"
+        XCTAssertEqual(L10n.tr("overlay.emergencyOverride"), "Emergency Exit · Esc")
+        XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").contains("configured shortcut"))
+        XCTAssertFalse(L10n.tr("onboarding.emergencyFeatureBody").localizedCaseInsensitiveContains("countdown"))
+        XCTAssertFalse(L10n.tr("onboarding.emergencyFeatureBody").localizedCaseInsensitiveContains("confirmation"))
+
+        L10n.languageOverride = "zh-Hans"
+        XCTAssertEqual(L10n.tr("overlay.emergencyOverride"), "紧急退出 · Esc")
+        XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").contains("配置的快捷键"))
+        XCTAssertFalse(L10n.tr("onboarding.emergencyFeatureBody").contains("倒计时"))
+        XCTAssertFalse(L10n.tr("onboarding.emergencyFeatureBody").contains("确认"))
+    }
+
     func testBlockedActionNotificationsUseUserActionLanguage() {
         defer { L10n.languageOverride = nil }
 

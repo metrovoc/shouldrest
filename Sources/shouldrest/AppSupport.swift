@@ -7,6 +7,7 @@ enum AppPaths {
 
     static let settingsURL = supportDirectory.appendingPathComponent("settings.json")
     static let logURL = supportDirectory.appendingPathComponent("logs/shouldrest.log")
+    static let emergencyRequestURL = supportDirectory.appendingPathComponent("emergency-request")
 
     static func supportDirectory(environment: [String: String]) -> URL {
         if let override = environment["SHOULDREST_SUPPORT_DIR"]?.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -20,8 +21,50 @@ enum AppPaths {
     }
 }
 
+enum EmergencyAutomationSignal {
+    static let defaultMaxAge: TimeInterval = 10
+
+    static func write(fileURL: URL = AppPaths.emergencyRequestURL, now: Date = Date()) throws {
+        try FileManager.default.createDirectory(
+            at: fileURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try ISO8601DateFormatter()
+            .string(from: now)
+            .write(to: fileURL, atomically: true, encoding: String.Encoding.utf8)
+    }
+
+    static func isPending(
+        fileURL: URL = AppPaths.emergencyRequestURL,
+        now: Date = Date(),
+        maxAge: TimeInterval = defaultMaxAge
+    ) -> Bool {
+        guard FileManager.default.fileExists(atPath: fileURL.path),
+              let data = try? Data(contentsOf: fileURL),
+              let value = String(data: data, encoding: String.Encoding.utf8),
+              let requestedAt = ISO8601DateFormatter().date(from: value.trimmingCharacters(in: .whitespacesAndNewlines)) else {
+            return false
+        }
+        if now.timeIntervalSince(requestedAt) > maxAge {
+            _ = consume(fileURL: fileURL)
+            return false
+        }
+        return true
+    }
+
+    static func consume(fileURL: URL = AppPaths.emergencyRequestURL) -> Bool {
+        guard FileManager.default.fileExists(atPath: fileURL.path) else { return false }
+        do {
+            try FileManager.default.removeItem(at: fileURL)
+        } catch {
+            return false
+        }
+        return true
+    }
+}
+
 enum AppVersion {
-    static let current = "0.1.70"
+    static let current = "0.1.71"
 }
 
 final class AppLogger {
@@ -66,6 +109,7 @@ enum AutomationCommand: String {
     case reset
     case eye
     case body
+    case emergency
     case preferences
     case debug
     case debugPanel
@@ -248,6 +292,11 @@ enum CommandLineAutomation {
                     message: "Requested Body Break\(request.wait.map { " after \(Int($0)) seconds" } ?? " now")."
                 )
             }
+        case "emergency", "emergency-exit", "emergencyExit":
+            return dispatchOrQueue(
+                AutomationRequest(command: .emergency),
+                message: "Requested Emergency Exit."
+            )
         case "preferences":
             return dispatchOrQueue(
                 AutomationRequest(command: .preferences),
@@ -272,6 +321,9 @@ enum CommandLineAutomation {
     }
 
     private static func post(_ request: AutomationRequest) {
+        if request.command == .emergency {
+            try? EmergencyAutomationSignal.write()
+        }
         DistributedNotificationCenter.default().postNotificationName(
             .shouldRestAutomation,
             object: request.command.rawValue,
@@ -315,6 +367,8 @@ enum CommandLineAutomation {
             command = .eye
         case "body", "long":
             command = .body
+        case "emergency", "emergency-exit", "emergencyExit":
+            command = .emergency
         case "preferences":
             command = .preferences
         case "debug":
