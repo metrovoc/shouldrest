@@ -1,4 +1,5 @@
 import AppKit
+import Carbon
 import ShouldRestCore
 import XCTest
 @testable import shouldrest
@@ -22,6 +23,25 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(button.title, L10n.tr("shortcut.recording"))
         XCTAssertEqual(button.toolTip, L10n.tr("shortcut.recordingHelp"))
         XCTAssertNotNil(button.image)
+    }
+
+    func testRequiredShortcutRecorderRestoresFallbackInsteadOfClearing() throws {
+        let button = ShortcutRecorderButton()
+        button.requiredFallbackShortcutValue = ShortcutSettings.defaultEmergencyEyeGateOverride
+
+        XCTAssertEqual(button.title, "⌘⌥E")
+        XCTAssertEqual(button.toolTip, L10n.tr("shortcut.requiredHelp"))
+
+        button.shortcutValue = "Cmd+1"
+        XCTAssertEqual(button.title, "⌘1")
+        XCTAssertEqual(button.toolTip, L10n.tr("shortcut.requiredHelp"))
+
+        button.performClick(nil)
+        button.keyDown(with: try keyEvent(keyCode: kVK_Delete))
+
+        XCTAssertEqual(button.shortcutValue, ShortcutSettings.defaultEmergencyEyeGateOverride)
+        XCTAssertEqual(button.title, "⌘⌥E")
+        XCTAssertEqual(button.toolTip, L10n.tr("shortcut.requiredHelp"))
     }
 
     func testUnsetShortcutsDoNotRepeatRecordInstructionAsButtonText() throws {
@@ -200,6 +220,26 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(savedSettings.value?.shortcuts.skipToNextBodyBreak, "")
     }
 
+    func testEmergencyShortcutDeleteRestoresDefaultAndAutosaves() throws {
+        var settings = RestSettings.defaults
+        settings.shortcuts.emergencyEyeGateOverride = "Cmd+1"
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectShortcutsTab(in: contentView)
+        let emergencyShortcut = try XCTUnwrap(control(withIdentifier: "shortcut.emergencyEye", in: contentView) as? ShortcutRecorderButton)
+
+        XCTAssertEqual(emergencyShortcut.toolTip, L10n.tr("shortcut.requiredHelp"))
+        emergencyShortcut.performClick(nil)
+        emergencyShortcut.keyDown(with: try keyEvent(keyCode: kVK_Delete))
+        waitUntilSavedSettingsArrive(savedSettings)
+
+        XCTAssertEqual(emergencyShortcut.shortcutValue, ShortcutSettings.defaultEmergencyEyeGateOverride)
+        XCTAssertEqual(emergencyShortcut.title, "⌘⌥E")
+        XCTAssertEqual(savedSettings.value?.shortcuts.emergencyEyeGateOverride, ShortcutSettings.defaultEmergencyEyeGateOverride)
+    }
+
     private func selectShortcutsTab(in view: NSView) throws {
         let tabView = try XCTUnwrap(firstTabView(in: view))
         tabView.selectTabViewItem(withIdentifier: L10n.tr("prefs.tabShortcuts"))
@@ -245,6 +285,21 @@ final class PreferencesWindowShortcutTests: XCTestCase {
     private func sendAction(from control: NSControl) -> Bool {
         guard let action = control.action else { return false }
         return NSApplication.shared.sendAction(action, to: control.target, from: control)
+    }
+
+    private func keyEvent(keyCode: Int, characters: String = "") throws -> NSEvent {
+        try XCTUnwrap(NSEvent.keyEvent(
+            with: .keyDown,
+            location: .zero,
+            modifierFlags: [],
+            timestamp: 0,
+            windowNumber: 0,
+            context: nil,
+            characters: characters,
+            charactersIgnoringModifiers: characters,
+            isARepeat: false,
+            keyCode: UInt16(keyCode)
+        ))
     }
 
     private func waitUntilSavedSettingsArrive(_ settings: SavedSettingsBox) {

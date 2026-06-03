@@ -243,6 +243,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         configureAppExclusionTokenField()
         configureSoundPreviewButtons()
         configureShortcutConflictWarning()
+        configureShortcutRecorders()
         configureEnablementGuards()
         configureSaveStatusControls()
         configureAutosave()
@@ -1072,6 +1073,10 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         shortcutConflictRow.addArrangedSubview(shortcutConflictIcon)
         shortcutConflictRow.addArrangedSubview(shortcutConflictLabel)
         shortcutConflictRow.isHidden = true
+    }
+
+    private func configureShortcutRecorders() {
+        shortcutEmergencyEye.requiredFallbackShortcutValue = ShortcutSettings.defaultEmergencyEyeGateOverride
     }
 
     private func configureSoundPopup(_ popup: NSPopUpButton) {
@@ -2414,6 +2419,17 @@ final class ShortcutRecorderButton: NSButton {
     var displayValue: String {
         ShortcutDisplay.string(shortcutValue)
     }
+    var requiredFallbackShortcutValue: String? {
+        didSet {
+            if !isRecording,
+               shortcutValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+               let requiredFallbackShortcutValue {
+                shortcutValue = requiredFallbackShortcutValue
+            } else if !isRecording {
+                updateDisplay()
+            }
+        }
+    }
     var onChange: (() -> Void)?
     private var isRecording = false
 
@@ -2459,7 +2475,7 @@ final class ShortcutRecorderButton: NSButton {
         case kVK_Escape:
             finishRecording(didChange: false)
         case kVK_Delete, kVK_ForwardDelete:
-            shortcutValue = ""
+            shortcutValue = requiredFallbackShortcutValue ?? ""
             finishRecording(didChange: true)
         default:
             guard let shortcut = Self.shortcutString(from: event) else {
@@ -2482,7 +2498,11 @@ final class ShortcutRecorderButton: NSButton {
 
     private func updateDisplay() {
         if shortcutValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            applyDisplayState(.unset)
+            if let requiredFallbackShortcutValue {
+                applyDisplayState(.assigned(ShortcutDisplay.string(requiredFallbackShortcutValue)))
+            } else {
+                applyDisplayState(.unset)
+            }
         } else {
             applyDisplayState(.assigned(ShortcutDisplay.string(shortcutValue)))
         }
@@ -2508,7 +2528,9 @@ final class ShortcutRecorderButton: NSButton {
             setSymbol("record.circle", fallback: "keyboard")
         case .assigned(let display):
             title = display
-            toolTip = L10n.tr("shortcut.clearHelp")
+            toolTip = requiredFallbackShortcutValue == nil
+                ? L10n.tr("shortcut.clearHelp")
+                : L10n.tr("shortcut.requiredHelp")
             contentTintColor = nil
             setSymbol("keyboard")
         }
