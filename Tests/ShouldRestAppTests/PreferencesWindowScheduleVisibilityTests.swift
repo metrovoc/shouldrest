@@ -23,10 +23,32 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertTrue(try view(withIdentifier: "prefs.eyeManualFinish", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.eyeEmergencyOverride", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.eyeEmergencyHoldRow", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.bodyAfterEyeGatesRow", in: contentView).isHidden)
 
         let visibleTexts = visibleTexts(in: contentView)
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.everyMinutes")))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.eyeEmergencyHold")))
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.afterEyeGates")))
+    }
+
+    func testReenablingEyeGateShowsBodyAfterEyeGatesAndAutosaves() throws {
+        var settings = RestSettings.defaults
+        settings.eyeGate.isEnabled = false
+        settings.bodyBreak.isEnabled = true
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectScheduleTab(in: contentView)
+        let eyeEnabled = try XCTUnwrap(view(withIdentifier: "prefs.eyeEnabled", in: contentView) as? NSButton)
+        XCTAssertTrue(try view(withIdentifier: "prefs.bodyAfterEyeGatesRow", in: contentView).isHidden)
+
+        eyeEnabled.state = .on
+        XCTAssertTrue(sendAction(from: eyeEnabled))
+
+        XCTAssertFalse(try view(withIdentifier: "prefs.bodyAfterEyeGatesRow", in: contentView).isHidden)
+        waitUntilSavedSettingsArrive(savedSettings)
+        XCTAssertEqual(savedSettings.value?.eyeGate.isEnabled, true)
     }
 
     func testEyeNotificationAndEmergencyRowsHideWhenTheirSwitchesAreOffAndAutosave() throws {

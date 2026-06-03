@@ -1426,7 +1426,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         [
             bodyIntervalRow,
             bodyDurationRow,
-            bodyAfterEyeGatesRow,
             bodyColorRow,
             bodyPostponeMinutesRow,
             bodyPostponeLimitRow,
@@ -1444,9 +1443,12 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             bodyCoveredDisplay, bodyContentDisplay, bodyBlankSecondaryDisplays
         ].forEach { $0.isEnabled = bodyBreakEnabled }
         [
-            bodyInterval, bodyDuration, bodyAfterEyeGates, bodyLead, bodyPostponeMinutes,
+            bodyInterval, bodyDuration, bodyLead, bodyPostponeMinutes,
             bodyPostponeLimit, bodyPostponeWindowPercent
         ].forEach { setNumberInputEnabled($0, bodyBreakEnabled) }
+        let bodyAfterEyeGatesVisible = bodyBreakEnabled && eyeGateEnabled
+        bodyAfterEyeGatesRow?.isHidden = !bodyAfterEyeGatesVisible
+        setNumberInputEnabled(bodyAfterEyeGates, bodyAfterEyeGatesVisible)
         let bodyNotificationEnabled = bodyBreakEnabled && isOn(bodyNotify)
         bodyLeadRow?.isHidden = !bodyNotificationEnabled
         setNumberInputEnabled(bodyLead, bodyNotificationEnabled)
