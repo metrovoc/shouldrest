@@ -38,6 +38,7 @@ final class PreferencesWindowController: NSWindowController {
     private let appExclusionMode = NSPopUpButton()
     private let appExclusionAppliesEye = NSButton(checkboxWithTitle: "Applies to Eye Gate", target: nil, action: nil)
     private let appExclusionAppliesBody = NSButton(checkboxWithTitle: "Applies to Body Break", target: nil, action: nil)
+    private let appExclusionsJSON = NSTextField()
 
     private let themeSource = NSPopUpButton()
     private let trayStyle = NSPopUpButton()
@@ -166,6 +167,7 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(row("Mode", appExclusionMode))
         stack.addArrangedSubview(appExclusionAppliesEye)
         stack.addArrangedSubview(appExclusionAppliesBody)
+        stack.addArrangedSubview(row("Advanced rules JSON", appExclusionsJSON))
 
         stack.addArrangedSubview(separator())
         stack.addArrangedSubview(section("Presentation And Sound"))
@@ -229,7 +231,7 @@ final class PreferencesWindowController: NSWindowController {
             eyeColor, bodyColor, bodyStartSound, bodyFinishSound, customBodyTitle,
             customBodyText, localImagePath, shortcutPauseToggle, shortcutEyeNow, shortcutBodyNow,
             shortcutReset, appExclusionName, appExclusionTerms, updateFeedURL,
-            customPreferencesMessage
+            customPreferencesMessage, appExclusionsJSON
         ]
         wideFields.forEach { $0.widthAnchor.constraint(equalToConstant: 320).isActive = true }
     }
@@ -267,6 +269,7 @@ final class PreferencesWindowController: NSWindowController {
         appExclusionMode.selectItem(withTitle: (exclusion?.mode ?? .pauseWhenMatched).rawValue)
         appExclusionAppliesEye.state = state(exclusion?.appliesTo.contains(.eyeGate) ?? false)
         appExclusionAppliesBody.state = state(exclusion?.appliesTo.contains(.bodyBreak) ?? true)
+        appExclusionsJSON.stringValue = encodedAppExclusions(settings.appExclusions)
 
         themeSource.selectItem(withTitle: settings.presentation.themeSource.rawValue)
         trayStyle.selectItem(withTitle: settings.presentation.trayIconStyle.rawValue)
@@ -332,7 +335,7 @@ final class PreferencesWindowController: NSWindowController {
             endMinuteOfDay: Self.minutes(fromTimeString: workingEnd.stringValue, fallback: 18 * 60)
         )
 
-        next.appExclusions = savedAppExclusions()
+        next.appExclusions = savedAdvancedAppExclusions() ?? savedAppExclusions()
         next.presentation.themeSource = selected(ThemeSource.self, from: themeSource, fallback: .system)
         next.presentation.trayIconStyle = selected(TrayIconStyle.self, from: trayStyle, fallback: .default)
         next.presentation.showCurrentTimeDuringBodyBreak = isOn(currentTimeInBodyBreak)
@@ -399,6 +402,21 @@ final class PreferencesWindowController: NSWindowController {
                 isEnabled: true
             )
         ]
+    }
+
+    private func savedAdvancedAppExclusions() -> [AppExclusionRule]? {
+        let raw = appExclusionsJSON.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !raw.isEmpty, let data = raw.data(using: .utf8) else { return nil }
+        return try? JSONDecoder().decode([AppExclusionRule].self, from: data)
+    }
+
+    private func encodedAppExclusions(_ rules: [AppExclusionRule]) -> String {
+        guard !rules.isEmpty,
+              let data = try? JSONEncoder().encode(rules),
+              let string = String(data: data, encoding: .utf8) else {
+            return ""
+        }
+        return string
     }
 
     private func savedCustomIdeas() -> [RestIdea] {

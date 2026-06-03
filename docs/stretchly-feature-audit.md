@@ -162,8 +162,8 @@ Implemented now:
 - SwiftPM localization resource bundle with English and Simplified Chinese strings for core menu, notification, status, debug, preferences, and overlay surfaces.
 - Safe local image Body Break content path support and overlay renderer.
 - Reproducible `.app` packaging script with `shouldrest://` URL-scheme Info.plist registration and localization resource bundling.
+- Advanced app-exclusion JSON editor for multi-rule configurations, plus primary-rule form controls for common cases.
 
 Still to implement:
 
-- Multi-rule app exclusion editor; current UI edits the primary rule while JSON supports more.
 - Broader localization coverage for every preference label and CLI help line.
