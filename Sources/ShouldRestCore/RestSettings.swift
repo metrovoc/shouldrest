@@ -355,16 +355,34 @@ public struct FocusModeSettings: Codable, Equatable, Sendable {
 
 public struct WorkingHoursSettings: Codable, Equatable, Sendable {
     public var isEnabled: Bool
+    public var startMinuteOfDay: Int
+    public var endMinuteOfDay: Int
 
-    public init(isEnabled: Bool) {
+    public init(isEnabled: Bool, startMinuteOfDay: Int, endMinuteOfDay: Int) {
         self.isEnabled = isEnabled
+        self.startMinuteOfDay = min(1_439, max(0, startMinuteOfDay))
+        self.endMinuteOfDay = min(1_439, max(0, endMinuteOfDay))
     }
 
-    public static let always = WorkingHoursSettings(isEnabled: false)
+    public static let always = WorkingHoursSettings(
+        isEnabled: false,
+        startMinuteOfDay: 9 * 60,
+        endMinuteOfDay: 18 * 60
+    )
+
+    public func contains(_ date: Date, calendar: Calendar = .current) -> Bool {
+        guard isEnabled else { return true }
+        let components = calendar.dateComponents([.hour, .minute], from: date)
+        let minute = (components.hour ?? 0) * 60 + (components.minute ?? 0)
+        if startMinuteOfDay <= endMinuteOfDay {
+            return minute >= startMinuteOfDay && minute < endMinuteOfDay
+        }
+        return minute >= startMinuteOfDay || minute < endMinuteOfDay
+    }
 }
 
 public struct AppExclusionRule: Codable, Equatable, Identifiable, Sendable {
-    public enum Mode: String, Codable, Equatable, Sendable {
+    public enum Mode: String, Codable, CaseIterable, Equatable, Sendable {
         case pauseWhenMatched
         case resumeOnlyWhenMatched
     }
@@ -429,13 +447,13 @@ public struct PresentationSettings: Codable, Equatable, Sendable {
     )
 }
 
-public enum ThemeSource: String, Codable, Equatable, Sendable {
+public enum ThemeSource: String, Codable, CaseIterable, Equatable, Sendable {
     case system
     case light
     case dark
 }
 
-public enum TrayIconStyle: String, Codable, Equatable, Sendable {
+public enum TrayIconStyle: String, Codable, CaseIterable, Equatable, Sendable {
     case `default`
     case timeToBreak
     case progress
@@ -495,17 +513,20 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
     public var openAtLogin: Bool
     public var checkForUpdates: Bool
     public var notifyNewVersion: Bool
+    public var updateFeedURL: String
 
-    public init(openAtLogin: Bool, checkForUpdates: Bool, notifyNewVersion: Bool) {
+    public init(openAtLogin: Bool, checkForUpdates: Bool, notifyNewVersion: Bool, updateFeedURL: String) {
         self.openAtLogin = openAtLogin
         self.checkForUpdates = checkForUpdates
         self.notifyNewVersion = notifyNewVersion
+        self.updateFeedURL = updateFeedURL
     }
 
     public static let defaults = OperationsSettings(
         openAtLogin: false,
         checkForUpdates: true,
-        notifyNewVersion: true
+        notifyNewVersion: true,
+        updateFeedURL: "https://api.github.com/repos/tovkaic/shouldrest/releases/latest"
     )
 }
 

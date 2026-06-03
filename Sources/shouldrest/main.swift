@@ -15,6 +15,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private let focusDetector = FocusModeDetector()
     private let soundPlayer = SoundPlayer()
     private let globalShortcuts = GlobalShortcutManager()
+    private let updateChecker = UpdateChecker()
     private var preferencesWindowController: PreferencesWindowController?
     private var debugWindowController: DebugWindowController?
     private var statusItem: NSStatusItem?
@@ -23,6 +24,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private var focusModeActive = false
     private var suspendedAt: Date?
     private var manualAwaitingSessionID: UUID?
+    private var latestReleaseURL: URL?
 
     override init() {
         let store = SettingsStore(fileURL: AppPaths.settingsURL)
@@ -67,6 +69,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         logger.log("Application launched")
         applyOpenAtLoginSetting()
         configureGlobalShortcuts()
+        scheduleAutomaticUpdateCheck()
         tick()
     }
 
@@ -148,15 +151,15 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         return RestContext(
             idleDuration: SystemIdleTime.seconds(),
             focusModeActive: focusModeActive,
-            inWorkingHours: true,
+            inWorkingHours: settings.workingHours.contains(Date()),
             appExclusions: appExclusions
         )
     }
 
     private func showNotification(for kind: RestKind) {
         let content = UNMutableNotificationContent()
-        content.title = "ShouldRest"
-        content.body = kind == .eyeGate ? "Eye Gate soon" : "Body Break soon"
+        content.title = L10n.tr("app.name")
+        content.body = kind == .eyeGate ? L10n.tr("notification.eyeGateSoon") : L10n.tr("notification.bodyBreakSoon")
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request)
     }
@@ -166,44 +169,51 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         item.button?.title = menuBarTitle()
 
         let menu = NSMenu()
+        if !settings.admin.disableAppUpdateFeatures, latestReleaseURL != nil {
+            menu.addItem(actionItem(L10n.tr("menu.downloadLatest"), #selector(openLatestRelease)))
+            menu.addItem(.separator())
+        }
         menu.addItem(disabledItem(statusText()))
         menu.addItem(.separator())
 
         if engine.state.activeSession == nil {
-            menu.addItem(actionItem("Take Eye Gate Now", #selector(takeEyeGateNow)))
-            menu.addItem(actionItem("Take Body Break Now", #selector(takeBodyBreakNow)))
+            menu.addItem(actionItem(L10n.tr("menu.takeEyeGateNow"), #selector(takeEyeGateNow)))
+            menu.addItem(actionItem(L10n.tr("menu.takeBodyBreakNow"), #selector(takeBodyBreakNow)))
             menu.addItem(.separator())
         }
 
         if let active = engine.state.activeSession, active.kind == .bodyBreak {
-            menu.addItem(actionItem("Postpone Body Break", #selector(postponeBodyBreak)))
-            menu.addItem(actionItem("Finish Body Break", #selector(finishActiveBreak)))
-            menu.addItem(actionItem("Skip Body Break", #selector(skipBodyBreak)))
+            menu.addItem(actionItem(L10n.tr("menu.postponeBodyBreak"), #selector(postponeBodyBreak)))
+            menu.addItem(actionItem(L10n.tr("menu.finishBodyBreak"), #selector(finishActiveBreak)))
+            menu.addItem(actionItem(L10n.tr("menu.skipBodyBreak"), #selector(skipBodyBreak)))
             menu.addItem(.separator())
         }
 
         if engine.state.pause != nil {
-            menu.addItem(actionItem("Resume", #selector(resumeBreaks)))
+            menu.addItem(actionItem(L10n.tr("menu.resume"), #selector(resumeBreaks)))
         } else if engine.state.activeSession == nil {
             let pauseMenu = NSMenu()
-            pauseMenu.addItem(actionItem("30 Minutes", #selector(pauseFor30Minutes)))
-            pauseMenu.addItem(actionItem("1 Hour", #selector(pauseFor1Hour)))
-            pauseMenu.addItem(actionItem("2 Hours", #selector(pauseFor2Hours)))
-            pauseMenu.addItem(actionItem("5 Hours", #selector(pauseFor5Hours)))
-            pauseMenu.addItem(actionItem("Until Morning", #selector(pauseUntilMorning)))
+            pauseMenu.addItem(actionItem(L10n.tr("menu.pause30"), #selector(pauseFor30Minutes)))
+            pauseMenu.addItem(actionItem(L10n.tr("menu.pause1h"), #selector(pauseFor1Hour)))
+            pauseMenu.addItem(actionItem(L10n.tr("menu.pause2h"), #selector(pauseFor2Hours)))
+            pauseMenu.addItem(actionItem(L10n.tr("menu.pause5h"), #selector(pauseFor5Hours)))
+            pauseMenu.addItem(actionItem(L10n.tr("menu.pauseUntilMorning"), #selector(pauseUntilMorning)))
             pauseMenu.addItem(.separator())
-            pauseMenu.addItem(actionItem("Indefinitely", #selector(pauseIndefinitely)))
-            let pauseItem = NSMenuItem(title: "Pause", action: nil, keyEquivalent: "")
+            pauseMenu.addItem(actionItem(L10n.tr("menu.pauseIndefinitely"), #selector(pauseIndefinitely)))
+            let pauseItem = NSMenuItem(title: L10n.tr("menu.pause"), action: nil, keyEquivalent: "")
             pauseItem.submenu = pauseMenu
             menu.addItem(pauseItem)
         }
 
-        menu.addItem(actionItem("Reset", #selector(resetBreaks)))
+        menu.addItem(actionItem(L10n.tr("menu.reset"), #selector(resetBreaks)))
         menu.addItem(.separator())
-        menu.addItem(actionItem("Preferences...", #selector(openPreferences)))
-        menu.addItem(actionItem("Save Settings", #selector(saveSettings)))
-        menu.addItem(actionItem("Copy Debug Info", #selector(copyDebugInfo)))
-        menu.addItem(actionItem("Debug Panel...", #selector(openDebugPanel)))
+        menu.addItem(actionItem(L10n.tr("menu.preferences"), #selector(openPreferences)))
+        if !settings.admin.disableAppUpdateFeatures {
+            menu.addItem(actionItem(L10n.tr("menu.checkUpdates"), #selector(checkForUpdatesNow)))
+        }
+        menu.addItem(actionItem(L10n.tr("menu.saveSettings"), #selector(saveSettings)))
+        menu.addItem(actionItem(L10n.tr("menu.copyDebug"), #selector(copyDebugInfo)))
+        menu.addItem(actionItem(L10n.tr("menu.debugPanel"), #selector(openDebugPanel)))
 
         if !settings.admin.hideSettingsFileLocation {
             let pathItem = disabledItem(settingsStore.fileURL.path)
@@ -212,7 +222,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
 
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Quit ShouldRest", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
+        menu.addItem(NSMenuItem(title: L10n.tr("menu.quit"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
         item.menu = menu
     }
 
@@ -224,12 +234,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             return "Paused"
         }
         guard let scheduled = engine.state.scheduled else {
-            return "ShouldRest"
+            return L10n.tr("app.name")
         }
         let seconds = max(0, Int(scheduled.dueAt.timeIntervalSinceNow))
         switch settings.presentation.trayIconStyle {
         case .default:
-            return "ShouldRest"
+            return L10n.tr("app.name")
         case .timeToBreak:
             return seconds >= 60 ? "\(seconds / 60)m" : "\(seconds)s"
         case .progress:
@@ -240,18 +250,18 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func statusText() -> String {
         if let active = engine.state.activeSession {
             let remaining = max(0, Int(active.duration - Date().timeIntervalSince(active.startedAt)))
-            return "\(active.kind.rawValue) active, \(remaining)s remaining"
+            return L10n.format("status.active", active.kind.rawValue, remaining)
         }
         if let pause = engine.state.pause {
             if let until = pause.until {
-                return "Paused until \(until.formatted(date: .omitted, time: .shortened))"
+                return L10n.format("status.pausedUntil", until.formatted(date: .omitted, time: .shortened))
             }
-            return "Paused indefinitely"
+            return L10n.tr("status.pausedIndefinitely")
         }
         if let scheduled = engine.state.scheduled {
-            return "Next: \(scheduled.kind.rawValue) at \(scheduled.dueAt.formatted(date: .omitted, time: .shortened))"
+            return L10n.format("status.next", scheduled.kind.rawValue, scheduled.dueAt.formatted(date: .omitted, time: .shortened))
         }
-        return "No enabled rests"
+        return L10n.tr("status.noRests")
     }
 
     private func disabledItem(_ title: String) -> NSMenuItem {
@@ -375,6 +385,17 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         NSApp.activate(ignoringOtherApps: true)
     }
 
+    @objc private func checkForUpdatesNow() {
+        Task { @MainActor in
+            await runUpdateCheck(notifyWhenCurrent: true)
+        }
+    }
+
+    @objc private func openLatestRelease() {
+        guard let latestReleaseURL else { return }
+        NSWorkspace.shared.open(latestReleaseURL)
+    }
+
     @objc private func saveSettings() {
         do {
             try settingsStore.save(settings)
@@ -407,6 +428,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         engine.updateSettings(nextSettings)
         applyOpenAtLoginSetting()
         configureGlobalShortcuts()
+        scheduleAutomaticUpdateCheck()
         do {
             try settingsStore.save(nextSettings)
             logger.log("Preferences saved")
@@ -525,6 +547,57 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             self?.resetBreaks()
         }
         logger.log("Global shortcuts configured")
+    }
+
+    private func scheduleAutomaticUpdateCheck() {
+        guard settings.operations.checkForUpdates,
+              !settings.admin.disableAppUpdateFeatures else {
+            return
+        }
+        Task { @MainActor in
+            await runUpdateCheck(notifyWhenCurrent: false)
+        }
+    }
+
+    private func runUpdateCheck(notifyWhenCurrent: Bool) async {
+        let result = await updateChecker.check(
+            feedURL: settings.operations.updateFeedURL,
+            currentVersion: AppVersion.current
+        )
+
+        switch result.status {
+        case .newerVersion(let version):
+            latestReleaseURL = result.releaseURL
+            logger.log("Update available version=\(version) url=\(String(describing: result.releaseURL))")
+            if settings.operations.notifyNewVersion {
+                showAppNotification(title: L10n.tr("notification.updateTitle"), body: L10n.format("notification.updateAvailable", version))
+            }
+        case .upToDate:
+            latestReleaseURL = result.releaseURL
+            logger.log("Update check: up to date")
+            if notifyWhenCurrent {
+                showAppNotification(title: L10n.tr("notification.updateTitle"), body: L10n.tr("notification.updateCurrent"))
+            }
+        case .notConfigured:
+            logger.log("Update check skipped: no feed URL")
+            if notifyWhenCurrent {
+                showAppNotification(title: L10n.tr("notification.updateTitle"), body: L10n.tr("notification.updateNoFeed"))
+            }
+        case .failed(let message):
+            logger.log("Update check failed: \(message)")
+            if notifyWhenCurrent {
+                showAppNotification(title: L10n.tr("notification.updateTitle"), body: L10n.format("notification.updateFailed", message))
+            }
+        }
+        rebuildMenu()
+    }
+
+    private func showAppNotification(title: String, body: String) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request)
     }
 
     private func registerShortcut(_ shortcut: String, action: @MainActor @escaping () -> Void) {
@@ -747,23 +820,23 @@ final class RestOverlayView: NSView {
         guard showsContent else { return }
 
         if manualAwaiting {
-            titleLabel.stringValue = "Break complete"
-            detailLabel.stringValue = "Use the menu to finish when ready"
-            countdownLabel.stringValue = "ready"
+            titleLabel.stringValue = L10n.tr("overlay.completeTitle")
+            detailLabel.stringValue = L10n.tr("overlay.completeBody")
+            countdownLabel.stringValue = L10n.tr("overlay.ready")
             return
         }
 
         switch session.kind {
         case .eyeGate:
             let idea = settings.contentLibrary.ideas(for: .eyeGate).first
-            titleLabel.stringValue = idea?.title ?? "Look away"
-            detailLabel.stringValue = idea?.body ?? "Rest your eyes"
+            titleLabel.stringValue = idea?.title ?? L10n.tr("overlay.eyeTitle")
+            detailLabel.stringValue = idea?.body ?? L10n.tr("overlay.eyeBody")
         case .bodyBreak:
             let ideas = settings.contentLibrary.ideas(for: .bodyBreak)
             let index = Int(session.startedAt.timeIntervalSinceReferenceDate) % max(1, ideas.count)
             let idea = ideas[safe: index]
-            titleLabel.stringValue = idea?.title ?? "Body Break"
-            detailLabel.stringValue = idea?.body ?? "Stand up, breathe, and move"
+            titleLabel.stringValue = idea?.title ?? L10n.tr("overlay.bodyTitle")
+            detailLabel.stringValue = idea?.body ?? L10n.tr("overlay.bodyBody")
         }
         countdownLabel.stringValue = "\(remainingSeconds)s"
     }

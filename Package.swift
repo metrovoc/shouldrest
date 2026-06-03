@@ -4,6 +4,7 @@ import PackageDescription
 
 let package = Package(
     name: "ShouldRest",
+    defaultLocalization: "en",
     platforms: [
         .macOS(.v14)
     ],
@@ -23,7 +24,10 @@ let package = Package(
         ),
         .executableTarget(
             name: "shouldrest",
-            dependencies: ["ShouldRestCore"]
+            dependencies: ["ShouldRestCore"],
+            resources: [
+                .process("Resources")
+            ]
         ),
         .testTarget(
             name: "ShouldRestCoreTests",

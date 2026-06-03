@@ -20,7 +20,7 @@ final class DebugWindowController: NSWindowController {
             backing: .buffered,
             defer: false
         )
-        window.title = "ShouldRest Debug"
+        window.title = L10n.tr("debug.title")
         window.contentView = scrollView
         window.center()
         super.init(window: window)
@@ -34,4 +34,3 @@ final class DebugWindowController: NSWindowController {
         textView.string = text
     }
 }
-

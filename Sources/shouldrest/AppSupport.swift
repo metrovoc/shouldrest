@@ -10,6 +10,10 @@ enum AppPaths {
     static let logURL = supportDirectory.appendingPathComponent("logs/shouldrest.log")
 }
 
+enum AppVersion {
+    static let current = "0.1.0"
+}
+
 final class AppLogger {
     let fileURL: URL
     private let formatter = ISO8601DateFormatter()
@@ -76,7 +80,7 @@ enum CommandLineAutomation {
             print(helpText)
             return true
         case "version", "--version", "-v":
-            print("ShouldRest 0.1.0")
+            print("ShouldRest \(AppVersion.current)")
             return true
         case "settings":
             print(AppPaths.settingsURL.path)

@@ -2,6 +2,8 @@
 
 Reference baseline: `hovancik/stretchly` trunk at commit `f14012cc51e7944f4a6c93a75147f994e08b1f6e`, version `1.21.0`.
 
+Upstream refresh on 2026-06-03 confirmed `origin/trunk` is still `f14012cc51e7944f4a6c93a75147f994e08b1f6e`.
+
 Inspected source areas:
 
 - `app/utils/defaultSettings.js`
@@ -143,6 +145,7 @@ Implemented now:
 - Start/finish sound playback.
 - Copyable debug snapshot from the menu.
 - Native preferences window for core cadence, enablement, Focus policy, and tray style.
+- Expanded preferences for notification lead times, overlay colors, sounds, Body Break postpone policy, natural break settings, working hours, primary app exclusion, custom Body Break idea, shortcuts, update settings, and admin controls.
 - CLI command surface for help, version, settings/log paths, pause/resume/reset, take-now, preferences, and debug requests.
 - Distributed notification bridge for CLI-to-running-app automation.
 - Local log file.
@@ -154,8 +157,13 @@ Implemented now:
 - Global shortcut registration for pause, pause durations, take-now, Body Break skip-to-next, and reset.
 - URL-style automation parser plus Apple Event URL handler for bundled app registration.
 - Body Break manual-finish phase that lowers overlay level after the required duration and waits for user completion.
+- Configurable active working-hours windows, including overnight windows.
+- Update feed checks with manual menu action, launch-time checks, admin disable switch, and update notifications.
+- SwiftPM localization resource bundle with English and Simplified Chinese strings for core menu, notification, status, debug, preferences, and overlay surfaces.
 
 Still to implement:
 
-- Update check and admin policy UI.
-- Localization files.
+- Safe local image Body Break content picker and renderer.
+- Multi-rule app exclusion editor; current UI edits the primary rule while JSON supports more.
+- Bundled `.app` Info.plist URL-scheme registration for `shouldrest://`.
+- Broader localization coverage for every preference label and CLI help line.

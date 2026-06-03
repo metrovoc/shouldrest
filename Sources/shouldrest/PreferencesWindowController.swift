@@ -10,24 +10,72 @@ final class PreferencesWindowController: NSWindowController {
     private let eyeEnabled = NSButton(checkboxWithTitle: "Enable Eye Gate", target: nil, action: nil)
     private let eyeInterval = NSTextField()
     private let eyeDuration = NSTextField()
+    private let eyeColor = NSTextField()
+    private let eyeNotify = NSButton(checkboxWithTitle: "Notify before Eye Gate", target: nil, action: nil)
+    private let eyeLead = NSTextField()
+
     private let bodyEnabled = NSButton(checkboxWithTitle: "Enable Body Break", target: nil, action: nil)
     private let bodyDuration = NSTextField()
     private let bodyAfterEyeGates = NSTextField()
+    private let bodyColor = NSTextField()
+    private let bodyNotify = NSButton(checkboxWithTitle: "Notify before Body Break", target: nil, action: nil)
+    private let bodyLead = NSTextField()
+    private let bodyPostponeMinutes = NSTextField()
+    private let bodyPostponeLimit = NSTextField()
+    private let bodyManualFinish = NSButton(checkboxWithTitle: "Manual finish after Body Break duration", target: nil, action: nil)
+
+    private let naturalBreaks = NSButton(checkboxWithTitle: "Credit natural rests from idle time", target: nil, action: nil)
+    private let naturalIdleMinutes = NSTextField()
+    private let focusMonitor = NSButton(checkboxWithTitle: "Monitor Focus / Do Not Disturb", target: nil, action: nil)
     private let focusDefersBody = NSButton(checkboxWithTitle: "Focus mode defers Body Break", target: nil, action: nil)
-    private let openAtLogin = NSButton(checkboxWithTitle: "Open at login", target: nil, action: nil)
+    private let workingHoursEnabled = NSButton(checkboxWithTitle: "Use active working hours", target: nil, action: nil)
+    private let workingStart = NSTextField()
+    private let workingEnd = NSTextField()
+
+    private let appExclusionEnabled = NSButton(checkboxWithTitle: "Enable primary app exclusion", target: nil, action: nil)
+    private let appExclusionName = NSTextField()
+    private let appExclusionTerms = NSTextField()
+    private let appExclusionMode = NSPopUpButton()
+    private let appExclusionAppliesEye = NSButton(checkboxWithTitle: "Applies to Eye Gate", target: nil, action: nil)
+    private let appExclusionAppliesBody = NSButton(checkboxWithTitle: "Applies to Body Break", target: nil, action: nil)
+
+    private let themeSource = NSPopUpButton()
     private let trayStyle = NSPopUpButton()
+    private let currentTimeInBodyBreak = NSButton(checkboxWithTitle: "Show current time during Body Break", target: nil, action: nil)
+    private let breakHealth = NSButton(checkboxWithTitle: "Use break health / danger indicator", target: nil, action: nil)
+    private let silentNotifications = NSButton(checkboxWithTitle: "Silent notifications", target: nil, action: nil)
+    private let bodyStartSound = NSTextField()
+    private let bodyFinishSound = NSTextField()
+    private let soundVolume = NSTextField()
+
+    private let customBodyTitle = NSTextField()
+    private let customBodyText = NSTextField()
+
+    private let shortcutPauseToggle = NSTextField()
+    private let shortcutEyeNow = NSTextField()
+    private let shortcutBodyNow = NSTextField()
+    private let shortcutReset = NSTextField()
+
+    private let openAtLogin = NSButton(checkboxWithTitle: "Open at login", target: nil, action: nil)
+    private let checkUpdates = NSButton(checkboxWithTitle: "Check for updates", target: nil, action: nil)
+    private let notifyNewVersion = NSButton(checkboxWithTitle: "Notify when a new version is found", target: nil, action: nil)
+    private let updateFeedURL = NSTextField()
+    private let disableUpdateFeatures = NSButton(checkboxWithTitle: "Admin: hide update UI", target: nil, action: nil)
+    private let hideSettingsPath = NSButton(checkboxWithTitle: "Admin: hide settings file path", target: nil, action: nil)
+    private let hideStrictPreferences = NSButton(checkboxWithTitle: "Admin: hide strict preferences", target: nil, action: nil)
+    private let customPreferencesMessage = NSTextField()
 
     init(settings: RestSettings, onSave: @escaping (RestSettings) -> Void) {
         self.settings = settings
         self.onSave = onSave
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 480, height: 390),
-            styleMask: [.titled, .closable],
+            contentRect: NSRect(x: 0, y: 0, width: 720, height: 760),
+            styleMask: [.titled, .closable, .resizable],
             backing: .buffered,
             defer: false
         )
-        window.title = "ShouldRest Preferences"
+        window.title = L10n.tr("preferences.title")
         window.center()
         super.init(window: window)
 
@@ -47,63 +95,323 @@ final class PreferencesWindowController: NSWindowController {
     private func buildContent() {
         guard let contentView = window?.contentView else { return }
 
+        let scrollView = NSScrollView()
+        scrollView.hasVerticalScroller = true
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(scrollView)
+
+        let documentView = NSView()
+        documentView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.documentView = documentView
+
         let stack = NSStackView()
         stack.orientation = .vertical
         stack.alignment = .leading
         stack.spacing = 14
         stack.edgeInsets = NSEdgeInsets(top: 24, left: 24, bottom: 24, right: 24)
         stack.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(stack)
+        documentView.addSubview(stack)
 
         NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            stack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            stack.topAnchor.constraint(equalTo: contentView.topAnchor),
-            stack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
+            scrollView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            scrollView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            documentView.widthAnchor.constraint(equalTo: scrollView.contentView.widthAnchor),
+            stack.leadingAnchor.constraint(equalTo: documentView.leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: documentView.trailingAnchor),
+            stack.topAnchor.constraint(equalTo: documentView.topAnchor),
+            stack.bottomAnchor.constraint(equalTo: documentView.bottomAnchor)
         ])
 
-        stack.addArrangedSubview(sectionLabel("Eye Gate"))
+        configurePopups()
+        configureFieldWidths()
+
+        stack.addArrangedSubview(section("Eye Gate"))
         stack.addArrangedSubview(eyeEnabled)
         stack.addArrangedSubview(row("Every minutes", eyeInterval))
         stack.addArrangedSubview(row("Duration seconds", eyeDuration))
+        stack.addArrangedSubview(row("Overlay color hex", eyeColor))
+        stack.addArrangedSubview(eyeNotify)
+        stack.addArrangedSubview(row("Notification lead seconds", eyeLead))
 
         stack.addArrangedSubview(separator())
-        stack.addArrangedSubview(sectionLabel("Body Break"))
+        stack.addArrangedSubview(section("Body Break"))
         stack.addArrangedSubview(bodyEnabled)
         stack.addArrangedSubview(row("Duration minutes", bodyDuration))
         stack.addArrangedSubview(row("After Eye Gates", bodyAfterEyeGates))
+        stack.addArrangedSubview(row("Overlay color hex", bodyColor))
+        stack.addArrangedSubview(bodyNotify)
+        stack.addArrangedSubview(row("Notification lead seconds", bodyLead))
+        stack.addArrangedSubview(row("Postpone minutes", bodyPostponeMinutes))
+        stack.addArrangedSubview(row("Max postpones", bodyPostponeLimit))
+        stack.addArrangedSubview(bodyManualFinish)
 
         stack.addArrangedSubview(separator())
-        stack.addArrangedSubview(sectionLabel("Context And Menu"))
+        stack.addArrangedSubview(section("Context"))
+        stack.addArrangedSubview(naturalBreaks)
+        stack.addArrangedSubview(row("Natural idle minutes", naturalIdleMinutes))
+        stack.addArrangedSubview(focusMonitor)
         stack.addArrangedSubview(focusDefersBody)
-        stack.addArrangedSubview(openAtLogin)
-        trayStyle.addItems(withTitles: ["default", "timeToBreak", "progress"])
+        stack.addArrangedSubview(workingHoursEnabled)
+        stack.addArrangedSubview(row("Working start HH:mm", workingStart))
+        stack.addArrangedSubview(row("Working end HH:mm", workingEnd))
+
+        stack.addArrangedSubview(separator())
+        stack.addArrangedSubview(section("Primary App Exclusion"))
+        stack.addArrangedSubview(appExclusionEnabled)
+        stack.addArrangedSubview(row("Name", appExclusionName))
+        stack.addArrangedSubview(row("Match terms, comma-separated", appExclusionTerms))
+        stack.addArrangedSubview(row("Mode", appExclusionMode))
+        stack.addArrangedSubview(appExclusionAppliesEye)
+        stack.addArrangedSubview(appExclusionAppliesBody)
+
+        stack.addArrangedSubview(separator())
+        stack.addArrangedSubview(section("Presentation And Sound"))
+        stack.addArrangedSubview(row("Theme", themeSource))
         stack.addArrangedSubview(row("Menu bar style", trayStyle))
+        stack.addArrangedSubview(currentTimeInBodyBreak)
+        stack.addArrangedSubview(breakHealth)
+        stack.addArrangedSubview(silentNotifications)
+        stack.addArrangedSubview(row("Body start sound", bodyStartSound))
+        stack.addArrangedSubview(row("Finish sound", bodyFinishSound))
+        stack.addArrangedSubview(row("Volume 0...1", soundVolume))
+
+        stack.addArrangedSubview(separator())
+        stack.addArrangedSubview(section("Custom Body Break Idea"))
+        stack.addArrangedSubview(row("Title", customBodyTitle))
+        stack.addArrangedSubview(row("Text", customBodyText))
+
+        stack.addArrangedSubview(separator())
+        stack.addArrangedSubview(section("Global Shortcuts"))
+        stack.addArrangedSubview(row("Pause toggle", shortcutPauseToggle))
+        stack.addArrangedSubview(row("Eye Gate now", shortcutEyeNow))
+        stack.addArrangedSubview(row("Body Break now", shortcutBodyNow))
+        stack.addArrangedSubview(row("Reset", shortcutReset))
+
+        stack.addArrangedSubview(separator())
+        stack.addArrangedSubview(section("Operations And Admin"))
+        stack.addArrangedSubview(openAtLogin)
+        stack.addArrangedSubview(checkUpdates)
+        stack.addArrangedSubview(notifyNewVersion)
+        stack.addArrangedSubview(row("Update feed URL", updateFeedURL))
+        stack.addArrangedSubview(disableUpdateFeatures)
+        stack.addArrangedSubview(hideSettingsPath)
+        stack.addArrangedSubview(hideStrictPreferences)
+        stack.addArrangedSubview(row("Preferences message", customPreferencesMessage))
 
         let buttons = NSStackView()
         buttons.orientation = .horizontal
         buttons.spacing = 12
         buttons.alignment = .centerY
-        let save = NSButton(title: "Save", target: self, action: #selector(savePressed))
-        let restore = NSButton(title: "Restore Defaults", target: self, action: #selector(restoreDefaultsPressed))
-        buttons.addArrangedSubview(save)
-        buttons.addArrangedSubview(restore)
+        buttons.addArrangedSubview(NSButton(title: "Save", target: self, action: #selector(savePressed)))
+        buttons.addArrangedSubview(NSButton(title: "Restore Defaults", target: self, action: #selector(restoreDefaultsPressed)))
         stack.addArrangedSubview(buttons)
     }
 
-    private func loadSettings() {
-        eyeEnabled.state = settings.eyeGate.isEnabled ? .on : .off
-        eyeInterval.stringValue = String(Int(settings.eyeGate.interval / 60))
-        eyeDuration.stringValue = String(Int(settings.eyeGate.duration))
-        bodyEnabled.state = settings.bodyBreak.isEnabled ? .on : .off
-        bodyDuration.stringValue = String(Int(settings.bodyBreak.duration / 60))
-        bodyAfterEyeGates.stringValue = String(settings.bodyBreakAfterEyeGates)
-        focusDefersBody.state = settings.focusMode.deferBodyBreak ? .on : .off
-        openAtLogin.state = settings.operations.openAtLogin ? .on : .off
-        trayStyle.selectItem(withTitle: settings.presentation.trayIconStyle.rawValue)
+    private func configurePopups() {
+        appExclusionMode.addItems(withTitles: AppExclusionRule.Mode.allCases.map(\.rawValue))
+        themeSource.addItems(withTitles: ThemeSource.allCases.map(\.rawValue))
+        trayStyle.addItems(withTitles: TrayIconStyle.allCases.map(\.rawValue))
     }
 
-    private func sectionLabel(_ title: String) -> NSTextField {
+    private func configureFieldWidths() {
+        let compactFields = [
+            eyeInterval, eyeDuration, bodyDuration, bodyAfterEyeGates, eyeLead, bodyLead,
+            bodyPostponeMinutes, bodyPostponeLimit, naturalIdleMinutes, workingStart,
+            workingEnd, soundVolume
+        ]
+        compactFields.forEach { $0.widthAnchor.constraint(equalToConstant: 110).isActive = true }
+
+        let wideFields = [
+            eyeColor, bodyColor, bodyStartSound, bodyFinishSound, customBodyTitle,
+            customBodyText, shortcutPauseToggle, shortcutEyeNow, shortcutBodyNow,
+            shortcutReset, appExclusionName, appExclusionTerms, updateFeedURL,
+            customPreferencesMessage
+        ]
+        wideFields.forEach { $0.widthAnchor.constraint(equalToConstant: 320).isActive = true }
+    }
+
+    private func loadSettings() {
+        eyeEnabled.state = state(settings.eyeGate.isEnabled)
+        eyeInterval.stringValue = String(Int(settings.eyeGate.interval / 60))
+        eyeDuration.stringValue = String(Int(settings.eyeGate.duration))
+        eyeColor.stringValue = settings.eyeGate.colorHex
+        eyeNotify.state = state(settings.notifications.eyeGateEnabled)
+        eyeLead.stringValue = String(Int(settings.notifications.eyeGateLeadTime))
+
+        bodyEnabled.state = state(settings.bodyBreak.isEnabled)
+        bodyDuration.stringValue = String(Int(settings.bodyBreak.duration / 60))
+        bodyAfterEyeGates.stringValue = String(settings.bodyBreakAfterEyeGates)
+        bodyColor.stringValue = settings.bodyBreak.colorHex
+        bodyNotify.state = state(settings.notifications.bodyBreakEnabled)
+        bodyLead.stringValue = String(Int(settings.notifications.bodyBreakLeadTime))
+        bodyPostponeMinutes.stringValue = String(Int(settings.bodyBreak.postpone.duration / 60))
+        bodyPostponeLimit.stringValue = String(settings.bodyBreak.postpone.maxCount)
+        bodyManualFinish.state = state(settings.bodyBreak.manualFinishEnabled)
+
+        naturalBreaks.state = state(settings.naturalBreaks.isEnabled)
+        naturalIdleMinutes.stringValue = String(Int(settings.naturalBreaks.inactivityResetTime / 60))
+        focusMonitor.state = state(settings.focusMode.monitorFocusMode)
+        focusDefersBody.state = state(settings.focusMode.deferBodyBreak)
+        workingHoursEnabled.state = state(settings.workingHours.isEnabled)
+        workingStart.stringValue = Self.timeString(minutes: settings.workingHours.startMinuteOfDay)
+        workingEnd.stringValue = Self.timeString(minutes: settings.workingHours.endMinuteOfDay)
+
+        let exclusion = settings.appExclusions.first
+        appExclusionEnabled.state = state(exclusion?.isEnabled ?? false)
+        appExclusionName.stringValue = exclusion?.name ?? ""
+        appExclusionTerms.stringValue = exclusion?.matchTerms.joined(separator: ", ") ?? ""
+        appExclusionMode.selectItem(withTitle: (exclusion?.mode ?? .pauseWhenMatched).rawValue)
+        appExclusionAppliesEye.state = state(exclusion?.appliesTo.contains(.eyeGate) ?? false)
+        appExclusionAppliesBody.state = state(exclusion?.appliesTo.contains(.bodyBreak) ?? true)
+
+        themeSource.selectItem(withTitle: settings.presentation.themeSource.rawValue)
+        trayStyle.selectItem(withTitle: settings.presentation.trayIconStyle.rawValue)
+        currentTimeInBodyBreak.state = state(settings.presentation.showCurrentTimeDuringBodyBreak)
+        breakHealth.state = state(settings.presentation.breakHealthMode)
+        silentNotifications.state = state(settings.notifications.silentNotifications)
+        bodyStartSound.stringValue = soundName(settings.bodyBreak.startSound)
+        bodyFinishSound.stringValue = soundName(settings.bodyBreak.finishSound)
+        soundVolume.stringValue = String(soundVolumeValue(settings.bodyBreak.finishSound))
+
+        let custom = settings.contentLibrary.customBodyBreakIdeas.first
+        customBodyTitle.stringValue = custom?.title ?? ""
+        customBodyText.stringValue = custom?.body ?? ""
+
+        shortcutPauseToggle.stringValue = settings.shortcuts.pauseToggle
+        shortcutEyeNow.stringValue = settings.shortcuts.takeEyeGateNow
+        shortcutBodyNow.stringValue = settings.shortcuts.takeBodyBreakNow
+        shortcutReset.stringValue = settings.shortcuts.reset
+
+        openAtLogin.state = state(settings.operations.openAtLogin)
+        checkUpdates.state = state(settings.operations.checkForUpdates)
+        notifyNewVersion.state = state(settings.operations.notifyNewVersion)
+        updateFeedURL.stringValue = settings.operations.updateFeedURL
+        disableUpdateFeatures.state = state(settings.admin.disableAppUpdateFeatures)
+        hideSettingsPath.state = state(settings.admin.hideSettingsFileLocation)
+        hideStrictPreferences.state = state(settings.admin.hideStrictPreferences)
+        customPreferencesMessage.stringValue = settings.admin.customPreferencesMessage
+    }
+
+    @objc private func savePressed() {
+        var next = settings
+        next.eyeGate.isEnabled = isOn(eyeEnabled)
+        next.eyeGate.interval = TimeInterval(max(1, intValue(eyeInterval)) * 60)
+        next.eyeGate.duration = TimeInterval(max(1, intValue(eyeDuration)))
+        next.eyeGate.colorHex = normalizedHex(eyeColor.stringValue, fallback: RestSettings.defaults.eyeGate.colorHex)
+        next.notifications.eyeGateEnabled = isOn(eyeNotify)
+        next.notifications.eyeGateLeadTime = TimeInterval(max(0, intValue(eyeLead)))
+
+        next.bodyBreak.isEnabled = isOn(bodyEnabled)
+        next.bodyBreak.duration = TimeInterval(max(1, intValue(bodyDuration)) * 60)
+        next.bodyBreakAfterEyeGates = max(1, intValue(bodyAfterEyeGates))
+        next.bodyBreak.colorHex = normalizedHex(bodyColor.stringValue, fallback: RestSettings.defaults.bodyBreak.colorHex)
+        next.notifications.bodyBreakEnabled = isOn(bodyNotify)
+        next.notifications.bodyBreakLeadTime = TimeInterval(max(0, intValue(bodyLead)))
+        next.bodyBreak.postpone = PostponePolicy(
+            isEnabled: max(0, intValue(bodyPostponeLimit)) > 0,
+            duration: TimeInterval(max(1, intValue(bodyPostponeMinutes)) * 60),
+            maxCount: max(0, intValue(bodyPostponeLimit)),
+            allowedDuringFirstPercent: next.bodyBreak.postpone.allowedDuringFirstPercent
+        )
+        next.bodyBreak.manualFinishEnabled = isOn(bodyManualFinish)
+
+        next.naturalBreaks = NaturalBreakSettings(
+            isEnabled: isOn(naturalBreaks),
+            inactivityResetTime: TimeInterval(max(1, intValue(naturalIdleMinutes)) * 60)
+        )
+        next.focusMode.monitorFocusMode = isOn(focusMonitor)
+        next.focusMode.deferBodyBreak = isOn(focusDefersBody)
+        next.workingHours = WorkingHoursSettings(
+            isEnabled: isOn(workingHoursEnabled),
+            startMinuteOfDay: Self.minutes(fromTimeString: workingStart.stringValue, fallback: 9 * 60),
+            endMinuteOfDay: Self.minutes(fromTimeString: workingEnd.stringValue, fallback: 18 * 60)
+        )
+
+        next.appExclusions = savedAppExclusions()
+        next.presentation.themeSource = selected(ThemeSource.self, from: themeSource, fallback: .system)
+        next.presentation.trayIconStyle = selected(TrayIconStyle.self, from: trayStyle, fallback: .default)
+        next.presentation.showCurrentTimeDuringBodyBreak = isOn(currentTimeInBodyBreak)
+        next.presentation.breakHealthMode = isOn(breakHealth)
+        next.notifications.silentNotifications = isOn(silentNotifications)
+        let volume = min(1, max(0, doubleValue(soundVolume, fallback: 1)))
+        next.bodyBreak.startSound = soundPolicy(name: bodyStartSound.stringValue, volume: volume)
+        next.bodyBreak.finishSound = soundPolicy(name: bodyFinishSound.stringValue, volume: volume)
+        next.eyeGate.finishSound = next.bodyBreak.finishSound
+
+        next.contentLibrary.customBodyBreakIdeas = savedCustomIdeas()
+        next.shortcuts.pauseToggle = shortcutPauseToggle.stringValue
+        next.shortcuts.takeEyeGateNow = shortcutEyeNow.stringValue
+        next.shortcuts.takeBodyBreakNow = shortcutBodyNow.stringValue
+        next.shortcuts.reset = shortcutReset.stringValue
+
+        next.operations.openAtLogin = isOn(openAtLogin)
+        next.operations.checkForUpdates = isOn(checkUpdates)
+        next.operations.notifyNewVersion = isOn(notifyNewVersion)
+        next.operations.updateFeedURL = updateFeedURL.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        next.admin.disableAppUpdateFeatures = isOn(disableUpdateFeatures)
+        next.admin.hideSettingsFileLocation = isOn(hideSettingsPath)
+        next.admin.hideStrictPreferences = isOn(hideStrictPreferences)
+        next.admin.customPreferencesMessage = customPreferencesMessage.stringValue
+
+        settings = next
+        onSave(next)
+    }
+
+    @objc private func restoreDefaultsPressed() {
+        settings = .defaults
+        loadSettings()
+        onSave(.defaults)
+    }
+
+    private func savedAppExclusions() -> [AppExclusionRule] {
+        let terms = appExclusionTerms.stringValue
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        guard isOn(appExclusionEnabled), !terms.isEmpty else { return [] }
+
+        var appliesTo: Set<RestKind> = []
+        if isOn(appExclusionAppliesEye) {
+            appliesTo.insert(.eyeGate)
+        }
+        if isOn(appExclusionAppliesBody) {
+            appliesTo.insert(.bodyBreak)
+        }
+        if appliesTo.isEmpty {
+            appliesTo.insert(.bodyBreak)
+        }
+
+        let mode = selected(AppExclusionRule.Mode.self, from: appExclusionMode, fallback: .pauseWhenMatched)
+        return [
+            AppExclusionRule(
+                id: settings.appExclusions.first?.id ?? UUID().uuidString,
+                name: appExclusionName.stringValue.isEmpty ? "Primary Exclusion" : appExclusionName.stringValue,
+                matchTerms: terms,
+                mode: mode,
+                appliesTo: appliesTo,
+                isEnabled: true
+            )
+        ]
+    }
+
+    private func savedCustomIdeas() -> [RestIdea] {
+        let title = customBodyTitle.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        let body = ContentSanitizer.sanitizeRichText(customBodyText.stringValue)
+        guard !title.isEmpty || !body.isEmpty else { return [] }
+        return [
+            RestIdea(
+                id: settings.contentLibrary.customBodyBreakIdeas.first?.id ?? UUID().uuidString,
+                kind: .bodyBreak,
+                title: title.isEmpty ? "Custom Body Break" : title,
+                body: body,
+                isEnabled: true
+            )
+        ]
+    }
+
+    private func section(_ title: String) -> NSTextField {
         let label = NSTextField(labelWithString: title)
         label.font = .systemFont(ofSize: 14, weight: .semibold)
         return label
@@ -111,14 +419,7 @@ final class PreferencesWindowController: NSWindowController {
 
     private func row(_ title: String, _ field: NSView) -> NSStackView {
         let label = NSTextField(labelWithString: title)
-        label.widthAnchor.constraint(equalToConstant: 160).isActive = true
-
-        if let textField = field as? NSTextField {
-            textField.widthAnchor.constraint(equalToConstant: 110).isActive = true
-        } else if let popup = field as? NSPopUpButton {
-            popup.widthAnchor.constraint(equalToConstant: 150).isActive = true
-        }
-
+        label.widthAnchor.constraint(equalToConstant: 220).isActive = true
         let stack = NSStackView(views: [label, field])
         stack.orientation = .horizontal
         stack.spacing = 12
@@ -132,31 +433,73 @@ final class PreferencesWindowController: NSWindowController {
         return box
     }
 
-    @objc private func savePressed() {
-        var next = settings
-        next.eyeGate.isEnabled = eyeEnabled.state == .on
-        next.eyeGate.interval = TimeInterval(max(1, intValue(eyeInterval)) * 60)
-        next.eyeGate.duration = TimeInterval(max(1, intValue(eyeDuration)))
-        next.bodyBreak.isEnabled = bodyEnabled.state == .on
-        next.bodyBreak.duration = TimeInterval(max(1, intValue(bodyDuration)) * 60)
-        next.bodyBreakAfterEyeGates = max(1, intValue(bodyAfterEyeGates))
-        next.focusMode.deferBodyBreak = focusDefersBody.state == .on
-        next.operations.openAtLogin = openAtLogin.state == .on
-        if let selected = trayStyle.selectedItem?.title,
-           let style = TrayIconStyle(rawValue: selected) {
-            next.presentation.trayIconStyle = style
-        }
-        settings = next
-        onSave(next)
+    private func state(_ value: Bool) -> NSControl.StateValue {
+        value ? .on : .off
     }
 
-    @objc private func restoreDefaultsPressed() {
-        settings = .defaults
-        loadSettings()
-        onSave(.defaults)
+    private func isOn(_ button: NSButton) -> Bool {
+        button.state == .on
     }
 
     private func intValue(_ field: NSTextField) -> Int {
         Int(field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
+    }
+
+    private func doubleValue(_ field: NSTextField, fallback: Double) -> Double {
+        Double(field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)) ?? fallback
+    }
+
+    private func normalizedHex(_ raw: String, fallback: String) -> String {
+        let value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        let candidate = value.hasPrefix("#") ? value : "#\(value)"
+        return candidate.range(of: #"^#[0-9a-fA-F]{6}$"#, options: .regularExpression) == nil ? fallback : candidate
+    }
+
+    private func selected<T: RawRepresentable>(_ type: T.Type, from popup: NSPopUpButton, fallback: T) -> T where T.RawValue == String {
+        guard let title = popup.selectedItem?.title, let value = T(rawValue: title) else {
+            return fallback
+        }
+        return value
+    }
+
+    private func soundPolicy(name: String, volume: Double) -> SoundPolicy {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty || trimmed == "silence" ? .silent : .named(trimmed, volume: volume)
+    }
+
+    private func soundName(_ policy: SoundPolicy) -> String {
+        switch policy {
+        case .silent:
+            "silence"
+        case .named(let name, _):
+            name
+        }
+    }
+
+    private func soundVolumeValue(_ policy: SoundPolicy) -> Double {
+        switch policy {
+        case .silent:
+            1
+        case .named(_, let volume):
+            volume
+        }
+    }
+
+    private static func timeString(minutes: Int) -> String {
+        let hour = minutes / 60
+        let minute = minutes % 60
+        return String(format: "%02d:%02d", hour, minute)
+    }
+
+    private static func minutes(fromTimeString value: String, fallback: Int) -> Int {
+        let parts = value.split(separator: ":")
+        guard parts.count == 2,
+              let hour = Int(parts[0]),
+              let minute = Int(parts[1]),
+              (0...23).contains(hour),
+              (0...59).contains(minute) else {
+            return fallback
+        }
+        return hour * 60 + minute
     }
 }

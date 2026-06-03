@@ -177,4 +177,22 @@ final class RestEngineTests: XCTestCase {
 
         XCTAssertEqual(loaded, .defaults)
     }
+
+    func testWorkingHoursSupportsDayAndOvernightWindows() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let day = calendar.date(from: DateComponents(year: 2026, month: 6, day: 3, hour: 10, minute: 0))!
+        let evening = calendar.date(from: DateComponents(year: 2026, month: 6, day: 3, hour: 20, minute: 0))!
+        let late = calendar.date(from: DateComponents(year: 2026, month: 6, day: 3, hour: 23, minute: 0))!
+        let early = calendar.date(from: DateComponents(year: 2026, month: 6, day: 3, hour: 2, minute: 0))!
+
+        let daytime = WorkingHoursSettings(isEnabled: true, startMinuteOfDay: 9 * 60, endMinuteOfDay: 18 * 60)
+        XCTAssertTrue(daytime.contains(day, calendar: calendar))
+        XCTAssertFalse(daytime.contains(evening, calendar: calendar))
+
+        let overnight = WorkingHoursSettings(isEnabled: true, startMinuteOfDay: 22 * 60, endMinuteOfDay: 4 * 60)
+        XCTAssertTrue(overnight.contains(late, calendar: calendar))
+        XCTAssertTrue(overnight.contains(early, calendar: calendar))
+        XCTAssertFalse(overnight.contains(day, calendar: calendar))
+    }
 }
