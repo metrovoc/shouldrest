@@ -39,7 +39,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
-        createStatusItem()
+        applyMenuBarVisibility()
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(screenParametersChanged),
@@ -88,10 +88,20 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func createStatusItem() {
+        guard statusItem == nil else { return }
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         item.button?.title = "ShouldRest"
         statusItem = item
         rebuildMenu()
+    }
+
+    private func applyMenuBarVisibility() {
+        if settings.presentation.resolvedShowMenuBarItem {
+            createStatusItem()
+        } else if let statusItem {
+            NSStatusBar.system.removeStatusItem(statusItem)
+            self.statusItem = nil
+        }
     }
 
     private func tick() {
@@ -560,6 +570,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         engine.updateSettings(nextSettings)
         applyAppearanceSetting()
         applyOpenAtLoginSetting()
+        applyMenuBarVisibility()
         configureGlobalShortcuts()
         scheduleAutomaticUpdateCheck()
         do {

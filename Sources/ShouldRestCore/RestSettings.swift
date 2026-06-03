@@ -432,25 +432,33 @@ public struct PresentationSettings: Codable, Equatable, Sendable {
     public var trayIconStyle: TrayIconStyle
     public var showCurrentTimeDuringBodyBreak: Bool
     public var breakHealthMode: Bool
+    public var showMenuBarItem: Bool?
 
     public init(
         themeSource: ThemeSource,
         trayIconStyle: TrayIconStyle,
         showCurrentTimeDuringBodyBreak: Bool,
-        breakHealthMode: Bool
+        breakHealthMode: Bool,
+        showMenuBarItem: Bool? = nil
     ) {
         self.themeSource = themeSource
         self.trayIconStyle = trayIconStyle
         self.showCurrentTimeDuringBodyBreak = showCurrentTimeDuringBodyBreak
         self.breakHealthMode = breakHealthMode
+        self.showMenuBarItem = showMenuBarItem
     }
 
     public static let defaults = PresentationSettings(
         themeSource: .system,
         trayIconStyle: .default,
         showCurrentTimeDuringBodyBreak: false,
-        breakHealthMode: true
+        breakHealthMode: true,
+        showMenuBarItem: true
     )
+
+    public var resolvedShowMenuBarItem: Bool {
+        showMenuBarItem ?? true
+    }
 }
 
 public enum ThemeSource: String, Codable, CaseIterable, Equatable, Sendable {

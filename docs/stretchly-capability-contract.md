@@ -51,6 +51,7 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 ### Controls
 
 - Menu bar status item.
+- Optional hidden menu bar item for CLI/URL-managed setups.
 - Open at login.
 - Pause durations: 30 minutes, 1 hour, 2 hours, 5 hours, until morning, indefinitely.
 - Pause-until-morning supports both a fixed hour and sunrise from configured coordinates.

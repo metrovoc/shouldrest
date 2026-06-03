@@ -48,6 +48,7 @@ final class PreferencesWindowController: NSWindowController {
 
     private let themeSource = NSPopUpButton()
     private let trayStyle = NSPopUpButton()
+    private let showMenuBarItem = NSButton(checkboxWithTitle: L10n.tr("prefs.showMenuBarItem"), target: nil, action: nil)
     private let currentTimeInBodyBreak = NSButton(checkboxWithTitle: L10n.tr("prefs.currentTimeBody"), target: nil, action: nil)
     private let breakHealth = NSButton(checkboxWithTitle: L10n.tr("prefs.breakHealth"), target: nil, action: nil)
     private let silentNotifications = NSButton(checkboxWithTitle: L10n.tr("prefs.silentNotifications"), target: nil, action: nil)
@@ -208,6 +209,7 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(section(L10n.tr("prefs.sectionPresentation")))
         stack.addArrangedSubview(row(L10n.tr("prefs.theme"), themeSource))
         stack.addArrangedSubview(row(L10n.tr("prefs.menuBarStyle"), trayStyle))
+        stack.addArrangedSubview(showMenuBarItem)
         stack.addArrangedSubview(currentTimeInBodyBreak)
         stack.addArrangedSubview(breakHealth)
         stack.addArrangedSubview(silentNotifications)
@@ -349,6 +351,7 @@ final class PreferencesWindowController: NSWindowController {
 
         themeSource.selectItem(withTitle: settings.presentation.themeSource.rawValue)
         trayStyle.selectItem(withTitle: settings.presentation.trayIconStyle.rawValue)
+        showMenuBarItem.state = state(settings.presentation.resolvedShowMenuBarItem)
         currentTimeInBodyBreak.state = state(settings.presentation.showCurrentTimeDuringBodyBreak)
         breakHealth.state = state(settings.presentation.breakHealthMode)
         silentNotifications.state = state(settings.notifications.silentNotifications)
@@ -436,6 +439,7 @@ final class PreferencesWindowController: NSWindowController {
         next.appExclusions = savedAdvancedAppExclusions() ?? savedAppExclusions()
         next.presentation.themeSource = selected(ThemeSource.self, from: themeSource, fallback: .system)
         next.presentation.trayIconStyle = selected(TrayIconStyle.self, from: trayStyle, fallback: .default)
+        next.presentation.showMenuBarItem = isOn(showMenuBarItem)
         next.presentation.showCurrentTimeDuringBodyBreak = isOn(currentTimeInBodyBreak)
         next.presentation.breakHealthMode = isOn(breakHealth)
         next.notifications.silentNotifications = isOn(silentNotifications)
