@@ -187,6 +187,7 @@ Implemented now:
 - Sanitized Body Break rich-text rendering with remote/inline HTML images stripped; images remain available through the explicit safe local-image channel.
 - Preference surface for enabling/disabling built-in rest ideas while preserving custom Body Break ideas.
 - Preference surface for editing multiple custom Body Break ideas through a sanitized advanced JSON array, matching Stretchly's settings-file idea customization while keeping Eye Gate content minimal.
+- Advanced JSON preference editors validate non-empty input and stop saving on parse errors instead of silently falling back to simplified form fields; single-rule/single-idea configurations stay editable through the simplified form instead of being shadowed by auto-filled JSON.
 - Separate preference controls for Eye Gate and Body Break start/finish sounds, with shared configurable sound volume.
 - Complete global-shortcut preference surface for pause toggle, pause durations, pause until morning, immediate rests, Body Break skip-to-next, and reset; pause-until-morning shortcut is registered at runtime.
 - Stretchly-style skip-to-next-scheduled menu action and shortcut: it immediately starts whichever rest kind is currently scheduled next, while separate Eye Gate now and Body Break now actions remain available.
@@ -197,6 +198,7 @@ Implemented now:
 - Break-health danger is visible in the menu status surface, not only in debug output.
 - Disabling break-health mode resets accumulated danger, matching Stretchly's runtime setting behavior.
 - Eye Gate emergency override is frictional in core and app surfaces: minimum hold duration and required confirmation steps are enforced before the override is counted as a missed Eye Gate, with a configurable global shortcut for screen-covering situations.
+- Admin strict-preference hiding now removes both the Body Break ordinary-skip control and the Eye Gate emergency-override shortcut row from Preferences while preserving their stored values.
 
 Still to perform for public release:
 - Run `scripts/release_app.sh` with real Developer ID and Apple notarization credentials, then repeat GUI smoke on a clean user account.

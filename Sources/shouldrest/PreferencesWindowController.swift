@@ -80,6 +80,7 @@ final class PreferencesWindowController: NSWindowController {
     private let shortcutSkipBody = NSTextField()
     private let shortcutEndBody = NSTextField()
     private let shortcutEmergencyEye = NSTextField()
+    private var shortcutEmergencyEyeRow: NSView?
     private let shortcutReset = NSTextField()
 
     private let openAtLogin = NSButton(checkboxWithTitle: L10n.tr("prefs.openAtLogin"), target: nil, action: nil)
@@ -256,7 +257,9 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(row(L10n.tr("prefs.bodyBreakNow"), shortcutBodyNow))
         stack.addArrangedSubview(row(L10n.tr("prefs.skipToBodyBreak"), shortcutSkipBody))
         stack.addArrangedSubview(row(L10n.tr("prefs.endBodyBreak"), shortcutEndBody))
-        stack.addArrangedSubview(row(L10n.tr("prefs.emergencyEyeGate"), shortcutEmergencyEye))
+        let shortcutEmergencyEyeRow = row(L10n.tr("prefs.emergencyEyeGate"), shortcutEmergencyEye)
+        self.shortcutEmergencyEyeRow = shortcutEmergencyEyeRow
+        stack.addArrangedSubview(shortcutEmergencyEyeRow)
         stack.addArrangedSubview(row(L10n.tr("prefs.reset"), shortcutReset))
 
         stack.addArrangedSubview(separator())
@@ -432,6 +435,16 @@ final class PreferencesWindowController: NSWindowController {
     }
 
     @objc private func savePressed() {
+        let advancedAppExclusions: [AppExclusionRule]?
+        let advancedCustomIdeas: [RestIdea]?
+        do {
+            advancedAppExclusions = try decodedAdvancedAppExclusions()
+            advancedCustomIdeas = try decodedAdvancedCustomIdeas()
+        } catch {
+            showInvalidJSONAlert(error)
+            return
+        }
+
         var next = settings
         next.eyeGate.isEnabled = isOn(eyeEnabled)
         next.eyeGate.interval = TimeInterval(max(1, intValue(eyeInterval)) * 60)
@@ -480,7 +493,7 @@ final class PreferencesWindowController: NSWindowController {
             endMinuteOfDay: Self.minutes(fromTimeString: workingEnd.stringValue, fallback: 18 * 60)
         )
 
-        next.appExclusions = savedAdvancedAppExclusions() ?? savedAppExclusions()
+        next.appExclusions = advancedAppExclusions ?? savedAppExclusions()
         next.presentation.themeSource = selected(ThemeSource.self, from: themeSource, fallback: .system)
         next.presentation.trayIconStyle = selected(TrayIconStyle.self, from: trayStyle, fallback: .default)
         next.presentation.showMenuBarItem = isOn(showMenuBarItem)
@@ -495,7 +508,7 @@ final class PreferencesWindowController: NSWindowController {
         next.bodyBreak.finishSound = soundPolicy(name: bodyFinishSound.stringValue, volume: volume)
 
         next.contentLibrary.useBuiltInIdeas = isOn(useBuiltInIdeas)
-        next.contentLibrary.customBodyBreakIdeas = savedAdvancedCustomIdeas() ?? savedCustomIdeas()
+        next.contentLibrary.customBodyBreakIdeas = advancedCustomIdeas ?? savedCustomIdeas()
         next.contentLibrary.localImagePaths = savedLocalImagePaths()
         next.bodyBreak.content = next.contentLibrary.localImagePaths.isEmpty ? .richRestIdea : .localImage
         next.shortcuts.pauseToggle = shortcutPauseToggle.stringValue
@@ -509,7 +522,9 @@ final class PreferencesWindowController: NSWindowController {
         next.shortcuts.takeBodyBreakNow = shortcutBodyNow.stringValue
         next.shortcuts.skipToNextBodyBreak = shortcutSkipBody.stringValue
         next.shortcuts.endBodyBreak = shortcutEndBody.stringValue
-        next.shortcuts.emergencyEyeGateOverride = shortcutEmergencyEye.stringValue
+        if !(shortcutEmergencyEyeRow?.isHidden ?? false) {
+            next.shortcuts.emergencyEyeGateOverride = shortcutEmergencyEye.stringValue
+        }
         next.shortcuts.reset = shortcutReset.stringValue
 
         next.operations.openAtLogin = isOn(openAtLogin)
@@ -534,6 +549,7 @@ final class PreferencesWindowController: NSWindowController {
 
     private func applyAdminVisibility() {
         bodyAllowSkip.isHidden = settings.admin.hideStrictPreferences
+        shortcutEmergencyEyeRow?.isHidden = settings.admin.hideStrictPreferences
 
         let hideUpdateControls = settings.admin.disableAppUpdateFeatures
         checkUpdates.isHidden = hideUpdateControls
@@ -602,14 +618,35 @@ final class PreferencesWindowController: NSWindowController {
         ]
     }
 
-    private func savedAdvancedAppExclusions() -> [AppExclusionRule]? {
+    private struct InvalidAdvancedJSON: LocalizedError {
+        var fieldName: String
+        var underlying: Error
+
+        var errorDescription: String? {
+            L10n.format("prefs.invalidJSONBody", fieldName, underlying.localizedDescription)
+        }
+    }
+
+    private func showInvalidJSONAlert(_ error: Error) {
+        let alert = NSAlert()
+        alert.messageText = L10n.tr("prefs.invalidJSONTitle")
+        alert.informativeText = error.localizedDescription
+        alert.alertStyle = .warning
+        alert.runModal()
+    }
+
+    private func decodedAdvancedAppExclusions() throws -> [AppExclusionRule]? {
         let raw = appExclusionsJSON.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !raw.isEmpty, let data = raw.data(using: .utf8) else { return nil }
-        return try? JSONDecoder().decode([AppExclusionRule].self, from: data)
+        do {
+            return try JSONDecoder().decode([AppExclusionRule].self, from: data)
+        } catch {
+            throw InvalidAdvancedJSON(fieldName: L10n.tr("prefs.advancedRulesJSON"), underlying: error)
+        }
     }
 
     private func encodedAppExclusions(_ rules: [AppExclusionRule]) -> String {
-        guard !rules.isEmpty,
+        guard rules.count > 1,
               let data = try? JSONEncoder().encode(rules),
               let string = String(data: data, encoding: .utf8) else {
             return ""
@@ -632,26 +669,30 @@ final class PreferencesWindowController: NSWindowController {
         ]
     }
 
-    private func savedAdvancedCustomIdeas() -> [RestIdea]? {
+    private func decodedAdvancedCustomIdeas() throws -> [RestIdea]? {
         let raw = customBodyIdeasJSON.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !raw.isEmpty, let data = raw.data(using: .utf8) else { return nil }
-        guard let decoded = try? JSONDecoder().decode([RestIdea].self, from: data) else { return nil }
-        return decoded
-            .filter { $0.kind == .bodyBreak }
-            .map {
-                RestIdea(
-                    id: $0.id.isEmpty ? UUID().uuidString : $0.id,
-                    kind: .bodyBreak,
-                    title: $0.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Custom Body Break" : $0.title,
-                    body: ContentSanitizer.sanitizeRichText($0.body),
-                    isEnabled: $0.isEnabled
-                )
-            }
+        do {
+            let decoded = try JSONDecoder().decode([RestIdea].self, from: data)
+            return decoded
+                .filter { $0.kind == .bodyBreak }
+                .map {
+                    RestIdea(
+                        id: $0.id.isEmpty ? UUID().uuidString : $0.id,
+                        kind: .bodyBreak,
+                        title: $0.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Custom Body Break" : $0.title,
+                        body: ContentSanitizer.sanitizeRichText($0.body),
+                        isEnabled: $0.isEnabled
+                    )
+                }
+        } catch {
+            throw InvalidAdvancedJSON(fieldName: L10n.tr("prefs.advancedIdeasJSON"), underlying: error)
+        }
     }
 
     private func encodedCustomIdeas(_ ideas: [RestIdea]) -> String {
         let bodyIdeas = ideas.filter { $0.kind == .bodyBreak }
-        guard !bodyIdeas.isEmpty,
+        guard bodyIdeas.count > 1,
               let data = try? JSONEncoder().encode(bodyIdeas),
               let string = String(data: data, encoding: .utf8) else {
             return ""
