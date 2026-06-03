@@ -16,6 +16,14 @@ enum MenuStatusPresenter {
         }
     }
 
+    struct HeaderContent: Equatable {
+        var title: String
+        var primary: String
+        var secondary: String?
+        var healthBadge: String?
+        var icon: MenuBarIcon
+    }
+
     static func lines(state: RestEngineState, settings: RestSettings, now: Date = Date()) -> [String] {
         var lines = [primaryStatusText(state: state, now: now)]
         if let bodyBreakStatus = nextBodyBreakStatusText(state: state, settings: settings) {
@@ -26,6 +34,17 @@ enum MenuStatusPresenter {
 
     static func tooltip(state: RestEngineState, settings: RestSettings, now: Date = Date()) -> String {
         L10n.tr("status.tooltipHeader") + "\n\n" + lines(state: state, settings: settings, now: now).joined(separator: "\n")
+    }
+
+    static func headerContent(state: RestEngineState, settings: RestSettings, now: Date = Date()) -> HeaderContent {
+        let statusLines = lines(state: state, settings: settings, now: now)
+        return HeaderContent(
+            title: L10n.tr("app.name"),
+            primary: statusLines.first ?? L10n.tr("status.noRests"),
+            secondary: statusLines.dropFirst().first,
+            healthBadge: settings.presentation.breakHealthMode ? L10n.format("status.healthBadge", state.dangerScore) : nil,
+            icon: menuBarIcon(state: state)
+        )
     }
 
     static func menuBarTitle(state: RestEngineState, settings: RestSettings, now: Date = Date()) -> String {

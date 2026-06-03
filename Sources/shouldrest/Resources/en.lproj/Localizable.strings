@@ -47,6 +47,7 @@
 "status.deferredShort" = "Deferred";
 "status.deferred" = "%@ deferred: %@";
 "status.health" = "Break health danger: %d/10";
+"status.healthBadge" = "Danger %d/10";
 "status.tooltipHeader" = "ShouldRest - The rest reminder app";
 "kind.eyeGate" = "Eye Gate";
 "kind.eyeGateShort" = "E";

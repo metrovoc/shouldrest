@@ -36,6 +36,32 @@ final class MenuStatusPresenterTests: XCTestCase {
         XCTAssertTrue(tooltip.contains("Next Body Break after 2 Eye Gate(s)"))
     }
 
+    func testHeaderContentPromotesStatusLinesAndHealthBadge() {
+        let settings = RestSettings.defaults
+        let state = RestEngineState(
+            scheduled: ScheduledRest(kind: .eyeGate, dueAt: start.addingTimeInterval(20 * 60), notificationAt: nil),
+            dangerScore: 3
+        )
+
+        let content = MenuStatusPresenter.headerContent(state: state, settings: settings, now: start)
+
+        XCTAssertEqual(content.title, "ShouldRest")
+        XCTAssertTrue(content.primary.hasPrefix("Next: Eye Gate at "))
+        XCTAssertEqual(content.secondary, "Next Body Break after 2 Eye Gate(s)")
+        XCTAssertEqual(content.healthBadge, "Danger 3/10")
+        XCTAssertEqual(content.icon, .restGate)
+    }
+
+    func testHeaderContentHidesHealthBadgeWhenBreakHealthModeIsDisabled() {
+        var settings = RestSettings.defaults
+        settings.presentation.breakHealthMode = false
+        let engine = RestEngine(settings: settings, now: start)
+
+        let content = MenuStatusPresenter.headerContent(state: engine.state, settings: settings, now: start)
+
+        XCTAssertNil(content.healthBadge)
+    }
+
     func testDefaultMenuBarPresentationIsCompactIconOnly() {
         let engine = RestEngine(settings: .defaults, now: start)
 

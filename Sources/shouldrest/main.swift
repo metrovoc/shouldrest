@@ -358,17 +358,13 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         item.button?.toolTip = MenuStatusPresenter.tooltip(state: engine.state, settings: settings, now: now)
 
         let menu = NSMenu()
+        menu.addItem(statusHeaderMenuItem(now: now))
+        menu.addItem(.separator())
+
         if !settings.admin.disableAppUpdateFeatures, latestReleaseURL != nil {
             menu.addItem(actionItem(L10n.tr("menu.downloadLatest"), #selector(openLatestRelease)))
             menu.addItem(.separator())
         }
-        for line in MenuStatusPresenter.lines(state: engine.state, settings: settings, now: now) {
-            menu.addItem(disabledItem(line))
-        }
-        if settings.presentation.breakHealthMode {
-            menu.addItem(disabledItem(L10n.format("status.health", engine.state.dangerScore)))
-        }
-        menu.addItem(.separator())
 
         if engine.state.activeSession == nil {
             menu.addItem(actionItem(L10n.tr("menu.takeEyeGateNow"), #selector(takeEyeGateNow)))
@@ -453,6 +449,19 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         quitItem.image = menuItemImage("power")
         menu.addItem(quitItem)
         item.menu = menu
+    }
+
+    private func statusHeaderMenuItem(now: Date) -> NSMenuItem {
+        let item = NSMenuItem()
+        item.isEnabled = false
+        item.view = StatusMenuHeaderView(
+            content: MenuStatusPresenter.headerContent(
+                state: engine.state,
+                settings: settings,
+                now: now
+            )
+        )
+        return item
     }
 
     private func menuBarImage() -> NSImage? {
