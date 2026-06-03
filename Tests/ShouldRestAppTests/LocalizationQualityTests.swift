@@ -36,7 +36,9 @@ final class LocalizationQualityTests: XCTestCase {
 
         XCTAssertFalse(simplifiedChineseValues.contains("语言覆盖"))
         XCTAssertFalse(simplifiedChineseValues.contains("结束当前活动休息"))
+        XCTAssertFalse(simplifiedChineseValues.contains("可用等待"))
         XCTAssertFalse(englishValues.contains("Language override"))
+        XCTAssertFalse(englishValues.contains("available after"))
     }
 
     private func simplifiedChineseLocalizedValues() throws -> [String] {

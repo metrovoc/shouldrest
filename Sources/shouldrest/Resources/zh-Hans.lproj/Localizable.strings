@@ -6,7 +6,7 @@
 "menu.finishBodyBreak" = "完成活动休息";
 "menu.finishEyeGate" = "完成护眼休息";
 "menu.skipBodyBreak" = "跳过活动休息";
-"menu.emergencyOverride" = "紧急退出护眼休息";
+"menu.emergencyOverride" = "紧急退出";
 "menu.resume" = "恢复";
 "menu.pause" = "暂停";
 "menu.pause30" = "30 分钟";
@@ -92,7 +92,7 @@
 "prefs.notifyEyeGate" = "护眼休息前通知";
 "prefs.eyeManualFinish" = "护眼休息到时后手动完成";
 "prefs.eyeEmergencyOverride" = "启用紧急退出";
-"prefs.eyeEmergencyHold" = "紧急退出可用等待";
+"prefs.eyeEmergencyHold" = "紧急退出等待时长";
 "prefs.enableBodyBreak" = "启用活动休息";
 "prefs.notifyBodyBreak" = "活动休息前通知";
 "prefs.manualFinish" = "活动休息到时后手动完成";
@@ -205,7 +205,7 @@
 "prefs.bodyBreakNow" = "立即活动休息";
 "prefs.skipToBodyBreak" = "跳到活动休息";
 "prefs.endBodyBreak" = "结束当前休息";
-"prefs.emergencyEyeGate" = "护眼紧急退出";
+"prefs.emergencyEyeGate" = "紧急退出快捷键";
 "prefs.reset" = "重置";
 "prefs.sectionOperations" = "操作";
 "prefs.pauseUntilMorningMode" = "暂停到早晨模式";
