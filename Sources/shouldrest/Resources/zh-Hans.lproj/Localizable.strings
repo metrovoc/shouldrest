@@ -35,10 +35,13 @@
 "status.pausedIndefinitely" = "已无限期暂停";
 "status.pausedUntil" = "暂停到 %@";
 "status.next" = "下一次：%@，时间 %@";
+"status.nextBodyAfterEyeGates" = "距离下一次 Body Break 还有 %d 次 Eye Gate";
 "status.active" = "%@ 进行中，剩余 %d 秒";
 "status.deferredShort" = "已延后";
 "status.deferred" = "%@ 已延后：%@";
 "status.health" = "休息健康危险值：%d/10";
+"kind.eyeGate" = "Eye Gate";
+"kind.bodyBreak" = "Body Break";
 "deferral.outsideWorkingHours" = "非工作时间";
 "deferral.focusMode" = "Focus / 勿扰模式";
 "deferral.appExclusion" = "应用排除：%@";

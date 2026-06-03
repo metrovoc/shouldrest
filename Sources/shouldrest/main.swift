@@ -133,7 +133,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                     pendingBodyBreakIdea = idea
                 }
                 clearActiveBodyBreakIdea(for: active)
-                logger.log("Active \(kind.rawValue) deferred: \(deferralReasonText(reason))")
+                logger.log("Active \(kind.rawValue) deferred: \(MenuStatusPresenter.deferralReasonText(reason))")
                 rebuildMenu()
                 return
             }
@@ -226,7 +226,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(actionItem(L10n.tr("menu.downloadLatest"), #selector(openLatestRelease)))
             menu.addItem(.separator())
         }
-        menu.addItem(disabledItem(statusText()))
+        for line in MenuStatusPresenter.lines(state: engine.state, settings: settings) {
+            menu.addItem(disabledItem(line))
+        }
         if settings.presentation.breakHealthMode {
             menu.addItem(disabledItem(L10n.format("status.health", engine.state.dangerScore)))
         }
@@ -326,41 +328,6 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             return seconds >= 60 ? "\(seconds / 60)m" : "\(seconds)s"
         case .progress:
             return scheduled.kind == .eyeGate ? "Eye \(seconds / 60)m" : "Body \(seconds / 60)m"
-        }
-    }
-
-    private func statusText() -> String {
-        if let active = engine.state.activeSession {
-            let remaining = max(0, Int(active.duration - Date().timeIntervalSince(active.startedAt)))
-            return L10n.format("status.active", active.kind.rawValue, remaining)
-        }
-        if let pause = engine.state.pause {
-            if let until = pause.until {
-                return L10n.format("status.pausedUntil", until.formatted(date: .omitted, time: .shortened))
-            }
-            return L10n.tr("status.pausedIndefinitely")
-        }
-        if let deferral = engine.state.activeDeferral {
-            return L10n.format(
-                "status.deferred",
-                deferral.kind.rawValue,
-                deferralReasonText(deferral.reason)
-            )
-        }
-        if let scheduled = engine.state.scheduled {
-            return L10n.format("status.next", scheduled.kind.rawValue, scheduled.dueAt.formatted(date: .omitted, time: .shortened))
-        }
-        return L10n.tr("status.noRests")
-    }
-
-    private func deferralReasonText(_ reason: ContextDeferralReason) -> String {
-        switch reason {
-        case .outsideWorkingHours:
-            return L10n.tr("deferral.outsideWorkingHours")
-        case .focusMode:
-            return L10n.tr("deferral.focusMode")
-        case .appExclusion(let name):
-            return L10n.format("deferral.appExclusion", name)
         }
     }
 
