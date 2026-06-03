@@ -54,7 +54,7 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 - Open at login.
 - Pause durations: 30 minutes, 1 hour, 2 hours, 5 hours, until morning, indefinitely.
 - Pause-until-morning supports both a fixed hour and sunrise from configured coordinates.
-- Global shortcuts for pause/resume, immediate break, and reset.
+- Global shortcuts for pause/resume, immediate break, Body Break end, and reset.
 - CLI or URL-style automation surface.
 
 ### Presentation

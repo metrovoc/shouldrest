@@ -359,6 +359,26 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         rebuildMenu()
     }
 
+    @objc private func endBodyBreakFromShortcut() {
+        let now = Date()
+        guard let active = engine.state.activeSession, active.kind == .bodyBreak else { return }
+
+        if now.timeIntervalSince(active.startedAt) >= active.duration {
+            finishActiveBreak()
+            return
+        }
+
+        if case .postponed = engine.postponeActive(now: now) {
+            overlayController.dismiss()
+            logger.log("Body Break postponed by end shortcut")
+        } else if case .completed = engine.skipActive(now: now) {
+            overlayController.dismiss()
+            manualAwaitingSessionID = nil
+            logger.log("Body Break skipped by end shortcut")
+        }
+        rebuildMenu()
+    }
+
     @objc private func emergencyOverrideEyeGate() {
         guard let active = engine.state.activeSession, active.kind == .eyeGate else { return }
 
@@ -680,6 +700,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
         registerShortcut(settings.shortcuts.skipToNextBodyBreak) { [weak self] in
             self?.takeBodyBreakNow()
+        }
+        registerShortcut(settings.shortcuts.endBodyBreak ?? "") { [weak self] in
+            self?.endBodyBreakFromShortcut()
         }
         registerShortcut(settings.shortcuts.emergencyEyeGateOverride ?? "") { [weak self] in
             self?.emergencyOverrideEyeGate()

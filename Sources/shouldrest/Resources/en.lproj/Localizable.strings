@@ -123,6 +123,7 @@
 "prefs.eyeGateNow" = "Eye Gate now";
 "prefs.bodyBreakNow" = "Body Break now";
 "prefs.skipToBodyBreak" = "Skip to Body Break";
+"prefs.endBodyBreak" = "End active Body Break";
 "prefs.emergencyEyeGate" = "Emergency Eye Gate override";
 "prefs.reset" = "Reset";
 "prefs.sectionOperations" = "Operations And Admin";

@@ -72,6 +72,7 @@ final class PreferencesWindowController: NSWindowController {
     private let shortcutEyeNow = NSTextField()
     private let shortcutBodyNow = NSTextField()
     private let shortcutSkipBody = NSTextField()
+    private let shortcutEndBody = NSTextField()
     private let shortcutEmergencyEye = NSTextField()
     private let shortcutReset = NSTextField()
 
@@ -235,6 +236,7 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(row(L10n.tr("prefs.eyeGateNow"), shortcutEyeNow))
         stack.addArrangedSubview(row(L10n.tr("prefs.bodyBreakNow"), shortcutBodyNow))
         stack.addArrangedSubview(row(L10n.tr("prefs.skipToBodyBreak"), shortcutSkipBody))
+        stack.addArrangedSubview(row(L10n.tr("prefs.endBodyBreak"), shortcutEndBody))
         stack.addArrangedSubview(row(L10n.tr("prefs.emergencyEyeGate"), shortcutEmergencyEye))
         stack.addArrangedSubview(row(L10n.tr("prefs.reset"), shortcutReset))
 
@@ -295,7 +297,7 @@ final class PreferencesWindowController: NSWindowController {
             eyeColor, bodyColor, eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, customBodyTitle,
             customBodyText, customBodyIdeasJSON, localImagePath, shortcutPauseToggle, shortcutPause30,
             shortcutPause1h, shortcutPause2h, shortcutPause5h, shortcutPauseUntilMorning,
-            shortcutEyeNow, shortcutBodyNow, shortcutSkipBody, shortcutEmergencyEye, shortcutReset,
+            shortcutEyeNow, shortcutBodyNow, shortcutSkipBody, shortcutEndBody, shortcutEmergencyEye, shortcutReset,
             appExclusionName, appExclusionTerms, updateFeedURL,
             customPreferencesMessage, appExclusionsJSON
         ]
@@ -372,6 +374,7 @@ final class PreferencesWindowController: NSWindowController {
         shortcutEyeNow.stringValue = settings.shortcuts.takeEyeGateNow
         shortcutBodyNow.stringValue = settings.shortcuts.takeBodyBreakNow
         shortcutSkipBody.stringValue = settings.shortcuts.skipToNextBodyBreak
+        shortcutEndBody.stringValue = settings.shortcuts.endBodyBreak ?? ""
         shortcutEmergencyEye.stringValue = settings.shortcuts.emergencyEyeGateOverride ?? ""
         shortcutReset.stringValue = settings.shortcuts.reset
 
@@ -455,6 +458,7 @@ final class PreferencesWindowController: NSWindowController {
         next.shortcuts.takeEyeGateNow = shortcutEyeNow.stringValue
         next.shortcuts.takeBodyBreakNow = shortcutBodyNow.stringValue
         next.shortcuts.skipToNextBodyBreak = shortcutSkipBody.stringValue
+        next.shortcuts.endBodyBreak = shortcutEndBody.stringValue
         next.shortcuts.emergencyEyeGateOverride = shortcutEmergencyEye.stringValue
         next.shortcuts.reset = shortcutReset.stringValue
 

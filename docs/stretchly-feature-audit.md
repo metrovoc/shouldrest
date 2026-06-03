@@ -156,6 +156,7 @@ Implemented now:
 - Stretchly-compatible `pauseForSuspendOrLock` preference: enabled by default, with an opt-out path that preserves schedule state and lets natural rest credit absorb sleep/lock idle time.
 - Debug panel with runtime state and paths.
 - Global shortcut registration for pause, pause durations, take-now, Body Break skip-to-next, and reset.
+- Stretchly-style end-break shortcut for Body Break only: after the required duration it finishes, during the postpone window it postpones, and otherwise it uses the Body Break skip policy. Eye Gate intentionally ignores this shortcut.
 - URL-style automation parser plus Apple Event URL handler for bundled app registration.
 - Body Break manual-finish phase that lowers overlay level after the required duration and waits for user completion.
 - Configurable active working-hours windows, including overnight windows.

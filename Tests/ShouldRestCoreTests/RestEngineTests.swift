@@ -331,6 +331,7 @@ final class RestEngineTests: XCTestCase {
         let shortcuts = try JSONDecoder().decode(ShortcutSettings.self, from: legacyJSON)
 
         XCTAssertNil(shortcuts.emergencyEyeGateOverride)
+        XCTAssertNil(shortcuts.endBodyBreak)
     }
 
     func testOperationsSettingsCalculatesUntilMorningUsingConfiguredHour() throws {
