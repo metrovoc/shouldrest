@@ -77,6 +77,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     private let naturalBreaks = NSButton(checkboxWithTitle: L10n.tr("prefs.naturalBreaks"), target: nil, action: nil)
     private let naturalIdleMinutes = NSTextField()
+    private var naturalIdleMinutesRow: NSView?
     private let focusMonitor = NSButton(checkboxWithTitle: L10n.tr("prefs.monitorFocus"), target: nil, action: nil)
     private let focusDefersBody = NSButton(checkboxWithTitle: L10n.tr("prefs.focusDefersBody"), target: nil, action: nil)
     private let workingHoursEnabled = NSButton(checkboxWithTitle: L10n.tr("prefs.workingHours"), target: nil, action: nil)
@@ -84,6 +85,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let workingEnd = NSTextField()
     private let workingStartPicker = NSDatePicker()
     private let workingEndPicker = NSDatePicker()
+    private var workingStartRow: NSView?
+    private var workingEndRow: NSView?
 
     private let appExclusionEnabled = NSButton(checkboxWithTitle: L10n.tr("prefs.enablePrimaryExclusion"), target: nil, action: nil)
     private let appExclusionName = NSTextField()
@@ -91,6 +94,9 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let appExclusionMode = NSPopUpButton()
     private let appExclusionAppliesEye = NSButton(checkboxWithTitle: L10n.tr("prefs.appliesEye"), target: nil, action: nil)
     private let appExclusionAppliesBody = NSButton(checkboxWithTitle: L10n.tr("prefs.appliesBody"), target: nil, action: nil)
+    private var appExclusionNameRow: NSView?
+    private var appExclusionTermsRow: NSView?
+    private var appExclusionModeRow: NSView?
     private let appExclusionsJSONEditor = NSTextView()
     private let appExclusionsJSONScrollView = NSScrollView()
     private let appExclusionsAdvancedButton = NSButton()
@@ -332,23 +338,57 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
         let contextStack = contentStack()
         contextStack.addArrangedSubview(section(L10n.tr("prefs.sectionContext"), symbolName: "scope"))
+        naturalBreaks.identifier = NSUserInterfaceItemIdentifier("prefs.naturalBreaks")
         contextStack.addArrangedSubview(naturalBreaks)
-        contextStack.addArrangedSubview(numberRow(L10n.tr("prefs.naturalIdleMinutes"), naturalIdleMinutes, unit: L10n.tr("prefs.unit.minutes"), min: 1, max: 120))
+        let naturalIdleMinutesRow = numberRow(
+            L10n.tr("prefs.naturalIdleMinutes"),
+            naturalIdleMinutes,
+            unit: L10n.tr("prefs.unit.minutes"),
+            min: 1,
+            max: 120,
+            identifier: "naturalIdleMinutes"
+        )
+        naturalIdleMinutesRow.identifier = NSUserInterfaceItemIdentifier("prefs.naturalIdleMinutesRow")
+        self.naturalIdleMinutesRow = naturalIdleMinutesRow
+        contextStack.addArrangedSubview(naturalIdleMinutesRow)
         contextStack.addArrangedSubview(focusMonitor)
         contextStack.addArrangedSubview(focusDefersBody)
+        workingHoursEnabled.identifier = NSUserInterfaceItemIdentifier("prefs.workingHours")
         contextStack.addArrangedSubview(workingHoursEnabled)
-        contextStack.addArrangedSubview(row(L10n.tr("prefs.workingStart"), workingStartPicker))
-        contextStack.addArrangedSubview(row(L10n.tr("prefs.workingEnd"), workingEndPicker))
+        let workingStartRow = row(L10n.tr("prefs.workingStart"), workingStartPicker)
+        workingStartRow.identifier = NSUserInterfaceItemIdentifier("prefs.workingStartRow")
+        self.workingStartRow = workingStartRow
+        contextStack.addArrangedSubview(workingStartRow)
+        let workingEndRow = row(L10n.tr("prefs.workingEnd"), workingEndPicker)
+        workingEndRow.identifier = NSUserInterfaceItemIdentifier("prefs.workingEndRow")
+        self.workingEndRow = workingEndRow
+        contextStack.addArrangedSubview(workingEndRow)
         contextStack.addArrangedSubview(separator())
         contextStack.addArrangedSubview(section(L10n.tr("prefs.sectionExclusion"), symbolName: "app.badge"))
+        appExclusionEnabled.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionEnabled")
         contextStack.addArrangedSubview(appExclusionEnabled)
-        contextStack.addArrangedSubview(row(L10n.tr("prefs.name"), appExclusionName))
-        contextStack.addArrangedSubview(row(L10n.tr("prefs.matchTerms"), appExclusionTerms))
-        contextStack.addArrangedSubview(row(L10n.tr("prefs.mode"), appExclusionMode))
+        let appExclusionNameRow = row(L10n.tr("prefs.name"), appExclusionName)
+        appExclusionName.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionNameField")
+        appExclusionNameRow.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionNameRow")
+        self.appExclusionNameRow = appExclusionNameRow
+        contextStack.addArrangedSubview(appExclusionNameRow)
+        let appExclusionTermsRow = row(L10n.tr("prefs.matchTerms"), appExclusionTerms)
+        appExclusionTerms.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionTermsField")
+        appExclusionTermsRow.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionTermsRow")
+        self.appExclusionTermsRow = appExclusionTermsRow
+        contextStack.addArrangedSubview(appExclusionTermsRow)
+        let appExclusionModeRow = row(L10n.tr("prefs.mode"), appExclusionMode)
+        appExclusionMode.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionMode")
+        appExclusionModeRow.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionModeRow")
+        self.appExclusionModeRow = appExclusionModeRow
+        contextStack.addArrangedSubview(appExclusionModeRow)
+        appExclusionAppliesEye.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionAppliesEye")
         contextStack.addArrangedSubview(appExclusionAppliesEye)
+        appExclusionAppliesBody.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionAppliesBody")
         contextStack.addArrangedSubview(appExclusionAppliesBody)
         contextStack.addArrangedSubview(appExclusionsAdvancedButton)
         let appExclusionsJSONRow = multilineRow(L10n.tr("prefs.advancedRulesJSON"), appExclusionsJSONScrollView)
+        appExclusionsJSONRow.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionsJSONRow")
         self.appExclusionsJSONRow = appExclusionsJSONRow
         contextStack.addArrangedSubview(appExclusionsJSONRow)
         addTab(to: tabView, title: L10n.tr("prefs.tabContext"), stack: contextStack)
@@ -1276,11 +1316,26 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         bodyConfiguredDisplayRow?.isHidden = !usesConfiguredDisplay
         bodyConfiguredDisplay.isEnabled = bodyBreakEnabled && usesConfiguredDisplay
 
-        setNumberInputEnabled(naturalIdleMinutes, isOn(naturalBreaks))
-        workingStartPicker.isEnabled = isOn(workingHoursEnabled)
-        workingEndPicker.isEnabled = isOn(workingHoursEnabled)
+        let naturalBreaksEnabled = isOn(naturalBreaks)
+        naturalIdleMinutesRow?.isHidden = !naturalBreaksEnabled
+        setNumberInputEnabled(naturalIdleMinutes, naturalBreaksEnabled)
+
+        let workingHoursAreEnabled = isOn(workingHoursEnabled)
+        workingStartRow?.isHidden = !workingHoursAreEnabled
+        workingEndRow?.isHidden = !workingHoursAreEnabled
+        workingStartPicker.isEnabled = workingHoursAreEnabled
+        workingEndPicker.isEnabled = workingHoursAreEnabled
 
         let exclusionEnabled = isOn(appExclusionEnabled)
+        [
+            appExclusionNameRow, appExclusionTermsRow, appExclusionModeRow
+        ].forEach { $0?.isHidden = !exclusionEnabled }
+        [
+            appExclusionAppliesEye, appExclusionAppliesBody, appExclusionsAdvancedButton
+        ].forEach { $0.isHidden = !exclusionEnabled }
+        if !exclusionEnabled {
+            setAdvancedDisclosure(row: appExclusionsJSONRow, button: appExclusionsAdvancedButton, expanded: false)
+        }
         [
             appExclusionName, appExclusionTerms, appExclusionMode,
             appExclusionAppliesEye, appExclusionAppliesBody
