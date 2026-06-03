@@ -55,9 +55,11 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let bodyManualFinish = NSButton(checkboxWithTitle: L10n.tr("prefs.manualFinish"), target: nil, action: nil)
     private let bodyCoversAllDisplays = NSButton(checkboxWithTitle: L10n.tr("prefs.bodyAllDisplays"), target: nil, action: nil)
     private let bodyCoveredDisplay = NSPopUpButton()
+    private var bodyCoveredDisplayRow: NSView?
     private let bodyContentDisplay = NSPopUpButton()
     private let bodyBlankSecondaryDisplays = NSButton(checkboxWithTitle: L10n.tr("prefs.bodyBlankSecondary"), target: nil, action: nil)
-    private let bodyConfiguredDisplayIndex = NSTextField()
+    private let bodyConfiguredDisplay = NSPopUpButton()
+    private var bodyConfiguredDisplayRow: NSView?
 
     private let naturalBreaks = NSButton(checkboxWithTitle: L10n.tr("prefs.naturalBreaks"), target: nil, action: nil)
     private let naturalIdleMinutes = NSTextField()
@@ -253,10 +255,14 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         scheduleStack.addArrangedSubview(bodyAllowSkip)
         scheduleStack.addArrangedSubview(bodyManualFinish)
         scheduleStack.addArrangedSubview(bodyCoversAllDisplays)
-        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.bodyCoveredDisplay"), bodyCoveredDisplay))
+        let bodyCoveredDisplayRow = row(L10n.tr("prefs.bodyCoveredDisplay"), bodyCoveredDisplay)
+        self.bodyCoveredDisplayRow = bodyCoveredDisplayRow
+        scheduleStack.addArrangedSubview(bodyCoveredDisplayRow)
         scheduleStack.addArrangedSubview(row(L10n.tr("prefs.bodyContentDisplay"), bodyContentDisplay))
         scheduleStack.addArrangedSubview(bodyBlankSecondaryDisplays)
-        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.configuredDisplayIndex"), bodyConfiguredDisplayIndex, unit: "", min: 0, max: 16))
+        let bodyConfiguredDisplayRow = row(L10n.tr("prefs.configuredDisplayIndex"), bodyConfiguredDisplay)
+        self.bodyConfiguredDisplayRow = bodyConfiguredDisplayRow
+        scheduleStack.addArrangedSubview(bodyConfiguredDisplayRow)
         addTab(to: tabView, title: L10n.tr("prefs.tabSchedule"), stack: scheduleStack)
 
         let contextStack = contentStack()
@@ -467,7 +473,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             eyeInterval, eyeDuration, bodyInterval, bodyDuration, bodyAfterEyeGates, eyeLead, bodyLead,
             eyeEmergencyHoldSeconds, eyeEmergencyConfirmations,
             bodyPostponeMinutes, bodyPostponeLimit, bodyPostponeWindowPercent, naturalIdleMinutes,
-            bodyConfiguredDisplayIndex, pauseUntilMorningHour,
+            pauseUntilMorningHour,
             pauseUntilMorningLatitude, pauseUntilMorningLongitude
         ]
         compactFields.forEach { $0.widthAnchor.constraint(equalToConstant: 110).isActive = true }
@@ -482,7 +488,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             shortcutPause30, shortcutPause1h, shortcutPause2h, shortcutPause5h, shortcutPauseUntilMorning,
             shortcutNextScheduled, shortcutEyeNow, shortcutBodyNow, shortcutSkipBody, shortcutEndBody,
             shortcutEmergencyEye, shortcutReset,
-            appExclusionName, appExclusionTerms, updateFeedURL,
+            appExclusionName, appExclusionTerms, bodyConfiguredDisplay, updateFeedURL,
             customPreferencesMessage, appExclusionsJSON
         ]
         wideFields.forEach { $0.widthAnchor.constraint(equalToConstant: 360).isActive = true }
@@ -611,7 +617,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             eyeEmergencyHoldSeconds, eyeEmergencyConfirmations,
             bodyLead, bodyPostponeMinutes, bodyPostponeLimit, bodyPostponeWindowPercent, naturalIdleMinutes,
             appExclusionName, appExclusionTerms, appExclusionsJSON,
-            customBodyTitle, customBodyIdeasJSON, localImagePath, bodyConfiguredDisplayIndex,
+            customBodyTitle, customBodyIdeasJSON, localImagePath,
             pauseUntilMorningHour, pauseUntilMorningLatitude, pauseUntilMorningLongitude, updateFeedURL,
             customPreferencesMessage
         ]
@@ -630,7 +636,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, useBuiltInIdeas, openAtLogin,
             checkUpdates, notifyNewVersion, showOnboardingNextLaunch, pauseUntilMorningMode, pauseForSuspendOrLock,
             disableUpdateFeatures, hideSettingsPath, hideStrictPreferences, bodyCoveredDisplay, bodyContentDisplay,
-            workingStartPicker, workingEndPicker, soundVolumeSlider
+            bodyConfiguredDisplay, workingStartPicker, workingEndPicker, soundVolumeSlider
         ]
         controls.forEach { control in
             control.target = self
@@ -726,7 +732,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         selectPopup(bodyCoveredDisplay, rawValue: (settings.bodyBreak.enforcement.coveredDisplay ?? .primary).rawValue)
         selectPopup(bodyContentDisplay, rawValue: settings.bodyBreak.enforcement.contentDisplay.rawValue)
         bodyBlankSecondaryDisplays.state = state(settings.bodyBreak.enforcement.blankSecondaryDisplays)
-        bodyConfiguredDisplayIndex.stringValue = String(settings.bodyBreak.enforcement.configuredDisplayIndex ?? 0)
+        configureConfiguredDisplayPopup(selectedIndex: settings.bodyBreak.enforcement.configuredDisplayIndex ?? 0)
 
         naturalBreaks.state = state(settings.naturalBreaks.isEnabled)
         naturalIdleMinutes.stringValue = String(Int(settings.naturalBreaks.inactivityResetTime / 60))
@@ -877,7 +883,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         next.bodyBreak.enforcement.coveredDisplay = selected(DisplaySelection.self, from: bodyCoveredDisplay, fallback: .primary)
         next.bodyBreak.enforcement.contentDisplay = selected(DisplaySelection.self, from: bodyContentDisplay, fallback: .all)
         next.bodyBreak.enforcement.blankSecondaryDisplays = isOn(bodyBlankSecondaryDisplays)
-        next.bodyBreak.enforcement.configuredDisplayIndex = max(0, intValue(bodyConfiguredDisplayIndex))
+        next.bodyBreak.enforcement.configuredDisplayIndex = selectedConfiguredDisplayIndex()
 
         next.naturalBreaks = NaturalBreakSettings(
             isEnabled: isOn(naturalBreaks),
@@ -1039,12 +1045,21 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         ].forEach { $0.isEnabled = bodyBreakEnabled }
         [
             bodyInterval, bodyDuration, bodyAfterEyeGates, bodyLead, bodyPostponeMinutes,
-            bodyPostponeLimit, bodyPostponeWindowPercent, bodyConfiguredDisplayIndex
+            bodyPostponeLimit, bodyPostponeWindowPercent
         ].forEach { setNumberInputEnabled($0, bodyBreakEnabled) }
         setNumberInputEnabled(bodyLead, bodyBreakEnabled && isOn(bodyNotify))
-        let usesConfiguredDisplay = selected(DisplaySelection.self, from: bodyCoveredDisplay, fallback: .primary) == .configured ||
-            selected(DisplaySelection.self, from: bodyContentDisplay, fallback: .all) == .configured
-        setNumberInputEnabled(bodyConfiguredDisplayIndex, bodyBreakEnabled && usesConfiguredDisplay)
+        let coversAllDisplays = isOn(bodyCoversAllDisplays)
+        let coveredDisplaySelection = selected(DisplaySelection.self, from: bodyCoveredDisplay, fallback: .primary)
+        let contentDisplaySelection = selected(DisplaySelection.self, from: bodyContentDisplay, fallback: .all)
+        bodyCoveredDisplayRow?.isHidden = coversAllDisplays
+        bodyCoveredDisplay.isEnabled = bodyBreakEnabled && !coversAllDisplays
+        let canBlankSecondaryDisplays = contentDisplaySelection != .all && contentDisplaySelection != .none
+        bodyBlankSecondaryDisplays.isHidden = !canBlankSecondaryDisplays
+        bodyBlankSecondaryDisplays.isEnabled = bodyBreakEnabled && canBlankSecondaryDisplays
+        let usesConfiguredDisplay = (!coversAllDisplays && coveredDisplaySelection == .configured) ||
+            contentDisplaySelection == .configured
+        bodyConfiguredDisplayRow?.isHidden = !usesConfiguredDisplay
+        bodyConfiguredDisplay.isEnabled = bodyBreakEnabled && usesConfiguredDisplay
 
         setNumberInputEnabled(naturalIdleMinutes, isOn(naturalBreaks))
         workingStartPicker.isEnabled = isOn(workingHoursEnabled)
@@ -1520,6 +1535,55 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             return
         }
         popup.select(item)
+    }
+
+    private func configureConfiguredDisplayPopup(selectedIndex: Int) {
+        bodyConfiguredDisplay.removeAllItems()
+        let screens = NSScreen.screens
+        let primaryDisplayID = screens.first?.displayID
+        for (index, screen) in screens.enumerated() {
+            bodyConfiguredDisplay.addItem(
+                withTitle: configuredDisplayTitle(
+                    index: index,
+                    screen: screen,
+                    isPrimary: screen.displayID == primaryDisplayID
+                )
+            )
+            bodyConfiguredDisplay.lastItem?.representedObject = index
+        }
+
+        if screens.isEmpty {
+            bodyConfiguredDisplay.addItem(withTitle: L10n.format("prefs.displayPicker.unavailable", selectedIndex + 1))
+            bodyConfiguredDisplay.lastItem?.representedObject = max(0, selectedIndex)
+        } else if !screens.indices.contains(selectedIndex) {
+            bodyConfiguredDisplay.addItem(withTitle: L10n.format("prefs.displayPicker.unavailable", selectedIndex + 1))
+            bodyConfiguredDisplay.lastItem?.representedObject = selectedIndex
+        }
+
+        selectConfiguredDisplayIndex(selectedIndex)
+    }
+
+    private func configuredDisplayTitle(index: Int, screen: NSScreen, isPrimary: Bool) -> String {
+        let suffix = isPrimary ? L10n.tr("prefs.displayPicker.primarySuffix") : ""
+        return L10n.format(
+            "prefs.displayPicker.item",
+            index + 1,
+            Int(screen.frame.width.rounded()),
+            Int(screen.frame.height.rounded()),
+            suffix
+        )
+    }
+
+    private func selectConfiguredDisplayIndex(_ index: Int) {
+        guard let item = bodyConfiguredDisplay.itemArray.first(where: { ($0.representedObject as? Int) == index }) else {
+            bodyConfiguredDisplay.selectItem(at: 0)
+            return
+        }
+        bodyConfiguredDisplay.select(item)
+    }
+
+    private func selectedConfiguredDisplayIndex() -> Int? {
+        bodyConfiguredDisplay.selectedItem?.representedObject as? Int
     }
 
     private func selectLanguageOption(_ option: LanguageOption) {
