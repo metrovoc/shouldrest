@@ -1890,7 +1890,7 @@ final class OverlayWindow: NSWindow {
     let overlayView: RestOverlayView
 
     init(screen: NSScreen, session: RestSession, settings: RestSettings) {
-        self.overlayView = RestOverlayView(frame: screen.frame)
+        self.overlayView = RestOverlayView(frame: NSRect(origin: .zero, size: screen.frame.size))
         super.init(
             contentRect: screen.frame,
             styleMask: [.borderless],
@@ -1907,6 +1907,7 @@ final class OverlayWindow: NSWindow {
         hidesOnDeactivate = false
         isMovable = false
         canHide = false
+        syncOverlayViewFrame(to: screen.frame.size)
     }
 
     override var canBecomeKey: Bool {
@@ -1923,6 +1924,15 @@ final class OverlayWindow: NSWindow {
         } else {
             super.keyDown(with: event)
         }
+    }
+
+    override func setFrame(_ frameRect: NSRect, display flag: Bool) {
+        super.setFrame(frameRect, display: flag)
+        syncOverlayViewFrame(to: frameRect.size)
+    }
+
+    private func syncOverlayViewFrame(to size: NSSize) {
+        overlayView.frame = NSRect(origin: .zero, size: size)
     }
 }
 
@@ -2320,10 +2330,8 @@ final class RestOverlayView: NSView {
         let title: String
         if emergencyOverrideArmed, remainingSeconds > 0 {
             title = L10n.format("overlay.emergencyOverrideArmed", remainingSeconds)
-        } else if remainingSeconds == 0 {
-            title = L10n.tr("overlay.emergencyOverride")
         } else {
-            title = L10n.format("overlay.emergencyOverrideIn", remainingSeconds)
+            title = L10n.tr("overlay.emergencyOverride")
         }
         setEmergencyButtonTitle(
             title,

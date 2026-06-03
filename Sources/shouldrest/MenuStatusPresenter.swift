@@ -124,6 +124,9 @@ enum MenuStatusPresenter {
 
     private static func compactMenuBarDuration(state: RestEngineState, now: Date) -> String? {
         if let active = state.activeSession {
+            if isManualFinishReady(active, now: now) {
+                return L10n.tr("status.readyCompact")
+            }
             let seconds = max(0, Int(ceil(active.duration - now.timeIntervalSince(active.startedAt))))
             return compactDuration(seconds: seconds)
         }
@@ -147,6 +150,9 @@ enum MenuStatusPresenter {
 
     private static func primaryStatusText(state: RestEngineState, now: Date) -> String {
         if let active = state.activeSession {
+            if isManualFinishReady(active, now: now) {
+                return L10n.format("status.readyToFinish", restKindName(active.kind))
+            }
             let remaining = max(0, Int(active.duration - now.timeIntervalSince(active.startedAt)))
             return L10n.format("status.active", restKindName(active.kind), remaining)
         }
@@ -171,6 +177,10 @@ enum MenuStatusPresenter {
             )
         }
         return L10n.tr("status.noRests")
+    }
+
+    private static func isManualFinishReady(_ session: RestSession, now: Date) -> Bool {
+        session.manualFinishEnabled && now.timeIntervalSince(session.startedAt) >= session.duration
     }
 
     private static func nextBodyBreakStatusText(state: RestEngineState, settings: RestSettings) -> String? {

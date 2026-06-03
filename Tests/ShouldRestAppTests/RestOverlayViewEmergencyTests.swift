@@ -107,6 +107,25 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertTrue(didRequestEmergency)
     }
 
+    func testOverlayWindowKeepsOverlayViewInWindowLocalCoordinates() throws {
+        let screen = try XCTUnwrap(NSScreen.main)
+        let window = OverlayWindow(screen: screen, session: eyeGateSession(), settings: .defaults)
+        defer { window.close() }
+
+        XCTAssertEqual(window.overlayView.frame.origin.x, 0)
+        XCTAssertEqual(window.overlayView.frame.origin.y, 0)
+        XCTAssertEqual(window.overlayView.frame.width, screen.frame.width)
+        XCTAssertEqual(window.overlayView.frame.height, screen.frame.height)
+
+        let resizedFrame = NSRect(x: screen.frame.minX, y: screen.frame.minY, width: 640, height: 480)
+        window.setFrame(resizedFrame, display: false)
+
+        XCTAssertEqual(window.overlayView.frame.origin.x, 0)
+        XCTAssertEqual(window.overlayView.frame.origin.y, 0)
+        XCTAssertEqual(window.overlayView.frame.width, 640)
+        XCTAssertEqual(window.overlayView.frame.height, 480)
+    }
+
     func testEarlyEmergencyTriggerWaitsInsideOverlayInsteadOfExternalConfirmation() throws {
         let view = configuredEyeGateOverlay(
             remainingSeconds: 2,
@@ -144,6 +163,17 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         )
 
         XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
+    }
+
+    func testEarlyEmergencyAffordanceStillLooksActionable() throws {
+        let view = configuredEyeGateOverlay(
+            remainingSeconds: 2,
+            isArmed: false
+        )
+
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverride"))
     }
 
     func testEmergencyAffordanceUsesDimRedGhostStyle() throws {

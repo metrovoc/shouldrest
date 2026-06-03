@@ -147,6 +147,46 @@ final class MenuStatusPresenterTests: XCTestCase {
         XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: state), .restGate)
     }
 
+    func testManualFinishStatusShowsReadyInsteadOfZeroRemaining() {
+        let state = RestEngineState(activeSession: RestSession(
+            kind: .eyeGate,
+            startedAt: start,
+            scheduledAt: start,
+            duration: 20,
+            manualFinishEnabled: true
+        ))
+
+        let lines = MenuStatusPresenter.lines(state: state, settings: .defaults, now: start.addingTimeInterval(21))
+        let content = MenuStatusPresenter.headerContent(state: state, settings: .defaults, now: start.addingTimeInterval(21))
+
+        XCTAssertEqual(lines.first, "Eye Gate ready to finish")
+        XCTAssertEqual(content.primary, "Eye Gate ready to finish")
+        XCTAssertFalse(lines.first?.contains("0s") ?? true)
+    }
+
+    func testManualFinishMenuBarStylesUseReadyState() {
+        let state = RestEngineState(activeSession: RestSession(
+            kind: .eyeGate,
+            startedAt: start,
+            scheduledAt: start,
+            duration: 20,
+            manualFinishEnabled: true
+        ))
+        var timeSettings = RestSettings.defaults
+        timeSettings.presentation.trayIconStyle = .timeToBreak
+        var progressSettings = RestSettings.defaults
+        progressSettings.presentation.trayIconStyle = .progress
+
+        XCTAssertEqual(
+            MenuStatusPresenter.menuBarTitle(state: state, settings: timeSettings, now: start.addingTimeInterval(21)),
+            "done"
+        )
+        XCTAssertEqual(
+            MenuStatusPresenter.menuBarTitle(state: state, settings: progressSettings, now: start.addingTimeInterval(21)),
+            "E done"
+        )
+    }
+
     func testMenuBarPausedStateStaysIconOnlyInCountdownStyles() {
         var settings = RestSettings.defaults
         settings.presentation.trayIconStyle = .timeToBreak
