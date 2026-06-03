@@ -13,6 +13,7 @@ final class FlippedView: NSView {
 private struct NumberInput {
     var field: NSTextField
     var stepper: NSStepper
+    var slider: NSSlider?
     var min: Double
     var max: Double
 }
@@ -229,10 +230,26 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         adminMessageLabel.lineBreakMode = .byWordWrapping
         adminMessageLabel.widthAnchor.constraint(equalToConstant: 620).isActive = true
         scheduleStack.addArrangedSubview(adminMessageLabel)
-        scheduleStack.addArrangedSubview(section(L10n.tr("prefs.sectionEyeGate"), symbolName: "timer"))
+        scheduleStack.addArrangedSubview(section(L10n.tr("prefs.sectionEyeGate"), symbolName: "circle.lefthalf.filled"))
         scheduleStack.addArrangedSubview(eyeEnabled)
-        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.everyMinutes"), eyeInterval, unit: L10n.tr("prefs.unit.minutes"), min: 1, max: 240))
-        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.durationSeconds"), eyeDuration, unit: L10n.tr("prefs.unit.seconds"), min: 1, max: 300))
+        scheduleStack.addArrangedSubview(numberRow(
+            L10n.tr("prefs.everyMinutes"),
+            eyeInterval,
+            unit: L10n.tr("prefs.unit.minutes"),
+            min: 1,
+            max: 240,
+            identifier: "eyeInterval",
+            showsSlider: true
+        ))
+        scheduleStack.addArrangedSubview(numberRow(
+            L10n.tr("prefs.durationSeconds"),
+            eyeDuration,
+            unit: L10n.tr("prefs.unit.seconds"),
+            min: 1,
+            max: 300,
+            identifier: "eyeDuration",
+            showsSlider: true
+        ))
         scheduleStack.addArrangedSubview(row(L10n.tr("prefs.overlayColor"), eyeColor))
         scheduleStack.addArrangedSubview(eyeNotify)
         scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.notificationLead"), eyeLead, unit: L10n.tr("prefs.unit.seconds"), min: 0, max: 3600))
@@ -259,9 +276,33 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         scheduleStack.addArrangedSubview(separator())
         scheduleStack.addArrangedSubview(section(L10n.tr("prefs.sectionBodyBreak"), symbolName: "figure.walk"))
         scheduleStack.addArrangedSubview(bodyEnabled)
-        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.bodyIntervalMinutes"), bodyInterval, unit: L10n.tr("prefs.unit.minutes"), min: 1, max: 720))
-        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.durationMinutes"), bodyDuration, unit: L10n.tr("prefs.unit.minutes"), min: 1, max: 180))
-        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.afterEyeGates"), bodyAfterEyeGates, unit: L10n.tr("prefs.unit.eyeGates"), min: 1, max: 99))
+        scheduleStack.addArrangedSubview(numberRow(
+            L10n.tr("prefs.bodyIntervalMinutes"),
+            bodyInterval,
+            unit: L10n.tr("prefs.unit.minutes"),
+            min: 1,
+            max: 720,
+            identifier: "bodyInterval",
+            showsSlider: true
+        ))
+        scheduleStack.addArrangedSubview(numberRow(
+            L10n.tr("prefs.durationMinutes"),
+            bodyDuration,
+            unit: L10n.tr("prefs.unit.minutes"),
+            min: 1,
+            max: 180,
+            identifier: "bodyDuration",
+            showsSlider: true
+        ))
+        scheduleStack.addArrangedSubview(numberRow(
+            L10n.tr("prefs.afterEyeGates"),
+            bodyAfterEyeGates,
+            unit: L10n.tr("prefs.unit.eyeGates"),
+            min: 1,
+            max: 99,
+            identifier: "bodyAfterEyeGates",
+            showsSlider: true
+        ))
         scheduleStack.addArrangedSubview(row(L10n.tr("prefs.overlayColor"), bodyColor))
         scheduleStack.addArrangedSubview(bodyNotify)
         scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.notificationLead"), bodyLead, unit: L10n.tr("prefs.unit.seconds"), min: 0, max: 3600))
@@ -909,7 +950,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             button: adminControlsAdvancedButton,
             expanded: hasVisibleAdminOverrides(settings.admin)
         )
-        syncNumberSteppersFromFields()
+        syncNumberControlsFromFields()
         updateDependentControlEnablement()
         applyAdminVisibility()
     }
@@ -1171,7 +1212,9 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     private func setNumberInputEnabled(_ field: NSTextField, _ enabled: Bool) {
         field.isEnabled = enabled
-        numberInputs.first(where: { $0.field === field })?.stepper.isEnabled = enabled
+        let input = numberInputs.first(where: { $0.field === field })
+        input?.stepper.isEnabled = enabled
+        input?.slider?.isEnabled = enabled
     }
 
     @objc private func restoreDefaultsPressed() {
@@ -1254,7 +1297,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     func controlTextDidEndEditing(_ obj: Notification) {
         if let field = obj.object as? NSTextField {
-            syncNumberStepper(for: field)
+            syncNumberControls(for: field)
         }
         updateDependentControlEnablement()
         scheduleAutosave()
@@ -1355,7 +1398,19 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     @objc private func numberStepperChanged(_ sender: NSStepper) {
         guard let input = numberInputs.first(where: { $0.stepper === sender }) else { return }
-        input.field.stringValue = String(Int(sender.doubleValue.rounded()))
+        let value = Int(sender.doubleValue.rounded())
+        input.field.stringValue = String(value)
+        input.slider?.doubleValue = Double(value)
+        updateDependentControlEnablement()
+        scheduleAutosave()
+    }
+
+    @objc private func numberSliderChanged(_ sender: NSSlider) {
+        guard let input = numberInputs.first(where: { $0.slider === sender }) else { return }
+        let value = Int(sender.doubleValue.rounded())
+        sender.doubleValue = Double(value)
+        input.field.stringValue = String(value)
+        input.stepper.doubleValue = Double(value)
         updateDependentControlEnablement()
         scheduleAutosave()
     }
@@ -1544,24 +1599,52 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         _ field: NSTextField,
         unit: String,
         min: Double,
-        max: Double
+        max: Double,
+        identifier: String? = nil,
+        showsSlider: Bool = false
     ) -> NSStackView {
         field.alignment = .right
+        if let identifier {
+            field.identifier = NSUserInterfaceItemIdentifier("\(identifier)Field")
+        }
 
         let stepper = NSStepper()
+        if let identifier {
+            stepper.identifier = NSUserInterfaceItemIdentifier("\(identifier)Stepper")
+        }
         stepper.minValue = min
         stepper.maxValue = max
         stepper.increment = 1
         stepper.target = self
         stepper.action = #selector(numberStepperChanged(_:))
 
-        numberInputs.append(NumberInput(field: field, stepper: stepper, min: min, max: max))
+        let slider: NSSlider?
+        if showsSlider {
+            let control = NSSlider(value: min, minValue: min, maxValue: max, target: self, action: #selector(numberSliderChanged(_:)))
+            if let identifier {
+                control.identifier = NSUserInterfaceItemIdentifier("\(identifier)Slider")
+            }
+            control.numberOfTickMarks = 5
+            control.allowsTickMarkValuesOnly = false
+            control.widthAnchor.constraint(equalToConstant: 160).isActive = true
+            slider = control
+        } else {
+            slider = nil
+        }
+
+        numberInputs.append(NumberInput(field: field, stepper: stepper, slider: slider, min: min, max: max))
 
         let unitLabel = NSTextField(labelWithString: unit)
         unitLabel.textColor = .secondaryLabelColor
         unitLabel.widthAnchor.constraint(equalToConstant: unit.isEmpty ? 0 : 58).isActive = true
 
-        let inputStack = NSStackView(views: [field, stepper, unitLabel])
+        var inputViews: [NSView] = [field, stepper]
+        if let slider {
+            inputViews.append(slider)
+        }
+        inputViews.append(unitLabel)
+
+        let inputStack = NSStackView(views: inputViews)
         inputStack.orientation = .horizontal
         inputStack.spacing = 8
         inputStack.alignment = .centerY
@@ -1652,14 +1735,15 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         Int(field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
     }
 
-    private func syncNumberSteppersFromFields() {
-        numberInputs.forEach { syncNumberStepper(for: $0.field) }
+    private func syncNumberControlsFromFields() {
+        numberInputs.forEach { syncNumberControls(for: $0.field) }
     }
 
-    private func syncNumberStepper(for field: NSTextField) {
+    private func syncNumberControls(for field: NSTextField) {
         guard let input = numberInputs.first(where: { $0.field === field }) else { return }
         let value = min(input.max, max(input.min, Double(intValue(field))))
         input.stepper.doubleValue = value
+        input.slider?.doubleValue = value
         field.stringValue = String(Int(value.rounded()))
     }
 
