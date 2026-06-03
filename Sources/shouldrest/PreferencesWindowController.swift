@@ -51,6 +51,8 @@ final class PreferencesWindowController: NSWindowController {
     private let currentTimeInBodyBreak = NSButton(checkboxWithTitle: L10n.tr("prefs.currentTimeBody"), target: nil, action: nil)
     private let breakHealth = NSButton(checkboxWithTitle: L10n.tr("prefs.breakHealth"), target: nil, action: nil)
     private let silentNotifications = NSButton(checkboxWithTitle: L10n.tr("prefs.silentNotifications"), target: nil, action: nil)
+    private let eyeStartSound = NSTextField()
+    private let eyeFinishSound = NSTextField()
     private let bodyStartSound = NSTextField()
     private let bodyFinishSound = NSTextField()
     private let soundVolume = NSTextField()
@@ -203,8 +205,10 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(currentTimeInBodyBreak)
         stack.addArrangedSubview(breakHealth)
         stack.addArrangedSubview(silentNotifications)
+        stack.addArrangedSubview(row(L10n.tr("prefs.eyeStartSound"), eyeStartSound))
+        stack.addArrangedSubview(row(L10n.tr("prefs.eyeFinishSound"), eyeFinishSound))
         stack.addArrangedSubview(row(L10n.tr("prefs.bodyStartSound"), bodyStartSound))
-        stack.addArrangedSubview(row(L10n.tr("prefs.finishSound"), bodyFinishSound))
+        stack.addArrangedSubview(row(L10n.tr("prefs.bodyFinishSound"), bodyFinishSound))
         stack.addArrangedSubview(row(L10n.tr("prefs.volume"), soundVolume))
 
         stack.addArrangedSubview(separator())
@@ -276,7 +280,7 @@ final class PreferencesWindowController: NSWindowController {
         compactFields.forEach { $0.widthAnchor.constraint(equalToConstant: 110).isActive = true }
 
         let wideFields = [
-            eyeColor, bodyColor, bodyStartSound, bodyFinishSound, customBodyTitle,
+            eyeColor, bodyColor, eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, customBodyTitle,
             customBodyText, localImagePath, shortcutPauseToggle, shortcutPause30,
             shortcutPause1h, shortcutPause2h, shortcutPause5h, shortcutPauseUntilMorning,
             shortcutEyeNow, shortcutBodyNow, shortcutSkipBody, shortcutEmergencyEye, shortcutReset,
@@ -334,9 +338,11 @@ final class PreferencesWindowController: NSWindowController {
         currentTimeInBodyBreak.state = state(settings.presentation.showCurrentTimeDuringBodyBreak)
         breakHealth.state = state(settings.presentation.breakHealthMode)
         silentNotifications.state = state(settings.notifications.silentNotifications)
+        eyeStartSound.stringValue = soundName(settings.eyeGate.startSound)
+        eyeFinishSound.stringValue = soundName(settings.eyeGate.finishSound)
         bodyStartSound.stringValue = soundName(settings.bodyBreak.startSound)
         bodyFinishSound.stringValue = soundName(settings.bodyBreak.finishSound)
-        soundVolume.stringValue = String(soundVolumeValue(settings.bodyBreak.finishSound))
+        soundVolume.stringValue = String(preferredSoundVolume())
 
         let custom = settings.contentLibrary.customBodyBreakIdeas.first
         useBuiltInIdeas.state = state(settings.contentLibrary.useBuiltInIdeas)
@@ -414,9 +420,10 @@ final class PreferencesWindowController: NSWindowController {
         next.presentation.breakHealthMode = isOn(breakHealth)
         next.notifications.silentNotifications = isOn(silentNotifications)
         let volume = min(1, max(0, doubleValue(soundVolume, fallback: 1)))
+        next.eyeGate.startSound = soundPolicy(name: eyeStartSound.stringValue, volume: volume)
+        next.eyeGate.finishSound = soundPolicy(name: eyeFinishSound.stringValue, volume: volume)
         next.bodyBreak.startSound = soundPolicy(name: bodyStartSound.stringValue, volume: volume)
         next.bodyBreak.finishSound = soundPolicy(name: bodyFinishSound.stringValue, volume: volume)
-        next.eyeGate.finishSound = next.bodyBreak.finishSound
 
         next.contentLibrary.useBuiltInIdeas = isOn(useBuiltInIdeas)
         next.contentLibrary.customBodyBreakIdeas = savedCustomIdeas()
@@ -593,6 +600,20 @@ final class PreferencesWindowController: NSWindowController {
         case .named(_, let volume):
             volume
         }
+    }
+
+    private func preferredSoundVolume() -> Double {
+        [
+            settings.eyeGate.startSound,
+            settings.eyeGate.finishSound,
+            settings.bodyBreak.startSound,
+            settings.bodyBreak.finishSound
+        ]
+        .compactMap { policy -> Double? in
+            guard case .named(_, let volume) = policy else { return nil }
+            return volume
+        }
+        .first ?? 1
     }
 
     private static func timeString(minutes: Int) -> String {

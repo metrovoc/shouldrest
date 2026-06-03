@@ -101,7 +101,10 @@
 "prefs.sectionPresentation" = "显示与声音";
 "prefs.theme" = "主题";
 "prefs.menuBarStyle" = "菜单栏样式";
+"prefs.eyeStartSound" = "Eye Gate 开始声音";
+"prefs.eyeFinishSound" = "Eye Gate 结束声音";
 "prefs.bodyStartSound" = "Body Break 开始声音";
+"prefs.bodyFinishSound" = "Body Break 结束声音";
 "prefs.finishSound" = "结束声音";
 "prefs.volume" = "音量 0...1";
 "prefs.sectionCustomIdea" = "自定义 Body Break 内容";

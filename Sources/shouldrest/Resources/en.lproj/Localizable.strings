@@ -101,7 +101,10 @@
 "prefs.sectionPresentation" = "Presentation And Sound";
 "prefs.theme" = "Theme";
 "prefs.menuBarStyle" = "Menu bar style";
+"prefs.eyeStartSound" = "Eye Gate start sound";
+"prefs.eyeFinishSound" = "Eye Gate finish sound";
 "prefs.bodyStartSound" = "Body start sound";
+"prefs.bodyFinishSound" = "Body finish sound";
 "prefs.finishSound" = "Finish sound";
 "prefs.volume" = "Volume 0...1";
 "prefs.sectionCustomIdea" = "Custom Body Break Idea";

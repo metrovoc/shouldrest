@@ -173,6 +173,7 @@ Implemented now:
 - Stretchly-style display targeting for Body Break: all displays or a selected single display, primary/cursor/configured-display selection, separate content-display selection, optional secondary-display blanking, and backward-compatible settings decoding. Eye Gate still forces all-display coverage.
 - Sanitized Body Break rich-text rendering with remote/inline HTML images stripped; images remain available through the explicit safe local-image channel.
 - Preference surface for enabling/disabling built-in rest ideas while preserving custom Body Break ideas.
+- Separate preference controls for Eye Gate and Body Break start/finish sounds, with shared configurable sound volume.
 - Complete global-shortcut preference surface for pause toggle, pause durations, pause until morning, immediate rests, Body Break skip-to-next, and reset; pause-until-morning shortcut is registered at runtime.
 - Configurable pause-until-morning hour, shared by menu/global-shortcut and CLI/URL automation; early-morning pauses now resume the same morning instead of always tomorrow.
 - Notification sound policy honors the silent-notifications setting for both pre-break and update notifications.
