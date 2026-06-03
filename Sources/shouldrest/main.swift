@@ -750,7 +750,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 now: now,
                 manualAwaiting: false,
                 emergencyOverrideAction: overlayEmergencyOverrideAction(for: session),
-                emergencyOverrideArmed: false,
+                emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: session),
                 bodyActions: nil
             )
             logger.log("Emergency override waiting for \(session.kind.rawValue), available in \(remainingSeconds)s")
@@ -2206,11 +2206,11 @@ final class RestOverlayView: NSView {
 
         emergencyButton.isHidden = false
         emergencyButton.isEnabled = true
-        updateEmergencyConfirmationUI()
+        updateEmergencyAffordanceUI()
         emergencyButton.toolTip = L10n.tr("overlay.emergencyOverrideHelp")
     }
 
-    private func updateEmergencyConfirmationUI() {
+    private func updateEmergencyAffordanceUI() {
         guard let remainingSeconds = emergencyRemainingSeconds else { return }
 
         emergencyPanel.isHidden = false
@@ -2229,10 +2229,16 @@ final class RestOverlayView: NSView {
         emergencyButton.alphaValue = style.buttonAlpha
         emergencyButton.contentTintColor = NSColor.systemRed.withAlphaComponent(style.tintAlpha)
 
+        let title: String
+        if emergencyOverrideArmed, remainingSeconds > 0 {
+            title = L10n.format("overlay.emergencyOverrideArmed", remainingSeconds)
+        } else if remainingSeconds == 0 {
+            title = L10n.tr("overlay.emergencyOverride")
+        } else {
+            title = L10n.format("overlay.emergencyOverrideIn", remainingSeconds)
+        }
         setEmergencyButtonTitle(
-            remainingSeconds == 0
-                ? L10n.tr("overlay.emergencyOverride")
-                : L10n.format("overlay.emergencyOverrideIn", remainingSeconds),
+            title,
             style: style
         )
     }

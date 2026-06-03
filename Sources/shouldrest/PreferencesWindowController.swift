@@ -384,15 +384,36 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         bodyLeadRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyLeadRow")
         self.bodyLeadRow = bodyLeadRow
         scheduleStack.addArrangedSubview(bodyLeadRow)
-        let bodyPostponeMinutesRow = numberRow(L10n.tr("prefs.postponeMinutes"), bodyPostponeMinutes, unit: L10n.tr("prefs.unit.minutes"), min: 1, max: 120)
+        let bodyPostponeMinutesRow = numberRow(
+            L10n.tr("prefs.postponeMinutes"),
+            bodyPostponeMinutes,
+            unit: L10n.tr("prefs.unit.minutes"),
+            min: 1,
+            max: 120,
+            identifier: "bodyPostponeMinutes"
+        )
         bodyPostponeMinutesRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyPostponeMinutesRow")
         self.bodyPostponeMinutesRow = bodyPostponeMinutesRow
         scheduleStack.addArrangedSubview(bodyPostponeMinutesRow)
-        let bodyPostponeLimitRow = numberRow(L10n.tr("prefs.maxPostpones"), bodyPostponeLimit, unit: L10n.tr("prefs.unit.times"), min: 0, max: 20)
+        let bodyPostponeLimitRow = numberRow(
+            L10n.tr("prefs.maxPostpones"),
+            bodyPostponeLimit,
+            unit: L10n.tr("prefs.unit.times"),
+            min: 0,
+            max: 20,
+            identifier: "bodyPostponeLimit"
+        )
         bodyPostponeLimitRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyPostponeLimitRow")
         self.bodyPostponeLimitRow = bodyPostponeLimitRow
         scheduleStack.addArrangedSubview(bodyPostponeLimitRow)
-        let bodyPostponeWindowPercentRow = numberRow(L10n.tr("prefs.postponeWindowPercent"), bodyPostponeWindowPercent, unit: L10n.tr("prefs.unit.percent"), min: 0, max: 100)
+        let bodyPostponeWindowPercentRow = numberRow(
+            L10n.tr("prefs.postponeWindowPercent"),
+            bodyPostponeWindowPercent,
+            unit: L10n.tr("prefs.unit.percent"),
+            min: 0,
+            max: 100,
+            identifier: "bodyPostponeWindowPercent"
+        )
         bodyPostponeWindowPercentRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyPostponeWindowPercentRow")
         self.bodyPostponeWindowPercentRow = bodyPostponeWindowPercentRow
         scheduleStack.addArrangedSubview(bodyPostponeWindowPercentRow)
@@ -1428,9 +1449,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             bodyIntervalRow,
             bodyDurationRow,
             bodyColorRow,
-            bodyPostponeMinutesRow,
             bodyPostponeLimitRow,
-            bodyPostponeWindowPercentRow,
             bodyContentDisplayRow
         ].forEach { $0?.isHidden = !bodyBreakEnabled }
         [
@@ -1450,6 +1469,9 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         let bodyAfterEyeGatesVisible = bodyBreakEnabled && eyeGateEnabled
         bodyAfterEyeGatesRow?.isHidden = !bodyAfterEyeGatesVisible
         setNumberInputEnabled(bodyAfterEyeGates, bodyAfterEyeGatesVisible)
+        let bodyPostponeEnabled = bodyBreakEnabled && intValue(bodyPostponeLimit) > 0
+        [bodyPostponeMinutesRow, bodyPostponeWindowPercentRow].forEach { $0?.isHidden = !bodyPostponeEnabled }
+        [bodyPostponeMinutes, bodyPostponeWindowPercent].forEach { setNumberInputEnabled($0, bodyPostponeEnabled) }
         let bodyNotificationEnabled = bodyBreakEnabled && isOn(bodyNotify)
         bodyLeadRow?.isHidden = !bodyNotificationEnabled
         setNumberInputEnabled(bodyLead, bodyNotificationEnabled)

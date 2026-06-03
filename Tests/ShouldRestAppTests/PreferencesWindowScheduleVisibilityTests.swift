@@ -109,6 +109,42 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.bodyContentDisplay")))
     }
 
+    func testDisablingBodyPostponesHidesPostponeDurationAndWindowAndAutosaves() throws {
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectScheduleTab(in: contentView)
+        let postponeLimit = try XCTUnwrap(view(withIdentifier: "bodyPostponeLimitField", in: contentView) as? NSTextField)
+        XCTAssertFalse(try view(withIdentifier: "prefs.bodyPostponeMinutesRow", in: contentView).isHidden)
+        XCTAssertFalse(try view(withIdentifier: "prefs.bodyPostponeWindowPercentRow", in: contentView).isHidden)
+
+        postponeLimit.stringValue = "0"
+        controller.controlTextDidEndEditing(Notification(name: NSControl.textDidEndEditingNotification, object: postponeLimit))
+
+        XCTAssertTrue(try view(withIdentifier: "prefs.bodyPostponeMinutesRow", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.bodyPostponeWindowPercentRow", in: contentView).isHidden)
+        var texts = visibleTexts(in: contentView)
+        XCTAssertFalse(texts.contains(L10n.tr("prefs.postponeMinutes")))
+        XCTAssertFalse(texts.contains(L10n.tr("prefs.postponeWindowPercent")))
+        waitUntilSavedSettingsArrive(savedSettings)
+        XCTAssertFalse(savedSettings.value?.bodyBreak.postpone.isEnabled ?? true)
+        XCTAssertEqual(savedSettings.value?.bodyBreak.postpone.maxCount, 0)
+
+        savedSettings.value = nil
+        postponeLimit.stringValue = "1"
+        controller.controlTextDidEndEditing(Notification(name: NSControl.textDidEndEditingNotification, object: postponeLimit))
+
+        XCTAssertFalse(try view(withIdentifier: "prefs.bodyPostponeMinutesRow", in: contentView).isHidden)
+        XCTAssertFalse(try view(withIdentifier: "prefs.bodyPostponeWindowPercentRow", in: contentView).isHidden)
+        texts = visibleTexts(in: contentView)
+        XCTAssertTrue(texts.contains(L10n.tr("prefs.postponeMinutes")))
+        XCTAssertTrue(texts.contains(L10n.tr("prefs.postponeWindowPercent")))
+        waitUntilSavedSettingsArrive(savedSettings)
+        XCTAssertTrue(savedSettings.value?.bodyBreak.postpone.isEnabled ?? false)
+        XCTAssertEqual(savedSettings.value?.bodyBreak.postpone.maxCount, 1)
+    }
+
     func testBodyNotificationLeadRowHidesWhenNotificationIsOffAndAutosaves() throws {
         let savedSettings = SavedSettingsBox()
         let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }

@@ -6,7 +6,7 @@ import XCTest
 final class EmergencyOverrideCoordinatorTests: XCTestCase {
     private let start = Date(timeIntervalSinceReferenceDate: 1_000)
 
-    func testRequestBeforeHoldOnlyWaitsAndNeverCreatesConfirmationState() {
+    func testRequestBeforeHoldArmsAndCompletesAutomaticallyWhenHoldExpires() {
         let session = eyeGateSession()
         let policy = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 0, minimumHoldDuration: 3)
         var coordinator = EmergencyOverrideCoordinator()
@@ -15,17 +15,21 @@ final class EmergencyOverrideCoordinatorTests: XCTestCase {
             coordinator.request(session: session, policy: policy, now: start.addingTimeInterval(1)),
             .waiting(remainingSeconds: 2)
         )
-        XCTAssertFalse(coordinator.isArmed(for: session))
+        XCTAssertTrue(coordinator.isArmed(for: session))
         XCTAssertNil(coordinator.completionIfArmedAndReady(
             session: session,
             policy: policy,
             now: start.addingTimeInterval(2)
         ))
-        XCTAssertNil(coordinator.completionIfArmedAndReady(
-            session: session,
-            policy: policy,
-            now: start.addingTimeInterval(3)
-        ))
+        XCTAssertEqual(
+            coordinator.completionIfArmedAndReady(
+                session: session,
+                policy: policy,
+                now: start.addingTimeInterval(3)
+            ),
+            .complete(heldDuration: 3)
+        )
+        XCTAssertFalse(coordinator.isArmed(for: session))
     }
 
     func testRequestAfterHoldCompletesImmediatelyWithoutLegacyConfirmationSteps() {
@@ -46,10 +50,28 @@ final class EmergencyOverrideCoordinatorTests: XCTestCase {
         var coordinator = EmergencyOverrideCoordinator()
 
         _ = coordinator.request(session: session, policy: enabled, now: start.addingTimeInterval(1))
-        XCTAssertFalse(coordinator.isArmed(for: session))
+        XCTAssertTrue(coordinator.isArmed(for: session))
 
         XCTAssertEqual(
             coordinator.request(session: session, policy: disabled, now: start.addingTimeInterval(1)),
+            .unavailable
+        )
+        XCTAssertFalse(coordinator.isArmed(for: session))
+    }
+
+    func testBodyBreakCannotCreateArmedEmergencyState() {
+        let session = RestSession(
+            kind: .bodyBreak,
+            startedAt: start,
+            scheduledAt: start,
+            duration: 60,
+            manualFinishEnabled: false
+        )
+        let policy = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 0, minimumHoldDuration: 3)
+        var coordinator = EmergencyOverrideCoordinator()
+
+        XCTAssertEqual(
+            coordinator.request(session: session, policy: policy, now: start.addingTimeInterval(1)),
             .unavailable
         )
         XCTAssertFalse(coordinator.isArmed(for: session))

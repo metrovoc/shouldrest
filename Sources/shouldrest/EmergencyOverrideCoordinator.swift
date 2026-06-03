@@ -11,7 +11,7 @@ struct EmergencyOverrideCoordinator {
     private(set) var armedSessionID: UUID?
 
     func isArmed(for session: RestSession) -> Bool {
-        false
+        armedSessionID == session.id
     }
 
     mutating func request(
@@ -26,7 +26,7 @@ struct EmergencyOverrideCoordinator {
 
         let heldDuration = max(0, now.timeIntervalSince(session.startedAt))
         guard heldDuration >= policy.minimumHoldDuration else {
-            armedSessionID = nil
+            armedSessionID = session.id
             return .waiting(remainingSeconds: Int(ceil(policy.minimumHoldDuration - heldDuration)))
         }
 
@@ -39,7 +39,19 @@ struct EmergencyOverrideCoordinator {
         policy: EmergencyOverridePolicy,
         now: Date
     ) -> EmergencyOverrideDecision? {
-        nil
+        guard armedSessionID == session.id else { return nil }
+        guard session.kind == .eyeGate, policy.isEnabled else {
+            armedSessionID = nil
+            return .unavailable
+        }
+
+        let heldDuration = max(0, now.timeIntervalSince(session.startedAt))
+        guard heldDuration >= policy.minimumHoldDuration else {
+            return nil
+        }
+
+        armedSessionID = nil
+        return .complete(heldDuration: heldDuration)
     }
 
     mutating func clear(sessionID: UUID? = nil) {
