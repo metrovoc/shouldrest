@@ -149,6 +149,32 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertFalse(try view(withIdentifier: "prefs.shortcutEndBodyRow", in: contentView).isHidden)
     }
 
+    func testEndActiveRestShortcutFollowsEyeManualFinishWhenBodyBreakIsDisabled() throws {
+        var settings = RestSettings.defaults
+        settings.bodyBreak.isEnabled = false
+        settings.eyeGate.manualFinishEnabled = false
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectShortcutsTab(in: contentView)
+        XCTAssertTrue(try view(withIdentifier: "prefs.shortcutBodyNowRow", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.shortcutEndBodyRow", in: contentView).isHidden)
+
+        try selectScheduleTab(in: contentView)
+        let eyeManualFinish = try XCTUnwrap(view(withIdentifier: "prefs.eyeManualFinish", in: contentView) as? NSButton)
+        eyeManualFinish.state = .on
+
+        XCTAssertTrue(sendAction(from: eyeManualFinish))
+        waitUntilSavedSettingsArrive(savedSettings)
+        XCTAssertEqual(savedSettings.value?.eyeGate.manualFinishEnabled, true)
+
+        try selectShortcutsTab(in: contentView)
+        XCTAssertTrue(try view(withIdentifier: "prefs.shortcutBodyNowRow", in: contentView).isHidden)
+        XCTAssertFalse(try view(withIdentifier: "prefs.shortcutEndBodyRow", in: contentView).isHidden)
+        XCTAssertTrue(visibleTexts(in: contentView).contains(L10n.tr("prefs.endBodyBreak")))
+    }
+
     func testLegacySkipToBodyShortcutIsShownAsBodyBreakNowWithoutDuplicateRow() throws {
         var settings = RestSettings.defaults
         settings.shortcuts.takeBodyBreakNow = ""

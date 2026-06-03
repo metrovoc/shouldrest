@@ -1556,6 +1556,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         updateShortcutPreferenceVisibility(
             eyeGateEnabled: eyeGateEnabled,
             bodyBreakEnabled: bodyBreakEnabled,
+            eyeManualFinishEnabled: isOn(eyeManualFinish),
             strictPreferencesHidden: strictPreferencesHidden
         )
     }
@@ -1563,17 +1564,18 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private func updateShortcutPreferenceVisibility(
         eyeGateEnabled: Bool,
         bodyBreakEnabled: Bool,
+        eyeManualFinishEnabled: Bool,
         strictPreferencesHidden: Bool
     ) {
         shortcutEyeNowRow?.isHidden = !eyeGateEnabled
         shortcutEyeNow.isEnabled = eyeGateEnabled
 
-        [shortcutBodyNowRow, shortcutEndBodyRow].forEach {
-            $0?.isHidden = !bodyBreakEnabled
-        }
-        [shortcutBodyNow, shortcutEndBody].forEach {
-            $0.isEnabled = bodyBreakEnabled
-        }
+        shortcutBodyNowRow?.isHidden = !bodyBreakEnabled
+        shortcutBodyNow.isEnabled = bodyBreakEnabled
+
+        let canEndActiveRest = bodyBreakEnabled || (eyeGateEnabled && eyeManualFinishEnabled)
+        shortcutEndBodyRow?.isHidden = !canEndActiveRest
+        shortcutEndBody.isEnabled = canEndActiveRest
 
         let emergencyVisible = eyeGateEnabled && !strictPreferencesHidden && isOn(eyeEmergencyOverride)
         shortcutEmergencyEyeRow?.isHidden = !emergencyVisible
