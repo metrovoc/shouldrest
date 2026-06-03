@@ -1,6 +1,7 @@
 "app.name" = "ShouldRest";
 "menu.takeEyeGateNow" = "Take Eye Gate Now";
 "menu.takeBodyBreakNow" = "Take Body Break Now";
+"menu.takeNextScheduledRestNow" = "Take Next Scheduled Rest Now";
 "menu.postponeBodyBreak" = "Postpone Body Break";
 "menu.finishBodyBreak" = "Finish Body Break";
 "menu.skipBodyBreak" = "Skip Body Break";

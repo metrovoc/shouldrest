@@ -205,6 +205,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         if engine.state.activeSession == nil {
             menu.addItem(actionItem(L10n.tr("menu.takeEyeGateNow"), #selector(takeEyeGateNow)))
             menu.addItem(actionItem(L10n.tr("menu.takeBodyBreakNow"), #selector(takeBodyBreakNow)))
+            if engine.state.scheduled != nil {
+                menu.addItem(actionItem(L10n.tr("menu.takeNextScheduledRestNow"), #selector(takeNextScheduledRestNow)))
+            }
             menu.addItem(.separator())
         }
 

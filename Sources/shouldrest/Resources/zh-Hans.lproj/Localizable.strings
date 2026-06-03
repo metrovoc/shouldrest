@@ -1,6 +1,7 @@
 "app.name" = "ShouldRest";
 "menu.takeEyeGateNow" = "立即 Eye Gate";
 "menu.takeBodyBreakNow" = "立即 Body Break";
+"menu.takeNextScheduledRestNow" = "立即执行下一项计划休息";
 "menu.postponeBodyBreak" = "推迟 Body Break";
 "menu.finishBodyBreak" = "完成 Body Break";
 "menu.skipBodyBreak" = "跳过 Body Break";
