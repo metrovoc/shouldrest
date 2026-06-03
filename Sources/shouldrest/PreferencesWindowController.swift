@@ -78,7 +78,10 @@ final class PreferencesWindowController: NSWindowController {
     private let openAtLogin = NSButton(checkboxWithTitle: L10n.tr("prefs.openAtLogin"), target: nil, action: nil)
     private let checkUpdates = NSButton(checkboxWithTitle: L10n.tr("prefs.checkUpdates"), target: nil, action: nil)
     private let notifyNewVersion = NSButton(checkboxWithTitle: L10n.tr("prefs.notifyNewVersion"), target: nil, action: nil)
+    private let pauseUntilMorningMode = NSPopUpButton()
     private let pauseUntilMorningHour = NSTextField()
+    private let pauseUntilMorningLatitude = NSTextField()
+    private let pauseUntilMorningLongitude = NSTextField()
     private let updateFeedURL = NSTextField()
     private let disableUpdateFeatures = NSButton(checkboxWithTitle: L10n.tr("prefs.adminHideUpdates"), target: nil, action: nil)
     private let hideSettingsPath = NSButton(checkboxWithTitle: L10n.tr("prefs.adminHideSettingsPath"), target: nil, action: nil)
@@ -239,7 +242,10 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(openAtLogin)
         stack.addArrangedSubview(checkUpdates)
         stack.addArrangedSubview(notifyNewVersion)
+        stack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningMode"), pauseUntilMorningMode))
         stack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningHour"), pauseUntilMorningHour))
+        stack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningLatitude"), pauseUntilMorningLatitude))
+        stack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningLongitude"), pauseUntilMorningLongitude))
         stack.addArrangedSubview(row(L10n.tr("prefs.updateFeedURL"), updateFeedURL))
         stack.addArrangedSubview(disableUpdateFeatures)
         stack.addArrangedSubview(hideSettingsPath)
@@ -259,6 +265,7 @@ final class PreferencesWindowController: NSWindowController {
         appExclusionMode.addItems(withTitles: AppExclusionRule.Mode.allCases.map(\.rawValue))
         themeSource.addItems(withTitles: ThemeSource.allCases.map(\.rawValue))
         trayStyle.addItems(withTitles: TrayIconStyle.allCases.map(\.rawValue))
+        pauseUntilMorningMode.addItems(withTitles: MorningPauseMode.allCases.map(\.rawValue))
         bodyCoveredDisplay.addItems(withTitles: [
             DisplaySelection.primary.rawValue,
             DisplaySelection.cursor.rawValue,
@@ -277,7 +284,8 @@ final class PreferencesWindowController: NSWindowController {
         let compactFields = [
             eyeInterval, eyeDuration, bodyDuration, bodyAfterEyeGates, eyeLead, bodyLead,
             bodyPostponeMinutes, bodyPostponeLimit, naturalIdleMinutes, workingStart,
-            workingEnd, soundVolume, bodyConfiguredDisplayIndex, pauseUntilMorningHour
+            workingEnd, soundVolume, bodyConfiguredDisplayIndex, pauseUntilMorningHour,
+            pauseUntilMorningLatitude, pauseUntilMorningLongitude
         ]
         compactFields.forEach { $0.widthAnchor.constraint(equalToConstant: 110).isActive = true }
 
@@ -368,7 +376,10 @@ final class PreferencesWindowController: NSWindowController {
         openAtLogin.state = state(settings.operations.openAtLogin)
         checkUpdates.state = state(settings.operations.checkForUpdates)
         notifyNewVersion.state = state(settings.operations.notifyNewVersion)
+        pauseUntilMorningMode.selectItem(withTitle: settings.operations.resolvedPauseUntilMorningMode.rawValue)
         pauseUntilMorningHour.stringValue = String(settings.operations.resolvedPauseUntilMorningHour)
+        pauseUntilMorningLatitude.stringValue = String(settings.operations.pauseUntilMorningLatitude ?? 0)
+        pauseUntilMorningLongitude.stringValue = String(settings.operations.pauseUntilMorningLongitude ?? 0)
         updateFeedURL.stringValue = settings.operations.updateFeedURL
         disableUpdateFeatures.state = state(settings.admin.disableAppUpdateFeatures)
         hideSettingsPath.state = state(settings.admin.hideSettingsFileLocation)
@@ -447,7 +458,10 @@ final class PreferencesWindowController: NSWindowController {
         next.operations.openAtLogin = isOn(openAtLogin)
         next.operations.checkForUpdates = isOn(checkUpdates)
         next.operations.notifyNewVersion = isOn(notifyNewVersion)
+        next.operations.pauseUntilMorningMode = selected(MorningPauseMode.self, from: pauseUntilMorningMode, fallback: .hour)
         next.operations.pauseUntilMorningHour = min(23, max(0, intValue(pauseUntilMorningHour)))
+        next.operations.pauseUntilMorningLatitude = min(89.8, max(-89.8, doubleValue(pauseUntilMorningLatitude, fallback: 0)))
+        next.operations.pauseUntilMorningLongitude = normalizedLongitude(doubleValue(pauseUntilMorningLongitude, fallback: 0))
         next.operations.updateFeedURL = updateFeedURL.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
         next.admin.disableAppUpdateFeatures = isOn(disableUpdateFeatures)
         next.admin.hideSettingsFileLocation = isOn(hideSettingsPath)
@@ -600,6 +614,16 @@ final class PreferencesWindowController: NSWindowController {
         let value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         let candidate = value.hasPrefix("#") ? value : "#\(value)"
         return candidate.range(of: #"^#[0-9a-fA-F]{6}$"#, options: .regularExpression) == nil ? fallback : candidate
+    }
+
+    private func normalizedLongitude(_ longitude: Double) -> Double {
+        var value = longitude.truncatingRemainder(dividingBy: 360)
+        if value > 180 {
+            value -= 360
+        } else if value < -180 {
+            value += 360
+        }
+        return value
     }
 
     private func selected<T: RawRepresentable>(_ type: T.Type, from popup: NSPopUpButton, fallback: T) -> T where T.RawValue == String {

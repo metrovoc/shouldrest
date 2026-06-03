@@ -52,6 +52,7 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 - Menu bar status item.
 - Open at login.
 - Pause durations: 30 minutes, 1 hour, 2 hours, 5 hours, until morning, indefinitely.
+- Pause-until-morning supports both a fixed hour and sunrise from configured coordinates.
 - Global shortcuts for pause/resume, immediate break, and reset.
 - CLI or URL-style automation surface.
 
@@ -80,4 +81,3 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 - Version/update checks with disable switch.
 - Debug panel or command with settings path, log path, runtime state, and timer state.
 - Corporate/admin controls: hide update UI, hide strict preferences, hide settings file path, custom preferences message.
-

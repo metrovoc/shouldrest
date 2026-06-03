@@ -126,7 +126,10 @@
 "prefs.emergencyEyeGate" = "Emergency Eye Gate override";
 "prefs.reset" = "Reset";
 "prefs.sectionOperations" = "Operations And Admin";
+"prefs.pauseUntilMorningMode" = "Pause-until-morning mode";
 "prefs.pauseUntilMorningHour" = "Pause-until-morning hour";
+"prefs.pauseUntilMorningLatitude" = "Sunrise latitude";
+"prefs.pauseUntilMorningLongitude" = "Sunrise longitude";
 "prefs.updateFeedURL" = "Update feed URL";
 "prefs.preferencesMessage" = "Preferences message";
 "prefs.save" = "Save";

@@ -527,6 +527,9 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
     public var updateFeedURL: String
     public var hasCompletedOnboarding: Bool
     public var pauseUntilMorningHour: Int?
+    public var pauseUntilMorningMode: MorningPauseMode?
+    public var pauseUntilMorningLatitude: Double?
+    public var pauseUntilMorningLongitude: Double?
 
     public init(
         openAtLogin: Bool,
@@ -534,7 +537,10 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
         notifyNewVersion: Bool,
         updateFeedURL: String,
         hasCompletedOnboarding: Bool,
-        pauseUntilMorningHour: Int? = nil
+        pauseUntilMorningHour: Int? = nil,
+        pauseUntilMorningMode: MorningPauseMode? = nil,
+        pauseUntilMorningLatitude: Double? = nil,
+        pauseUntilMorningLongitude: Double? = nil
     ) {
         self.openAtLogin = openAtLogin
         self.checkForUpdates = checkForUpdates
@@ -542,6 +548,9 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
         self.updateFeedURL = updateFeedURL
         self.hasCompletedOnboarding = hasCompletedOnboarding
         self.pauseUntilMorningHour = pauseUntilMorningHour.map(Self.normalizedMorningHour)
+        self.pauseUntilMorningMode = pauseUntilMorningMode
+        self.pauseUntilMorningLatitude = pauseUntilMorningLatitude.map { min(89.8, max(-89.8, $0)) }
+        self.pauseUntilMorningLongitude = pauseUntilMorningLongitude.map(Self.normalizedLongitude)
     }
 
     public static let defaults = OperationsSettings(
@@ -550,26 +559,44 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
         notifyNewVersion: true,
         updateFeedURL: "https://api.github.com/repos/tovkaic/shouldrest/releases/latest",
         hasCompletedOnboarding: false,
-        pauseUntilMorningHour: defaultPauseUntilMorningHour
+        pauseUntilMorningHour: defaultPauseUntilMorningHour,
+        pauseUntilMorningMode: .hour,
+        pauseUntilMorningLatitude: 0,
+        pauseUntilMorningLongitude: 0
     )
 
     public var resolvedPauseUntilMorningHour: Int {
         Self.normalizedMorningHour(pauseUntilMorningHour ?? Self.defaultPauseUntilMorningHour)
     }
 
+    public var resolvedPauseUntilMorningMode: MorningPauseMode {
+        pauseUntilMorningMode ?? .hour
+    }
+
     public func secondsUntilMorning(from now: Date = Date(), calendar: Calendar = .current) -> TimeInterval {
         Self.secondsUntilMorning(
             from: now,
             calendar: calendar,
-            morningHour: resolvedPauseUntilMorningHour
+            morningHour: resolvedPauseUntilMorningHour,
+            mode: resolvedPauseUntilMorningMode,
+            latitude: pauseUntilMorningLatitude,
+            longitude: pauseUntilMorningLongitude
         )
     }
 
     public static func secondsUntilMorning(
         from now: Date = Date(),
         calendar: Calendar = .current,
-        morningHour: Int? = nil
+        morningHour: Int? = nil,
+        mode: MorningPauseMode? = nil,
+        latitude: Double? = nil,
+        longitude: Double? = nil
     ) -> TimeInterval {
+        if (mode ?? .hour) == .sunrise,
+           let target = nextSunrise(from: now, calendar: calendar, latitude: latitude ?? 0, longitude: longitude ?? 0) {
+            return max(1, target.timeIntervalSince(now))
+        }
+
         let hour = normalizedMorningHour(morningHour ?? defaultPauseUntilMorningHour)
         let sameDayTarget = calendar.date(bySettingHour: hour, minute: 0, second: 0, of: now)
             ?? now.addingTimeInterval(24 * 60 * 60)
@@ -582,6 +609,99 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
     private static func normalizedMorningHour(_ hour: Int) -> Int {
         min(23, max(0, hour))
     }
+
+    private static func nextSunrise(from now: Date, calendar: Calendar, latitude: Double, longitude: Double) -> Date? {
+        for dayOffset in 0...3 {
+            guard let day = calendar.date(byAdding: .day, value: dayOffset, to: now),
+                  let sunrise = sunrise(on: day, calendar: calendar, latitude: latitude, longitude: longitude) else {
+                continue
+            }
+            if sunrise > now {
+                return sunrise
+            }
+        }
+        return nil
+    }
+
+    private static func sunrise(on day: Date, calendar: Calendar, latitude: Double, longitude: Double) -> Date? {
+        let dayStart = calendar.startOfDay(for: day)
+        guard let dayOfYear = calendar.ordinality(of: .day, in: .year, for: dayStart) else {
+            return nil
+        }
+
+        let lat = min(89.8, max(-89.8, latitude))
+        let lon = normalizedLongitude(longitude)
+        let zenith = 90.833
+        let longitudeHour = lon / 15
+        let approximateTime = Double(dayOfYear) + ((6 - longitudeHour) / 24)
+        let meanAnomaly = (0.9856 * approximateTime) - 3.289
+        let trueLongitude = normalizedDegrees(
+            meanAnomaly
+                + (1.916 * sin(degreesToRadians(meanAnomaly)))
+                + (0.020 * sin(2 * degreesToRadians(meanAnomaly)))
+                + 282.634
+        )
+        var rightAscension = radiansToDegrees(atan(0.91764 * tan(degreesToRadians(trueLongitude))))
+        rightAscension = normalizedDegrees(rightAscension)
+        let longitudeQuadrant = floor(trueLongitude / 90) * 90
+        let ascensionQuadrant = floor(rightAscension / 90) * 90
+        rightAscension = (rightAscension + longitudeQuadrant - ascensionQuadrant) / 15
+
+        let sinDeclination = 0.39782 * sin(degreesToRadians(trueLongitude))
+        let cosDeclination = cos(asin(sinDeclination))
+        let cosHourAngle = (
+            cos(degreesToRadians(zenith)) - (sinDeclination * sin(degreesToRadians(lat)))
+        ) / (cosDeclination * cos(degreesToRadians(lat)))
+        guard cosHourAngle >= -1, cosHourAngle <= 1 else {
+            return nil
+        }
+
+        let localHourAngle = (360 - radiansToDegrees(acos(cosHourAngle))) / 15
+        let localMeanTime = localHourAngle + rightAscension - (0.06571 * approximateTime) - 6.622
+        let utcHours = normalizedHours(localMeanTime - longitudeHour)
+        let offsetHours = Double(calendar.timeZone.secondsFromGMT(for: dayStart)) / 3600
+        let localHours = normalizedHours(utcHours + offsetHours)
+        return dayStart.addingTimeInterval(localHours * 60 * 60)
+    }
+
+    private static func normalizedLongitude(_ longitude: Double) -> Double {
+        var value = longitude.truncatingRemainder(dividingBy: 360)
+        if value > 180 {
+            value -= 360
+        } else if value < -180 {
+            value += 360
+        }
+        return value
+    }
+
+    private static func normalizedDegrees(_ degrees: Double) -> Double {
+        var value = degrees.truncatingRemainder(dividingBy: 360)
+        if value < 0 {
+            value += 360
+        }
+        return value
+    }
+
+    private static func normalizedHours(_ hours: Double) -> Double {
+        var value = hours.truncatingRemainder(dividingBy: 24)
+        if value < 0 {
+            value += 24
+        }
+        return value
+    }
+
+    private static func degreesToRadians(_ degrees: Double) -> Double {
+        degrees * .pi / 180
+    }
+
+    private static func radiansToDegrees(_ radians: Double) -> Double {
+        radians * 180 / .pi
+    }
+}
+
+public enum MorningPauseMode: String, Codable, CaseIterable, Equatable, Sendable {
+    case hour
+    case sunrise
 }
 
 public struct AdminSettings: Codable, Equatable, Sendable {

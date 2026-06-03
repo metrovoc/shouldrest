@@ -179,7 +179,7 @@ enum CommandLineAutomation {
 
         let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
         let durationValue = components?.queryItems?.first(where: { $0.name == "duration" })?.value
-        let duration = durationValue.flatMap { parseDuration($0, morningHour: configuredMorningHour()) }
+        let duration = durationValue.flatMap { parseDuration($0, operations: configuredOperations()) }
         return (command, duration)
     }
 
@@ -188,14 +188,21 @@ enum CommandLineAutomation {
               args.indices.contains(index + 1) else {
             return nil
         }
-        return parseDuration(args[index + 1], morningHour: configuredMorningHour())
+        return parseDuration(args[index + 1], operations: configuredOperations())
     }
 
-    static func parseDuration(_ input: String, morningHour: Int? = nil) -> TimeInterval? {
+    static func parseDuration(
+        _ input: String,
+        operations: OperationsSettings? = nil,
+        morningHour: Int? = nil
+    ) -> TimeInterval? {
         if input == "indefinitely" {
             return nil
         }
         if input == "until-morning" {
+            if let operations {
+                return operations.secondsUntilMorning()
+            }
             return OperationsSettings.secondsUntilMorning(morningHour: morningHour)
         }
         if let minutes = Int(input), minutes > 0 {
@@ -219,8 +226,8 @@ enum CommandLineAutomation {
         return seconds > 0 ? TimeInterval(seconds) : nil
     }
 
-    private static func configuredMorningHour() -> Int? {
-        (try? SettingsStore(fileURL: AppPaths.settingsURL).load())?.operations.pauseUntilMorningHour
+    private static func configuredOperations() -> OperationsSettings? {
+        (try? SettingsStore(fileURL: AppPaths.settingsURL).load())?.operations
     }
 
     private static var helpText: String {

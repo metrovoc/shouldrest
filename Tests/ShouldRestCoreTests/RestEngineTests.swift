@@ -349,6 +349,35 @@ final class RestEngineTests: XCTestCase {
         )
     }
 
+    func testOperationsSettingsCalculatesUntilMorningUsingSunrise() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let beforeSunrise = calendar.date(from: DateComponents(year: 2026, month: 6, day: 3, hour: 8, minute: 0))!
+        let afterSunrise = calendar.date(from: DateComponents(year: 2026, month: 6, day: 3, hour: 20, minute: 0))!
+
+        let sameDaySeconds = OperationsSettings.secondsUntilMorning(
+            from: beforeSunrise,
+            calendar: calendar,
+            morningHour: 6,
+            mode: .sunrise,
+            latitude: 42.3,
+            longitude: -71
+        )
+        let nextDaySeconds = OperationsSettings.secondsUntilMorning(
+            from: afterSunrise,
+            calendar: calendar,
+            morningHour: 6,
+            mode: .sunrise,
+            latitude: 42.3,
+            longitude: -71
+        )
+
+        XCTAssertGreaterThan(sameDaySeconds, 60 * 60)
+        XCTAssertLessThan(sameDaySeconds, 2 * 60 * 60)
+        XCTAssertGreaterThan(nextDaySeconds, 12 * 60 * 60)
+        XCTAssertLessThan(nextDaySeconds, 15 * 60 * 60)
+    }
+
     func testOperationsSettingsDecodesLegacyMissingPauseUntilMorningHour() throws {
         let legacyJSON = #"""
         {
@@ -363,7 +392,11 @@ final class RestEngineTests: XCTestCase {
         let operations = try JSONDecoder().decode(OperationsSettings.self, from: legacyJSON)
 
         XCTAssertNil(operations.pauseUntilMorningHour)
+        XCTAssertNil(operations.pauseUntilMorningMode)
+        XCTAssertNil(operations.pauseUntilMorningLatitude)
+        XCTAssertNil(operations.pauseUntilMorningLongitude)
         XCTAssertEqual(operations.resolvedPauseUntilMorningHour, OperationsSettings.defaultPauseUntilMorningHour)
+        XCTAssertEqual(operations.resolvedPauseUntilMorningMode, .hour)
     }
 
     func testWorkingHoursSupportsDayAndOvernightWindows() throws {
