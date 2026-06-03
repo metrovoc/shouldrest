@@ -38,6 +38,25 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
         XCTAssertNotNil(view(withIdentifier: "prefs.restoreDefaultsButton", in: contentView) as? NSButton)
     }
 
+    func testRestoreDefaultsConfirmationDefaultsToCancel() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let alert = controller.makeRestoreDefaultsAlert()
+
+        XCTAssertEqual(alert.messageText, L10n.tr("prefs.restoreDefaults"))
+        XCTAssertEqual(alert.informativeText, L10n.tr("prefs.restoreDefaultsWarning"))
+        XCTAssertEqual(alert.alertStyle, .warning)
+        XCTAssertEqual(alert.buttons.map(\.title), [
+            L10n.tr("prefs.restoreDefaultsCancel"),
+            L10n.tr("prefs.restoreDefaultsContinue")
+        ])
+        XCTAssertEqual(alert.buttons[0].keyEquivalent, "\r")
+        XCTAssertEqual(alert.buttons[1].keyEquivalent, "")
+        if #available(macOS 11.0, *) {
+            XCTAssertFalse(alert.buttons[0].hasDestructiveAction)
+            XCTAssertTrue(alert.buttons[1].hasDestructiveAction)
+        }
+    }
+
     private func view(withIdentifier identifier: String, in view: NSView) -> NSView? {
         if view.identifier?.rawValue == identifier {
             return view
