@@ -151,10 +151,10 @@ Implemented now:
 - Open-at-login setting and ServiceManagement integration when running as a bundled app.
 - Sleep, wake, lock, and unlock correction hooks.
 - Debug panel with runtime state and paths.
+- Global shortcut registration for pause, pause durations, take-now, Body Break skip-to-next, and reset.
 
 Still to implement:
 
-- Global shortcuts.
 - URL automation.
 - Update check and admin policy UI.
 - Full manual-finish overlay interaction model.

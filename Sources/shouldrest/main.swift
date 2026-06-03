@@ -13,6 +13,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private let overlayController = OverlayController()
     private let focusDetector = FocusModeDetector()
     private let soundPlayer = SoundPlayer()
+    private let globalShortcuts = GlobalShortcutManager()
     private var preferencesWindowController: PreferencesWindowController?
     private var debugWindowController: DebugWindowController?
     private var statusItem: NSStatusItem?
@@ -57,6 +58,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
         logger.log("Application launched")
         applyOpenAtLoginSetting()
+        configureGlobalShortcuts()
         tick()
     }
 
@@ -376,6 +378,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         settings = nextSettings
         engine.updateSettings(nextSettings)
         applyOpenAtLoginSetting()
+        configureGlobalShortcuts()
         do {
             try settingsStore.save(nextSettings)
             logger.log("Preferences saved")
@@ -447,6 +450,51 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         } catch {
             if settings.operations.openAtLogin {
                 logger.log("Open-at-login unavailable: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    private func configureGlobalShortcuts() {
+        globalShortcuts.unregisterAll()
+        registerShortcut(settings.shortcuts.pauseToggle) { [weak self] in
+            if self?.engine.state.pause == nil {
+                self?.pause(for: nil, reason: .user)
+            } else {
+                self?.resumeBreaks()
+            }
+        }
+        registerShortcut(settings.shortcuts.pauseFor30Minutes) { [weak self] in
+            self?.pause(for: 30 * 60, reason: .user)
+        }
+        registerShortcut(settings.shortcuts.pauseFor1Hour) { [weak self] in
+            self?.pause(for: 60 * 60, reason: .user)
+        }
+        registerShortcut(settings.shortcuts.pauseFor2Hours) { [weak self] in
+            self?.pause(for: 2 * 60 * 60, reason: .user)
+        }
+        registerShortcut(settings.shortcuts.pauseFor5Hours) { [weak self] in
+            self?.pause(for: 5 * 60 * 60, reason: .user)
+        }
+        registerShortcut(settings.shortcuts.takeEyeGateNow) { [weak self] in
+            self?.takeEyeGateNow()
+        }
+        registerShortcut(settings.shortcuts.takeBodyBreakNow) { [weak self] in
+            self?.takeBodyBreakNow()
+        }
+        registerShortcut(settings.shortcuts.skipToNextBodyBreak) { [weak self] in
+            self?.takeBodyBreakNow()
+        }
+        registerShortcut(settings.shortcuts.reset) { [weak self] in
+            self?.resetBreaks()
+        }
+        logger.log("Global shortcuts configured")
+    }
+
+    private func registerShortcut(_ shortcut: String, action: @MainActor @escaping () -> Void) {
+        guard !shortcut.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+        globalShortcuts.register(shortcut: shortcut) {
+            Task { @MainActor in
+                action()
             }
         }
     }
