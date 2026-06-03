@@ -970,7 +970,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         case .newerVersion(let version):
             latestReleaseURL = result.releaseURL
             logger.log("Update available version=\(version) url=\(String(describing: result.releaseURL))")
-            if settings.operations.notifyNewVersion {
+            if settings.operations.notifyNewVersion || notifyWhenCurrent {
                 showAppNotification(title: L10n.tr("notification.updateTitle"), body: L10n.format("notification.updateAvailable", version))
             }
         case .upToDate:

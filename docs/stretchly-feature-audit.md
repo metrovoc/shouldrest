@@ -167,7 +167,7 @@ Implemented now:
 - URL-style automation parser plus Apple Event URL handler for bundled app registration.
 - Body Break manual-finish phase that lowers overlay level after the required duration and waits for user completion.
 - Configurable active working-hours windows, including overnight windows.
-- Update feed checks with manual menu action, launch-time checks, admin disable switch, and update notifications.
+- Update feed checks with manual menu action, launch-time checks, admin disable switch, automatic update notifications, and explicit manual-check feedback even when automatic update notifications are disabled.
 - SwiftPM localization resource bundle with English and Simplified Chinese strings for core menu, notification, status, debug, preferences, and overlay surfaces.
 - Safe local image Body Break content path support and overlay renderer.
 - Reproducible `.app` packaging script with `shouldrest://` URL-scheme Info.plist registration and localization resource bundling.
