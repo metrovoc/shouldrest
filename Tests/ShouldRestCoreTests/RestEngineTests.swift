@@ -290,6 +290,95 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(result, .deferred(.bodyBreak, .appExclusion("Presentation")))
     }
 
+    func testPauseAppExclusionInterruptsActiveBodyBreakUntilCleared() {
+        let rule = AppExclusionRule(
+            id: "presentation",
+            name: "Presentation",
+            matchTerms: ["Keynote"],
+            mode: .pauseWhenMatched,
+            appliesTo: [.bodyBreak],
+            isEnabled: true
+        )
+        var settings = RestSettings.defaults
+        settings.appExclusions = [rule]
+
+        var engine = RestEngine(settings: settings, now: start)
+        _ = engine.takeNow(.bodyBreak, now: start)
+
+        let interruptedAt = start.addingTimeInterval(30)
+        let interrupted = engine.deferActiveForAppExclusion(
+            now: interruptedAt,
+            context: RestContext(appExclusions: [AppExclusionEvaluation(rule: rule, isMatched: true)])
+        )
+
+        XCTAssertEqual(interrupted, .deferred(.bodyBreak, .appExclusion("Presentation")))
+        XCTAssertNil(engine.state.activeSession)
+        XCTAssertEqual(engine.state.scheduled?.kind, .bodyBreak)
+        XCTAssertEqual(engine.state.scheduled?.dueAt, interruptedAt)
+        XCTAssertEqual(engine.state.activeDeferral?.reason, .appExclusion("Presentation"))
+
+        let dangerAfterInterruption = engine.state.dangerScore
+        let stillDeferred = engine.evaluate(
+            now: interruptedAt.addingTimeInterval(10),
+            context: RestContext(appExclusions: [AppExclusionEvaluation(rule: rule, isMatched: true)])
+        )
+        XCTAssertEqual(stillDeferred, .deferred(.bodyBreak, .appExclusion("Presentation")))
+        XCTAssertEqual(engine.state.dangerScore, dangerAfterInterruption)
+
+        let resumed = engine.evaluate(
+            now: interruptedAt.addingTimeInterval(20),
+            context: RestContext(appExclusions: [AppExclusionEvaluation(rule: rule, isMatched: false)])
+        )
+
+        guard case .started(let session) = resumed else {
+            return XCTFail("Expected Body Break to restart once pause app exclusion clears")
+        }
+        XCTAssertEqual(session.kind, .bodyBreak)
+        XCTAssertNil(engine.state.activeDeferral)
+    }
+
+    func testAppExclusionDoesNotInterruptEyeGateOrResumeOnlyActiveBodyBreak() {
+        let pauseRule = AppExclusionRule(
+            id: "presentation",
+            name: "Presentation",
+            matchTerms: ["Keynote"],
+            mode: .pauseWhenMatched,
+            appliesTo: [.eyeGate, .bodyBreak],
+            isEnabled: true
+        )
+        var pauseSettings = RestSettings.defaults
+        pauseSettings.appExclusions = [pauseRule]
+
+        var eyeEngine = RestEngine(settings: pauseSettings, now: start)
+        _ = eyeEngine.takeNow(.eyeGate, now: start)
+        let eyeResult = eyeEngine.deferActiveForAppExclusion(
+            now: start.addingTimeInterval(5),
+            context: RestContext(appExclusions: [AppExclusionEvaluation(rule: pauseRule, isMatched: true)])
+        )
+        XCTAssertEqual(eyeResult, .noChange)
+        XCTAssertEqual(eyeEngine.state.activeSession?.kind, .eyeGate)
+
+        let resumeRule = AppExclusionRule(
+            id: "deep-work",
+            name: "Deep Work",
+            matchTerms: ["Xcode"],
+            mode: .resumeOnlyWhenMatched,
+            appliesTo: [.bodyBreak],
+            isEnabled: true
+        )
+        var resumeSettings = RestSettings.defaults
+        resumeSettings.appExclusions = [resumeRule]
+
+        var bodyEngine = RestEngine(settings: resumeSettings, now: start)
+        _ = bodyEngine.takeNow(.bodyBreak, now: start)
+        let bodyResult = bodyEngine.deferActiveForAppExclusion(
+            now: start.addingTimeInterval(5),
+            context: RestContext(appExclusions: [AppExclusionEvaluation(rule: resumeRule, isMatched: false)])
+        )
+        XCTAssertEqual(bodyResult, .noChange)
+        XCTAssertEqual(bodyEngine.state.activeSession?.kind, .bodyBreak)
+    }
+
     func testResumeOnlyAppExclusionDefersUntilMatchedThenStarts() {
         let rule = AppExclusionRule(
             id: "deep-work",

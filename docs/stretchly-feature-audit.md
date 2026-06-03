@@ -98,7 +98,7 @@ ShouldRest must implement or exceed these Stretchly capabilities except where ex
 - Natural rest credit from idle time.
 - Suspend/lock correction.
 - Focus/DND awareness.
-- App exclusions with pause and resume-only semantics.
+- App exclusions with pause and resume-only semantics, including active Body Break interruption for matching pause rules.
 - Working-hours gating.
 
 ### Controls
@@ -141,7 +141,7 @@ Implemented now:
 - Body Break default: rich content allowed, bounded postpone, ordinary skip, manual finish flag.
 - Natural rest credit.
 - Focus/DND policy: Body Break defers by default; Eye Gate does not.
-- App exclusions with per-kind targeting and pause/resume-only semantics.
+- App exclusions with per-kind targeting and pause/resume-only semantics, including Stretchly-style closure of an active Body Break when a matching pause exclusion appears. Eye Gate is not interrupted by app exclusions.
 - JSON settings store.
 - Built-in Eye Gate and Body Break idea library.
 - Native menu bar app skeleton.

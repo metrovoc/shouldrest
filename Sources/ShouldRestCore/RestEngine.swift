@@ -242,6 +242,25 @@ public struct RestEngine: Equatable, Sendable {
     }
 
     @discardableResult
+    public mutating func deferActiveForAppExclusion(
+        now: Date = Date(),
+        context: RestContext
+    ) -> RestEngineResult {
+        guard let active = state.activeSession else {
+            return .denied(.noActiveSession)
+        }
+
+        guard let reason = activeAppExclusionInterruptionReason(for: active.kind, context: context) else {
+            return .noChange
+        }
+
+        state.activeSession = nil
+        let scheduled = scheduledRest(kind: active.kind, dueAt: now)
+        state.scheduled = scheduled
+        return deferScheduledRest(scheduled, reason: reason, now: now)
+    }
+
+    @discardableResult
     public mutating func takeNow(_ kind: RestKind, now: Date = Date()) -> RestEngineResult {
         guard state.activeSession == nil else {
             return .denied(.alreadyActive)
@@ -477,6 +496,21 @@ public struct RestEngine: Equatable, Sendable {
                 return .appExclusion(evaluation.rule.name)
             default:
                 continue
+            }
+        }
+
+        return nil
+    }
+
+    private func activeAppExclusionInterruptionReason(
+        for kind: RestKind,
+        context: RestContext
+    ) -> ContextDeferralReason? {
+        guard kind != .eyeGate else { return nil }
+
+        for evaluation in context.appExclusions where evaluation.rule.isEnabled && evaluation.rule.appliesTo.contains(kind) {
+            if evaluation.rule.mode == .pauseWhenMatched, evaluation.isMatched {
+                return .appExclusion(evaluation.rule.name)
             }
         }
 

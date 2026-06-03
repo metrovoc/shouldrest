@@ -125,6 +125,18 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
 
         if let active = engine.state.activeSession {
+            if case .deferred(let kind, let reason) = engine.deferActiveForAppExclusion(now: now, context: currentContext()) {
+                unregisterActiveBreakShortcut()
+                overlayController.dismiss()
+                manualAwaitingSessionID = nil
+                if active.kind == .bodyBreak, let idea = activeBodyBreakIdeas[active.id] {
+                    pendingBodyBreakIdea = idea
+                }
+                clearActiveBodyBreakIdea(for: active)
+                logger.log("Active \(kind.rawValue) deferred: \(deferralReasonText(reason))")
+                rebuildMenu()
+                return
+            }
             refreshActiveBreakShortcut()
             let elapsed = now.timeIntervalSince(active.startedAt)
             let shouldAwaitManualFinish = elapsed >= active.duration && active.manualFinishEnabled
