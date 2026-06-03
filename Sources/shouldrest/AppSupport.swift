@@ -90,7 +90,11 @@ enum CommandLineAutomation {
             print("ShouldRest \(AppVersion.current)")
             return true
         case "settings":
-            print(AppPaths.settingsURL.path)
+            if configuredSettings()?.admin.hideSettingsFileLocation == true {
+                print("Settings path hidden by administrator.")
+            } else {
+                print(AppPaths.settingsURL.path)
+            }
             return true
         case "logs":
             print(AppPaths.logURL.path)
@@ -360,7 +364,11 @@ enum CommandLineAutomation {
     }
 
     private static func configuredOperations() -> OperationsSettings? {
-        (try? SettingsStore(fileURL: AppPaths.settingsURL).load())?.operations
+        configuredSettings()?.operations
+    }
+
+    private static func configuredSettings() -> RestSettings? {
+        try? SettingsStore(fileURL: AppPaths.settingsURL).load()
     }
 
     private static var helpText: String {
