@@ -13,36 +13,58 @@ struct UpdateCheckResult: Equatable {
 }
 
 final class UpdateChecker: @unchecked Sendable {
-    private let session: URLSession
+    typealias Fetch = @Sendable (URL) async throws -> (Data, URLResponse)
 
     init(session: URLSession = .shared) {
-        self.session = session
+        self.fetch = { url in
+            try await session.data(from: url)
+        }
     }
+
+    init(fetch: @escaping Fetch) {
+        self.fetch = fetch
+    }
+
+    private let fetch: Fetch
 
     func check(feedURL: String, currentVersion: String) async -> UpdateCheckResult {
         guard let url = URL(string: feedURL), !feedURL.isEmpty else {
             return UpdateCheckResult(status: .notConfigured, releaseURL: nil)
         }
 
+        let data: Data
+        let response: URLResponse
         do {
-            let (data, _) = try await session.data(from: url)
-            guard let object = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                return UpdateCheckResult(status: .failed("Invalid update response"), releaseURL: nil)
-            }
-
-            let tag = (object["tag_name"] as? String) ?? (object["version"] as? String) ?? ""
-            let releaseURL = (object["html_url"] as? String).flatMap(URL.init(string:))
-            guard !tag.isEmpty else {
-                return UpdateCheckResult(status: .failed("No version in update response"), releaseURL: releaseURL)
-            }
-
-            if Self.isVersion(tag, newerThan: currentVersion) {
-                return UpdateCheckResult(status: .newerVersion(tag), releaseURL: releaseURL)
-            }
-            return UpdateCheckResult(status: .upToDate, releaseURL: releaseURL)
+            (data, response) = try await fetch(url)
         } catch {
             return UpdateCheckResult(status: .failed(error.localizedDescription), releaseURL: nil)
         }
+
+        if let httpResponse = response as? HTTPURLResponse,
+           !(200..<300).contains(httpResponse.statusCode) {
+            return UpdateCheckResult(status: .failed("HTTP \(httpResponse.statusCode)"), releaseURL: nil)
+        }
+
+        let object: [String: Any]
+        do {
+            guard let parsed = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                return UpdateCheckResult(status: .failed("Invalid update response"), releaseURL: nil)
+            }
+            object = parsed
+        } catch {
+            return UpdateCheckResult(status: .failed("Invalid update response"), releaseURL: nil)
+        }
+
+        let tag = (object["tag_name"] as? String) ?? (object["version"] as? String) ?? ""
+        let releaseURL = (object["html_url"] as? String).flatMap(URL.init(string:))
+        guard !tag.isEmpty else {
+            return UpdateCheckResult(status: .failed("No version in update response"), releaseURL: releaseURL)
+        }
+
+        if Self.isVersion(tag, newerThan: currentVersion) {
+            return UpdateCheckResult(status: .newerVersion(tag), releaseURL: releaseURL)
+        }
+        return UpdateCheckResult(status: .upToDate, releaseURL: releaseURL)
     }
 
     static func isVersion(_ candidate: String, newerThan current: String) -> Bool {

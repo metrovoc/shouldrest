@@ -285,6 +285,7 @@ Implemented now:
 - Optional Eye Gate manual-finish phase that waits after the required duration without allowing early skip/postpone; its overlay remains at native screen-saver level and can be completed from the menu or active finish shortcut.
 - Configurable active working-hours windows, including overnight windows.
 - Update feed checks with manual menu action, launch-time and 48-hour repeat checks, admin disable switch that hides normal update controls, automatic update notifications that open the release page when clicked, and explicit manual-check feedback even when automatic update notifications are disabled.
+- Update checker tests cover version comparison, GitHub-style release JSON, `version` fallback responses, unconfigured feeds, HTTP failures, and malformed responses without using the network.
 - SwiftPM localization resource bundle with English and Simplified Chinese strings for core menu, notification, status, debug, preferences, and overlay surfaces.
 - Preference-level language selector for System language, English, and Simplified Chinese; unknown legacy locale identifiers fall back to System language instead of persisting an invalid override.
 - Safe local image Body Break content path support and overlay renderer.
