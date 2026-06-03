@@ -123,4 +123,41 @@ if [[ "$preferences_seen" != "1" ]]; then
   exit 1
 fi
 
-echo "GUI smoke OK: first-run welcome and preferences windows appeared with temporary support directory."
+SHOULDREST_SUPPORT_DIR="$support_dir" "$executable" debug-panel >> "$support_dir/stdout.log" 2>> "$support_dir/stderr.log" &
+automation_pid="$!"
+
+debug_seen=0
+for ((attempt = 1; attempt <= attempts; attempt++)); do
+  if ! kill -0 "$pid" 2>/dev/null; then
+    echo "ShouldRest exited before the debug panel appeared." >&2
+    cat "$support_dir/stdout.log" >&2 || true
+    cat "$support_dir/stderr.log" >&2 || true
+    exit 1
+  fi
+
+  windows="$(swift scripts/list_windows.swift || true)"
+  if grep -Eq 'name=(ShouldRest Debug|ShouldRest 调试)' <<< "$windows"; then
+    if ! grep -Eq "Handled (automation|launch automation) command debugPanel" "$support_dir/logs/shouldrest.log" 2>/dev/null; then
+      echo "Debug panel appeared, but smoke log did not confirm debug-panel automation." >&2
+      cat "$support_dir/logs/shouldrest.log" >&2 || true
+      exit 1
+    fi
+    debug_seen=1
+    break
+  fi
+
+  sleep 0.5
+done
+
+if [[ "$debug_seen" != "1" ]]; then
+  echo "Timed out waiting for debug panel." >&2
+  echo "Observed ShouldRest windows:" >&2
+  swift scripts/list_windows.swift >&2 || true
+  echo "stdout:" >&2
+  cat "$support_dir/stdout.log" >&2 || true
+  echo "stderr:" >&2
+  cat "$support_dir/stderr.log" >&2 || true
+  exit 1
+fi
+
+echo "GUI smoke OK: first-run welcome, preferences, and debug windows appeared with temporary support directory."

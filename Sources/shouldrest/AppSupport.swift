@@ -21,7 +21,7 @@ enum AppPaths {
 }
 
 enum AppVersion {
-    static let current = "0.1.28"
+    static let current = "0.1.29"
 }
 
 final class AppLogger {
@@ -68,6 +68,7 @@ enum AutomationCommand: String {
     case body
     case preferences
     case debug
+    case debugPanel
 }
 
 struct AutomationRequest: Equatable {
@@ -170,6 +171,11 @@ enum CommandLineAutomation {
             return dispatchOrQueue(
                 AutomationRequest(command: .debug),
                 message: "Requested debug info from running ShouldRest."
+            )
+        case "debug-panel", "debugPanel":
+            return dispatchOrQueue(
+                AutomationRequest(command: .debugPanel),
+                message: "Requested debug panel from running ShouldRest."
             )
         case "url":
             guard args.indices.contains(1) else {
@@ -307,6 +313,8 @@ enum CommandLineAutomation {
             command = .preferences
         case "debug":
             command = .debug
+        case "debug-panel", "debugPanel":
+            command = .debugPanel
         default:
             return nil
         }

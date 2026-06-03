@@ -869,9 +869,15 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func openDebugPanel() {
         if debugWindowController == nil {
-            debugWindowController = DebugWindowController()
+            debugWindowController = DebugWindowController(debugInfoProvider: { [weak self] in
+                self?.debugInfo() ?? ""
+            })
         }
-        debugWindowController?.update(text: debugInfo())
+        debugWindowController?.update(
+            text: debugInfo(),
+            logURL: settings.admin.hideSettingsFileLocation ? nil : logger.fileURL,
+            settingsURL: settings.admin.hideSettingsFileLocation ? nil : settingsStore.fileURL
+        )
         debugWindowController?.showWindow(nil)
         debugWindowController?.window?.makeKeyAndOrderFront(nil)
         debugWindowController?.window?.orderFrontRegardless()
@@ -949,6 +955,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             openPreferences()
         case .debug:
             copyDebugInfo()
+        case .debugPanel:
+            openDebugPanel()
         }
     }
 

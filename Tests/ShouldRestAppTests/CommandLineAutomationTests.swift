@@ -47,6 +47,17 @@ final class CommandLineAutomationTests: XCTestCase {
         XCTAssertTrue(request.noSkip)
     }
 
+    func testParsesDebugPanelURLAutomation() throws {
+        let url = try XCTUnwrap(URL(string: "shouldrest://debug-panel"))
+        let request = try XCTUnwrap(CommandLineAutomation.request(from: url))
+
+        XCTAssertEqual(request.command, .debugPanel)
+        XCTAssertNil(request.duration)
+        XCTAssertNil(request.title)
+        XCTAssertNil(request.text)
+        XCTAssertFalse(request.noSkip)
+    }
+
     func testPlansImmediateMiniAliasAsEyeGateRequest() throws {
         let plan = CommandLineAutomation.eyeGateCommandPlan(["mini"])
 
