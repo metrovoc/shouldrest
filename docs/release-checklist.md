@@ -8,6 +8,7 @@ This checklist covers the remaining distribution work after the local package bu
 - Confirm `dist/ShouldRest.app/Contents/Info.plist` contains the `shouldrest://` URL scheme.
 - Confirm `dist/ShouldRest.app/Contents/Resources/ShouldRest_shouldrest.bundle` contains localization resources.
 - Confirm `codesign --verify --deep --strict dist/ShouldRest.app` passes.
+- Run `scripts/check_stretchly_settings_coverage.sh /path/to/stretchly/app/utils/defaultSettings.js`.
 - Run `swift test`.
 
 ## Manual GUI Smoke
