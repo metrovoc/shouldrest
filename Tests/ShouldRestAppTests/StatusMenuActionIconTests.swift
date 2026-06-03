@@ -14,7 +14,9 @@ final class StatusMenuActionIconTests: XCTestCase {
             "openPreferences": "gearshape",
             "copyDebugInfo": "doc.on.doc",
             "openDebugPanel": "stethoscope",
-            "showAboutPanel": "info.circle"
+            "showAboutPanel": "info.circle",
+            "showSettingsFile": "folder",
+            "copySettingsPath": "doc.on.doc"
         ]
 
         for (actionName, symbolName) in expectedSymbols {

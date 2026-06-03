@@ -79,6 +79,10 @@ enum StatusMenuActionIcon {
             return "stethoscope"
         case "showAboutPanel":
             return "info.circle"
+        case "showSettingsFile":
+            return "folder"
+        case "copySettingsPath":
+            return "doc.on.doc"
         default:
             return nil
         }
@@ -101,6 +105,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private let globalShortcuts = GlobalShortcutManager()
     private let activeBreakShortcuts = GlobalShortcutManager(signature: GlobalShortcutManager.signature("SRAB"))
     private let updateChecker = UpdateChecker()
+    private var emergencyOverrideCoordinator = EmergencyOverrideCoordinator()
     private var preferencesWindowController: PreferencesWindowController?
     private var debugWindowController: DebugWindowController?
     private var aboutWindowController: AboutWindowController?
@@ -226,9 +231,21 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
 
         if let active = engine.state.activeSession {
+            if emergencyOverrideCoordinator.armedSessionID != active.id {
+                emergencyOverrideCoordinator.clear()
+            }
+            if let decision = emergencyOverrideCoordinator.completionIfArmedAndReady(
+                session: active,
+                policy: settings.eyeGate.emergencyOverride,
+                now: now
+            ) {
+                handleEmergencyOverrideDecision(decision, session: active, now: now)
+                return
+            }
             if case .deferred(let kind, let reason) = engine.deferActiveForAppExclusion(now: now, context: currentContext()) {
                 unregisterActiveBreakShortcut()
                 overlayController.dismiss()
+                emergencyOverrideCoordinator.clear(sessionID: active.id)
                 manualAwaitingSessionID = nil
                 if active.kind == .bodyBreak, let idea = activeBodyBreakIdeas[active.id] {
                     pendingBodyBreakIdea = idea
@@ -247,6 +264,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 now: now,
                 manualAwaiting: shouldAwaitManualFinish,
                 emergencyOverrideAction: overlayEmergencyOverrideAction(for: active),
+                emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: active),
                 bodyActions: overlayBodyActions(for: active, now: now)
             )
             if shouldAwaitManualFinish {
@@ -263,6 +281,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 _ = engine.completeActive(now: now, reason: .completed)
                 unregisterActiveBreakShortcut()
                 overlayController.dismiss()
+                emergencyOverrideCoordinator.clear(sessionID: active.id)
                 manualAwaitingSessionID = nil
                 clearActiveBodyBreakIdea(for: active)
                 logger.log("Completed \(active.kind.rawValue)")
@@ -273,6 +292,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
+        emergencyOverrideCoordinator.clear()
         unregisterActiveBreakShortcut()
         let expiredPause = engine.state.pause.flatMap { pause in
             pause.isActive(at: now) ? nil : pause
@@ -295,6 +315,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 settings: overlaySettings(for: session),
                 now: now,
                 emergencyOverrideAction: overlayEmergencyOverrideAction(for: session),
+                emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: session),
                 bodyActions: overlayBodyActions(for: session, now: now)
             )
             refreshActiveBreakShortcut()
@@ -423,9 +444,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(actionItem(L10n.tr("menu.about"), #selector(showAboutPanel)))
 
         if !settings.admin.hideSettingsFileLocation {
-            let pathItem = disabledItem(settingsStore.fileURL.path)
-            pathItem.toolTip = settingsStore.fileURL.path
-            menu.addItem(pathItem)
+            menu.addItem(settingsFileMenuItem())
         }
 
         menu.addItem(.separator())
@@ -463,6 +482,24 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         return item
     }
 
+    private func settingsFileMenuItem() -> NSMenuItem {
+        let item = NSMenuItem(title: L10n.tr("menu.settingsFile"), action: nil, keyEquivalent: "")
+        item.image = menuItemImage("doc.text")
+        item.toolTip = settingsStore.fileURL.path
+
+        let submenu = NSMenu()
+        let showItem = actionItem(L10n.tr("menu.showSettingsFile"), #selector(showSettingsFile))
+        showItem.toolTip = settingsStore.fileURL.path
+        submenu.addItem(showItem)
+
+        let copyItem = actionItem(L10n.tr("menu.copySettingsPath"), #selector(copySettingsPath))
+        copyItem.toolTip = settingsStore.fileURL.path
+        submenu.addItem(copyItem)
+
+        item.submenu = submenu
+        return item
+    }
+
     private func actionItem(_ title: String, _ action: Selector) -> NSMenuItem {
         let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
         item.target = self
@@ -490,8 +527,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     private func overlayEmergencyOverrideAction(for session: RestSession) -> ((Int) -> Void)? {
         guard session.kind == .eyeGate, settings.eyeGate.emergencyOverride.isEnabled else { return nil }
-        return { [weak self] completedConfirmationSteps in
-            self?.performEmergencyOverrideEyeGate(completedConfirmationSteps: completedConfirmationSteps)
+        return { [weak self] _ in
+            self?.performEmergencyOverrideEyeGate()
         }
     }
 
@@ -516,6 +553,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 settings: settings,
                 now: Date(),
                 emergencyOverrideAction: overlayEmergencyOverrideAction(for: session),
+                emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: session),
                 bodyActions: nil
             )
             refreshActiveBreakShortcut()
@@ -542,6 +580,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 settings: overlaySettings(for: session),
                 now: now,
                 emergencyOverrideAction: overlayEmergencyOverrideAction(for: session),
+                emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: session),
                 bodyActions: overlayBodyActions(for: session, now: now)
             )
             refreshActiveBreakShortcut()
@@ -566,6 +605,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             unregisterActiveBreakShortcut()
             overlayController.dismiss()
             if let active {
+                emergencyOverrideCoordinator.clear(sessionID: active.id)
                 clearActiveBodyBreakIdea(for: active)
             }
             logger.log("Body Break postponed")
@@ -585,6 +625,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             unregisterActiveBreakShortcut()
             clearActiveBodyBreakIdea(for: active)
             overlayController.dismiss()
+            emergencyOverrideCoordinator.clear(sessionID: active.id)
             manualAwaitingSessionID = nil
         }
         rebuildMenu()
@@ -601,6 +642,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             unregisterActiveBreakShortcut()
             clearActiveBodyBreakIdea(for: active)
             overlayController.dismiss()
+            emergencyOverrideCoordinator.clear(sessionID: active.id)
             manualAwaitingSessionID = nil
             logger.log("Body Break skipped")
         } else {
@@ -625,11 +667,13 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         if case .postponed = engine.postponeActive(now: now) {
             unregisterActiveBreakShortcut()
             overlayController.dismiss()
+            emergencyOverrideCoordinator.clear(sessionID: active.id)
             clearActiveBodyBreakIdea(for: active)
             logger.log("Body Break postponed by end shortcut")
         } else if case .completed = engine.skipActive(now: now) {
             unregisterActiveBreakShortcut()
             overlayController.dismiss()
+            emergencyOverrideCoordinator.clear(sessionID: active.id)
             manualAwaitingSessionID = nil
             clearActiveBodyBreakIdea(for: active)
             logger.log("Body Break skipped by end shortcut")
@@ -638,36 +682,69 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func emergencyOverrideEyeGate() {
-        performEmergencyOverrideEyeGate(completedConfirmationSteps: nil)
+        performEmergencyOverrideEyeGate()
     }
 
-    private func performEmergencyOverrideEyeGate(completedConfirmationSteps: Int?) {
+    private func performEmergencyOverrideEyeGate() {
         guard let active = engine.state.activeSession, active.kind == .eyeGate else { return }
 
-        let policy = settings.eyeGate.emergencyOverride
-        let elapsed = Date().timeIntervalSince(active.startedAt)
-        guard elapsed >= policy.minimumHoldDuration else {
-            let remaining = Int(ceil(policy.minimumHoldDuration - elapsed))
-            showAppNotification(
-                title: L10n.tr("app.name"),
-                body: L10n.format("notification.emergencyHold", remaining)
-            )
-            logger.log("Emergency override denied: hold incomplete")
-            return
-        }
-
-        let completedSteps = completedConfirmationSteps ?? policy.confirmationSteps
-
-        let result = engine.emergencyOverride(
-            now: Date(),
-            completedConfirmationSteps: completedSteps,
-            heldDuration: elapsed
+        let now = Date()
+        let decision = emergencyOverrideCoordinator.request(
+            session: active,
+            policy: settings.eyeGate.emergencyOverride,
+            now: now
         )
-        if case .completed(let session, _) = result {
-            playRestSound(settings.rule(for: session.kind).finishSound)
+        handleEmergencyOverrideDecision(decision, session: active, now: now)
+    }
+
+    private func handleEmergencyOverrideDecision(
+        _ decision: EmergencyOverrideDecision,
+        session: RestSession,
+        now: Date
+    ) {
+        switch decision {
+        case .armed(let remainingSeconds):
+            overlayController.update(
+                session: session,
+                settings: overlaySettings(for: session),
+                now: now,
+                manualAwaiting: false,
+                emergencyOverrideAction: overlayEmergencyOverrideAction(for: session),
+                emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: session),
+                bodyActions: nil
+            )
+            logger.log("Emergency override armed for \(session.kind.rawValue), completing in \(remainingSeconds)s")
+            rebuildMenu()
+        case .complete(let completedSteps, let heldDuration):
+            completeEmergencyOverrideEyeGate(
+                session: session,
+                now: now,
+                completedConfirmationSteps: completedSteps,
+                heldDuration: heldDuration
+            )
+        case .unavailable:
+            logger.log("Emergency override unavailable for \(session.kind.rawValue)")
+            rebuildMenu()
+        }
+    }
+
+    private func completeEmergencyOverrideEyeGate(
+        session: RestSession,
+        now: Date,
+        completedConfirmationSteps: Int,
+        heldDuration: TimeInterval
+    ) {
+        let result = engine.emergencyOverride(
+            now: now,
+            completedConfirmationSteps: completedConfirmationSteps,
+            heldDuration: heldDuration
+        )
+        if case .completed(let completedSession, _) = result {
+            playRestSound(settings.rule(for: completedSession.kind).finishSound)
             overlayController.dismiss()
+            emergencyOverrideCoordinator.clear(sessionID: session.id)
             manualAwaitingSessionID = nil
-            logger.log("Emergency override completed for \(session.kind.rawValue)")
+            logger.log("Emergency override completed for \(completedSession.kind.rawValue)")
         } else {
             logger.log("Emergency override denied result=\(result)")
         }
@@ -868,6 +945,17 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         logger.log("Debug info copied")
     }
 
+    @objc private func showSettingsFile() {
+        reveal(url: settingsStore.fileURL)
+        logger.log("Settings file revealed")
+    }
+
+    @objc private func copySettingsPath() {
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(settingsStore.fileURL.path, forType: .string)
+        logger.log("Settings path copied")
+    }
+
     @objc private func openDebugPanel() {
         if debugWindowController == nil {
             debugWindowController = DebugWindowController(debugInfoProvider: { [weak self] in
@@ -901,6 +989,16 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         aboutWindowController?.window?.orderFrontRegardless()
         NSApp.activate(ignoringOtherApps: true)
         logger.log("About panel opened")
+    }
+
+    private func reveal(url: URL) {
+        if FileManager.default.fileExists(atPath: url.path) {
+            NSWorkspace.shared.activateFileViewerSelecting([url])
+        } else {
+            let parentURL = url.deletingLastPathComponent()
+            try? FileManager.default.createDirectory(at: parentURL, withIntermediateDirectories: true)
+            NSWorkspace.shared.open(parentURL)
+        }
     }
 
     private func applySettings(_ nextSettings: RestSettings) {
@@ -1409,6 +1507,7 @@ final class OverlayController {
         settings: RestSettings,
         now: Date,
         emergencyOverrideAction: ((Int) -> Void)? = nil,
+        emergencyOverrideArmed: Bool = false,
         bodyActions: BodyOverlayActions? = nil
     ) {
         self.session = session
@@ -1423,6 +1522,7 @@ final class OverlayController {
             now: now,
             manualAwaiting: false,
             emergencyOverrideAction: emergencyOverrideAction,
+            emergencyOverrideArmed: emergencyOverrideArmed,
             bodyActions: bodyActions
         )
     }
@@ -1437,6 +1537,7 @@ final class OverlayController {
         now: Date,
         manualAwaiting: Bool,
         emergencyOverrideAction: ((Int) -> Void)? = nil,
+        emergencyOverrideArmed: Bool = false,
         bodyActions: BodyOverlayActions? = nil
     ) {
         self.session = session
@@ -1462,6 +1563,7 @@ final class OverlayController {
                 manualAwaiting: manualAwaiting,
                 emergencyOverrideRemainingSeconds: emergencyRemaining,
                 emergencyOverrideConfirmationSteps: emergencyRemaining == nil ? 0 : settings.eyeGate.emergencyOverride.confirmationSteps,
+                emergencyOverrideArmed: emergencyOverrideArmed,
                 bodyActions: bodyActions
             )
             let level: NSWindow.Level
@@ -1671,6 +1773,7 @@ final class RestOverlayView: NSView {
     private var detailCacheKey: String?
     private var emergencyRemainingSeconds: Int?
     private var emergencyConfirmationSteps = 0
+    private var emergencyOverrideArmed = false
     private var emergencySessionID: UUID?
     private var emergencyPanelWidthConstraint: NSLayoutConstraint?
     private var emergencyPanelHeightConstraint: NSLayoutConstraint?
@@ -1851,6 +1954,7 @@ final class RestOverlayView: NSView {
         manualAwaiting: Bool,
         emergencyOverrideRemainingSeconds: Int?,
         emergencyOverrideConfirmationSteps: Int,
+        emergencyOverrideArmed: Bool = false,
         bodyActions: BodyOverlayActions? = nil
     ) {
         let rule = settings.rule(for: session.kind)
@@ -1859,7 +1963,8 @@ final class RestOverlayView: NSView {
         configureEmergencyButton(
             sessionID: session.id,
             remainingSeconds: emergencyOverrideRemainingSeconds,
-            confirmationSteps: emergencyOverrideConfirmationSteps
+            confirmationSteps: emergencyOverrideConfirmationSteps,
+            isArmed: emergencyOverrideArmed
         )
 
         titleLabel.isHidden = !showsContent
@@ -1954,7 +2059,8 @@ final class RestOverlayView: NSView {
     private func configureEmergencyButton(
         sessionID: UUID,
         remainingSeconds: Int?,
-        confirmationSteps: Int
+        confirmationSteps: Int,
+        isArmed: Bool
     ) {
         if emergencySessionID != sessionID {
             emergencySessionID = sessionID
@@ -1962,6 +2068,7 @@ final class RestOverlayView: NSView {
 
         emergencyRemainingSeconds = remainingSeconds
         emergencyConfirmationSteps = max(0, confirmationSteps)
+        emergencyOverrideArmed = isArmed
 
         guard remainingSeconds != nil else {
             emergencyPanel.isHidden = true
@@ -1991,6 +2098,8 @@ final class RestOverlayView: NSView {
         setEmergencyButtonTitle(
             remainingSeconds == 0
                 ? L10n.tr("overlay.emergencyOverride")
+                : emergencyOverrideArmed
+                    ? L10n.format("overlay.emergencyOverrideArmed", remainingSeconds)
                 : L10n.format("overlay.emergencyOverrideIn", remainingSeconds)
         )
     }

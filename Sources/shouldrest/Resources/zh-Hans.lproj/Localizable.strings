@@ -22,6 +22,9 @@
 "menu.copyDebug" = "复制调试信息";
 "menu.debugPanel" = "调试面板...";
 "menu.about" = "关于 ShouldRest...";
+"menu.settingsFile" = "设置文件";
+"menu.showSettingsFile" = "在 Finder 中显示";
+"menu.copySettingsPath" = "复制设置路径";
 "menu.quit" = "退出 ShouldRest";
 "notification.eyeGateSoon" = "护眼休息即将开始";
 "notification.bodyBreakSoon" = "活动休息即将开始";
@@ -61,7 +64,8 @@
 "overlay.ready" = "就绪";
 "overlay.emergencyOverride" = "紧急";
 "overlay.emergencyOverrideIn" = "%d 秒后紧急";
-"overlay.emergencyOverrideHelp" = "只在真正中断时使用。单次触发后计为未完成的护眼休息。";
+"overlay.emergencyOverrideArmed" = "已触发 · %d 秒";
+"overlay.emergencyOverrideHelp" = "只在真正中断时使用。触发一次即可等待自动退出，并计为未完成的护眼休息。";
 "overlay.bodyPostpone" = "推迟";
 "overlay.bodySkip" = "跳过";
 "overlay.bodyFinish" = "完成";

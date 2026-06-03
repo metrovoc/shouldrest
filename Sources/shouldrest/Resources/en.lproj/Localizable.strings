@@ -22,6 +22,9 @@
 "menu.copyDebug" = "Copy Debug Info";
 "menu.debugPanel" = "Debug Panel...";
 "menu.about" = "About ShouldRest...";
+"menu.settingsFile" = "Settings File";
+"menu.showSettingsFile" = "Show in Finder";
+"menu.copySettingsPath" = "Copy Settings Path";
 "menu.quit" = "Quit ShouldRest";
 "notification.eyeGateSoon" = "Eye Gate soon";
 "notification.bodyBreakSoon" = "Body Break soon";
@@ -61,7 +64,8 @@
 "overlay.ready" = "ready";
 "overlay.emergencyOverride" = "Emergency";
 "overlay.emergencyOverrideIn" = "Emergency in %ds";
-"overlay.emergencyOverrideHelp" = "Use only for a genuine interruption. A single trigger counts as a missed Eye Gate.";
+"overlay.emergencyOverrideArmed" = "Armed · %ds";
+"overlay.emergencyOverrideHelp" = "Use only for a genuine interruption. One trigger arms the override and counts as a missed Eye Gate.";
 "overlay.bodyPostpone" = "Postpone";
 "overlay.bodySkip" = "Skip";
 "overlay.bodyFinish" = "Finish";

@@ -22,6 +22,36 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(confirmedSteps, 2)
     }
 
+    func testEarlyEmergencyTriggerArmsInsideOverlayInsteadOfExternalConfirmation() throws {
+        let view = configuredEyeGateOverlay(
+            remainingSeconds: 2,
+            confirmationSteps: 2,
+            isArmed: false
+        )
+        var requestedSteps: Int?
+        view.onEmergencyOverrideConfirmed = { steps in
+            requestedSteps = steps
+        }
+
+        view.performEmergencyOverrideKeyCommand()
+
+        XCTAssertEqual(requestedSteps, 0)
+
+        view.configure(
+            session: eyeGateSession(),
+            remainingSeconds: 60,
+            settings: .defaults,
+            showsContent: true,
+            manualAwaiting: false,
+            emergencyOverrideRemainingSeconds: 2,
+            emergencyOverrideConfirmationSteps: 2,
+            emergencyOverrideArmed: true
+        )
+
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        XCTAssertEqual(button.attributedTitle.string, L10n.format("overlay.emergencyOverrideArmed", 2))
+    }
+
     func testEmergencyTriggerDoesNotEnterClickConfirmationState() throws {
         let view = configuredEyeGateOverlay(confirmationSteps: 2)
         let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.panel"))
@@ -103,15 +133,12 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(view.advanceEmergencyOverrideConfirmationIfAvailable(), .unavailable)
     }
 
-    private func configuredEyeGateOverlay(confirmationSteps: Int) -> RestOverlayView {
-        let start = Date()
-        let session = RestSession(
-            kind: .eyeGate,
-            startedAt: start,
-            scheduledAt: start,
-            duration: 60,
-            manualFinishEnabled: false
-        )
+    private func configuredEyeGateOverlay(
+        remainingSeconds: Int = 0,
+        confirmationSteps: Int,
+        isArmed: Bool = false
+    ) -> RestOverlayView {
+        let session = eyeGateSession()
         let view = RestOverlayView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
         view.configure(
             session: session,
@@ -119,10 +146,22 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             settings: .defaults,
             showsContent: true,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: 0,
-            emergencyOverrideConfirmationSteps: confirmationSteps
+            emergencyOverrideRemainingSeconds: remainingSeconds,
+            emergencyOverrideConfirmationSteps: confirmationSteps,
+            emergencyOverrideArmed: isArmed
         )
         return view
+    }
+
+    private func eyeGateSession() -> RestSession {
+        let start = Date()
+        return RestSession(
+            kind: .eyeGate,
+            startedAt: start,
+            scheduledAt: start,
+            duration: 60,
+            manualFinishEnabled: false
+        )
     }
 }
 
