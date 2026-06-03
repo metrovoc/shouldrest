@@ -21,6 +21,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private var onboardingWindowController: OnboardingWindowController?
     private var statusItem: NSStatusItem?
     private var tickTimer: Timer?
+    private var updateCheckTimer: Timer?
     private var lastFocusCheck = Date.distantPast
     private var focusModeActive = false
     private var suspendedAt: Date?
@@ -84,6 +85,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         tickTimer?.invalidate()
+        updateCheckTimer?.invalidate()
         overlayController.dismiss()
         logger.log("Application terminated")
     }
@@ -966,12 +968,22 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func scheduleAutomaticUpdateCheck() {
+        updateCheckTimer?.invalidate()
+        updateCheckTimer = nil
+
         guard settings.operations.checkForUpdates,
               !settings.admin.disableAppUpdateFeatures else {
+            latestReleaseURL = nil
             return
         }
+
         Task { @MainActor in
             await runUpdateCheck(notifyWhenCurrent: false)
+        }
+        updateCheckTimer = Timer.scheduledTimer(withTimeInterval: 48 * 60 * 60, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                await self?.runUpdateCheck(notifyWhenCurrent: false)
+            }
         }
     }
 
