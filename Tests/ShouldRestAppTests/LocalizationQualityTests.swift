@@ -53,20 +53,28 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(simplifiedChineseValues.contains("恢复时间"))
     }
 
-    func testEmergencyCopyDoesNotAdvertiseConfirmationOrCountdown() {
+    func testEmergencyCopyUsesInternalConfirmationWithoutCountdownOrExternalWindow() {
         defer { L10n.languageOverride = nil }
 
         L10n.languageOverride = "en"
         XCTAssertEqual(L10n.tr("overlay.emergencyOverride"), "Emergency Exit · Esc")
+        XCTAssertEqual(L10n.tr("overlay.emergencyOverrideConfirm"), "Click again to exit")
+        XCTAssertEqual(L10n.tr("overlay.emergencyOverrideArmed"), "Click again to exit")
+        XCTAssertTrue(L10n.tr("overlay.emergencyOverrideHelp").contains("inside the overlay"))
         XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").contains("configured shortcut"))
+        XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").localizedCaseInsensitiveContains("second click"))
         XCTAssertFalse(L10n.tr("onboarding.emergencyFeatureBody").localizedCaseInsensitiveContains("countdown"))
-        XCTAssertFalse(L10n.tr("onboarding.emergencyFeatureBody").localizedCaseInsensitiveContains("confirmation"))
+        XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").localizedCaseInsensitiveContains("without asking you to click another window"))
 
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(L10n.tr("overlay.emergencyOverride"), "紧急退出 · Esc")
+        XCTAssertEqual(L10n.tr("overlay.emergencyOverrideConfirm"), "再次点击退出")
+        XCTAssertEqual(L10n.tr("overlay.emergencyOverrideArmed"), "再次点击退出")
+        XCTAssertTrue(L10n.tr("overlay.emergencyOverrideHelp").contains("覆盖层内"))
         XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").contains("配置的快捷键"))
+        XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").contains("第二次点击"))
         XCTAssertFalse(L10n.tr("onboarding.emergencyFeatureBody").contains("倒计时"))
-        XCTAssertFalse(L10n.tr("onboarding.emergencyFeatureBody").contains("确认"))
+        XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").contains("不再要求你点击另一个窗口"))
     }
 
     func testBlockedActionNotificationsUseUserActionLanguage() {

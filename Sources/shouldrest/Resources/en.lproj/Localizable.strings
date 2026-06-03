@@ -66,8 +66,9 @@
 "overlay.completeBody" = "Finish when ready";
 "overlay.ready" = "ready";
 "overlay.emergencyOverride" = "Emergency Exit · Esc";
-"overlay.emergencyOverrideArmed" = "Exits in %ds";
-"overlay.emergencyOverrideHelp" = "Use only for a genuine interruption. During Eye Gate, Esc is handled inside the overlay and counts as a missed Eye Gate.";
+"overlay.emergencyOverrideConfirm" = "Click again to exit";
+"overlay.emergencyOverrideArmed" = "Click again to exit";
+"overlay.emergencyOverrideHelp" = "Use only for a genuine interruption. Confirm with a second click or Esc inside the overlay; it counts as a missed Eye Gate.";
 "overlay.bodyPostpone" = "Postpone";
 "overlay.bodySkip" = "Skip";
 "overlay.bodyFinish" = "Finish";
@@ -258,7 +259,7 @@
 "onboarding.eyeFeatureTitle" = "Short, frequent Eye Gates";
 "onboarding.eyeFeatureBody" = "Brief opaque breaks protect the habit from skip muscle memory and visual drift.";
 "onboarding.emergencyFeatureTitle" = "Emergency without deadlock";
-"onboarding.emergencyFeatureBody" = "Emergency Exit is owned by the overlay: Esc, the configured shortcut, or the dim red Emergency affordance exits from inside the overlay without asking you to click another window.";
+"onboarding.emergencyFeatureBody" = "Emergency Exit is owned by the overlay: Esc, the configured shortcut, or the dim red Emergency affordance arms it first; the second click or Esc exits from inside the overlay without asking you to click another window.";
 "onboarding.bodyFeatureTitle" = "Configurable Body Breaks";
 "onboarding.bodyFeatureBody" = "Longer movement breaks can use postpones, images, display rules, and manual finish.";
 "onboarding.learnMore" = "Learn More";

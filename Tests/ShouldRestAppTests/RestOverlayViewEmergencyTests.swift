@@ -6,13 +6,13 @@ import XCTest
 
 @MainActor
 final class RestOverlayViewEmergencyTests: XCTestCase {
-    func testOverlayEmergencyCompletesOnFirstTriggerWithoutConfirmationState() {
+    func testOverlayEmergencyActivationIsAvailableWhenAffordanceVisible() {
         let view = configuredEyeGateOverlay()
 
         XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
     }
 
-    func testOverlayKeyboardCommandCompletesEmergencyOnFirstTrigger() {
+    func testOverlayKeyboardCommandRequestsEmergencyFromInsideOverlay() {
         let view = configuredEyeGateOverlay()
         var didRequestEmergency = false
         view.onEmergencyOverrideRequested = {
@@ -139,9 +139,9 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(window.overlayView.frame.height, 480)
     }
 
-    func testEarlyEmergencyTriggerWaitsInsideOverlayInsteadOfExternalConfirmation() throws {
+    func testEmergencyTriggerArmsInsideOverlayInsteadOfExternalConfirmation() throws {
         let view = configuredEyeGateOverlay(
-            remainingSeconds: 2,
+            remainingSeconds: 0,
             isArmed: false
         )
         var requestCount = 0
@@ -159,17 +159,17 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             settings: .defaults,
             showsContent: true,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: 2,
+            emergencyOverrideRemainingSeconds: 0,
             emergencyOverrideArmed: true
         )
 
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
-        XCTAssertEqual(button.attributedTitle.string, L10n.format("overlay.emergencyOverrideArmed", 2))
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
         view.performEmergencyOverrideKeyCommand()
-        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(requestCount, 2)
     }
 
-    func testEarlyEmergencyAffordanceCanArmBeforeHoldExpires() {
+    func testLegacyPositiveEmergencyRemainingStillAllowsFirstConfirmationClick() {
         let view = configuredEyeGateOverlay(
             remainingSeconds: 2,
             isArmed: false
@@ -178,7 +178,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
     }
 
-    func testEarlyEmergencyAffordanceStillLooksActionable() throws {
+    func testLegacyPositiveEmergencyRemainingStillLooksActionable() throws {
         let view = configuredEyeGateOverlay(
             remainingSeconds: 2,
             isArmed: false
@@ -228,19 +228,19 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertLessThanOrEqual(panel.layer?.borderColor?.alpha ?? 1, 0.09)
     }
 
-    func testArmedEmergencyShowsInternalWaitingStateWithoutSecondConfirmation() throws {
+    func testArmedEmergencyShowsInternalSecondClickConfirmation() throws {
         let view = configuredEyeGateOverlay(
-            remainingSeconds: 2,
+            remainingSeconds: 0,
             isArmed: true
         )
 
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
 
-        XCTAssertEqual(button.attributedTitle.string, L10n.format("overlay.emergencyOverrideArmed", 2))
-        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .unavailable)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
     }
 
-    func testEmergencyTriggerDoesNotEnterClickConfirmationState() throws {
+    func testEmergencyConfirmationStaysInEmergencyAffordance() throws {
         let view = configuredEyeGateOverlay()
         let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.panel"))
 

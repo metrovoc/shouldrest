@@ -325,7 +325,7 @@ Implemented now:
 - Menu status uses localized rest-kind names and shows the Stretchly-style Body Break countdown in Eye Gate units when both rest kinds are enabled.
 - Menu bar tooltip mirrors the Stretchly tray tooltip structure: product header plus dynamic status lines.
 - Disabling break-health mode resets accumulated danger, matching Stretchly's runtime setting behavior.
-- Eye Gate emergency override is frictional without becoming unreachable: one overlay/local-shortcut trigger arms the override, the minimum hold duration is shown inside the overlay, and completion is counted as a missed Eye Gate. Legacy confirmation-step settings remain an internal compatibility check, not a second user-visible confirmation.
+- Eye Gate emergency override is frictional without becoming unreachable: the first overlay/local-shortcut trigger arms the override, the second click or Esc confirms from inside the overlay, and completion is counted as a missed Eye Gate. Legacy hold durations are normalized to zero, legacy confirmation steps are capped to one internal overlay confirmation, and CLI/automation emergency remains a direct last-resort escape hatch.
 - Admin strict-preference hiding now removes both the Body Break ordinary-skip control and the Eye Gate emergency-override shortcut row from Preferences while preserving their stored values.
 
 Still to perform for public release:

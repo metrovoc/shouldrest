@@ -1232,7 +1232,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         next.eyeGate.manualFinishEnabled = isOn(eyeManualFinish)
         next.eyeGate.emergencyOverride = EmergencyOverridePolicy(
             isEnabled: isOn(eyeEmergencyOverride),
-            confirmationSteps: 0,
+            confirmationSteps: EmergencyOverridePolicy.defaults.confirmationSteps,
             minimumHoldDuration: 0
         )
 

@@ -66,8 +66,9 @@
 "overlay.completeBody" = "准备好后结束休息";
 "overlay.ready" = "就绪";
 "overlay.emergencyOverride" = "紧急退出 · Esc";
-"overlay.emergencyOverrideArmed" = "%d 秒后自动退出";
-"overlay.emergencyOverrideHelp" = "只在真正中断时使用。护眼休息期间，Esc 由覆盖层直接处理，并计为一次未完成护眼休息。";
+"overlay.emergencyOverrideConfirm" = "再次点击退出";
+"overlay.emergencyOverrideArmed" = "再次点击退出";
+"overlay.emergencyOverrideHelp" = "只在真正中断时使用。第二次点击或再次按 Esc 会在覆盖层内确认，并计为一次未完成护眼休息。";
 "overlay.bodyPostpone" = "推迟";
 "overlay.bodySkip" = "跳过";
 "overlay.bodyFinish" = "完成";
@@ -258,7 +259,7 @@
 "onboarding.eyeFeatureTitle" = "短而频繁的护眼休息";
 "onboarding.eyeFeatureBody" = "短暂不透明的覆盖层，减少 20 秒休息被忽视或习惯性跳过。";
 "onboarding.emergencyFeatureTitle" = "紧急退出不再锁死";
-"onboarding.emergencyFeatureBody" = "紧急退出由覆盖层自身处理：Esc、配置的快捷键或淡红色紧急入口都会从覆盖层内退出，不再要求你点击另一个窗口。";
+"onboarding.emergencyFeatureBody" = "紧急退出由覆盖层自身处理：Esc、配置的快捷键或淡红色紧急入口都会先进入待确认状态；第二次点击或再次按 Esc 才会从覆盖层内退出，不再要求你点击另一个窗口。";
 "onboarding.bodyFeatureTitle" = "活动休息可配置";
 "onboarding.bodyFeatureBody" = "更长的活动休息支持推迟、图片、显示器规则和手动完成。";
 "onboarding.learnMore" = "了解更多";

@@ -614,13 +614,13 @@ final class RestEngineTests: XCTestCase {
 
         let loaded = try store.load()
 
-        XCTAssertEqual(loaded.eyeGate.emergencyOverride.confirmationSteps, 0)
+        XCTAssertEqual(loaded.eyeGate.emergencyOverride.confirmationSteps, 1)
         XCTAssertEqual(loaded.bodyBreak.emergencyOverride.confirmationSteps, 0)
         XCTAssertEqual(loaded.eyeGate.emergencyOverride.minimumHoldDuration, 0)
         XCTAssertEqual(loaded.bodyBreak.emergencyOverride.minimumHoldDuration, 0)
         let migratedData = try Data(contentsOf: url)
         let migratedRaw = try JSONDecoder().decode(RestSettings.self, from: migratedData)
-        XCTAssertEqual(migratedRaw.eyeGate.emergencyOverride.confirmationSteps, 0)
+        XCTAssertEqual(migratedRaw.eyeGate.emergencyOverride.confirmationSteps, 1)
         XCTAssertEqual(migratedRaw.bodyBreak.emergencyOverride.confirmationSteps, 0)
         XCTAssertEqual(migratedRaw.eyeGate.emergencyOverride.minimumHoldDuration, 0)
         XCTAssertEqual(migratedRaw.bodyBreak.emergencyOverride.minimumHoldDuration, 0)
@@ -629,7 +629,7 @@ final class RestEngineTests: XCTestCase {
         let savedData = try Data(contentsOf: url)
         let savedRaw = try JSONDecoder().decode(RestSettings.self, from: savedData)
 
-        XCTAssertEqual(savedRaw.eyeGate.emergencyOverride.confirmationSteps, 0)
+        XCTAssertEqual(savedRaw.eyeGate.emergencyOverride.confirmationSteps, 1)
         XCTAssertEqual(savedRaw.bodyBreak.emergencyOverride.confirmationSteps, 0)
         XCTAssertEqual(savedRaw.eyeGate.emergencyOverride.minimumHoldDuration, 0)
         XCTAssertEqual(savedRaw.bodyBreak.emergencyOverride.minimumHoldDuration, 0)

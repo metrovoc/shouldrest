@@ -157,6 +157,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private var activeBreakShortcutRegistered = false
     private var emergencyEscapeShortcutSessionID: UUID?
     private var emergencyEscapeShortcutRegistered = false
+    private var menuBarImageCache: [String: NSImage] = [:]
+    private var currentMenuBarImageKey: String?
     private var lastGlobalShortcutFailureKey: String?
     private var lastActiveBreakShortcutFailureKey: String?
     private var automationTasks: [UUID: Task<Void, Never>] = [:]
@@ -318,16 +320,11 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 return
             }
             if elapsed >= active.duration {
-                playRestSound(settings.rule(for: active.kind).finishSound)
                 _ = engine.completeActive(now: now, reason: .completed)
-                unregisterActiveBreakShortcut()
-                unregisterEmergencyEscapeShortcut()
-                overlayController.dismiss()
-                emergencyOverrideCoordinator.clear(sessionID: active.id)
-                manualAwaitingSessionID = nil
-                clearActiveBodyBreakIdea(for: active)
+                releaseActiveRestSurface(for: active)
                 logger.log("Completed \(active.kind.rawValue)")
                 rebuildMenu()
+                playRestSound(settings.rule(for: active.kind).finishSound)
                 return
             }
             rebuildMenu()
@@ -395,7 +392,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         guard let item = statusItem else { return }
         let now = Date()
         item.length = NSStatusItem.squareLength
-        item.button?.image = menuBarImage()
+        updateMenuBarImage(on: item)
         item.button?.imagePosition = .imageOnly
         item.button?.title = ""
         item.button?.toolTip = MenuStatusPresenter.tooltip(state: engine.state, settings: settings, now: now)
@@ -530,13 +527,37 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         return item
     }
 
-    private func menuBarImage() -> NSImage? {
-        switch MenuStatusPresenter.menuBarIcon(state: engine.state) {
+    private func updateMenuBarImage(on item: NSStatusItem) {
+        let icon = MenuStatusPresenter.menuBarIcon(state: engine.state)
+        let key = menuBarImageKey(for: icon)
+        guard currentMenuBarImageKey != key || item.button?.image == nil else { return }
+        currentMenuBarImageKey = key
+        item.button?.image = menuBarImage(for: icon, key: key)
+    }
+
+    private func menuBarImageKey(for icon: MenuStatusPresenter.MenuBarIcon) -> String {
+        switch icon {
         case .restGate:
-            return symbolMenuBarImage("viewfinder")
+            return "restGate:viewfinder"
         case .systemSymbol(let symbolName):
-            return symbolMenuBarImage(symbolName)
+            return "symbol:\(symbolName)"
         }
+    }
+
+    private func menuBarImage(for icon: MenuStatusPresenter.MenuBarIcon, key: String) -> NSImage? {
+        if let cached = menuBarImageCache[key] {
+            return cached
+        }
+
+        let image: NSImage?
+        switch icon {
+        case .restGate:
+            image = symbolMenuBarImage("viewfinder")
+        case .systemSymbol(let symbolName):
+            image = symbolMenuBarImage(symbolName)
+        }
+        menuBarImageCache[key] = image
+        return image
     }
 
     private func symbolMenuBarImage(_ symbolName: String) -> NSImage? {
@@ -750,14 +771,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         if case .completed = engine.completeActive(reason: .manual) {
-            playRestSound(settings.rule(for: active.kind).finishSound)
+            releaseActiveRestSurface(for: active)
             logger.log("Manually finished \(active.kind.rawValue)")
-            unregisterActiveBreakShortcut()
-            unregisterEmergencyEscapeShortcut()
-            clearActiveBodyBreakIdea(for: active)
-            overlayController.dismiss()
-            emergencyOverrideCoordinator.clear(sessionID: active.id)
-            manualAwaitingSessionID = nil
+            playRestSound(settings.rule(for: active.kind).finishSound)
         }
         rebuildMenu()
     }
@@ -830,18 +846,22 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         completeEmergencyOverrideEyeGate(
             session: active,
             now: now,
-            playSound: false
+            playSound: true
         )
     }
 
     private func consumeEmergencyAutomationSignalIfNeeded() -> Bool {
         guard EmergencyAutomationSignal.isPending() else { return false }
-        guard engine.state.activeSession?.kind == .eyeGate else {
+        guard let active = engine.state.activeSession, active.kind == .eyeGate else {
             return false
         }
         _ = EmergencyAutomationSignal.consume()
         logger.log("Emergency automation signal consumed")
-        performEmergencyOverrideEyeGate()
+        completeEmergencyOverrideEyeGate(
+            session: active,
+            now: Date(),
+            playSound: true
+        )
         return true
     }
 
@@ -873,7 +893,11 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: session),
                 bodyActions: nil
             )
-            logger.log("Emergency override waiting for \(session.kind.rawValue), available in \(remainingSeconds)s")
+            if remainingSeconds <= 0 {
+                logger.log("Emergency override armed for \(session.kind.rawValue), awaiting second overlay confirmation")
+            } else {
+                logger.log("Emergency override waiting for \(session.kind.rawValue), available in \(remainingSeconds)s")
+            }
             rebuildMenu()
         case .complete:
             completeEmergencyOverrideEyeGate(
@@ -896,19 +920,24 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         let result = engine.emergencyOverride(now: now)
         logger.log("Emergency override engine result=\(result)")
         if case .completed(let completedSession, _) = result {
+            releaseActiveRestSurface(for: session)
+            logger.log("Emergency override completed for \(completedSession.kind.rawValue)")
             if shouldPlaySound {
                 playRestSound(settings.rule(for: completedSession.kind).finishSound)
             }
-            unregisterActiveBreakShortcut()
-            unregisterEmergencyEscapeShortcut()
-            overlayController.dismiss()
-            emergencyOverrideCoordinator.clear(sessionID: session.id)
-            manualAwaitingSessionID = nil
-            logger.log("Emergency override completed for \(completedSession.kind.rawValue)")
         } else {
             logger.log("Emergency override denied result=\(result)")
         }
         rebuildMenu()
+    }
+
+    private func releaseActiveRestSurface(for session: RestSession) {
+        unregisterActiveBreakShortcut()
+        unregisterEmergencyEscapeShortcut()
+        overlayController.dismiss()
+        emergencyOverrideCoordinator.clear(sessionID: session.id)
+        manualAwaitingSessionID = nil
+        clearActiveBodyBreakIdea(for: session)
     }
 
     private func playRestSound(_ policy: SoundPolicy) {
@@ -2405,8 +2434,8 @@ final class RestOverlayView: NSView {
         emergencyButton.contentTintColor = NSColor.systemRed.withAlphaComponent(style.tintAlpha)
 
         let title: String
-        if emergencyOverrideArmed, remainingSeconds > 0 {
-            title = L10n.format("overlay.emergencyOverrideArmed", remainingSeconds)
+        if emergencyOverrideArmed {
+            title = L10n.tr("overlay.emergencyOverrideConfirm")
         } else {
             title = L10n.tr("overlay.emergencyOverride")
         }
@@ -2512,10 +2541,17 @@ final class RestOverlayView: NSView {
     }
 }
 
-final class SoundPlayer: NSObject, NSSoundDelegate {
+final class SoundPlayer: NSObject, NSSoundDelegate, @unchecked Sendable {
+    private let queue = DispatchQueue(label: "dev.shouldrest.sound-player", qos: .utility)
     private var activeSounds: [NSSound] = []
 
     func play(_ policy: SoundPolicy) {
+        queue.async { [weak self] in
+            self?.playOnQueue(policy)
+        }
+    }
+
+    private func playOnQueue(_ policy: SoundPolicy) {
         switch policy {
         case .silent:
             return
@@ -2526,12 +2562,16 @@ final class SoundPlayer: NSObject, NSSoundDelegate {
             sound.volume = Float(min(1, max(0, volume)))
             sound.delegate = self
             activeSounds.append(sound)
-            sound.play()
+            if !sound.play() {
+                activeSounds.removeAll { $0 === sound }
+            }
         }
     }
 
     func sound(_ sound: NSSound, didFinishPlaying finishedPlaying: Bool) {
-        activeSounds.removeAll { $0 === sound }
+        queue.async { [weak self] in
+            self?.activeSounds.removeAll { $0 === sound }
+        }
     }
 
     private func bundledSound(named name: String) -> NSSound? {
