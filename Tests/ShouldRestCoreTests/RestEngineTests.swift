@@ -116,7 +116,7 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.eyeGatesSinceBodyBreak, 0)
     }
 
-    func testEyeGateEmergencyOverrideRequiresHoldAndLegacyConfirmationFriction() {
+    func testEyeGateEmergencyOverrideRequiresHoldButIgnoresLegacyConfirmationSteps() {
         var settings = RestSettings.defaults
         settings.eyeGate.emergencyOverride = EmergencyOverridePolicy(
             isEnabled: true,
@@ -132,11 +132,14 @@ final class RestEngineTests: XCTestCase {
         )
         XCTAssertEqual(engine.state.activeSession?.kind, .eyeGate)
 
-        XCTAssertEqual(
-            engine.emergencyOverride(now: start.addingTimeInterval(3), completedConfirmationSteps: 1),
-            .denied(.emergencyOverrideConfirmationIncomplete)
-        )
-        XCTAssertEqual(engine.state.activeSession?.kind, .eyeGate)
+        guard case .completed(let session, let reason) = engine.emergencyOverride(
+            now: start.addingTimeInterval(3),
+            completedConfirmationSteps: 0
+        ) else {
+            return XCTFail("Expected emergency override without legacy confirmation")
+        }
+        XCTAssertEqual(session.kind, .eyeGate)
+        XCTAssertEqual(reason, .emergencyOverride)
     }
 
     func testBodyBreakCanBePostponedWithinPolicy() {

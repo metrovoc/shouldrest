@@ -6,28 +6,28 @@ import XCTest
 
 @MainActor
 final class RestOverlayViewEmergencyTests: XCTestCase {
-    func testOverlayEmergencyCompletesOnFirstTriggerEvenWithLegacyConfirmationSteps() {
-        let view = configuredEyeGateOverlay(confirmationSteps: 2)
+    func testOverlayEmergencyCompletesOnFirstTriggerWithoutConfirmationState() {
+        let view = configuredEyeGateOverlay()
 
-        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated(legacyConfirmationSteps: 2))
+        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
     }
 
     func testOverlayKeyboardCommandCompletesEmergencyOnFirstTrigger() {
-        let view = configuredEyeGateOverlay(confirmationSteps: 2)
-        var confirmedSteps: Int?
-        view.onEmergencyOverrideConfirmed = { steps in
-            confirmedSteps = steps
+        let view = configuredEyeGateOverlay()
+        var didRequestEmergency = false
+        view.onEmergencyOverrideConfirmed = {
+            didRequestEmergency = true
         }
 
         view.performEmergencyOverrideKeyCommand()
-        XCTAssertEqual(confirmedSteps, 2)
+        XCTAssertTrue(didRequestEmergency)
     }
 
     func testEscapeKeyTriggersEmergencyInsideOverlay() throws {
-        let view = configuredEyeGateOverlay(confirmationSteps: 2)
-        var confirmedSteps: Int?
-        view.onEmergencyOverrideConfirmed = { steps in
-            confirmedSteps = steps
+        let view = configuredEyeGateOverlay()
+        var didRequestEmergency = false
+        view.onEmergencyOverrideConfirmed = {
+            didRequestEmergency = true
         }
 
         let event = try XCTUnwrap(NSEvent.keyEvent(
@@ -44,23 +44,82 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         ))
         view.keyDown(with: event)
 
-        XCTAssertEqual(confirmedSteps, 2)
+        XCTAssertTrue(didRequestEmergency)
+    }
+
+    func testSpaceKeyDoesNotTriggerEmergencyInsideOverlay() throws {
+        let view = configuredEyeGateOverlay()
+        var didRequestEmergency = false
+        view.onEmergencyOverrideConfirmed = {
+            didRequestEmergency = true
+        }
+
+        let event = try XCTUnwrap(NSEvent.keyEvent(
+            with: .keyDown,
+            location: .zero,
+            modifierFlags: [],
+            timestamp: 0,
+            windowNumber: 0,
+            context: nil,
+            characters: " ",
+            charactersIgnoringModifiers: " ",
+            isARepeat: false,
+            keyCode: UInt16(kVK_Space)
+        ))
+        view.keyDown(with: event)
+
+        XCTAssertFalse(didRequestEmergency)
+    }
+
+    func testOverlayWindowRoutesEscapeToOverlayEmergencyAction() throws {
+        let screen = try XCTUnwrap(NSScreen.main)
+        let session = eyeGateSession()
+        let window = OverlayWindow(screen: screen, session: session, settings: .defaults)
+        defer { window.close() }
+        var didRequestEmergency = false
+        window.overlayView.onEmergencyOverrideConfirmed = {
+            didRequestEmergency = true
+        }
+        window.overlayView.configure(
+            session: session,
+            remainingSeconds: 60,
+            settings: .defaults,
+            showsContent: true,
+            manualAwaiting: false,
+            emergencyOverrideRemainingSeconds: 0
+        )
+
+        let event = try XCTUnwrap(NSEvent.keyEvent(
+            with: .keyDown,
+            location: .zero,
+            modifierFlags: [],
+            timestamp: 0,
+            windowNumber: window.windowNumber,
+            context: nil,
+            characters: "\u{1B}",
+            charactersIgnoringModifiers: "\u{1B}",
+            isARepeat: false,
+            keyCode: UInt16(kVK_Escape)
+        ))
+        window.keyDown(with: event)
+
+        XCTAssertTrue(window.canBecomeKey)
+        XCTAssertTrue(didRequestEmergency)
     }
 
     func testEarlyEmergencyTriggerArmsInsideOverlayInsteadOfExternalConfirmation() throws {
         let view = configuredEyeGateOverlay(
             remainingSeconds: 2,
-            confirmationSteps: 2,
             isArmed: false
         )
-        var requestedSteps: Int?
-        view.onEmergencyOverrideConfirmed = { steps in
-            requestedSteps = steps
+        var requestCount = 0
+        view.onEmergencyOverrideConfirmed = {
+            requestCount += 1
         }
 
         view.performEmergencyOverrideKeyCommand()
 
-        XCTAssertEqual(requestedSteps, 0)
+        XCTAssertEqual(requestCount, 1)
 
         view.configure(
             session: eyeGateSession(),
@@ -69,7 +128,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             showsContent: true,
             manualAwaiting: false,
             emergencyOverrideRemainingSeconds: 2,
-            emergencyOverrideConfirmationSteps: 2,
             emergencyOverrideArmed: true
         )
 
@@ -78,7 +136,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
     }
 
     func testEmergencyAffordanceUsesDimRedGhostStyle() throws {
-        let view = configuredEyeGateOverlay(remainingSeconds: 2, confirmationSteps: 2)
+        let view = configuredEyeGateOverlay(remainingSeconds: 2)
 
         let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.panel"))
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
@@ -102,7 +160,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
     }
 
     func testEmergencyAffordanceRemainsDimWhenReady() throws {
-        let view = configuredEyeGateOverlay(remainingSeconds: 0, confirmationSteps: 2)
+        let view = configuredEyeGateOverlay(remainingSeconds: 0)
 
         let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.panel"))
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
@@ -117,7 +175,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
     }
 
     func testEmergencyTriggerDoesNotEnterClickConfirmationState() throws {
-        let view = configuredEyeGateOverlay(confirmationSteps: 2)
+        let view = configuredEyeGateOverlay()
         let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.panel"))
 
         view.layoutSubtreeIfNeeded()
@@ -125,7 +183,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertFalse(panel.isHidden)
         XCTAssertNil(view.descendant(withIdentifier: "overlay.emergency.hint"))
 
-        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated(legacyConfirmationSteps: 2))
+        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
 
         view.layoutSubtreeIfNeeded()
         XCTAssertFalse(panel.isHidden)
@@ -134,19 +192,19 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
     }
 
     func testEmergencyDoesNotTurnWholeOverlayIntoHiddenConfirmSurface() {
-        let view = configuredEyeGateOverlay(confirmationSteps: 2)
+        let view = configuredEyeGateOverlay()
 
         view.layoutSubtreeIfNeeded()
         XCTAssertFalse(view.hitTest(NSPoint(x: 400, y: 300)) === view)
 
-        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated(legacyConfirmationSteps: 2))
+        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
         view.layoutSubtreeIfNeeded()
 
         XCTAssertFalse(view.hitTest(NSPoint(x: 400, y: 300)) === view)
     }
 
     func testEmergencyClickAreaRoutesToOverlayView() {
-        let view = configuredEyeGateOverlay(confirmationSteps: 2)
+        let view = configuredEyeGateOverlay()
 
         view.layoutSubtreeIfNeeded()
 
@@ -154,7 +212,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
     }
 
     func testEmergencyBottomRightSafetyAreaRoutesToOverlayView() {
-        let view = configuredEyeGateOverlay(confirmationSteps: 2)
+        let view = configuredEyeGateOverlay()
 
         view.layoutSubtreeIfNeeded()
 
@@ -162,15 +220,15 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
     }
 
     func testOverlayAcceptsFirstMouseForInactiveWindowEmergencyClicks() {
-        let view = configuredEyeGateOverlay(confirmationSteps: 2)
+        let view = configuredEyeGateOverlay()
 
         XCTAssertTrue(view.acceptsFirstMouse(for: nil))
     }
 
-    func testSingleStepEmergencyConfirmationCompletesOnFirstTrigger() {
-        let view = configuredEyeGateOverlay(confirmationSteps: 1)
+    func testEmergencyActivationDoesNotDependOnLegacyConfirmationStepCount() {
+        let view = configuredEyeGateOverlay()
 
-        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated(legacyConfirmationSteps: 1))
+        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
     }
 
     func testOverlayEmergencyConfirmationIsUnavailableWhenButtonIsHidden() {
@@ -190,8 +248,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             settings: .defaults,
             showsContent: true,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: nil,
-            emergencyOverrideConfirmationSteps: 0
+            emergencyOverrideRemainingSeconds: nil
         )
 
         XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .unavailable)
@@ -199,7 +256,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
     private func configuredEyeGateOverlay(
         remainingSeconds: Int = 0,
-        confirmationSteps: Int,
         isArmed: Bool = false
     ) -> RestOverlayView {
         let session = eyeGateSession()
@@ -211,7 +267,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             showsContent: true,
             manualAwaiting: false,
             emergencyOverrideRemainingSeconds: remainingSeconds,
-            emergencyOverrideConfirmationSteps: confirmationSteps,
             emergencyOverrideArmed: isArmed
         )
         return view

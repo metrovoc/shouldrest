@@ -105,7 +105,6 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
             showsContent: showsContent,
             manualAwaiting: manualAwaiting,
             emergencyOverrideRemainingSeconds: nil,
-            emergencyOverrideConfirmationSteps: 0,
             bodyActions: actions
         )
         return view

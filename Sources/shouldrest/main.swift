@@ -548,9 +548,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         return !canPostponeBodyBreak(session, now: now)
     }
 
-    private func overlayEmergencyOverrideAction(for session: RestSession) -> ((Int) -> Void)? {
+    private func overlayEmergencyOverrideAction(for session: RestSession) -> (() -> Void)? {
         guard session.kind == .eyeGate, settings.eyeGate.emergencyOverride.isEnabled else { return nil }
-        return { [weak self] _ in
+        return { [weak self] in
             self?.performEmergencyOverrideEyeGate()
         }
     }
@@ -745,11 +745,10 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             )
             logger.log("Emergency override armed for \(session.kind.rawValue), completing in \(remainingSeconds)s")
             rebuildMenu()
-        case .complete(let completedSteps, let heldDuration):
+        case .complete(let heldDuration):
             completeEmergencyOverrideEyeGate(
                 session: session,
                 now: now,
-                completedConfirmationSteps: completedSteps,
                 heldDuration: heldDuration
             )
         case .unavailable:
@@ -761,12 +760,10 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func completeEmergencyOverrideEyeGate(
         session: RestSession,
         now: Date,
-        completedConfirmationSteps: Int,
         heldDuration: TimeInterval
     ) {
         let result = engine.emergencyOverride(
             now: now,
-            completedConfirmationSteps: completedConfirmationSteps,
             heldDuration: heldDuration
         )
         if case .completed(let completedSession, _) = result {
@@ -1561,7 +1558,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
 enum EmergencyOverlayActivationResult: Equatable {
     case unavailable
-    case activated(legacyConfirmationSteps: Int)
+    case activated
 }
 
 struct BodyOverlayActions {
@@ -1575,7 +1572,7 @@ struct BodyOverlayActions {
 
 private func isEmergencyOverrideKey(_ event: NSEvent) -> Bool {
     switch Int(event.keyCode) {
-    case kVK_Return, kVK_Space, kVK_ANSI_KeypadEnter, kVK_Escape:
+    case kVK_Escape:
         return true
     default:
         return false
@@ -1587,14 +1584,14 @@ final class OverlayController {
     private var windows: [CGDirectDisplayID: OverlayWindow] = [:]
     private var session: RestSession?
     private var settings: RestSettings?
-    private var emergencyOverrideAction: ((Int) -> Void)?
+    private var emergencyOverrideAction: (() -> Void)?
     private var bodyActions: BodyOverlayActions?
 
     func present(
         session: RestSession,
         settings: RestSettings,
         now: Date,
-        emergencyOverrideAction: ((Int) -> Void)? = nil,
+        emergencyOverrideAction: (() -> Void)? = nil,
         emergencyOverrideArmed: Bool = false,
         bodyActions: BodyOverlayActions? = nil
     ) {
@@ -1624,7 +1621,7 @@ final class OverlayController {
         settings: RestSettings,
         now: Date,
         manualAwaiting: Bool,
-        emergencyOverrideAction: ((Int) -> Void)? = nil,
+        emergencyOverrideAction: (() -> Void)? = nil,
         emergencyOverrideArmed: Bool = false,
         bodyActions: BodyOverlayActions? = nil
     ) {
@@ -1650,7 +1647,6 @@ final class OverlayController {
                 showsContent: isContentScreen,
                 manualAwaiting: manualAwaiting,
                 emergencyOverrideRemainingSeconds: emergencyRemaining,
-                emergencyOverrideConfirmationSteps: emergencyRemaining == nil ? 0 : settings.eyeGate.emergencyOverride.confirmationSteps,
                 emergencyOverrideArmed: emergencyOverrideArmed,
                 bodyActions: bodyActions
             )
@@ -1672,11 +1668,11 @@ final class OverlayController {
     fileprivate func activateEmergencyOverrideIfAvailable() -> EmergencyOverlayActivationResult {
         for window in windows.values {
             switch window.overlayView.activateEmergencyOverrideIfAvailable() {
-            case .activated(let steps):
+            case .activated:
                 window.makeKeyAndOrderFront(nil)
                 window.orderFrontRegardless()
                 window.makeFirstResponder(window.overlayView)
-                return .activated(legacyConfirmationSteps: steps)
+                return .activated
             case .unavailable:
                 break
             }
@@ -1897,12 +1893,11 @@ final class RestOverlayView: NSView {
     private let bodyFinishButton = OverlayActionButton()
     private var detailCacheKey: String?
     private var emergencyRemainingSeconds: Int?
-    private var emergencyConfirmationSteps = 0
     private var emergencyOverrideArmed = false
     private var emergencySessionID: UUID?
     private var emergencyPanelWidthConstraint: NSLayoutConstraint?
     private var emergencyPanelHeightConstraint: NSLayoutConstraint?
-    var onEmergencyOverrideConfirmed: ((Int) -> Void)?
+    var onEmergencyOverrideConfirmed: (() -> Void)?
     var bodyActions: BodyOverlayActions? {
         didSet {
             updateBodyActionButtons()
@@ -2075,7 +2070,6 @@ final class RestOverlayView: NSView {
         showsContent: Bool,
         manualAwaiting: Bool,
         emergencyOverrideRemainingSeconds: Int?,
-        emergencyOverrideConfirmationSteps: Int,
         emergencyOverrideArmed: Bool = false,
         bodyActions: BodyOverlayActions? = nil
     ) {
@@ -2085,7 +2079,6 @@ final class RestOverlayView: NSView {
         configureEmergencyButton(
             sessionID: session.id,
             remainingSeconds: emergencyOverrideRemainingSeconds,
-            confirmationSteps: emergencyOverrideConfirmationSteps,
             isArmed: emergencyOverrideArmed
         )
 
@@ -2129,12 +2122,12 @@ final class RestOverlayView: NSView {
 
     @objc private func emergencyOverridePressed() {
         if let remainingSeconds = emergencyRemainingSeconds, remainingSeconds > 0 {
-            onEmergencyOverrideConfirmed?(0)
+            onEmergencyOverrideConfirmed?()
             return
         }
 
-        if case .activated(let steps) = activateEmergencyOverrideIfAvailable() {
-            onEmergencyOverrideConfirmed?(steps)
+        if case .activated = activateEmergencyOverrideIfAvailable() {
+            onEmergencyOverrideConfirmed?()
         }
     }
 
@@ -2175,13 +2168,12 @@ final class RestOverlayView: NSView {
             return .unavailable
         }
 
-        return .activated(legacyConfirmationSteps: emergencyConfirmationSteps)
+        return .activated
     }
 
     private func configureEmergencyButton(
         sessionID: UUID,
         remainingSeconds: Int?,
-        confirmationSteps: Int,
         isArmed: Bool
     ) {
         if emergencySessionID != sessionID {
@@ -2189,7 +2181,6 @@ final class RestOverlayView: NSView {
         }
 
         emergencyRemainingSeconds = remainingSeconds
-        emergencyConfirmationSteps = max(0, confirmationSteps)
         emergencyOverrideArmed = isArmed
 
         guard remainingSeconds != nil else {

@@ -4,7 +4,7 @@ import ShouldRestCore
 enum EmergencyOverrideDecision: Equatable {
     case unavailable
     case armed(remainingSeconds: Int)
-    case complete(completedConfirmationSteps: Int, heldDuration: TimeInterval)
+    case complete(heldDuration: TimeInterval)
 }
 
 struct EmergencyOverrideCoordinator {
@@ -31,10 +31,7 @@ struct EmergencyOverrideCoordinator {
         }
 
         armedSessionID = nil
-        return .complete(
-            completedConfirmationSteps: policy.confirmationSteps,
-            heldDuration: heldDuration
-        )
+        return .complete(heldDuration: heldDuration)
     }
 
     mutating func completionIfArmedAndReady(
@@ -52,10 +49,7 @@ struct EmergencyOverrideCoordinator {
         guard heldDuration >= policy.minimumHoldDuration else { return nil }
 
         armedSessionID = nil
-        return .complete(
-            completedConfirmationSteps: policy.confirmationSteps,
-            heldDuration: heldDuration
-        )
+        return .complete(heldDuration: heldDuration)
     }
 
     mutating func clear(sessionID: UUID? = nil) {

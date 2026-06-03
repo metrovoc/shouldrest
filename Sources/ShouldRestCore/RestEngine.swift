@@ -350,7 +350,7 @@ public struct RestEngine: Equatable, Sendable {
     @discardableResult
     public mutating func emergencyOverride(
         now: Date = Date(),
-        completedConfirmationSteps: Int = 0,
+        completedConfirmationSteps _: Int = 0,
         heldDuration: TimeInterval? = nil
     ) -> RestEngineResult {
         guard let session = state.activeSession else {
@@ -366,9 +366,6 @@ public struct RestEngine: Equatable, Sendable {
         let observedHoldDuration = max(0, heldDuration ?? now.timeIntervalSince(session.startedAt))
         guard observedHoldDuration >= policy.minimumHoldDuration else {
             return .denied(.emergencyOverrideHoldIncomplete)
-        }
-        guard completedConfirmationSteps >= policy.confirmationSteps else {
-            return .denied(.emergencyOverrideConfirmationIncomplete)
         }
         return completeActive(now: now, reason: .emergencyOverride)
     }

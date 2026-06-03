@@ -28,19 +28,19 @@ final class EmergencyOverrideCoordinatorTests: XCTestCase {
                 policy: policy,
                 now: start.addingTimeInterval(3)
             ),
-            .complete(completedConfirmationSteps: 0, heldDuration: 3)
+            .complete(heldDuration: 3)
         )
         XCTAssertFalse(coordinator.isArmed(for: session))
     }
 
-    func testRequestAfterHoldCompletesImmediatelyWithLegacyConfirmationSteps() {
+    func testRequestAfterHoldCompletesImmediatelyWithoutLegacyConfirmationSteps() {
         let session = eyeGateSession()
         let policy = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 2, minimumHoldDuration: 3)
         var coordinator = EmergencyOverrideCoordinator()
 
         XCTAssertEqual(
             coordinator.request(session: session, policy: policy, now: start.addingTimeInterval(4)),
-            .complete(completedConfirmationSteps: 2, heldDuration: 4)
+            .complete(heldDuration: 4)
         )
     }
 
