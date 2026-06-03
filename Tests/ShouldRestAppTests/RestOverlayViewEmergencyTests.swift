@@ -52,6 +52,43 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(button.attributedTitle.string, L10n.format("overlay.emergencyOverrideArmed", 2))
     }
 
+    func testEmergencyAffordanceUsesDimRedGhostStyle() throws {
+        let view = configuredEyeGateOverlay(remainingSeconds: 2, confirmationSteps: 2)
+
+        let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.panel"))
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        let tint = try XCTUnwrap(button.contentTintColor?.usingColorSpace(.sRGB))
+        let titleColor = try XCTUnwrap(
+            button.attributedTitle.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
+        ).usingColorSpace(.sRGB)
+        let title = try XCTUnwrap(titleColor)
+
+        XCTAssertFalse(button.isHidden)
+        XCTAssertLessThanOrEqual(button.alphaValue, 0.40)
+        XCTAssertGreaterThan(tint.redComponent, 0.80)
+        XCTAssertLessThan(tint.greenComponent, 0.35)
+        XCTAssertLessThanOrEqual(tint.alphaComponent, 0.50)
+        XCTAssertGreaterThan(title.redComponent, 0.80)
+        XCTAssertLessThan(title.greenComponent, 0.35)
+        XCTAssertLessThanOrEqual(title.alphaComponent, 0.50)
+        XCTAssertLessThanOrEqual(panel.layer?.backgroundColor?.alpha ?? 1, 0.02)
+        XCTAssertLessThanOrEqual(panel.layer?.borderColor?.alpha ?? 1, 0.06)
+    }
+
+    func testEmergencyAffordanceRemainsDimWhenReady() throws {
+        let view = configuredEyeGateOverlay(remainingSeconds: 0, confirmationSteps: 2)
+
+        let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.panel"))
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        let tint = try XCTUnwrap(button.contentTintColor?.usingColorSpace(.sRGB))
+
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverride"))
+        XCTAssertLessThanOrEqual(button.alphaValue, 0.50)
+        XCTAssertLessThanOrEqual(tint.alphaComponent, 0.66)
+        XCTAssertLessThanOrEqual(panel.layer?.backgroundColor?.alpha ?? 1, 0.03)
+        XCTAssertLessThanOrEqual(panel.layer?.borderColor?.alpha ?? 1, 0.09)
+    }
+
     func testEmergencyTriggerDoesNotEnterClickConfirmationState() throws {
         let view = configuredEyeGateOverlay(confirmationSteps: 2)
         let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.panel"))

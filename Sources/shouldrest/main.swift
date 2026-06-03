@@ -1768,6 +1768,44 @@ final class OverlayActionButton: NSButton {
     }
 }
 
+private struct EmergencyOverlayVisualStyle {
+    var buttonAlpha: CGFloat
+    var tintAlpha: CGFloat
+    var titleAlpha: CGFloat
+    var panelBackgroundAlpha: CGFloat
+    var panelBorderAlpha: CGFloat
+
+    static func style(remainingSeconds: Int, isArmed: Bool) -> EmergencyOverlayVisualStyle {
+        if remainingSeconds == 0 {
+            return EmergencyOverlayVisualStyle(
+                buttonAlpha: 0.48,
+                tintAlpha: 0.64,
+                titleAlpha: 0.64,
+                panelBackgroundAlpha: 0.022,
+                panelBorderAlpha: 0.082
+            )
+        }
+
+        if isArmed {
+            return EmergencyOverlayVisualStyle(
+                buttonAlpha: 0.44,
+                tintAlpha: 0.58,
+                titleAlpha: 0.58,
+                panelBackgroundAlpha: 0.018,
+                panelBorderAlpha: 0.070
+            )
+        }
+
+        return EmergencyOverlayVisualStyle(
+            buttonAlpha: 0.38,
+            tintAlpha: 0.50,
+            titleAlpha: 0.50,
+            panelBackgroundAlpha: 0.012,
+            panelBorderAlpha: 0.052
+        )
+    }
+}
+
 @MainActor
 final class RestOverlayView: NSView {
     private enum EmergencyHitTarget {
@@ -1834,10 +1872,8 @@ final class RestOverlayView: NSView {
         emergencyButton.isBordered = false
         emergencyButton.image = NSImage(systemSymbolName: "exclamationmark.triangle", accessibilityDescription: nil)
         emergencyButton.imagePosition = .imageLeading
-        emergencyButton.contentTintColor = NSColor.systemRed.withAlphaComponent(0.72)
         emergencyButton.target = self
         emergencyButton.action = #selector(emergencyOverridePressed)
-        emergencyButton.alphaValue = 0.58
         emergencyButton.isHidden = true
         addSubview(emergencyButton)
 
@@ -2102,25 +2138,32 @@ final class RestOverlayView: NSView {
         emergencyPanel.isHidden = false
         emergencyPanelWidthConstraint?.constant = 164
         emergencyPanelHeightConstraint?.constant = 44
+        let style = EmergencyOverlayVisualStyle.style(
+            remainingSeconds: remainingSeconds,
+            isArmed: emergencyOverrideArmed
+        )
         emergencyPanel.layer?.backgroundColor = NSColor.systemRed
-            .withAlphaComponent(0.028)
+            .withAlphaComponent(style.panelBackgroundAlpha)
             .cgColor
         emergencyPanel.layer?.borderColor = NSColor.systemRed
-            .withAlphaComponent(0.11)
+            .withAlphaComponent(style.panelBorderAlpha)
             .cgColor
+        emergencyButton.alphaValue = style.buttonAlpha
+        emergencyButton.contentTintColor = NSColor.systemRed.withAlphaComponent(style.tintAlpha)
 
         setEmergencyButtonTitle(
             remainingSeconds == 0
                 ? L10n.tr("overlay.emergencyOverride")
                 : emergencyOverrideArmed
                     ? L10n.format("overlay.emergencyOverrideArmed", remainingSeconds)
-                : L10n.format("overlay.emergencyOverrideIn", remainingSeconds)
+                : L10n.format("overlay.emergencyOverrideIn", remainingSeconds),
+            style: style
         )
     }
 
-    private func setEmergencyButtonTitle(_ title: String) {
+    private func setEmergencyButtonTitle(_ title: String, style: EmergencyOverlayVisualStyle) {
         let attributes: [NSAttributedString.Key: Any] = [
-            .foregroundColor: NSColor.systemRed.withAlphaComponent(0.72),
+            .foregroundColor: NSColor.systemRed.withAlphaComponent(style.titleAlpha),
             .font: NSFont.systemFont(ofSize: 13, weight: .medium)
         ]
         emergencyButton.attributedTitle = NSAttributedString(string: title, attributes: attributes)
