@@ -35,6 +35,11 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let eyeNotify = NSButton(checkboxWithTitle: L10n.tr("prefs.notifyEyeGate"), target: nil, action: nil)
     private let eyeLead = NSTextField()
     private let eyeManualFinish = NSButton(checkboxWithTitle: L10n.tr("prefs.eyeManualFinish"), target: nil, action: nil)
+    private let eyeEmergencyOverride = NSButton(checkboxWithTitle: L10n.tr("prefs.eyeEmergencyOverride"), target: nil, action: nil)
+    private let eyeEmergencyHoldSeconds = NSTextField()
+    private let eyeEmergencyConfirmations = NSTextField()
+    private var eyeEmergencyHoldRow: NSView?
+    private var eyeEmergencyConfirmationsRow: NSView?
 
     private let bodyEnabled = NSButton(checkboxWithTitle: L10n.tr("prefs.enableBodyBreak"), target: nil, action: nil)
     private let bodyInterval = NSTextField()
@@ -210,6 +215,25 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         scheduleStack.addArrangedSubview(eyeNotify)
         scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.notificationLead"), eyeLead, unit: L10n.tr("prefs.unit.seconds"), min: 0, max: 3600))
         scheduleStack.addArrangedSubview(eyeManualFinish)
+        scheduleStack.addArrangedSubview(eyeEmergencyOverride)
+        let eyeEmergencyHoldRow = numberRow(
+            L10n.tr("prefs.eyeEmergencyHold"),
+            eyeEmergencyHoldSeconds,
+            unit: L10n.tr("prefs.unit.seconds"),
+            min: 0,
+            max: 300
+        )
+        self.eyeEmergencyHoldRow = eyeEmergencyHoldRow
+        scheduleStack.addArrangedSubview(eyeEmergencyHoldRow)
+        let eyeEmergencyConfirmationsRow = numberRow(
+            L10n.tr("prefs.eyeEmergencyConfirmations"),
+            eyeEmergencyConfirmations,
+            unit: L10n.tr("prefs.unit.times"),
+            min: 0,
+            max: 10
+        )
+        self.eyeEmergencyConfirmationsRow = eyeEmergencyConfirmationsRow
+        scheduleStack.addArrangedSubview(eyeEmergencyConfirmationsRow)
         scheduleStack.addArrangedSubview(separator())
         scheduleStack.addArrangedSubview(section(L10n.tr("prefs.sectionBodyBreak"), symbolName: "figure.walk"))
         scheduleStack.addArrangedSubview(bodyEnabled)
@@ -436,6 +460,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private func configureFieldWidths() {
         let compactFields = [
             eyeInterval, eyeDuration, bodyInterval, bodyDuration, bodyAfterEyeGates, eyeLead, bodyLead,
+            eyeEmergencyHoldSeconds, eyeEmergencyConfirmations,
             bodyPostponeMinutes, bodyPostponeLimit, bodyPostponeWindowPercent, naturalIdleMinutes,
             bodyConfiguredDisplayIndex, pauseUntilMorningHour,
             pauseUntilMorningLatitude, pauseUntilMorningLongitude
@@ -578,6 +603,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private func configureAutosave() {
         let textFields = [
             eyeInterval, eyeDuration, eyeLead, bodyInterval, bodyDuration, bodyAfterEyeGates,
+            eyeEmergencyHoldSeconds, eyeEmergencyConfirmations,
             bodyLead, bodyPostponeMinutes, bodyPostponeLimit, bodyPostponeWindowPercent, naturalIdleMinutes,
             appExclusionName, appExclusionTerms, appExclusionsJSON,
             customBodyTitle, customBodyIdeasJSON, localImagePath, bodyConfiguredDisplayIndex,
@@ -592,7 +618,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         customBodyTextEditor.delegate = self
 
         let controls: [NSControl] = [
-            eyeColor, bodyColor, eyeNotify, eyeManualFinish, bodyNotify, bodyAllowSkip, bodyManualFinish, bodyCoversAllDisplays,
+            eyeColor, bodyColor, eyeNotify, eyeManualFinish, eyeEmergencyOverride, bodyNotify, bodyAllowSkip, bodyManualFinish, bodyCoversAllDisplays,
             bodyBlankSecondaryDisplays, naturalBreaks, focusMonitor, focusDefersBody, workingHoursEnabled,
             appExclusionEnabled, appExclusionAppliesEye, appExclusionAppliesBody, themeSource, trayStyle,
             languageIdentifier, currentTimeInBodyBreak, breakHealth, silentNotifications,
@@ -655,6 +681,9 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         eyeNotify.state = state(settings.notifications.eyeGateEnabled)
         eyeLead.stringValue = String(Int(settings.notifications.eyeGateLeadTime))
         eyeManualFinish.state = state(settings.eyeGate.manualFinishEnabled)
+        eyeEmergencyOverride.state = state(settings.eyeGate.emergencyOverride.isEnabled)
+        eyeEmergencyHoldSeconds.stringValue = String(Int(settings.eyeGate.emergencyOverride.minimumHoldDuration))
+        eyeEmergencyConfirmations.stringValue = String(settings.eyeGate.emergencyOverride.confirmationSteps)
 
         bodyEnabled.state = state(settings.bodyBreak.isEnabled)
         bodyInterval.stringValue = String(Int(settings.bodyBreak.interval / 60))
@@ -791,6 +820,11 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         next.notifications.eyeGateEnabled = isOn(eyeNotify)
         next.notifications.eyeGateLeadTime = TimeInterval(max(0, intValue(eyeLead)))
         next.eyeGate.manualFinishEnabled = isOn(eyeManualFinish)
+        next.eyeGate.emergencyOverride = EmergencyOverridePolicy(
+            isEnabled: isOn(eyeEmergencyOverride),
+            confirmationSteps: max(0, intValue(eyeEmergencyConfirmations)),
+            minimumHoldDuration: TimeInterval(max(0, intValue(eyeEmergencyHoldSeconds)))
+        )
 
         next.bodyBreak.isEnabled = isOn(bodyEnabled)
         if !next.eyeGate.isEnabled && !next.bodyBreak.isEnabled {
@@ -889,6 +923,9 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     }
 
     private func applyAdminVisibility() {
+        eyeEmergencyOverride.isHidden = settings.admin.hideStrictPreferences
+        eyeEmergencyHoldRow?.isHidden = settings.admin.hideStrictPreferences
+        eyeEmergencyConfirmationsRow?.isHidden = settings.admin.hideStrictPreferences
         bodyAllowSkip.isHidden = settings.admin.hideStrictPreferences
         shortcutEmergencyEyeRow?.isHidden = settings.admin.hideStrictPreferences
 
@@ -913,6 +950,10 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         eyeNotify.isEnabled = eyeGateEnabled
         setNumberInputEnabled(eyeLead, eyeGateEnabled && isOn(eyeNotify))
         eyeManualFinish.isEnabled = eyeGateEnabled
+        eyeEmergencyOverride.isEnabled = eyeGateEnabled
+        let emergencyEnabled = eyeGateEnabled && isOn(eyeEmergencyOverride)
+        setNumberInputEnabled(eyeEmergencyHoldSeconds, emergencyEnabled)
+        setNumberInputEnabled(eyeEmergencyConfirmations, emergencyEnabled)
 
         let bodyBreakEnabled = isOn(bodyEnabled)
         [

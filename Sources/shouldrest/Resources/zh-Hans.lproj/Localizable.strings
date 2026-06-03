@@ -74,6 +74,9 @@
 "prefs.cannotDisableBothRests" = "至少需要保留一种休息类型。";
 "prefs.notifyEyeGate" = "Eye Gate 前通知";
 "prefs.eyeManualFinish" = "Eye Gate 到时后手动完成";
+"prefs.eyeEmergencyOverride" = "启用紧急覆盖";
+"prefs.eyeEmergencyHold" = "紧急覆盖可用等待";
+"prefs.eyeEmergencyConfirmations" = "紧急覆盖确认次数";
 "prefs.enableBodyBreak" = "启用 Body Break";
 "prefs.notifyBodyBreak" = "Body Break 前通知";
 "prefs.manualFinish" = "Body Break 到时后手动完成";
