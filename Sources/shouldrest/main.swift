@@ -5,6 +5,25 @@ import IOKit
 import ShouldRestCore
 import UserNotifications
 
+enum AppNotificationUserInfo {
+    static let openURL = "openURL"
+
+    static func payload(openURL: URL?) -> [AnyHashable: Any] {
+        guard let openURL else { return [:] }
+        return [Self.openURL: openURL.absoluteString]
+    }
+
+    static func url(from userInfo: [AnyHashable: Any]) -> URL? {
+        guard let urlString = userInfo[Self.openURL] as? String,
+              let url = URL(string: urlString),
+              let scheme = url.scheme?.lowercased(),
+              ["http", "https"].contains(scheme) else {
+            return nil
+        }
+        return url
+    }
+}
+
 @MainActor
 final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private let settingsStore: SettingsStore
@@ -46,6 +65,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
+        UNUserNotificationCenter.current().delegate = self
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
         applyLanguageSetting()
         applyMenuBarVisibility()
@@ -1059,7 +1079,11 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             latestReleaseURL = result.releaseURL
             logger.log("Update available version=\(version) url=\(String(describing: result.releaseURL))")
             if settings.operations.notifyNewVersion || notifyWhenCurrent {
-                showAppNotification(title: L10n.tr("notification.updateTitle"), body: L10n.format("notification.updateAvailable", version))
+                showAppNotification(
+                    title: L10n.tr("notification.updateTitle"),
+                    body: L10n.format("notification.updateAvailable", version),
+                    openURL: result.releaseURL
+                )
             }
         case .upToDate:
             latestReleaseURL = result.releaseURL
@@ -1081,10 +1105,11 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         rebuildMenu()
     }
 
-    private func showAppNotification(title: String, body: String) {
+    private func showAppNotification(title: String, body: String, openURL: URL? = nil) {
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
+        content.userInfo = AppNotificationUserInfo.payload(openURL: openURL)
         if !settings.notifications.silentNotifications {
             content.sound = .default
         }
@@ -1545,6 +1570,23 @@ extension NSScreen {
     var displayID: CGDirectDisplayID {
         let key = NSDeviceDescriptionKey("NSScreenNumber")
         return deviceDescription[key] as? CGDirectDisplayID ?? 0
+    }
+}
+
+extension ShouldRestAppDelegate: UNUserNotificationCenterDelegate {
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        defer { completionHandler() }
+        guard response.actionIdentifier == UNNotificationDefaultActionIdentifier,
+              let url = AppNotificationUserInfo.url(from: response.notification.request.content.userInfo) else {
+            return
+        }
+        Task { @MainActor in
+            NSWorkspace.shared.open(url)
+        }
     }
 }
 
