@@ -103,6 +103,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private let updateChecker = UpdateChecker()
     private var preferencesWindowController: PreferencesWindowController?
     private var debugWindowController: DebugWindowController?
+    private var aboutWindowController: AboutWindowController?
     private var onboardingWindowController: OnboardingWindowController?
     private var statusItem: NSStatusItem?
     private var tickTimer: Timer?
@@ -886,16 +887,19 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func showAboutPanel() {
-        let alert = NSAlert()
-        alert.messageText = L10n.tr("about.title")
-        alert.informativeText = L10n.format("about.body", AppVersion.current)
-        alert.addButton(withTitle: L10n.tr("about.ok"))
-        alert.addButton(withTitle: L10n.tr("about.debug"))
-        alert.window.level = .floating
-        NSApp.activate(ignoringOtherApps: true)
-        if alert.runModal() == .alertSecondButtonReturn {
-            openDebugPanel()
+        if aboutWindowController == nil {
+            aboutWindowController = AboutWindowController(
+                version: AppVersion.current,
+                projectURL: URL(string: "https://github.com/metrovoc/shouldrest")!,
+                onOpenDebug: { [weak self] in
+                    self?.openDebugPanel()
+                }
+            )
         }
+        aboutWindowController?.showWindow(nil)
+        aboutWindowController?.window?.makeKeyAndOrderFront(nil)
+        aboutWindowController?.window?.orderFrontRegardless()
+        NSApp.activate(ignoringOtherApps: true)
         logger.log("About panel opened")
     }
 
@@ -957,6 +961,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             copyDebugInfo()
         case .debugPanel:
             openDebugPanel()
+        case .about:
+            showAboutPanel()
         }
     }
 

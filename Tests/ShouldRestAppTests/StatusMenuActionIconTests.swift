@@ -13,7 +13,8 @@ final class StatusMenuActionIconTests: XCTestCase {
             "resetBreaks": "arrow.counterclockwise",
             "openPreferences": "gearshape",
             "copyDebugInfo": "doc.on.doc",
-            "openDebugPanel": "stethoscope"
+            "openDebugPanel": "stethoscope",
+            "showAboutPanel": "info.circle"
         ]
 
         for (actionName, symbolName) in expectedSymbols {

@@ -247,7 +247,7 @@
 "shortcut.recordHelp" = "Click, then press a shortcut. Delete clears it.";
 "shortcut.recordingHelp" = "Press Command, Control, or Option with a key. Esc cancels; Delete clears.";
 "shortcut.clearHelp" = "Click to replace this shortcut. Delete clears it while recording.";
-"cli.help" = "Usage: shouldrest <command> [options]\n\nCommands:\n  help                         Show this help.\n  version                      Show version.\n  settings                     Print settings path unless hidden by admin.\n  logs                         Print log path.\n  pause [-d duration]          Pause breaks. Duration: indefinitely, until-morning, 60, 1h, 1h20m.\n  resume                       Resume breaks.\n  toggle                       Pause or resume breaks.\n  reset                        Reset schedule and health.\n  eye|mini [-w wait] [-n]      Start Eye Gate now or after wait; readable content is not customizable.\n  body|long [-T title] [-t text] [-w wait] [-n]  Start or customize Body Break.\n  preferences                  Open preferences in the running app.\n  debug                        Copy debug info in the running app.\n  debug-panel                  Open the debug panel in the running app.\n  url shouldrest://<command>    Send URL-style automation.";
+"cli.help" = "Usage: shouldrest <command> [options]\n\nCommands:\n  help                         Show this help.\n  version                      Show version.\n  settings                     Print settings path unless hidden by admin.\n  logs                         Print log path.\n  pause [-d duration]          Pause breaks. Duration: indefinitely, until-morning, 60, 1h, 1h20m.\n  resume                       Resume breaks.\n  toggle                       Pause or resume breaks.\n  reset                        Reset schedule and health.\n  eye|mini [-w wait] [-n]      Start Eye Gate now or after wait; readable content is not customizable.\n  body|long [-T title] [-t text] [-w wait] [-n]  Start or customize Body Break.\n  preferences                  Open preferences in the running app.\n  debug                        Copy debug info in the running app.\n  debug-panel                  Open the debug panel in the running app.\n  about                        Open the about window in the running app.\n  url shouldrest://<command>    Send URL-style automation.";
 "onboarding.title" = "Welcome to ShouldRest";
 "onboarding.heading" = "Start with a stricter rest rhythm";
 "onboarding.subtitle" = "Short eye rests first. Movement breaks stay flexible.";
@@ -263,5 +263,18 @@
 "onboarding.preferences" = "Open Preferences";
 "about.title" = "About ShouldRest";
 "about.body" = "ShouldRest %@\n\nShouldRest is a Mac-first rest reminder built around short, frequent, hard-to-ignore Eye Gates and configurable Body Breaks.\n\nIt keeps Stretchly-compatible scheduling, automation, update, debug, and preference capabilities where they support the product goal, while intentionally replacing weak 20-second skip/postpone behavior with stricter eye-rest enforcement.";
+"about.version" = "Version %@";
+"about.tagline" = "Mac-first rest reminders built around strict eye rests and configurable movement breaks.";
+"about.eyeGateTitle" = "Short, frequent Eye Gates";
+"about.eyeGateBody" = "Opaque screen coverage keeps 20-second eye rests hard to ignore.";
+"about.bodyBreakTitle" = "Configurable Body Breaks";
+"about.bodyBreakBody" = "Longer breaks keep postpones, display rules, images, and manual finish.";
+"about.compatibilityTitle" = "Stretchly-compatible where it helps";
+"about.compatibilityBody" = "Scheduling, automation, updates, diagnostics, and preferences stay available.";
 "about.ok" = "OK";
 "about.debug" = "Debug Info";
+"about.debugHelp" = "Open the diagnostics window";
+"about.project" = "Project Page";
+"about.projectHelp" = "Open the public GitHub project";
+"about.close" = "Close";
+"about.closeHelp" = "Close this window";
