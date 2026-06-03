@@ -141,7 +141,6 @@
 "prefs.trayStyle.appName" = "图标和应用名";
 "prefs.trayStyle.timeToBreak" = "图标和倒计时";
 "prefs.trayStyle.progress" = "图标和休息类型";
-"prefs.showMenuBarItem" = "显示菜单栏项目";
 "prefs.language" = "语言覆盖";
 "prefs.language.system" = "跟随系统语言";
 "prefs.language.english" = "英语";

@@ -76,7 +76,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     private let themeSource = NSPopUpButton()
     private let trayStyle = NSPopUpButton()
-    private let showMenuBarItem = NSButton(checkboxWithTitle: L10n.tr("prefs.showMenuBarItem"), target: nil, action: nil)
     private let languageIdentifier = NSPopUpButton()
     private let currentTimeInBodyBreak = NSButton(checkboxWithTitle: L10n.tr("prefs.currentTimeBody"), target: nil, action: nil)
     private let breakHealth = NSButton(checkboxWithTitle: L10n.tr("prefs.breakHealth"), target: nil, action: nil)
@@ -257,7 +256,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         appearanceStack.addArrangedSubview(section(L10n.tr("prefs.sectionPresentation"), symbolName: "paintbrush"))
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.theme"), themeSource))
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.menuBarStyle"), trayStyle))
-        appearanceStack.addArrangedSubview(showMenuBarItem)
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.language"), languageIdentifier))
         appearanceStack.addArrangedSubview(currentTimeInBodyBreak)
         appearanceStack.addArrangedSubview(breakHealth)
@@ -577,7 +575,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             eyeColor, bodyColor, eyeNotify, eyeManualFinish, bodyNotify, bodyAllowSkip, bodyManualFinish, bodyCoversAllDisplays,
             bodyBlankSecondaryDisplays, naturalBreaks, focusMonitor, focusDefersBody, workingHoursEnabled,
             appExclusionEnabled, appExclusionAppliesEye, appExclusionAppliesBody, themeSource, trayStyle,
-            showMenuBarItem, languageIdentifier, currentTimeInBodyBreak, breakHealth, silentNotifications,
+            languageIdentifier, currentTimeInBodyBreak, breakHealth, silentNotifications,
             eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, useBuiltInIdeas, openAtLogin,
             checkUpdates, notifyNewVersion, showOnboardingNextLaunch, pauseUntilMorningMode, pauseForSuspendOrLock,
             disableUpdateFeatures, hideSettingsPath, hideStrictPreferences, bodyCoveredDisplay, bodyContentDisplay,
@@ -682,7 +680,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
         selectPopup(themeSource, rawValue: settings.presentation.themeSource.rawValue)
         selectPopup(trayStyle, rawValue: settings.presentation.trayIconStyle.rawValue)
-        showMenuBarItem.state = state(settings.presentation.resolvedShowMenuBarItem)
         selectLanguageOption(LanguageOption(identifier: settings.presentation.languageIdentifier))
         currentTimeInBodyBreak.state = state(settings.presentation.showCurrentTimeDuringBodyBreak)
         breakHealth.state = state(settings.presentation.breakHealthMode)
@@ -813,7 +810,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         next.appExclusions = advancedAppExclusions ?? savedAppExclusions()
         next.presentation.themeSource = selected(ThemeSource.self, from: themeSource, fallback: .system)
         next.presentation.trayIconStyle = selected(TrayIconStyle.self, from: trayStyle, fallback: .default)
-        next.presentation.showMenuBarItem = isOn(showMenuBarItem)
+        next.presentation.showMenuBarItem = true
         next.presentation.languageIdentifier = selectedLanguageOption().identifier
         next.presentation.showCurrentTimeDuringBodyBreak = isOn(currentTimeInBodyBreak)
         next.presentation.breakHealthMode = isOn(breakHealth)
@@ -858,13 +855,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         next.admin.hideSettingsFileLocation = isOn(hideSettingsPath)
         next.admin.hideStrictPreferences = isOn(hideStrictPreferences)
         next.admin.customPreferencesMessage = customPreferencesMessage.stringValue
-
-        if next.eyeGate.manualFinishEnabled,
-           !next.presentation.resolvedShowMenuBarItem,
-           next.shortcuts.resolvedEndBodyBreakShortcut.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            next.presentation.showMenuBarItem = true
-            showMenuBarItem.state = .on
-        }
 
         settings = next
         applyAdminVisibility()
@@ -916,7 +906,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             appExclusionAppliesEye, appExclusionAppliesBody
         ].forEach { $0.isEnabled = exclusionEnabled }
 
-        trayStyle.isEnabled = isOn(showMenuBarItem)
+        trayStyle.isEnabled = true
         notifyNewVersion.isEnabled = isOn(checkUpdates)
 
         let morningMode = selected(MorningPauseMode.self, from: pauseUntilMorningMode, fallback: .hour)

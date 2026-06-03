@@ -475,7 +475,7 @@ public struct PresentationSettings: Codable, Equatable, Sendable {
     )
 
     public var resolvedShowMenuBarItem: Bool {
-        showMenuBarItem ?? true
+        true
     }
 }
 

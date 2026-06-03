@@ -502,6 +502,23 @@ final class RestEngineTests: XCTestCase {
         XCTAssertTrue(presentation.resolvedShowMenuBarItem)
     }
 
+    func testPresentationSettingsKeepsMenuBarVisibleEvenForLegacyHiddenValue() throws {
+        let legacyJSON = #"""
+        {
+          "themeSource": "system",
+          "trayIconStyle": "default",
+          "showCurrentTimeDuringBodyBreak": false,
+          "breakHealthMode": true,
+          "showMenuBarItem": false
+        }
+        """#.data(using: .utf8)!
+
+        let presentation = try JSONDecoder().decode(PresentationSettings.self, from: legacyJSON)
+
+        XCTAssertEqual(presentation.showMenuBarItem, false)
+        XCTAssertTrue(presentation.resolvedShowMenuBarItem)
+    }
+
     func testSettingsStoreRoundTripsDefaults() throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)

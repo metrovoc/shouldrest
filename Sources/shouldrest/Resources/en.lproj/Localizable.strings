@@ -141,7 +141,6 @@
 "prefs.trayStyle.appName" = "Icon and app name";
 "prefs.trayStyle.timeToBreak" = "Icon and countdown";
 "prefs.trayStyle.progress" = "Icon and rest type";
-"prefs.showMenuBarItem" = "Show menu bar item";
 "prefs.language" = "Language override";
 "prefs.language.system" = "System language";
 "prefs.language.english" = "English";
