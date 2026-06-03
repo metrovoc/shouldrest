@@ -32,6 +32,10 @@ private enum PreferencesSectionIcon {
     case systemSymbol(String)
 }
 
+private enum PreferencesTabIcon {
+    case systemSymbol(String)
+}
+
 @MainActor
 final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate, NSTextViewDelegate {
     private var settings: RestSettings
@@ -256,6 +260,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         root.addArrangedSubview(header)
 
         let tabView = NSTabView()
+        tabView.identifier = NSUserInterfaceItemIdentifier("prefs.tabView")
         tabView.translatesAutoresizingMaskIntoConstraints = false
         tabView.setContentHuggingPriority(.defaultLow, for: .vertical)
         tabView.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
@@ -423,7 +428,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         bodyConfiguredDisplayRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyConfiguredDisplayRow")
         self.bodyConfiguredDisplayRow = bodyConfiguredDisplayRow
         scheduleStack.addArrangedSubview(bodyConfiguredDisplayRow)
-        addTab(to: tabView, title: L10n.tr("prefs.tabSchedule"), stack: scheduleStack)
+        addTab(to: tabView, title: L10n.tr("prefs.tabSchedule"), icon: .systemSymbol("clock"), stack: scheduleStack)
 
         let contextStack = contentStack()
         contextStack.addArrangedSubview(section(L10n.tr("prefs.sectionContext"), symbolName: "scope"))
@@ -482,7 +487,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         appExclusionsJSONRow.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionsJSONRow")
         self.appExclusionsJSONRow = appExclusionsJSONRow
         contextStack.addArrangedSubview(appExclusionsJSONRow)
-        addTab(to: tabView, title: L10n.tr("prefs.tabContext"), stack: contextStack)
+        addTab(to: tabView, title: L10n.tr("prefs.tabContext"), icon: .systemSymbol("scope"), stack: contextStack)
 
         let appearanceStack = contentStack()
         appearanceStack.addArrangedSubview(section(L10n.tr("prefs.sectionPresentation"), symbolName: "paintbrush"))
@@ -531,7 +536,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         customBodyIdeasJSONRow.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyIdeasJSONRow")
         self.customBodyIdeasJSONRow = customBodyIdeasJSONRow
         appearanceStack.addArrangedSubview(customBodyIdeasJSONRow)
-        addTab(to: tabView, title: L10n.tr("prefs.tabAppearance"), stack: appearanceStack)
+        addTab(to: tabView, title: L10n.tr("prefs.tabAppearance"), icon: .systemSymbol("paintbrush"), stack: appearanceStack)
 
         let shortcutsStack = contentStack()
         shortcutsStack.addArrangedSubview(section(L10n.tr("prefs.sectionShortcuts"), symbolName: "keyboard"))
@@ -572,7 +577,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         self.shortcutEmergencyEyeRow = shortcutEmergencyEyeRow
         shortcutsStack.addArrangedSubview(shortcutEmergencyEyeRow)
         shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.reset"), shortcutReset))
-        addTab(to: tabView, title: L10n.tr("prefs.tabShortcuts"), stack: shortcutsStack)
+        addTab(to: tabView, title: L10n.tr("prefs.tabShortcuts"), icon: .systemSymbol("keyboard"), stack: shortcutsStack)
 
         let advancedStack = contentStack()
         advancedStack.addArrangedSubview(section(L10n.tr("prefs.sectionOperations"), symbolName: "gearshape"))
@@ -622,7 +627,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         adminControlsStack.addArrangedSubview(row(L10n.tr("prefs.preferencesMessage"), customPreferencesMessage))
         advancedStack.addArrangedSubview(adminControlsAdvancedButton)
         advancedStack.addArrangedSubview(adminControlsStack)
-        addTab(to: tabView, title: L10n.tr("prefs.tabAdvanced"), stack: advancedStack)
+        addTab(to: tabView, title: L10n.tr("prefs.tabAdvanced"), icon: .systemSymbol("gearshape"), stack: advancedStack)
 
         let footer = footerBar()
         root.addArrangedSubview(footer)
@@ -718,11 +723,27 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         return stack
     }
 
-    private func addTab(to tabView: NSTabView, title: String, stack: NSStackView) {
+    private func addTab(to tabView: NSTabView, title: String, icon: PreferencesTabIcon, stack: NSStackView) {
         let item = NSTabViewItem(identifier: title)
         item.label = title
+        item.toolTip = title
+        item.image = tabImage(icon, accessibilityDescription: title)
         item.view = scrollContainer(for: stack)
         tabView.addTabViewItem(item)
+    }
+
+    private func tabImage(_ icon: PreferencesTabIcon, accessibilityDescription: String) -> NSImage {
+        switch icon {
+        case let .systemSymbol(symbolName):
+            let configuration = NSImage.SymbolConfiguration(pointSize: 13, weight: .medium)
+            let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: accessibilityDescription)?
+                .withSymbolConfiguration(configuration)
+                ?? NSImage(systemSymbolName: "circle", accessibilityDescription: accessibilityDescription)
+                ?? NSImage(size: NSSize(width: 14, height: 14))
+            image.isTemplate = true
+            image.accessibilityDescription = accessibilityDescription
+            return image
+        }
     }
 
     private func scrollContainer(for stack: NSStackView) -> NSScrollView {
