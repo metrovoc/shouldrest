@@ -96,6 +96,32 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertEqual(savedSettings.value?.appExclusions, [])
     }
 
+    func testInvalidAdvancedJSONKeepsPendingAutosaveAfterFlushFailure() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "alpha",
+                name: "Alpha",
+                matchTerms: ["alpha.app"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let editor = try XCTUnwrap(view(withIdentifier: "appExclusionsJSONEditor", in: contentView) as? NSTextView)
+
+        editor.string = "{ invalid json"
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: editor))
+
+        XCTAssertFalse(controller.flushPendingAutosave(showAlerts: false))
+        XCTAssertNil(savedSettings.value)
+        XCTAssertFalse(controller.flushPendingAutosave(showAlerts: false))
+        XCTAssertNil(savedSettings.value)
+    }
+
     private func view(withIdentifier identifier: String, in view: NSView) -> NSView? {
         if view.identifier?.rawValue == identifier {
             return view

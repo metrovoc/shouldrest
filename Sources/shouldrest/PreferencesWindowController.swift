@@ -81,7 +81,7 @@ private final class PreferencesWindow: NSWindow {
 }
 
 @MainActor
-final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate, NSSearchFieldDelegate, NSTextViewDelegate, PreferencesWindowKeyboardDelegate {
+final class PreferencesWindowController: NSWindowController, NSWindowDelegate, NSTextFieldDelegate, NSSearchFieldDelegate, NSTextViewDelegate, PreferencesWindowKeyboardDelegate {
     private var settings: RestSettings
     private let onSave: (RestSettings) -> Void
     private let adminMessageLabel = NSTextField(labelWithString: "")
@@ -91,6 +91,9 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let saveStatusLabel = NSTextField(labelWithString: "")
     private let soundPlayer = SoundPlayer()
     private var isLoadingSettings = false
+    private var hasPendingTextEditing = false
+    private var hasPendingAutosave = false
+    private var autosaveGeneration = 0
     private var autosaveTask: Task<Void, Never>?
     private var numberInputs: [NumberInput] = []
     private weak var preferencesTabView: NSTabView?
@@ -267,6 +270,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         window.center()
         super.init(window: window)
         window.keyboardDelegate = self
+        window.delegate = self
 
         buildContent()
         loadSettings()
@@ -1809,6 +1813,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             return
         }
         guard !isLoadingSettings else { return }
+        hasPendingTextEditing = true
         setSaveStatus(.editing)
     }
 
@@ -1820,6 +1825,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         if let field = obj.object as? NSTextField {
             syncNumberControls(for: field)
         }
+        hasPendingTextEditing = false
         updateDependentControlEnablement()
         scheduleAutosave()
     }
@@ -1836,13 +1842,54 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     private func scheduleAutosave() {
         guard !isLoadingSettings else { return }
+        hasPendingAutosave = true
+        autosaveGeneration += 1
+        let generation = autosaveGeneration
         autosaveTask?.cancel()
         setSaveStatus(.saving)
         autosaveTask = Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: 250_000_000)
             guard !Task.isCancelled else { return }
-            self?.saveCurrentSettings(showAlerts: false)
+            self?.runScheduledAutosave(generation: generation)
         }
+    }
+
+    private func runScheduledAutosave(generation: Int) {
+        guard generation == autosaveGeneration else { return }
+        autosaveTask = nil
+        _ = flushPendingAutosave(showAlerts: false, commitTextEditing: false)
+    }
+
+    @discardableResult
+    func flushPendingAutosave(showAlerts: Bool) -> Bool {
+        flushPendingAutosave(showAlerts: showAlerts, commitTextEditing: true)
+    }
+
+    @discardableResult
+    private func flushPendingAutosave(showAlerts: Bool, commitTextEditing: Bool) -> Bool {
+        if commitTextEditing {
+            commitPendingTextEditing()
+        }
+        guard hasPendingAutosave else { return true }
+        autosaveGeneration += 1
+        autosaveTask?.cancel()
+        autosaveTask = nil
+        let didSave = saveCurrentSettings(showAlerts: showAlerts)
+        hasPendingAutosave = !didSave
+        return didSave
+    }
+
+    private func commitPendingTextEditing() {
+        guard hasPendingTextEditing, !isLoadingSettings else { return }
+        syncNumberControlsFromFields()
+        updateDependentControlEnablement()
+        hasPendingTextEditing = false
+        scheduleAutosave()
+    }
+
+    func windowShouldClose(_ sender: NSWindow) -> Bool {
+        sender.makeFirstResponder(nil)
+        return flushPendingAutosave(showAlerts: true)
     }
 
     private func setSaveStatus(_ status: PreferencesSaveStatus) {

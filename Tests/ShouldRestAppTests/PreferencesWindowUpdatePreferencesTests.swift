@@ -55,6 +55,40 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         XCTAssertEqual(savedSettings.value?.operations.checkForUpdates, false)
     }
 
+    func testClosingPreferencesFlushesPendingAutosaveImmediately() throws {
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
+
+        try selectAdvancedTab(in: contentView)
+        let checkbox = try XCTUnwrap(view(withIdentifier: "prefs.checkUpdates", in: contentView) as? NSButton)
+        checkbox.state = .off
+
+        XCTAssertTrue(sendAction(from: checkbox))
+        XCTAssertNil(savedSettings.value)
+
+        XCTAssertTrue(controller.windowShouldClose(window))
+        XCTAssertEqual(savedSettings.value?.operations.checkForUpdates, false)
+    }
+
+    func testClosingPreferencesCommitsInProgressTextEditing() throws {
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
+
+        try selectAdvancedTab(in: contentView)
+        let field = try XCTUnwrap(view(withIdentifier: "prefs.updateFeedURLField", in: contentView) as? NSTextField)
+        field.stringValue = "https://example.com/shouldrest.json"
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: field))
+
+        XCTAssertNil(savedSettings.value)
+
+        XCTAssertTrue(controller.windowShouldClose(window))
+        XCTAssertEqual(savedSettings.value?.operations.updateFeedURL, "https://example.com/shouldrest.json")
+    }
+
     private func selectAdvancedTab(in view: NSView) throws {
         let tabView = try XCTUnwrap(firstTabView(in: view))
         tabView.selectTabViewItem(withIdentifier: L10n.tr("prefs.tabAdvanced"))
