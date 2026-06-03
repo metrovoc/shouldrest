@@ -130,6 +130,7 @@
 "prefs.pauseUntilMorningHour" = "Pause-until-morning hour";
 "prefs.pauseUntilMorningLatitude" = "Sunrise latitude";
 "prefs.pauseUntilMorningLongitude" = "Sunrise longitude";
+"prefs.pauseForSuspendOrLock" = "Pause scheduler on sleep or lock";
 "prefs.updateFeedURL" = "Update feed URL";
 "prefs.preferencesMessage" = "Preferences message";
 "prefs.save" = "Save";

@@ -130,6 +130,7 @@
 "prefs.pauseUntilMorningHour" = "暂停到早晨的小时";
 "prefs.pauseUntilMorningLatitude" = "日出纬度";
 "prefs.pauseUntilMorningLongitude" = "日出经度";
+"prefs.pauseForSuspendOrLock" = "睡眠或锁屏时暂停调度器";
 "prefs.updateFeedURL" = "更新源 URL";
 "prefs.preferencesMessage" = "偏好设置消息";
 "prefs.save" = "保存";

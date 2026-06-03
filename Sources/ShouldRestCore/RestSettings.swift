@@ -530,6 +530,7 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
     public var pauseUntilMorningMode: MorningPauseMode?
     public var pauseUntilMorningLatitude: Double?
     public var pauseUntilMorningLongitude: Double?
+    public var pauseForSuspendOrLock: Bool?
 
     public init(
         openAtLogin: Bool,
@@ -540,7 +541,8 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
         pauseUntilMorningHour: Int? = nil,
         pauseUntilMorningMode: MorningPauseMode? = nil,
         pauseUntilMorningLatitude: Double? = nil,
-        pauseUntilMorningLongitude: Double? = nil
+        pauseUntilMorningLongitude: Double? = nil,
+        pauseForSuspendOrLock: Bool? = nil
     ) {
         self.openAtLogin = openAtLogin
         self.checkForUpdates = checkForUpdates
@@ -551,6 +553,7 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
         self.pauseUntilMorningMode = pauseUntilMorningMode
         self.pauseUntilMorningLatitude = pauseUntilMorningLatitude.map { min(89.8, max(-89.8, $0)) }
         self.pauseUntilMorningLongitude = pauseUntilMorningLongitude.map(Self.normalizedLongitude)
+        self.pauseForSuspendOrLock = pauseForSuspendOrLock
     }
 
     public static let defaults = OperationsSettings(
@@ -562,7 +565,8 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
         pauseUntilMorningHour: defaultPauseUntilMorningHour,
         pauseUntilMorningMode: .hour,
         pauseUntilMorningLatitude: 0,
-        pauseUntilMorningLongitude: 0
+        pauseUntilMorningLongitude: 0,
+        pauseForSuspendOrLock: true
     )
 
     public var resolvedPauseUntilMorningHour: Int {
@@ -571,6 +575,10 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
 
     public var resolvedPauseUntilMorningMode: MorningPauseMode {
         pauseUntilMorningMode ?? .hour
+    }
+
+    public var resolvedPauseForSuspendOrLock: Bool {
+        pauseForSuspendOrLock ?? true
     }
 
     public func secondsUntilMorning(from now: Date = Date(), calendar: Calendar = .current) -> TimeInterval {

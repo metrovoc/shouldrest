@@ -43,6 +43,7 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 
 - Natural break detection using idle time.
 - Suspend, lock, resume, and unlock correction.
+- Configurable pause-on-suspend-or-lock behavior.
 - Do Not Disturb / Focus awareness.
 - App exclusion rules with pause and resume semantics.
 - Configurable active working hours.

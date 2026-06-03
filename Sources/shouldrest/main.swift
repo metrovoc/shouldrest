@@ -24,6 +24,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private var lastFocusCheck = Date.distantPast
     private var focusModeActive = false
     private var suspendedAt: Date?
+    private var pausedForSuspendOrLock = false
     private var manualAwaitingSessionID: UUID?
     private var latestReleaseURL: URL?
 
@@ -133,6 +134,11 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let result = engine.evaluate(now: now, context: currentContext())
+        handleEngineResult(result, now: now)
+        rebuildMenu()
+    }
+
+    private func handleEngineResult(_ result: RestEngineResult, now: Date) {
         switch result {
         case .started(let session):
             soundPlayer.play(settings.rule(for: session.kind).startSound)
@@ -144,7 +150,6 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         default:
             break
         }
-        rebuildMenu()
     }
 
     private func currentContext() -> RestContext {
@@ -592,11 +597,17 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func systemWillPause() {
         suspendedAt = Date()
-        if engine.state.activeSession == nil {
-            _ = engine.pause(for: nil, reason: .suspendOrLock)
+        pausedForSuspendOrLock = false
+        if settings.operations.resolvedPauseForSuspendOrLock {
+            if engine.state.activeSession == nil,
+               case .paused = engine.pause(for: nil, reason: .suspendOrLock) {
+                pausedForSuspendOrLock = true
+            }
+            overlayController.dismiss()
+            logger.log("System pause detected")
+        } else {
+            logger.log("System pause detected without scheduler pause")
         }
-        overlayController.dismiss()
-        logger.log("System pause detected")
         rebuildMenu()
     }
 
@@ -604,8 +615,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         let now = Date()
         let idleDuration = suspendedAt.map { now.timeIntervalSince($0) } ?? 0
         suspendedAt = nil
-        _ = engine.resume(now: now)
-        _ = engine.evaluate(now: now, context: RestContext(idleDuration: idleDuration))
+        if pausedForSuspendOrLock {
+            _ = engine.resume(now: now)
+            pausedForSuspendOrLock = false
+        }
+        let result = engine.evaluate(now: now, context: RestContext(idleDuration: idleDuration))
+        handleEngineResult(result, now: now)
         logger.log("System resume detected idleDuration=\(idleDuration)")
         rebuildMenu()
     }

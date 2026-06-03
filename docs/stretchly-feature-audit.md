@@ -153,6 +153,7 @@ Implemented now:
 - Settings-store round-trip coverage.
 - Open-at-login setting and ServiceManagement integration when running as a bundled app.
 - Sleep, wake, lock, and unlock correction hooks.
+- Stretchly-compatible `pauseForSuspendOrLock` preference: enabled by default, with an opt-out path that preserves schedule state and lets natural rest credit absorb sleep/lock idle time.
 - Debug panel with runtime state and paths.
 - Global shortcut registration for pause, pause durations, take-now, Body Break skip-to-next, and reset.
 - URL-style automation parser plus Apple Event URL handler for bundled app registration.
