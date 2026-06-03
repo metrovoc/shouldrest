@@ -514,19 +514,28 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
     public var checkForUpdates: Bool
     public var notifyNewVersion: Bool
     public var updateFeedURL: String
+    public var hasCompletedOnboarding: Bool
 
-    public init(openAtLogin: Bool, checkForUpdates: Bool, notifyNewVersion: Bool, updateFeedURL: String) {
+    public init(
+        openAtLogin: Bool,
+        checkForUpdates: Bool,
+        notifyNewVersion: Bool,
+        updateFeedURL: String,
+        hasCompletedOnboarding: Bool
+    ) {
         self.openAtLogin = openAtLogin
         self.checkForUpdates = checkForUpdates
         self.notifyNewVersion = notifyNewVersion
         self.updateFeedURL = updateFeedURL
+        self.hasCompletedOnboarding = hasCompletedOnboarding
     }
 
     public static let defaults = OperationsSettings(
         openAtLogin: false,
         checkForUpdates: true,
         notifyNewVersion: true,
-        updateFeedURL: "https://api.github.com/repos/tovkaic/shouldrest/releases/latest"
+        updateFeedURL: "https://api.github.com/repos/tovkaic/shouldrest/releases/latest",
+        hasCompletedOnboarding: false
     )
 }
 

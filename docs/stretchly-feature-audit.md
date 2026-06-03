@@ -164,6 +164,7 @@ Implemented now:
 - Reproducible `.app` packaging script with `shouldrest://` URL-scheme Info.plist registration and localization resource bundling.
 - Advanced app-exclusion JSON editor for multi-rule configurations, plus primary-rule form controls for common cases.
 - Localized preference labels and CLI help in the SwiftPM resource bundle.
+- First-run onboarding window that lets users accept the scientific defaults or open preferences.
 
 Still to implement:
-- First-run onboarding and polished visual QA for the packaged `.app`.
+- Polished visual QA for the packaged `.app` in real GUI sessions.

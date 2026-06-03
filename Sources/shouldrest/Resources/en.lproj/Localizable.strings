@@ -102,3 +102,8 @@
 "prefs.save" = "Save";
 "prefs.restoreDefaults" = "Restore Defaults";
 "cli.help" = "Usage: shouldrest <command> [options]\n\nCommands:\n  help                         Show this help.\n  version                      Show version.\n  settings                     Print settings path.\n  logs                         Print log path.\n  pause [-d duration]          Pause breaks. Duration: indefinitely, until-morning, 60, 1h, 1h20m.\n  resume                       Resume breaks.\n  reset                        Reset schedule and health.\n  eye                          Start Eye Gate now.\n  body                         Start Body Break now.\n  preferences                  Open preferences in the running app.\n  debug                        Copy debug info in the running app.\n  url shouldrest://<command>    Send URL-style automation.";
+"onboarding.title" = "Welcome to ShouldRest";
+"onboarding.heading" = "Start with the default rest cadence";
+"onboarding.body" = "Eye Gate uses short, frequent, opaque rest intervals. Body Break remains configurable for longer movement breaks.";
+"onboarding.useDefaults" = "Use Defaults";
+"onboarding.preferences" = "Open Preferences";

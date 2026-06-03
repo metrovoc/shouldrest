@@ -18,6 +18,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private let updateChecker = UpdateChecker()
     private var preferencesWindowController: PreferencesWindowController?
     private var debugWindowController: DebugWindowController?
+    private var onboardingWindowController: OnboardingWindowController?
     private var statusItem: NSStatusItem?
     private var tickTimer: Timer?
     private var lastFocusCheck = Date.distantPast
@@ -71,6 +72,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         configureGlobalShortcuts()
         scheduleAutomaticUpdateCheck()
         tick()
+        showOnboardingIfNeeded()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -383,6 +385,31 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         preferencesWindowController?.showWindow(nil)
         preferencesWindowController?.window?.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    private func showOnboardingIfNeeded() {
+        guard !settings.operations.hasCompletedOnboarding else { return }
+        onboardingWindowController = OnboardingWindowController(
+            onUseDefaults: { [weak self] in
+                self?.completeOnboarding(openPreferences: false)
+            },
+            onOpenPreferences: { [weak self] in
+                self?.completeOnboarding(openPreferences: true)
+            }
+        )
+        onboardingWindowController?.showWindow(nil)
+        onboardingWindowController?.window?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        logger.log("Onboarding shown")
+    }
+
+    private func completeOnboarding(openPreferences shouldOpenPreferences: Bool) {
+        settings.operations.hasCompletedOnboarding = true
+        applySettings(settings)
+        logger.log("Onboarding completed")
+        if shouldOpenPreferences {
+            openPreferences()
+        }
     }
 
     @objc private func checkForUpdatesNow() {

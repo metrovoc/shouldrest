@@ -102,3 +102,8 @@
 "prefs.save" = "保存";
 "prefs.restoreDefaults" = "恢复默认";
 "cli.help" = "用法：shouldrest <命令> [选项]\n\n命令：\n  help                         显示帮助。\n  version                      显示版本。\n  settings                     输出设置文件路径。\n  logs                         输出日志路径。\n  pause [-d duration]          暂停休息。时长：indefinitely、until-morning、60、1h、1h20m。\n  resume                       恢复休息。\n  reset                        重置计划和健康值。\n  eye                          立即开始 Eye Gate。\n  body                         立即开始 Body Break。\n  preferences                  打开运行中 app 的偏好设置。\n  debug                        复制运行中 app 的调试信息。\n  url shouldrest://<command>    发送 URL 风格自动化命令。";
+"onboarding.title" = "欢迎使用 ShouldRest";
+"onboarding.heading" = "使用默认休息节奏开始";
+"onboarding.body" = "Eye Gate 使用短而频繁的不透明休息间隔。Body Break 保持可配置，用于更长的身体活动休息。";
+"onboarding.useDefaults" = "使用默认值";
+"onboarding.preferences" = "打开偏好设置";
