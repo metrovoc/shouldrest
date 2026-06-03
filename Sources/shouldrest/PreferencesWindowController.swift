@@ -1,13 +1,17 @@
 import AppKit
+import Carbon
 import Foundation
 import ShouldRestCore
 
 @MainActor
-final class PreferencesWindowController: NSWindowController {
+final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate {
     private var settings: RestSettings
     private let onSave: (RestSettings) -> Void
     private let adminMessageLabel = NSTextField(labelWithString: "")
+    private let saveStatusLabel = NSTextField(labelWithString: "")
     private let soundPlayer = SoundPlayer()
+    private var isLoadingSettings = false
+    private var autosaveTask: Task<Void, Never>?
 
     private let eyeEnabled = NSButton(checkboxWithTitle: L10n.tr("prefs.enableEyeGate"), target: nil, action: nil)
     private let eyeInterval = NSTextField()
@@ -74,20 +78,20 @@ final class PreferencesWindowController: NSWindowController {
     private let localImagePath = NSTextField()
     private let useBuiltInIdeas = NSButton(checkboxWithTitle: L10n.tr("prefs.useBuiltInIdeas"), target: nil, action: nil)
 
-    private let shortcutPauseToggle = NSTextField()
-    private let shortcutPause30 = NSTextField()
-    private let shortcutPause1h = NSTextField()
-    private let shortcutPause2h = NSTextField()
-    private let shortcutPause5h = NSTextField()
-    private let shortcutPauseUntilMorning = NSTextField()
-    private let shortcutNextScheduled = NSTextField()
-    private let shortcutEyeNow = NSTextField()
-    private let shortcutBodyNow = NSTextField()
-    private let shortcutSkipBody = NSTextField()
-    private let shortcutEndBody = NSTextField()
-    private let shortcutEmergencyEye = NSTextField()
+    private let shortcutPauseToggle = ShortcutRecorderButton()
+    private let shortcutPause30 = ShortcutRecorderButton()
+    private let shortcutPause1h = ShortcutRecorderButton()
+    private let shortcutPause2h = ShortcutRecorderButton()
+    private let shortcutPause5h = ShortcutRecorderButton()
+    private let shortcutPauseUntilMorning = ShortcutRecorderButton()
+    private let shortcutNextScheduled = ShortcutRecorderButton()
+    private let shortcutEyeNow = ShortcutRecorderButton()
+    private let shortcutBodyNow = ShortcutRecorderButton()
+    private let shortcutSkipBody = ShortcutRecorderButton()
+    private let shortcutEndBody = ShortcutRecorderButton()
+    private let shortcutEmergencyEye = ShortcutRecorderButton()
     private var shortcutEmergencyEyeRow: NSView?
-    private let shortcutReset = NSTextField()
+    private let shortcutReset = ShortcutRecorderButton()
 
     private let openAtLogin = NSButton(checkboxWithTitle: L10n.tr("prefs.openAtLogin"), target: nil, action: nil)
     private let checkUpdates = NSButton(checkboxWithTitle: L10n.tr("prefs.checkUpdates"), target: nil, action: nil)
@@ -114,7 +118,7 @@ final class PreferencesWindowController: NSWindowController {
         self.onSave = onSave
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 720, height: 760),
+            contentRect: NSRect(x: 0, y: 0, width: 820, height: 760),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered,
             defer: false
@@ -175,12 +179,13 @@ final class PreferencesWindowController: NSWindowController {
         configureFieldWidths()
         configureSoundPreviewButtons()
         configureEnablementGuards()
+        configureAutosave()
 
         adminMessageLabel.lineBreakMode = .byWordWrapping
         adminMessageLabel.widthAnchor.constraint(equalToConstant: 620).isActive = true
         stack.addArrangedSubview(adminMessageLabel)
 
-        stack.addArrangedSubview(section(L10n.tr("prefs.sectionEyeGate")))
+        stack.addArrangedSubview(section(L10n.tr("prefs.sectionEyeGate"), symbolName: "eye"))
         stack.addArrangedSubview(eyeEnabled)
         stack.addArrangedSubview(row(L10n.tr("prefs.everyMinutes"), eyeInterval))
         stack.addArrangedSubview(row(L10n.tr("prefs.durationSeconds"), eyeDuration))
@@ -190,7 +195,7 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(eyeManualFinish)
 
         stack.addArrangedSubview(separator())
-        stack.addArrangedSubview(section(L10n.tr("prefs.sectionBodyBreak")))
+        stack.addArrangedSubview(section(L10n.tr("prefs.sectionBodyBreak"), symbolName: "figure.walk"))
         stack.addArrangedSubview(bodyEnabled)
         stack.addArrangedSubview(row(L10n.tr("prefs.bodyIntervalMinutes"), bodyInterval))
         stack.addArrangedSubview(row(L10n.tr("prefs.durationMinutes"), bodyDuration))
@@ -210,7 +215,7 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(row(L10n.tr("prefs.configuredDisplayIndex"), bodyConfiguredDisplayIndex))
 
         stack.addArrangedSubview(separator())
-        stack.addArrangedSubview(section(L10n.tr("prefs.sectionContext")))
+        stack.addArrangedSubview(section(L10n.tr("prefs.sectionContext"), symbolName: "scope"))
         stack.addArrangedSubview(naturalBreaks)
         stack.addArrangedSubview(row(L10n.tr("prefs.naturalIdleMinutes"), naturalIdleMinutes))
         stack.addArrangedSubview(focusMonitor)
@@ -220,7 +225,7 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(row(L10n.tr("prefs.workingEnd"), workingEnd))
 
         stack.addArrangedSubview(separator())
-        stack.addArrangedSubview(section(L10n.tr("prefs.sectionExclusion")))
+        stack.addArrangedSubview(section(L10n.tr("prefs.sectionExclusion"), symbolName: "app.badge"))
         stack.addArrangedSubview(appExclusionEnabled)
         stack.addArrangedSubview(row(L10n.tr("prefs.name"), appExclusionName))
         stack.addArrangedSubview(row(L10n.tr("prefs.matchTerms"), appExclusionTerms))
@@ -230,7 +235,7 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(row(L10n.tr("prefs.advancedRulesJSON"), appExclusionsJSON))
 
         stack.addArrangedSubview(separator())
-        stack.addArrangedSubview(section(L10n.tr("prefs.sectionPresentation")))
+        stack.addArrangedSubview(section(L10n.tr("prefs.sectionPresentation"), symbolName: "paintbrush"))
         stack.addArrangedSubview(row(L10n.tr("prefs.theme"), themeSource))
         stack.addArrangedSubview(row(L10n.tr("prefs.menuBarStyle"), trayStyle))
         stack.addArrangedSubview(showMenuBarItem)
@@ -245,7 +250,7 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(row(L10n.tr("prefs.volume"), soundVolume))
 
         stack.addArrangedSubview(separator())
-        stack.addArrangedSubview(section(L10n.tr("prefs.sectionCustomIdea")))
+        stack.addArrangedSubview(section(L10n.tr("prefs.sectionCustomIdea"), symbolName: "text.bubble"))
         stack.addArrangedSubview(useBuiltInIdeas)
         stack.addArrangedSubview(row(L10n.tr("prefs.title"), customBodyTitle))
         stack.addArrangedSubview(row(L10n.tr("prefs.text"), customBodyText))
@@ -253,7 +258,7 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(row(L10n.tr("prefs.localImagePath"), localImagePath))
 
         stack.addArrangedSubview(separator())
-        stack.addArrangedSubview(section(L10n.tr("prefs.sectionShortcuts")))
+        stack.addArrangedSubview(section(L10n.tr("prefs.sectionShortcuts"), symbolName: "keyboard"))
         stack.addArrangedSubview(row(L10n.tr("prefs.pauseToggle"), shortcutPauseToggle))
         stack.addArrangedSubview(row(L10n.tr("prefs.pause30Shortcut"), shortcutPause30))
         stack.addArrangedSubview(row(L10n.tr("prefs.pause1hShortcut"), shortcutPause1h))
@@ -271,7 +276,7 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(row(L10n.tr("prefs.reset"), shortcutReset))
 
         stack.addArrangedSubview(separator())
-        stack.addArrangedSubview(section(L10n.tr("prefs.sectionOperations")))
+        stack.addArrangedSubview(section(L10n.tr("prefs.sectionOperations"), symbolName: "gearshape"))
         stack.addArrangedSubview(openAtLogin)
         stack.addArrangedSubview(checkUpdates)
         stack.addArrangedSubview(notifyNewVersion)
@@ -293,32 +298,50 @@ final class PreferencesWindowController: NSWindowController {
         buttons.orientation = .horizontal
         buttons.spacing = 12
         buttons.alignment = .centerY
-        buttons.addArrangedSubview(NSButton(title: L10n.tr("prefs.save"), target: self, action: #selector(savePressed)))
-        buttons.addArrangedSubview(NSButton(title: L10n.tr("prefs.restoreDefaults"), target: self, action: #selector(restoreDefaultsPressed)))
+        let restoreDefaultsButton = NSButton(title: L10n.tr("prefs.restoreDefaults"), target: self, action: #selector(restoreDefaultsPressed))
+        restoreDefaultsButton.image = NSImage(systemSymbolName: "arrow.counterclockwise", accessibilityDescription: nil)
+        restoreDefaultsButton.imagePosition = .imageLeading
+        saveStatusLabel.textColor = .secondaryLabelColor
+        buttons.addArrangedSubview(saveStatusLabel)
+        buttons.addArrangedSubview(restoreDefaultsButton)
         stack.addArrangedSubview(buttons)
     }
 
     private func configurePopups() {
-        appExclusionMode.addItems(withTitles: AppExclusionRule.Mode.allCases.map(\.rawValue))
-        themeSource.addItems(withTitles: ThemeSource.allCases.map(\.rawValue))
-        trayStyle.addItems(withTitles: TrayIconStyle.allCases.map(\.rawValue))
-        pauseUntilMorningMode.addItems(withTitles: MorningPauseMode.allCases.map(\.rawValue))
+        configurePopup(appExclusionMode, options: [
+            (AppExclusionRule.Mode.pauseWhenMatched.rawValue, L10n.tr("prefs.exclusionMode.pauseWhenMatched")),
+            (AppExclusionRule.Mode.resumeOnlyWhenMatched.rawValue, L10n.tr("prefs.exclusionMode.resumeOnlyWhenMatched"))
+        ])
+        configurePopup(themeSource, options: [
+            (ThemeSource.system.rawValue, L10n.tr("prefs.theme.system")),
+            (ThemeSource.light.rawValue, L10n.tr("prefs.theme.light")),
+            (ThemeSource.dark.rawValue, L10n.tr("prefs.theme.dark"))
+        ])
+        configurePopup(trayStyle, options: [
+            (TrayIconStyle.default.rawValue, L10n.tr("prefs.trayStyle.default")),
+            (TrayIconStyle.timeToBreak.rawValue, L10n.tr("prefs.trayStyle.timeToBreak")),
+            (TrayIconStyle.progress.rawValue, L10n.tr("prefs.trayStyle.progress"))
+        ])
+        configurePopup(pauseUntilMorningMode, options: [
+            (MorningPauseMode.hour.rawValue, L10n.tr("prefs.morningMode.hour")),
+            (MorningPauseMode.sunrise.rawValue, L10n.tr("prefs.morningMode.sunrise"))
+        ])
         for option in LanguageOption.allCases {
             languageIdentifier.addItem(withTitle: option.title)
             languageIdentifier.lastItem?.representedObject = option.popupValue
         }
         [eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound].forEach(configureSoundPopup)
-        bodyCoveredDisplay.addItems(withTitles: [
-            DisplaySelection.primary.rawValue,
-            DisplaySelection.cursor.rawValue,
-            DisplaySelection.configured.rawValue
+        configurePopup(bodyCoveredDisplay, options: [
+            (DisplaySelection.primary.rawValue, L10n.tr("prefs.display.primary")),
+            (DisplaySelection.cursor.rawValue, L10n.tr("prefs.display.cursor")),
+            (DisplaySelection.configured.rawValue, L10n.tr("prefs.display.configured"))
         ])
-        bodyContentDisplay.addItems(withTitles: [
-            DisplaySelection.all.rawValue,
-            DisplaySelection.primary.rawValue,
-            DisplaySelection.cursor.rawValue,
-            DisplaySelection.configured.rawValue,
-            DisplaySelection.none.rawValue
+        configurePopup(bodyContentDisplay, options: [
+            (DisplaySelection.all.rawValue, L10n.tr("prefs.display.all")),
+            (DisplaySelection.primary.rawValue, L10n.tr("prefs.display.primary")),
+            (DisplaySelection.cursor.rawValue, L10n.tr("prefs.display.cursor")),
+            (DisplaySelection.configured.rawValue, L10n.tr("prefs.display.configured")),
+            (DisplaySelection.none.rawValue, L10n.tr("prefs.display.none"))
         ])
     }
 
@@ -340,7 +363,7 @@ final class PreferencesWindowController: NSWindowController {
             appExclusionName, appExclusionTerms, updateFeedURL,
             customPreferencesMessage, appExclusionsJSON
         ]
-        wideFields.forEach { $0.widthAnchor.constraint(equalToConstant: 320).isActive = true }
+        wideFields.forEach { $0.widthAnchor.constraint(equalToConstant: 360).isActive = true }
     }
 
     private func configureEnablementGuards() {
@@ -348,6 +371,46 @@ final class PreferencesWindowController: NSWindowController {
         eyeEnabled.action = #selector(restEnablementChanged(_:))
         bodyEnabled.target = self
         bodyEnabled.action = #selector(restEnablementChanged(_:))
+    }
+
+    private func configureAutosave() {
+        let textFields = [
+            eyeInterval, eyeDuration, eyeColor, eyeLead, bodyInterval, bodyDuration, bodyAfterEyeGates, bodyColor,
+            bodyLead, bodyPostponeMinutes, bodyPostponeLimit, bodyPostponeWindowPercent, naturalIdleMinutes,
+            workingStart, workingEnd, appExclusionName, appExclusionTerms, appExclusionsJSON, soundVolume,
+            customBodyTitle, customBodyText, customBodyIdeasJSON, localImagePath, bodyConfiguredDisplayIndex,
+            pauseUntilMorningHour, pauseUntilMorningLatitude, pauseUntilMorningLongitude, updateFeedURL,
+            customPreferencesMessage
+        ]
+        textFields.forEach { field in
+            field.delegate = self
+            field.target = self
+            field.action = #selector(controlChanged(_:))
+        }
+
+        let controls: [NSControl] = [
+            eyeNotify, eyeManualFinish, bodyNotify, bodyAllowSkip, bodyManualFinish, bodyCoversAllDisplays,
+            bodyBlankSecondaryDisplays, naturalBreaks, focusMonitor, focusDefersBody, workingHoursEnabled,
+            appExclusionEnabled, appExclusionAppliesEye, appExclusionAppliesBody, themeSource, trayStyle,
+            showMenuBarItem, languageIdentifier, currentTimeInBodyBreak, breakHealth, silentNotifications,
+            eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, useBuiltInIdeas, openAtLogin,
+            checkUpdates, notifyNewVersion, showOnboardingNextLaunch, pauseUntilMorningMode, pauseForSuspendOrLock,
+            disableUpdateFeatures, hideSettingsPath, hideStrictPreferences, bodyCoveredDisplay, bodyContentDisplay
+        ]
+        controls.forEach { control in
+            control.target = self
+            control.action = #selector(controlChanged(_:))
+        }
+
+        [
+            shortcutPauseToggle, shortcutPause30, shortcutPause1h, shortcutPause2h, shortcutPause5h,
+            shortcutPauseUntilMorning, shortcutNextScheduled, shortcutEyeNow, shortcutBodyNow, shortcutSkipBody,
+            shortcutEndBody, shortcutEmergencyEye, shortcutReset
+        ].forEach { recorder in
+            recorder.onChange = { [weak self] in
+                self?.scheduleAutosave()
+            }
+        }
     }
 
     private func configureSoundPopup(_ popup: NSPopUpButton) {
@@ -372,6 +435,12 @@ final class PreferencesWindowController: NSWindowController {
     }
 
     private func loadSettings() {
+        isLoadingSettings = true
+        defer {
+            isLoadingSettings = false
+            saveStatusLabel.stringValue = L10n.tr("prefs.autosaveReady")
+        }
+
         adminMessageLabel.stringValue = settings.admin.customPreferencesMessage
         adminMessageLabel.isHidden = settings.admin.customPreferencesMessage.isEmpty
 
@@ -396,8 +465,8 @@ final class PreferencesWindowController: NSWindowController {
         bodyAllowSkip.state = state(settings.bodyBreak.ordinarySkipEnabled)
         bodyManualFinish.state = state(settings.bodyBreak.manualFinishEnabled)
         bodyCoversAllDisplays.state = state(settings.bodyBreak.enforcement.coversAllDisplays)
-        bodyCoveredDisplay.selectItem(withTitle: (settings.bodyBreak.enforcement.coveredDisplay ?? .primary).rawValue)
-        bodyContentDisplay.selectItem(withTitle: settings.bodyBreak.enforcement.contentDisplay.rawValue)
+        selectPopup(bodyCoveredDisplay, rawValue: (settings.bodyBreak.enforcement.coveredDisplay ?? .primary).rawValue)
+        selectPopup(bodyContentDisplay, rawValue: settings.bodyBreak.enforcement.contentDisplay.rawValue)
         bodyBlankSecondaryDisplays.state = state(settings.bodyBreak.enforcement.blankSecondaryDisplays)
         bodyConfiguredDisplayIndex.stringValue = String(settings.bodyBreak.enforcement.configuredDisplayIndex ?? 0)
 
@@ -413,13 +482,13 @@ final class PreferencesWindowController: NSWindowController {
         appExclusionEnabled.state = state(exclusion?.isEnabled ?? false)
         appExclusionName.stringValue = exclusion?.name ?? ""
         appExclusionTerms.stringValue = exclusion?.matchTerms.joined(separator: ", ") ?? ""
-        appExclusionMode.selectItem(withTitle: (exclusion?.mode ?? .pauseWhenMatched).rawValue)
+        selectPopup(appExclusionMode, rawValue: (exclusion?.mode ?? .pauseWhenMatched).rawValue)
         appExclusionAppliesEye.state = state(exclusion?.appliesTo.contains(.eyeGate) ?? false)
         appExclusionAppliesBody.state = state(exclusion?.appliesTo.contains(.bodyBreak) ?? true)
         appExclusionsJSON.stringValue = encodedAppExclusions(settings.appExclusions)
 
-        themeSource.selectItem(withTitle: settings.presentation.themeSource.rawValue)
-        trayStyle.selectItem(withTitle: settings.presentation.trayIconStyle.rawValue)
+        selectPopup(themeSource, rawValue: settings.presentation.themeSource.rawValue)
+        selectPopup(trayStyle, rawValue: settings.presentation.trayIconStyle.rawValue)
         showMenuBarItem.state = state(settings.presentation.resolvedShowMenuBarItem)
         selectLanguageOption(LanguageOption(identifier: settings.presentation.languageIdentifier))
         currentTimeInBodyBreak.state = state(settings.presentation.showCurrentTimeDuringBodyBreak)
@@ -438,25 +507,25 @@ final class PreferencesWindowController: NSWindowController {
         customBodyIdeasJSON.stringValue = encodedCustomIdeas(settings.contentLibrary.customBodyBreakIdeas)
         localImagePath.stringValue = settings.contentLibrary.localImagePaths.first ?? ""
 
-        shortcutPauseToggle.stringValue = settings.shortcuts.pauseToggle
-        shortcutPause30.stringValue = settings.shortcuts.pauseFor30Minutes
-        shortcutPause1h.stringValue = settings.shortcuts.pauseFor1Hour
-        shortcutPause2h.stringValue = settings.shortcuts.pauseFor2Hours
-        shortcutPause5h.stringValue = settings.shortcuts.pauseFor5Hours
-        shortcutPauseUntilMorning.stringValue = settings.shortcuts.pauseUntilMorning
-        shortcutNextScheduled.stringValue = settings.shortcuts.skipToNextScheduledRest ?? ""
-        shortcutEyeNow.stringValue = settings.shortcuts.takeEyeGateNow
-        shortcutBodyNow.stringValue = settings.shortcuts.takeBodyBreakNow
-        shortcutSkipBody.stringValue = settings.shortcuts.skipToNextBodyBreak
-        shortcutEndBody.stringValue = settings.shortcuts.resolvedEndBodyBreakShortcut
-        shortcutEmergencyEye.stringValue = settings.shortcuts.emergencyEyeGateOverride ?? ""
-        shortcutReset.stringValue = settings.shortcuts.reset
+        shortcutPauseToggle.shortcutValue = settings.shortcuts.pauseToggle
+        shortcutPause30.shortcutValue = settings.shortcuts.pauseFor30Minutes
+        shortcutPause1h.shortcutValue = settings.shortcuts.pauseFor1Hour
+        shortcutPause2h.shortcutValue = settings.shortcuts.pauseFor2Hours
+        shortcutPause5h.shortcutValue = settings.shortcuts.pauseFor5Hours
+        shortcutPauseUntilMorning.shortcutValue = settings.shortcuts.pauseUntilMorning
+        shortcutNextScheduled.shortcutValue = settings.shortcuts.skipToNextScheduledRest ?? ""
+        shortcutEyeNow.shortcutValue = settings.shortcuts.takeEyeGateNow
+        shortcutBodyNow.shortcutValue = settings.shortcuts.takeBodyBreakNow
+        shortcutSkipBody.shortcutValue = settings.shortcuts.skipToNextBodyBreak
+        shortcutEndBody.shortcutValue = settings.shortcuts.resolvedEndBodyBreakShortcut
+        shortcutEmergencyEye.shortcutValue = settings.shortcuts.emergencyEyeGateOverride ?? ""
+        shortcutReset.shortcutValue = settings.shortcuts.reset
 
         openAtLogin.state = state(settings.operations.openAtLogin)
         checkUpdates.state = state(settings.operations.checkForUpdates)
         notifyNewVersion.state = state(settings.operations.notifyNewVersion)
         showOnboardingNextLaunch.state = state(settings.operations.resolvedShowOnboardingOnNextLaunch)
-        pauseUntilMorningMode.selectItem(withTitle: settings.operations.resolvedPauseUntilMorningMode.rawValue)
+        selectPopup(pauseUntilMorningMode, rawValue: settings.operations.resolvedPauseUntilMorningMode.rawValue)
         pauseUntilMorningHour.stringValue = String(settings.operations.resolvedPauseUntilMorningHour)
         pauseUntilMorningLatitude.stringValue = String(settings.operations.pauseUntilMorningLatitude ?? 0)
         pauseUntilMorningLongitude.stringValue = String(settings.operations.pauseUntilMorningLongitude ?? 0)
@@ -470,14 +539,23 @@ final class PreferencesWindowController: NSWindowController {
     }
 
     @objc private func savePressed() {
+        _ = saveCurrentSettings(showAlerts: true)
+    }
+
+    @discardableResult
+    private func saveCurrentSettings(showAlerts: Bool) -> Bool {
         let advancedAppExclusions: [AppExclusionRule]?
         let advancedCustomIdeas: [RestIdea]?
         do {
             advancedAppExclusions = try decodedAdvancedAppExclusions()
             advancedCustomIdeas = try decodedAdvancedCustomIdeas()
         } catch {
-            showInvalidJSONAlert(error)
-            return
+            if showAlerts {
+                showInvalidJSONAlert(error)
+            } else {
+                saveStatusLabel.stringValue = L10n.tr("prefs.autosaveInvalid")
+            }
+            return false
         }
 
         var next = settings
@@ -547,21 +625,21 @@ final class PreferencesWindowController: NSWindowController {
         next.contentLibrary.customBodyBreakIdeas = advancedCustomIdeas ?? savedCustomIdeas()
         next.contentLibrary.localImagePaths = savedLocalImagePaths()
         next.bodyBreak.content = next.contentLibrary.localImagePaths.isEmpty ? .richRestIdea : .localImage
-        next.shortcuts.pauseToggle = shortcutPauseToggle.stringValue
-        next.shortcuts.pauseFor30Minutes = shortcutPause30.stringValue
-        next.shortcuts.pauseFor1Hour = shortcutPause1h.stringValue
-        next.shortcuts.pauseFor2Hours = shortcutPause2h.stringValue
-        next.shortcuts.pauseFor5Hours = shortcutPause5h.stringValue
-        next.shortcuts.pauseUntilMorning = shortcutPauseUntilMorning.stringValue
-        next.shortcuts.skipToNextScheduledRest = shortcutNextScheduled.stringValue
-        next.shortcuts.takeEyeGateNow = shortcutEyeNow.stringValue
-        next.shortcuts.takeBodyBreakNow = shortcutBodyNow.stringValue
-        next.shortcuts.skipToNextBodyBreak = shortcutSkipBody.stringValue
-        next.shortcuts.endBodyBreak = shortcutEndBody.stringValue
+        next.shortcuts.pauseToggle = shortcutPauseToggle.shortcutValue
+        next.shortcuts.pauseFor30Minutes = shortcutPause30.shortcutValue
+        next.shortcuts.pauseFor1Hour = shortcutPause1h.shortcutValue
+        next.shortcuts.pauseFor2Hours = shortcutPause2h.shortcutValue
+        next.shortcuts.pauseFor5Hours = shortcutPause5h.shortcutValue
+        next.shortcuts.pauseUntilMorning = shortcutPauseUntilMorning.shortcutValue
+        next.shortcuts.skipToNextScheduledRest = shortcutNextScheduled.shortcutValue
+        next.shortcuts.takeEyeGateNow = shortcutEyeNow.shortcutValue
+        next.shortcuts.takeBodyBreakNow = shortcutBodyNow.shortcutValue
+        next.shortcuts.skipToNextBodyBreak = shortcutSkipBody.shortcutValue
+        next.shortcuts.endBodyBreak = shortcutEndBody.shortcutValue
         if !(shortcutEmergencyEyeRow?.isHidden ?? false) {
-            next.shortcuts.emergencyEyeGateOverride = shortcutEmergencyEye.stringValue
+            next.shortcuts.emergencyEyeGateOverride = shortcutEmergencyEye.shortcutValue
         }
-        next.shortcuts.reset = shortcutReset.stringValue
+        next.shortcuts.reset = shortcutReset.shortcutValue
 
         next.operations.openAtLogin = isOn(openAtLogin)
         next.operations.checkForUpdates = isOn(checkUpdates)
@@ -588,6 +666,8 @@ final class PreferencesWindowController: NSWindowController {
         settings = next
         applyAdminVisibility()
         onSave(next)
+        saveStatusLabel.stringValue = L10n.tr("prefs.autosaveSaved")
+        return true
     }
 
     private func applyAdminVisibility() {
@@ -605,6 +685,7 @@ final class PreferencesWindowController: NSWindowController {
         settings = .restoredDefaults
         loadSettings()
         onSave(settings)
+        saveStatusLabel.stringValue = L10n.tr("prefs.autosaveRestored")
     }
 
     private func confirmRestoreDefaults() -> Bool {
@@ -618,9 +699,37 @@ final class PreferencesWindowController: NSWindowController {
     }
 
     @objc private func restEnablementChanged(_ sender: NSButton) {
-        guard !isOn(eyeEnabled), !isOn(bodyEnabled) else { return }
+        guard !isOn(eyeEnabled), !isOn(bodyEnabled) else {
+            scheduleAutosave()
+            return
+        }
         sender.state = .on
         showCannotDisableBothRestsAlert()
+        scheduleAutosave()
+    }
+
+    @objc private func controlChanged(_ sender: Any) {
+        scheduleAutosave()
+    }
+
+    func controlTextDidChange(_ obj: Notification) {
+        guard !isLoadingSettings else { return }
+        saveStatusLabel.stringValue = L10n.tr("prefs.autosaveEditing")
+    }
+
+    func controlTextDidEndEditing(_ obj: Notification) {
+        scheduleAutosave()
+    }
+
+    private func scheduleAutosave() {
+        guard !isLoadingSettings else { return }
+        autosaveTask?.cancel()
+        saveStatusLabel.stringValue = L10n.tr("prefs.autosaveSaving")
+        autosaveTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 250_000_000)
+            guard !Task.isCancelled else { return }
+            self?.saveCurrentSettings(showAlerts: false)
+        }
     }
 
     @objc private func previewSound(_ sender: NSButton) {
@@ -755,10 +864,21 @@ final class PreferencesWindowController: NSWindowController {
         return [path]
     }
 
-    private func section(_ title: String) -> NSTextField {
+    private func section(_ title: String, symbolName: String) -> NSStackView {
+        let imageView = NSImageView()
+        imageView.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
+        imageView.contentTintColor = .secondaryLabelColor
+        imageView.symbolConfiguration = .init(pointSize: 16, weight: .semibold)
+        imageView.widthAnchor.constraint(equalToConstant: 22).isActive = true
+
         let label = NSTextField(labelWithString: title)
-        label.font = .systemFont(ofSize: 14, weight: .semibold)
-        return label
+        label.font = .systemFont(ofSize: 15, weight: .semibold)
+
+        let stack = NSStackView(views: [imageView, label])
+        stack.orientation = .horizontal
+        stack.spacing = 8
+        stack.alignment = .centerY
+        return stack
     }
 
     private func row(_ title: String, _ field: NSView) -> NSStackView {
@@ -783,6 +903,14 @@ final class PreferencesWindowController: NSWindowController {
         let box = NSBox()
         box.boxType = .separator
         return box
+    }
+
+    private func configurePopup(_ popup: NSPopUpButton, options: [(rawValue: String, title: String)]) {
+        popup.removeAllItems()
+        for option in options {
+            popup.addItem(withTitle: option.title)
+            popup.lastItem?.representedObject = option.rawValue
+        }
     }
 
     private func state(_ value: Bool) -> NSControl.StateValue {
@@ -818,10 +946,20 @@ final class PreferencesWindowController: NSWindowController {
     }
 
     private func selected<T: RawRepresentable>(_ type: T.Type, from popup: NSPopUpButton, fallback: T) -> T where T.RawValue == String {
-        guard let title = popup.selectedItem?.title, let value = T(rawValue: title) else {
-            return fallback
+        if let rawValue = popup.selectedItem?.representedObject as? String,
+           let value = T(rawValue: rawValue) {
+            return value
         }
+        guard let title = popup.selectedItem?.title, let value = T(rawValue: title) else { return fallback }
         return value
+    }
+
+    private func selectPopup(_ popup: NSPopUpButton, rawValue: String) {
+        guard let item = popup.itemArray.first(where: { ($0.representedObject as? String) == rawValue }) else {
+            popup.selectItem(at: 0)
+            return
+        }
+        popup.select(item)
     }
 
     private func selectLanguageOption(_ option: LanguageOption) {
@@ -913,4 +1051,144 @@ final class PreferencesWindowController: NSWindowController {
         }
         return hour * 60 + minute
     }
+}
+
+@MainActor
+final class ShortcutRecorderButton: NSButton {
+    var shortcutValue: String = "" {
+        didSet {
+            if !isRecording {
+                updateDisplay()
+            }
+        }
+    }
+    var onChange: (() -> Void)?
+    private var isRecording = false
+
+    convenience init() {
+        self.init(frame: .zero)
+    }
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        setButtonType(.momentaryPushIn)
+        bezelStyle = .rounded
+        image = NSImage(systemSymbolName: "keyboard", accessibilityDescription: nil)
+        imagePosition = .imageLeading
+        target = self
+        action = #selector(beginRecording)
+        updateDisplay()
+    }
+
+    required init?(coder: NSCoder) {
+        nil
+    }
+
+    override var acceptsFirstResponder: Bool {
+        true
+    }
+
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        true
+    }
+
+    @objc private func beginRecording() {
+        isRecording = true
+        title = L10n.tr("shortcut.recording")
+        toolTip = L10n.tr("shortcut.recordingHelp")
+        window?.makeFirstResponder(self)
+    }
+
+    override func keyDown(with event: NSEvent) {
+        guard isRecording else {
+            super.keyDown(with: event)
+            return
+        }
+
+        switch Int(event.keyCode) {
+        case kVK_Escape:
+            finishRecording(didChange: false)
+        case kVK_Delete, kVK_ForwardDelete:
+            shortcutValue = ""
+            finishRecording(didChange: true)
+        default:
+            guard let shortcut = Self.shortcutString(from: event) else {
+                NSSound.beep()
+                return
+            }
+            shortcutValue = shortcut
+            finishRecording(didChange: true)
+        }
+    }
+
+    private func finishRecording(didChange: Bool) {
+        isRecording = false
+        updateDisplay()
+        window?.makeFirstResponder(nil)
+        if didChange {
+            onChange?()
+        }
+    }
+
+    private func updateDisplay() {
+        if shortcutValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            title = L10n.tr("shortcut.record")
+            toolTip = L10n.tr("shortcut.recordHelp")
+        } else {
+            title = Self.displayString(shortcutValue)
+            toolTip = L10n.tr("shortcut.clearHelp")
+        }
+    }
+
+    private static func shortcutString(from event: NSEvent) -> String? {
+        let flags = event.modifierFlags.intersection([.command, .control, .option, .shift])
+        guard flags.contains(.command) || flags.contains(.control) || flags.contains(.option) else {
+            return nil
+        }
+        guard let key = keyName(for: Int(event.keyCode)) else { return nil }
+
+        var parts: [String] = []
+        if flags.contains(.command) { parts.append("Cmd") }
+        if flags.contains(.control) { parts.append("Ctrl") }
+        if flags.contains(.option) { parts.append("Option") }
+        if flags.contains(.shift) { parts.append("Shift") }
+        parts.append(key)
+        return parts.joined(separator: "+")
+    }
+
+    private static func keyName(for keyCode: Int) -> String? {
+        keyNames[keyCode]
+    }
+
+    private static func displayString(_ shortcut: String) -> String {
+        shortcut
+            .split(separator: "+")
+            .map { part in
+                switch part.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+                case "cmd", "command", "cmdorctrl":
+                    return "⌘"
+                case "ctrl", "control":
+                    return "⌃"
+                case "alt", "option", "opt":
+                    return "⌥"
+                case "shift":
+                    return "⇧"
+                case "space":
+                    return "Space"
+                default:
+                    return part.uppercased()
+                }
+            }
+            .joined()
+    }
+
+    private static let keyNames: [Int: String] = [
+        0: "A", 1: "S", 2: "D", 3: "F", 4: "H", 5: "G", 6: "Z", 7: "X",
+        8: "C", 9: "V", 11: "B", 12: "Q", 13: "W", 14: "E", 15: "R",
+        16: "Y", 17: "T", 18: "1", 19: "2", 20: "3", 21: "4", 22: "6",
+        23: "5", 24: "=", 25: "9", 26: "7", 27: "-", 28: "8", 29: "0",
+        30: "]", 31: "O", 32: "U", 33: "[", 34: "I", 35: "P", 37: "L",
+        38: "J", 39: "'", 40: "K", 41: ";", 42: "\\", 43: ",", 44: "/",
+        45: "N", 46: "M", 47: ".", 49: "Space", 50: "`"
+    ]
 }

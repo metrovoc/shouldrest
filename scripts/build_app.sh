@@ -16,6 +16,9 @@ mkdir -p "$MACOS" "$RESOURCES"
 
 cp "$ROOT/.build/release/shouldrest" "$MACOS/shouldrest"
 cp "$ROOT/packaging/Info.plist" "$CONTENTS/Info.plist"
+if [[ -f "$ROOT/packaging/AppIcon.icns" ]]; then
+    cp "$ROOT/packaging/AppIcon.icns" "$RESOURCES/AppIcon.icns"
+fi
 
 RESOURCE_BUNDLE="$(find "$ROOT/.build" -path '*release*' -iname '*shouldrest.bundle' -type d | head -n 1)"
 if [[ -n "${RESOURCE_BUNDLE:-}" ]]; then

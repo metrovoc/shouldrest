@@ -10,6 +10,8 @@
     <string>shouldrest</string>
     <key>CFBundleIdentifier</key>
     <string>dev.shouldrest.app</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleName</key>
     <string>ShouldRest</string>
     <key>CFBundlePackageType</key>
@@ -39,4 +41,3 @@
     <string>alert</string>
 </dict>
 </plist>
-

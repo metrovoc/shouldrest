@@ -151,6 +151,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func createStatusItem() {
         guard statusItem == nil else { return }
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        item.button?.image = NSImage(systemSymbolName: "eye", accessibilityDescription: L10n.tr("app.name"))
+        item.button?.image?.isTemplate = true
+        item.button?.imagePosition = .imageLeading
         item.button?.title = "ShouldRest"
         item.button?.toolTip = MenuStatusPresenter.tooltip(state: engine.state, settings: settings)
         statusItem = item
@@ -194,7 +197,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 session: active,
                 settings: overlaySettings(for: active),
                 now: now,
-                manualAwaiting: shouldAwaitManualFinish
+                manualAwaiting: shouldAwaitManualFinish,
+                emergencyOverrideAction: overlayEmergencyOverrideAction(for: active)
             )
             if shouldAwaitManualFinish {
                 if manualAwaitingSessionID != active.id {
@@ -237,7 +241,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         case .started(let session):
             bindPendingBodyBreakIdea(to: session)
             playRestSound(settings.rule(for: session.kind).startSound)
-            overlayController.present(session: session, settings: overlaySettings(for: session), now: now)
+            overlayController.present(
+                session: session,
+                settings: overlaySettings(for: session),
+                now: now,
+                emergencyOverrideAction: overlayEmergencyOverrideAction(for: session)
+            )
             refreshActiveBreakShortcut()
             logger.log("Started \(session.kind.rawValue)")
         case .notificationDue(let kind):
@@ -269,6 +278,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     private func rebuildMenu() {
         guard let item = statusItem else { return }
+        item.button?.image = NSImage(systemSymbolName: "eye", accessibilityDescription: L10n.tr("app.name"))
+        item.button?.image?.isTemplate = true
+        item.button?.imagePosition = .imageLeading
         item.button?.title = menuBarTitle()
         item.button?.toolTip = MenuStatusPresenter.tooltip(state: engine.state, settings: settings)
 
@@ -353,7 +365,6 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         if !settings.admin.disableAppUpdateFeatures {
             menu.addItem(actionItem(L10n.tr("menu.checkUpdates"), #selector(checkForUpdatesNow)))
         }
-        menu.addItem(actionItem(L10n.tr("menu.saveSettings"), #selector(saveSettings)))
         menu.addItem(actionItem(L10n.tr("menu.copyDebug"), #selector(copyDebugInfo)))
         menu.addItem(actionItem(L10n.tr("menu.debugPanel"), #selector(openDebugPanel)))
         menu.addItem(actionItem(L10n.tr("menu.about"), #selector(showAboutPanel)))
@@ -423,10 +434,22 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         return !canPostponeBodyBreak(session, now: now)
     }
 
+    private func overlayEmergencyOverrideAction(for session: RestSession) -> (() -> Void)? {
+        guard session.kind == .eyeGate, settings.eyeGate.emergencyOverride.isEnabled else { return nil }
+        return { [weak self] in
+            self?.emergencyOverrideEyeGate()
+        }
+    }
+
     @objc private func takeEyeGateNow() {
         if case .started(let session) = engine.takeNow(.eyeGate) {
             playRestSound(settings.rule(for: session.kind).startSound)
-            overlayController.present(session: session, settings: settings, now: Date())
+            overlayController.present(
+                session: session,
+                settings: settings,
+                now: Date(),
+                emergencyOverrideAction: overlayEmergencyOverrideAction(for: session)
+            )
             refreshActiveBreakShortcut()
             logger.log("Manual Eye Gate started")
         }
@@ -445,7 +468,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 activeBodyBreakIdeas[session.id] = idea
             }
             playRestSound(settings.rule(for: session.kind).startSound)
-            overlayController.present(session: session, settings: overlaySettings(for: session), now: Date())
+            overlayController.present(
+                session: session,
+                settings: overlaySettings(for: session),
+                now: Date(),
+                emergencyOverrideAction: overlayEmergencyOverrideAction(for: session)
+            )
             refreshActiveBreakShortcut()
             logger.log("Manual Body Break started")
         }
@@ -1240,35 +1268,58 @@ final class OverlayController {
     private var windows: [CGDirectDisplayID: OverlayWindow] = [:]
     private var session: RestSession?
     private var settings: RestSettings?
+    private var emergencyOverrideAction: (() -> Void)?
 
-    func present(session: RestSession, settings: RestSettings, now: Date) {
+    func present(
+        session: RestSession,
+        settings: RestSettings,
+        now: Date,
+        emergencyOverrideAction: (() -> Void)? = nil
+    ) {
         self.session = session
         self.settings = settings
+        self.emergencyOverrideAction = emergencyOverrideAction
         reconcile()
-        update(session: session, settings: settings, now: now)
+        update(
+            session: session,
+            settings: settings,
+            now: now,
+            manualAwaiting: false,
+            emergencyOverrideAction: emergencyOverrideAction
+        )
     }
 
     func update(session: RestSession, settings: RestSettings, now: Date) {
         update(session: session, settings: settings, now: now, manualAwaiting: false)
     }
 
-    func update(session: RestSession, settings: RestSettings, now: Date, manualAwaiting: Bool) {
+    func update(
+        session: RestSession,
+        settings: RestSettings,
+        now: Date,
+        manualAwaiting: Bool,
+        emergencyOverrideAction: (() -> Void)? = nil
+    ) {
         self.session = session
         self.settings = settings
+        self.emergencyOverrideAction = emergencyOverrideAction
         let remaining = max(0, Int(session.duration - now.timeIntervalSince(session.startedAt)))
         let contentScreen = selectedContentScreen(for: session, settings: settings)
         let screens = coveredScreens(for: session, settings: settings, contentScreen: contentScreen)
+        let emergencyRemaining = emergencyOverrideRemainingSeconds(for: session, settings: settings, now: now)
 
         for screen in screens {
             let id = screen.displayID
             let isContentScreen = shouldShowContent(on: screen, contentScreen: contentScreen, session: session, settings: settings)
+            windows[id]?.overlayView.onEmergencyOverrideRequested = emergencyOverrideAction
             windows[id]?.setFrame(screen.frame, display: true)
             windows[id]?.overlayView.configure(
                 session: session,
                 remainingSeconds: remaining,
                 settings: settings,
                 showsContent: isContentScreen,
-                manualAwaiting: manualAwaiting
+                manualAwaiting: manualAwaiting,
+                emergencyOverrideRemainingSeconds: isContentScreen ? emergencyRemaining : nil
             )
             let level: NSWindow.Level
             if manualAwaiting && session.kind == .bodyBreak {
@@ -1310,6 +1361,13 @@ final class OverlayController {
         windows.removeAll()
         session = nil
         settings = nil
+        emergencyOverrideAction = nil
+    }
+
+    private func emergencyOverrideRemainingSeconds(for session: RestSession, settings: RestSettings, now: Date) -> Int? {
+        guard session.kind == .eyeGate, settings.eyeGate.emergencyOverride.isEnabled else { return nil }
+        let remaining = settings.eyeGate.emergencyOverride.minimumHoldDuration - now.timeIntervalSince(session.startedAt)
+        return max(0, Int(ceil(remaining)))
     }
 
     private func selectedContentScreen(for session: RestSession, settings: RestSettings) -> NSScreen? {
@@ -1404,11 +1462,17 @@ final class OverlayWindow: NSWindow {
     }
 
     override var canBecomeKey: Bool {
-        false
+        true
     }
 
     override var canBecomeMain: Bool {
         false
+    }
+}
+
+final class OverlayActionButton: NSButton {
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        true
     }
 }
 
@@ -1418,7 +1482,9 @@ final class RestOverlayView: NSView {
     private let detailLabel = NSTextField(labelWithString: "")
     private let countdownLabel = NSTextField(labelWithString: "")
     private let imageView = NSImageView()
+    private let emergencyButton = OverlayActionButton()
     private var detailCacheKey: String?
+    var onEmergencyOverrideRequested: (() -> Void)?
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -1441,6 +1507,18 @@ final class RestOverlayView: NSView {
         detailLabel.font = .systemFont(ofSize: 18, weight: .regular)
         countdownLabel.font = .monospacedDigitSystemFont(ofSize: 28, weight: .medium)
 
+        emergencyButton.translatesAutoresizingMaskIntoConstraints = false
+        emergencyButton.bezelStyle = .inline
+        emergencyButton.isBordered = false
+        emergencyButton.image = NSImage(systemSymbolName: "exclamationmark.triangle", accessibilityDescription: nil)
+        emergencyButton.imagePosition = .imageLeading
+        emergencyButton.contentTintColor = NSColor.systemRed.withAlphaComponent(0.72)
+        emergencyButton.target = self
+        emergencyButton.action = #selector(emergencyOverridePressed)
+        emergencyButton.alphaValue = 0.58
+        emergencyButton.isHidden = true
+        addSubview(emergencyButton)
+
         NSLayoutConstraint.activate([
             imageView.centerXAnchor.constraint(equalTo: centerXAnchor),
             imageView.bottomAnchor.constraint(equalTo: titleLabel.topAnchor, constant: -24),
@@ -1453,7 +1531,9 @@ final class RestOverlayView: NSView {
             detailLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
             detailLabel.widthAnchor.constraint(lessThanOrEqualTo: widthAnchor, multiplier: 0.7),
             countdownLabel.topAnchor.constraint(equalTo: detailLabel.bottomAnchor, constant: 20),
-            countdownLabel.centerXAnchor.constraint(equalTo: centerXAnchor)
+            countdownLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
+            emergencyButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -28),
+            emergencyButton.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -24)
         ])
     }
 
@@ -1466,10 +1546,12 @@ final class RestOverlayView: NSView {
         remainingSeconds: Int,
         settings: RestSettings,
         showsContent: Bool,
-        manualAwaiting: Bool
+        manualAwaiting: Bool,
+        emergencyOverrideRemainingSeconds: Int?
     ) {
         let rule = settings.rule(for: session.kind)
         layer?.backgroundColor = NSColor(hex: rule.colorHex).withAlphaComponent(rule.enforcement.opacity).cgColor
+        configureEmergencyButton(remainingSeconds: emergencyOverrideRemainingSeconds, showsContent: showsContent)
 
         titleLabel.isHidden = !showsContent
         detailLabel.isHidden = !showsContent
@@ -1507,6 +1589,34 @@ final class RestOverlayView: NSView {
         } else {
             countdownLabel.stringValue = "\(remainingSeconds)s"
         }
+    }
+
+    @objc private func emergencyOverridePressed() {
+        onEmergencyOverrideRequested?()
+    }
+
+    private func configureEmergencyButton(remainingSeconds: Int?, showsContent: Bool) {
+        guard showsContent, let remainingSeconds else {
+            emergencyButton.isHidden = true
+            return
+        }
+
+        emergencyButton.isHidden = false
+        emergencyButton.isEnabled = true
+        setEmergencyButtonTitle(
+            remainingSeconds == 0
+                ? L10n.tr("overlay.emergencyOverride")
+                : L10n.format("overlay.emergencyOverrideIn", remainingSeconds)
+        )
+        emergencyButton.toolTip = L10n.tr("overlay.emergencyOverrideHelp")
+    }
+
+    private func setEmergencyButtonTitle(_ title: String) {
+        let attributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: NSColor.systemRed.withAlphaComponent(0.72),
+            .font: NSFont.systemFont(ofSize: 13, weight: .medium)
+        ]
+        emergencyButton.attributedTitle = NSAttributedString(string: title, attributes: attributes)
     }
 
     private func localBodyBreakImage(settings: RestSettings) -> NSImage? {
