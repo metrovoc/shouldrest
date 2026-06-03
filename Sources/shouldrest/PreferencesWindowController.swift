@@ -24,6 +24,8 @@ final class PreferencesWindowController: NSWindowController {
     private let bodyLead = NSTextField()
     private let bodyPostponeMinutes = NSTextField()
     private let bodyPostponeLimit = NSTextField()
+    private let bodyPostponeWindowPercent = NSTextField()
+    private let bodyAllowSkip = NSButton(checkboxWithTitle: L10n.tr("prefs.bodyAllowSkip"), target: nil, action: nil)
     private let bodyManualFinish = NSButton(checkboxWithTitle: L10n.tr("prefs.manualFinish"), target: nil, action: nil)
     private let bodyCoversAllDisplays = NSButton(checkboxWithTitle: L10n.tr("prefs.bodyAllDisplays"), target: nil, action: nil)
     private let bodyCoveredDisplay = NSPopUpButton()
@@ -182,6 +184,8 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(row(L10n.tr("prefs.notificationLead"), bodyLead))
         stack.addArrangedSubview(row(L10n.tr("prefs.postponeMinutes"), bodyPostponeMinutes))
         stack.addArrangedSubview(row(L10n.tr("prefs.maxPostpones"), bodyPostponeLimit))
+        stack.addArrangedSubview(row(L10n.tr("prefs.postponeWindowPercent"), bodyPostponeWindowPercent))
+        stack.addArrangedSubview(bodyAllowSkip)
         stack.addArrangedSubview(bodyManualFinish)
         stack.addArrangedSubview(bodyCoversAllDisplays)
         stack.addArrangedSubview(row(L10n.tr("prefs.bodyCoveredDisplay"), bodyCoveredDisplay))
@@ -295,7 +299,7 @@ final class PreferencesWindowController: NSWindowController {
     private func configureFieldWidths() {
         let compactFields = [
             eyeInterval, eyeDuration, bodyInterval, bodyDuration, bodyAfterEyeGates, eyeLead, bodyLead,
-            bodyPostponeMinutes, bodyPostponeLimit, naturalIdleMinutes, workingStart,
+            bodyPostponeMinutes, bodyPostponeLimit, bodyPostponeWindowPercent, naturalIdleMinutes, workingStart,
             workingEnd, soundVolume, bodyConfiguredDisplayIndex, pauseUntilMorningHour,
             pauseUntilMorningLatitude, pauseUntilMorningLongitude
         ]
@@ -333,6 +337,9 @@ final class PreferencesWindowController: NSWindowController {
         bodyLead.stringValue = String(Int(settings.notifications.bodyBreakLeadTime))
         bodyPostponeMinutes.stringValue = String(Int(settings.bodyBreak.postpone.duration / 60))
         bodyPostponeLimit.stringValue = String(settings.bodyBreak.postpone.maxCount)
+        bodyPostponeWindowPercent.stringValue = String(Int(settings.bodyBreak.postpone.allowedDuringFirstPercent))
+        bodyAllowSkip.state = state(settings.bodyBreak.ordinarySkipEnabled)
+        bodyAllowSkip.isHidden = settings.admin.hideStrictPreferences
         bodyManualFinish.state = state(settings.bodyBreak.manualFinishEnabled)
         bodyCoversAllDisplays.state = state(settings.bodyBreak.enforcement.coversAllDisplays)
         bodyCoveredDisplay.selectItem(withTitle: (settings.bodyBreak.enforcement.coveredDisplay ?? .primary).rawValue)
@@ -426,8 +433,11 @@ final class PreferencesWindowController: NSWindowController {
             isEnabled: max(0, intValue(bodyPostponeLimit)) > 0,
             duration: TimeInterval(max(1, intValue(bodyPostponeMinutes)) * 60),
             maxCount: max(0, intValue(bodyPostponeLimit)),
-            allowedDuringFirstPercent: next.bodyBreak.postpone.allowedDuringFirstPercent
+            allowedDuringFirstPercent: min(100, max(0, doubleValue(bodyPostponeWindowPercent, fallback: 30)))
         )
+        if !bodyAllowSkip.isHidden {
+            next.bodyBreak.ordinarySkipEnabled = isOn(bodyAllowSkip)
+        }
         next.bodyBreak.manualFinishEnabled = isOn(bodyManualFinish)
         next.bodyBreak.enforcement.coversAllDisplays = isOn(bodyCoversAllDisplays)
         next.bodyBreak.enforcement.coveredDisplay = selected(DisplaySelection.self, from: bodyCoveredDisplay, fallback: .primary)

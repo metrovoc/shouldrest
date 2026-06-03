@@ -107,6 +107,24 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.statistics.postpones, 1)
     }
 
+    func testBodyBreakPostponeWindowPercentIsEnforced() {
+        var settings = RestSettings.defaults
+        settings.bodyBreak.duration = 100
+        settings.bodyBreak.postpone = PostponePolicy(
+            isEnabled: true,
+            duration: 5 * 60,
+            maxCount: 1,
+            allowedDuringFirstPercent: 10
+        )
+        var engine = RestEngine(settings: settings, now: start)
+        _ = engine.takeNow(.bodyBreak, now: start)
+
+        XCTAssertEqual(
+            engine.postponeActive(now: start.addingTimeInterval(20)),
+            .denied(.postponeWindowExpired)
+        )
+    }
+
     func testBodyBreakPostponeLimitIsEnforced() {
         var engine = RestEngine(settings: .defaults, now: start)
         _ = engine.takeNow(.bodyBreak, now: start)
@@ -114,6 +132,16 @@ final class RestEngineTests: XCTestCase {
         _ = engine.evaluate(now: start.addingTimeInterval(1 + 5 * 60))
 
         XCTAssertEqual(engine.postponeActive(now: start.addingTimeInterval(1 + 5 * 60)), .denied(.postponeLimitReached))
+    }
+
+    func testBodyBreakSkipCanBeDisabled() {
+        var settings = RestSettings.defaults
+        settings.bodyBreak.ordinarySkipEnabled = false
+        var engine = RestEngine(settings: settings, now: start)
+        _ = engine.takeNow(.bodyBreak, now: start)
+
+        XCTAssertEqual(engine.skipActive(now: start), .denied(.actionDisabled))
+        XCTAssertEqual(engine.state.activeSession?.kind, .bodyBreak)
     }
 
     func testNaturalIdleCreditsScheduledEyeGate() {

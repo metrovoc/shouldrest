@@ -85,6 +85,8 @@
 "prefs.afterEyeGates" = "经过 Eye Gate 次数";
 "prefs.postponeMinutes" = "推迟分钟数";
 "prefs.maxPostpones" = "最大推迟次数";
+"prefs.postponeWindowPercent" = "可推迟时间窗口百分比";
+"prefs.bodyAllowSkip" = "允许跳过 Body Break";
 "prefs.bodyAllDisplays" = "在所有显示器显示 Body Break";
 "prefs.bodyCoveredDisplay" = "单显示器目标";
 "prefs.bodyContentDisplay" = "内容显示器";

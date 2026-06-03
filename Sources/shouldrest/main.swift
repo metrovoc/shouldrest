@@ -216,10 +216,23 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
 
         if let active = engine.state.activeSession, active.kind == .bodyBreak {
-            menu.addItem(actionItem(L10n.tr("menu.postponeBodyBreak"), #selector(postponeBodyBreak)))
-            menu.addItem(actionItem(L10n.tr("menu.finishBodyBreak"), #selector(finishActiveBreak)))
-            menu.addItem(actionItem(L10n.tr("menu.skipBodyBreak"), #selector(skipBodyBreak)))
-            menu.addItem(.separator())
+            let now = Date()
+            var addedBodyAction = false
+            if canPostponeBodyBreak(active, now: now) {
+                menu.addItem(actionItem(L10n.tr("menu.postponeBodyBreak"), #selector(postponeBodyBreak)))
+                addedBodyAction = true
+            }
+            if now.timeIntervalSince(active.startedAt) >= active.duration {
+                menu.addItem(actionItem(L10n.tr("menu.finishBodyBreak"), #selector(finishActiveBreak)))
+                addedBodyAction = true
+            }
+            if canSkipBodyBreak(active, now: now) {
+                menu.addItem(actionItem(L10n.tr("menu.skipBodyBreak"), #selector(skipBodyBreak)))
+                addedBodyAction = true
+            }
+            if addedBodyAction {
+                menu.addItem(.separator())
+            }
         }
 
         if engine.state.pause != nil {
@@ -330,6 +343,22 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         return item
     }
 
+    private func canPostponeBodyBreak(_ session: RestSession, now: Date) -> Bool {
+        guard session.kind == .bodyBreak else { return false }
+        let policy = settings.bodyBreak.postpone
+        return policy.isEnabled &&
+            engine.state.postponesInCurrentCycle < policy.maxCount &&
+            session.passedPercent(at: now) <= policy.allowedDuringFirstPercent
+    }
+
+    private func canSkipBodyBreak(_ session: RestSession, now: Date) -> Bool {
+        guard session.kind == .bodyBreak,
+              settings.bodyBreak.ordinarySkipEnabled else {
+            return false
+        }
+        return !canPostponeBodyBreak(session, now: now)
+    }
+
     @objc private func takeEyeGateNow() {
         if case .started(let session) = engine.takeNow(.eyeGate) {
             soundPlayer.play(settings.rule(for: session.kind).startSound)
@@ -380,25 +409,36 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func finishActiveBreak() {
-        if let active = engine.state.activeSession {
+        guard let active = engine.state.activeSession else { return }
+        if Date().timeIntervalSince(active.startedAt) < active.duration {
+            logger.log("Ignored early finish for \(active.kind.rawValue)")
+            return
+        }
+        if case .completed = engine.completeActive(reason: .manual) {
             soundPlayer.play(settings.rule(for: active.kind).finishSound)
             logger.log("Manually finished \(active.kind.rawValue)")
             clearActiveBodyBreakIdea(for: active)
+            overlayController.dismiss()
+            manualAwaitingSessionID = nil
         }
-        _ = engine.completeActive(reason: .manual)
-        overlayController.dismiss()
-        manualAwaitingSessionID = nil
         rebuildMenu()
     }
 
     @objc private func skipBodyBreak() {
-        if let active = engine.state.activeSession {
-            clearActiveBodyBreakIdea(for: active)
+        guard let active = engine.state.activeSession else { return }
+        guard canSkipBodyBreak(active, now: Date()) else {
+            logger.log("Body Break skip denied by policy")
+            rebuildMenu()
+            return
         }
-        _ = engine.skipActive()
-        overlayController.dismiss()
-        manualAwaitingSessionID = nil
-        logger.log("Body Break skipped")
+        if case .completed = engine.skipActive() {
+            clearActiveBodyBreakIdea(for: active)
+            overlayController.dismiss()
+            manualAwaitingSessionID = nil
+            logger.log("Body Break skipped")
+        } else {
+            logger.log("Body Break skip denied")
+        }
         rebuildMenu()
     }
 

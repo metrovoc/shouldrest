@@ -85,6 +85,8 @@
 "prefs.afterEyeGates" = "After Eye Gates";
 "prefs.postponeMinutes" = "Postpone minutes";
 "prefs.maxPostpones" = "Max postpones";
+"prefs.postponeWindowPercent" = "Postpone window percent";
+"prefs.bodyAllowSkip" = "Allow Body Break skip";
 "prefs.bodyAllDisplays" = "Show Body Break on all displays";
 "prefs.bodyCoveredDisplay" = "Single-display target";
 "prefs.bodyContentDisplay" = "Content display";

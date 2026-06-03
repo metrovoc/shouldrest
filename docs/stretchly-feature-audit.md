@@ -150,7 +150,7 @@ Implemented now:
 - Start/finish sound playback.
 - Copyable debug snapshot from the menu.
 - Native preferences window for core cadence, enablement, Focus policy, and tray style.
-- Expanded preferences for notification lead times, overlay colors, sounds, Body Break interval/postpone policy, natural break settings, working hours, primary app exclusion, custom Body Break idea, shortcuts, update settings, and admin controls.
+- Expanded preferences for notification lead times, overlay colors, sounds, Body Break interval/postpone/skip policy, natural break settings, working hours, primary app exclusion, custom Body Break idea, shortcuts, update settings, and admin controls.
 - CLI command surface for help, version, settings/log paths, pause/resume/reset, take-now, preferences, and debug requests.
 - Stretchly-compatible `toggle`, `mini`, and `long` command aliases, delayed take-now automation, and `body`/`long` one-shot Body Break title, text, wait, and noskip options.
 - Distributed notification bridge for CLI-to-running-app automation.
