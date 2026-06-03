@@ -22,6 +22,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private var lastFocusCheck = Date.distantPast
     private var focusModeActive = false
     private var suspendedAt: Date?
+    private var manualAwaitingSessionID: UUID?
 
     override init() {
         let store = SettingsStore(fileURL: AppPaths.settingsURL)
@@ -95,11 +96,28 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
 
         if let active = engine.state.activeSession {
-            overlayController.update(session: active, settings: settings, now: now)
-            if now.timeIntervalSince(active.startedAt) >= active.duration {
+            let elapsed = now.timeIntervalSince(active.startedAt)
+            let shouldAwaitManualFinish = elapsed >= active.duration && active.manualFinishEnabled
+            overlayController.update(
+                session: active,
+                settings: settings,
+                now: now,
+                manualAwaiting: shouldAwaitManualFinish
+            )
+            if shouldAwaitManualFinish {
+                if manualAwaitingSessionID != active.id {
+                    manualAwaitingSessionID = active.id
+                    soundPlayer.play(settings.rule(for: active.kind).finishSound)
+                    logger.log("Entered manual finish phase for \(active.kind.rawValue)")
+                }
+                rebuildMenu()
+                return
+            }
+            if elapsed >= active.duration {
                 soundPlayer.play(settings.rule(for: active.kind).finishSound)
                 _ = engine.completeActive(now: now, reason: .completed)
                 overlayController.dismiss()
+                manualAwaitingSessionID = nil
                 logger.log("Completed \(active.kind.rawValue)")
                 rebuildMenu()
                 return
@@ -281,12 +299,14 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
         _ = engine.completeActive(reason: .manual)
         overlayController.dismiss()
+        manualAwaitingSessionID = nil
         rebuildMenu()
     }
 
     @objc private func skipBodyBreak() {
         _ = engine.skipActive()
         overlayController.dismiss()
+        manualAwaitingSessionID = nil
         logger.log("Body Break skipped")
         rebuildMenu()
     }
@@ -336,6 +356,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     @objc private func resetBreaks() {
         _ = engine.reset()
         overlayController.dismiss()
+        manualAwaitingSessionID = nil
         logger.log("Breaks reset")
         rebuildMenu()
     }
@@ -546,6 +567,10 @@ final class OverlayController {
     }
 
     func update(session: RestSession, settings: RestSettings, now: Date) {
+        update(session: session, settings: settings, now: now, manualAwaiting: false)
+    }
+
+    func update(session: RestSession, settings: RestSettings, now: Date, manualAwaiting: Bool) {
         self.session = session
         self.settings = settings
         let remaining = max(0, Int(session.duration - now.timeIntervalSince(session.startedAt)))
@@ -559,8 +584,10 @@ final class OverlayController {
                 session: session,
                 remainingSeconds: remaining,
                 settings: settings,
-                showsContent: isContentScreen
+                showsContent: isContentScreen,
+                manualAwaiting: manualAwaiting
             )
+            windows[id]?.level = manualAwaiting ? .modalPanel : windowLevel(for: session, settings: settings)
             windows[id]?.orderFrontRegardless()
         }
     }
@@ -624,6 +651,10 @@ final class OverlayController {
             return false
         }
         return screen.displayID == contentScreen.displayID
+    }
+
+    private func windowLevel(for session: RestSession, settings: RestSettings) -> NSWindow.Level {
+        settings.rule(for: session.kind).enforcement.usesScreenSaverLevel ? .screenSaver : .modalPanel
     }
 }
 
@@ -699,7 +730,13 @@ final class RestOverlayView: NSView {
         nil
     }
 
-    func configure(session: RestSession, remainingSeconds: Int, settings: RestSettings, showsContent: Bool) {
+    func configure(
+        session: RestSession,
+        remainingSeconds: Int,
+        settings: RestSettings,
+        showsContent: Bool,
+        manualAwaiting: Bool
+    ) {
         let rule = settings.rule(for: session.kind)
         layer?.backgroundColor = NSColor(hex: rule.colorHex).withAlphaComponent(rule.enforcement.opacity).cgColor
 
@@ -708,6 +745,13 @@ final class RestOverlayView: NSView {
         countdownLabel.isHidden = !showsContent
 
         guard showsContent else { return }
+
+        if manualAwaiting {
+            titleLabel.stringValue = "Break complete"
+            detailLabel.stringValue = "Use the menu to finish when ready"
+            countdownLabel.stringValue = "ready"
+            return
+        }
 
         switch session.kind {
         case .eyeGate:
