@@ -66,7 +66,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     private let appExclusionEnabled = NSButton(checkboxWithTitle: L10n.tr("prefs.enablePrimaryExclusion"), target: nil, action: nil)
     private let appExclusionName = NSTextField()
-    private let appExclusionTerms = NSTextField()
+    private let appExclusionTerms = NSTokenField()
     private let appExclusionMode = NSPopUpButton()
     private let appExclusionAppliesEye = NSButton(checkboxWithTitle: L10n.tr("prefs.appliesEye"), target: nil, action: nil)
     private let appExclusionAppliesBody = NSButton(checkboxWithTitle: L10n.tr("prefs.appliesBody"), target: nil, action: nil)
@@ -179,6 +179,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         configureTimePickers()
         configureSoundVolumeControls()
         configureCustomBodyTextEditor()
+        configureAppExclusionTokenField()
         configureSoundPreviewButtons()
         configureEnablementGuards()
         configureAutosave()
@@ -503,6 +504,12 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         customBodyTextScrollView.heightAnchor.constraint(equalToConstant: 96).isActive = true
     }
 
+    private func configureAppExclusionTokenField() {
+        appExclusionTerms.tokenStyle = .rounded
+        appExclusionTerms.tokenizingCharacterSet = CharacterSet(charactersIn: ",\n")
+        appExclusionTerms.placeholderString = L10n.tr("prefs.matchTermsPlaceholder")
+    }
+
     private func configureDisclosureButton(_ button: NSButton, identifier: String, expanded: Bool) {
         button.identifier = NSUserInterfaceItemIdentifier(identifier)
         button.target = self
@@ -662,7 +669,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         let exclusion = settings.appExclusions.first
         appExclusionEnabled.state = state(exclusion?.isEnabled ?? false)
         appExclusionName.stringValue = exclusion?.name ?? ""
-        appExclusionTerms.stringValue = exclusion?.matchTerms.joined(separator: ", ") ?? ""
+        appExclusionTerms.objectValue = exclusion?.matchTerms ?? []
         selectPopup(appExclusionMode, rawValue: (exclusion?.mode ?? .pauseWhenMatched).rawValue)
         appExclusionAppliesEye.state = state(exclusion?.appliesTo.contains(.eyeGate) ?? false)
         appExclusionAppliesBody.state = state(exclusion?.appliesTo.contains(.bodyBreak) ?? true)
@@ -1064,8 +1071,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     }
 
     private func savedAppExclusions() -> [AppExclusionRule] {
-        let terms = appExclusionTerms.stringValue
-            .split(separator: ",")
+        let terms = tokenFieldValues(appExclusionTerms)
+            .flatMap { $0.split(whereSeparator: { $0 == "," || $0 == "\n" }) }
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
         guard isOn(appExclusionEnabled), !terms.isEmpty else { return [] }
@@ -1180,6 +1187,16 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         let path = localImagePath.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !path.isEmpty, URL(string: path)?.scheme == nil else { return [] }
         return [path]
+    }
+
+    private func tokenFieldValues(_ tokenField: NSTokenField) -> [String] {
+        if let values = tokenField.objectValue as? [String] {
+            return values
+        }
+        if let values = tokenField.objectValue as? [Any] {
+            return values.map { String(describing: $0) }
+        }
+        return tokenField.stringValue.components(separatedBy: CharacterSet(charactersIn: ",\n"))
     }
 
     private func section(_ title: String, symbolName: String) -> NSStackView {

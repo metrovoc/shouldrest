@@ -121,7 +121,8 @@
 "prefs.workingEnd" = "工作日结束";
 "prefs.sectionExclusion" = "主要应用排除";
 "prefs.name" = "名称";
-"prefs.matchTerms" = "匹配词，逗号分隔";
+"prefs.matchTerms" = "匹配词";
+"prefs.matchTermsPlaceholder" = "添加应用名称或 Bundle ID";
 "prefs.mode" = "模式";
 "prefs.advancedRulesJSON" = "高级规则 JSON";
 "prefs.showAdvancedRules" = "高级规则";

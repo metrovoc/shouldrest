@@ -620,6 +620,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         let completedSteps: Int
         if let completedConfirmationSteps {
             completedSteps = completedConfirmationSteps
+        } else if policy.confirmationSteps == 0 {
+            completedSteps = 0
         } else if overlayController.requestEmergencyOverrideConfirmation() {
             logger.log("Emergency override confirmation shown in overlay")
             return
@@ -1364,8 +1366,8 @@ final class OverlayController {
                 settings: settings,
                 showsContent: isContentScreen,
                 manualAwaiting: manualAwaiting,
-                emergencyOverrideRemainingSeconds: isContentScreen ? emergencyRemaining : nil,
-                emergencyOverrideConfirmationSteps: isContentScreen ? settings.eyeGate.emergencyOverride.confirmationSteps : 0
+                emergencyOverrideRemainingSeconds: emergencyRemaining,
+                emergencyOverrideConfirmationSteps: emergencyRemaining == nil ? 0 : settings.eyeGate.emergencyOverride.confirmationSteps
             )
             let level: NSWindow.Level
             if manualAwaiting && session.kind == .bodyBreak {
@@ -1380,14 +1382,15 @@ final class OverlayController {
     }
 
     func requestEmergencyOverrideConfirmation() -> Bool {
+        var didRequestConfirmation = false
         for window in windows.values {
             if window.overlayView.requestEmergencyOverrideConfirmationIfAvailable() {
                 window.makeKeyAndOrderFront(nil)
                 window.orderFrontRegardless()
-                return true
+                didRequestConfirmation = true
             }
         }
-        return false
+        return didRequestConfirmation
     }
 
     func reconcile() {
@@ -1650,8 +1653,7 @@ final class RestOverlayView: NSView {
         configureEmergencyButton(
             sessionID: session.id,
             remainingSeconds: emergencyOverrideRemainingSeconds,
-            confirmationSteps: emergencyOverrideConfirmationSteps,
-            showsContent: showsContent
+            confirmationSteps: emergencyOverrideConfirmationSteps
         )
 
         titleLabel.isHidden = !showsContent
@@ -1726,16 +1728,23 @@ final class RestOverlayView: NSView {
     }
 
     func requestEmergencyOverrideConfirmationIfAvailable() -> Bool {
-        guard !emergencyButton.isHidden else { return false }
-        emergencyOverridePressed()
+        guard !emergencyButton.isHidden,
+              emergencyRemainingSeconds == 0,
+              emergencyConfirmationSteps > 0 else {
+            return false
+        }
+        if !isEmergencyConfirming {
+            isEmergencyConfirming = true
+            emergencyConfirmationProgress = 0
+            updateEmergencyConfirmationUI()
+        }
         return true
     }
 
     private func configureEmergencyButton(
         sessionID: UUID,
         remainingSeconds: Int?,
-        confirmationSteps: Int,
-        showsContent: Bool
+        confirmationSteps: Int
     ) {
         if emergencySessionID != sessionID {
             emergencySessionID = sessionID
@@ -1746,7 +1755,7 @@ final class RestOverlayView: NSView {
         emergencyRemainingSeconds = remainingSeconds
         emergencyConfirmationSteps = max(0, confirmationSteps)
 
-        guard showsContent, let remainingSeconds else {
+        guard let remainingSeconds else {
             emergencyButton.isHidden = true
             emergencyCancelButton.isHidden = true
             emergencyHintLabel.isHidden = true

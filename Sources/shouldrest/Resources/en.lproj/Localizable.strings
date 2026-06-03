@@ -121,7 +121,8 @@
 "prefs.workingEnd" = "Working day ends";
 "prefs.sectionExclusion" = "Primary App Exclusion";
 "prefs.name" = "Name";
-"prefs.matchTerms" = "Match terms, comma-separated";
+"prefs.matchTerms" = "Match terms";
+"prefs.matchTermsPlaceholder" = "Add app names or bundle IDs";
 "prefs.mode" = "Mode";
 "prefs.advancedRulesJSON" = "Advanced rules JSON";
 "prefs.showAdvancedRules" = "Advanced rules";
