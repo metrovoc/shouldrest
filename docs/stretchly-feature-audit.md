@@ -56,6 +56,7 @@ These Stretchly behaviors are design divergences, not missing features.
 | Contributor-only preferences. | No paywall or contributor gate for core controls. | The safety-critical control surface should be coherent and available. |
 | Account-based sync as a core feature. | Local JSON settings are core; sync is optional integration later. | The core app should remain local and deterministic. |
 | Electron-first implementation. | Mac-first native AppKit implementation. | Native window levels are required for a strong overlay on macOS. |
+| Stretchly's full translation catalog. | ShouldRest ships its own localization set, currently English and Simplified Chinese. | Translation breadth is brand/content rollout, not a copied rest-mechanism capability. |
 
 ## Re-scoped, Not Removed
 
@@ -69,6 +70,96 @@ These Stretchly behaviors are design divergences, not missing features.
 | Break health/danger | Kept and strengthened: Eye Gate overrides increase danger; completed/natural rests reduce it. |
 | Custom HTML/rich text | Body Break only, sanitized before rendering. |
 | Fullscreen/all screens/content screen | Kept, but implemented with native multi-display overlays. |
+
+## Stretchly Settings-Key Coverage
+
+This table is a mechanical coverage pass over every key in Stretchly's `app/utils/defaultSettings.js`.
+It is intended to catch gaps that are easy to miss when a behavior is exposed only through the JSON settings file or Contributor Preferences.
+
+| Stretchly setting key | ShouldRest coverage |
+| --- | --- |
+| `microbreakDuration` | Implemented as Eye Gate duration. |
+| `microbreakInterval` | Implemented as Eye Gate interval. |
+| `breakDuration` | Implemented as Body Break duration. |
+| `breakInterval` | Implemented as `bodyBreakAfterEyeGates`. |
+| `breakNotification` | Implemented as Body Break pre-rest notification enablement. |
+| `microbreakNotification` | Implemented as Eye Gate pre-rest notification enablement. |
+| `breakNotificationInterval` | Implemented as Body Break notification lead time. |
+| `microbreakNotificationInterval` | Implemented as Eye Gate notification lead time. |
+| `microbreak` | Implemented as Eye Gate enablement, with a guard preventing both rest kinds from being disabled at once. |
+| `break` | Implemented as Body Break enablement, with a guard preventing both rest kinds from being disabled at once. |
+| `microbreakStrictMode` | Strengthened: Eye Gate is strict by design and has no ordinary skip/postpone path. |
+| `breakStrictMode` | Implemented through Body Break ordinary-skip policy; when ordinary skip is disabled, active Body Break also blocks quit/reset bypasses. |
+| `morningHour` | Implemented as configurable pause-until-morning hour, plus sunrise mode. |
+| `microbreakPostpone` | Explicit divergence: Eye Gate has no ordinary postpone. |
+| `breakPostpone` | Implemented as Body Break postpone enablement. |
+| `microbreakPostponeTime` | Explicit divergence for Eye Gate; Body Break keeps configurable postpone duration. |
+| `breakPostponeTime` | Implemented as Body Break postpone duration. |
+| `microbreakPostponesLimit` | Explicit divergence for Eye Gate; Body Break keeps configurable limits. |
+| `microbreakPostponableDurationPercent` | Explicit divergence for Eye Gate; Body Break keeps configurable postpone window. |
+| `breakPostponesLimit` | Implemented as Body Break maximum postpones per cycle. |
+| `breakPostponableDurationPercent` | Implemented as Body Break postpone-window percent. |
+| `mainColor` | Implemented as Body Break color. |
+| `miniBreakColor` | Implemented as Eye Gate color, while preserving opaque full-screen enforcement. |
+| `transparentMode` | Explicit divergence for enforced rests: Eye Gate and enforced Body Break remain opaque. |
+| `blurredBackground` | Explicit divergence for enforced rests: no blur/transparent surface that allows continued screen work. |
+| `opacity` | Explicit divergence for enforced rests; opacity remains `1` for decisive overlays. |
+| `longBreakAudio` | Implemented as Body Break finish sound, with Stretchly-compatible built-in sound assets. |
+| `miniBreakAudio` | Implemented as Eye Gate finish sound, with Stretchly-compatible built-in sound assets. |
+| `volume` | Implemented as shared sound volume. |
+| `fullscreen` | Strengthened: enforced rests use native display coverage instead of a window/fullscreen toggle. |
+| `ideas` | Implemented for Body Break; Eye Gate intentionally avoids rich on-screen ideas. |
+| `naturalBreaks` | Implemented as idle-time natural rest credit. |
+| `naturalBreaksInactivityResetTime` | Implemented as configurable natural idle threshold. |
+| `allScreens` | Implemented for Body Break display coverage; Eye Gate always covers all displays. |
+| `useIdeasFromSettings` | Implemented for Body Break through custom idea JSON; Eye Gate custom ideas are intentionally omitted. |
+| `language` | Implemented as an in-app language override for bundled translations, currently System, English, and Simplified Chinese. Stretchly's full translation catalog is not copied because ShouldRest has its own localization rollout. |
+| `notifyNewVersion` | Implemented as update notification enablement. |
+| `isFirstRun` | Implemented as onboarding completion plus "show welcome on next launch". |
+| `posLatitude` | Implemented for sunrise-based pause-until-morning. |
+| `posLongitude` | Implemented for sunrise-based pause-until-morning. |
+| `useMonochromeTrayIcon` | Explicit divergence: ShouldRest uses Mac-native menu-bar text/status styles instead of Stretchly icon variants. |
+| `useMonochromeInvertedTrayIcon` | Explicit divergence: same as `useMonochromeTrayIcon`. |
+| `silentNotifications` | Implemented across rest notifications, update notifications, and configured start/finish sounds. |
+| `monitorDnd` | Implemented as Focus/DND monitoring, with Eye Gate not globally cancelled by default. |
+| `miniBreakStartSound` | Implemented as Eye Gate start sound. |
+| `longBreakStartSound` | Implemented as Body Break start sound. |
+| `themeSource` | Implemented as system/light/dark appearance. |
+| `endBreakShortcut` | Implemented as the active rest finish shortcut, defaulting to `CmdOrCtrl+X`, active only while compatible rest surfaces are active. |
+| `breakWindowWidth` | Explicit divergence: enforced rests do not use partial percentage-sized windows. |
+| `breakWindowHeight` | Explicit divergence: enforced rests do not use partial percentage-sized windows. |
+| `checkNewVersion` | Implemented as launch and periodic update checks, plus manual check. |
+| `breakIdeas` | Implemented as Body Break custom ideas with sanitized rich text and safe local images. |
+| `microbreakIdeas` | Explicit divergence for Eye Gate; custom readable Eye Gate content is not supported. |
+| `showBreaksAsRegularWindows` | Explicit divergence: enforced rests use native overlay windows, not regular focusable windows. |
+| `appExclusions` | Implemented and strengthened with multiple rules plus per-rest-kind targeting. |
+| `appExclusionsCheckInterval` | Explicit divergence: ShouldRest uses a fixed native context evaluation loop instead of exposing a tuning knob. |
+| `pauseForSuspendOrLock` | Implemented for sleep/lock behavior. |
+| `pauseBreaksToggleShortcut` | Implemented as pause/resume shortcut. |
+| `pauseBreaksFor30MinutesShortcut` | Implemented. |
+| `pauseBreaksFor1HourShortcut` | Implemented. |
+| `pauseBreaksFor2HoursShortcut` | Implemented. |
+| `pauseBreaksFor5HoursShortcut` | Implemented. |
+| `pauseBreaksUntilMorningShortcut` | Implemented, sharing fixed-hour/sunrise pause-until-morning logic. |
+| `screen` | Implemented for Body Break display targeting; Eye Gate forces all-display coverage. |
+| `breakContentScreen` | Implemented for Body Break content display and secondary blanking. |
+| `trayIconStyle` | Implemented as menu-bar default, time-to-break, and progress styles. |
+| `currentTimeInBreaks` | Implemented for Body Break only; Eye Gate intentionally avoids screen-reading content. |
+| `showTrayIcon` | Implemented as optional menu-bar item visibility. |
+| `skipToNextScheduledBreakShortcut` | Implemented as "take next scheduled rest now". |
+| `skipToNextMiniBreakShortcut` | Implemented as "take Eye Gate now"; ordinary Eye Gate skip remains unavailable. |
+| `skipToNextLongBreakShortcut` | Implemented as "take Body Break now". |
+| `resetBreaksShortcut` | Implemented, with strict active-rest bypass protection. |
+| `showTrayMenuInStrictMode` | Explicit divergence: Eye Gate does not expose ordinary tray/menu actions while active. |
+| `customPreferencesMessage` | Implemented as an admin preferences message. |
+| `disableAppUpdateFeatures` | Implemented as an admin switch that hides update UI and suppresses update checks. |
+| `hidePreferencesFileLocation` | Strengthened: admin path hiding removes settings, log, support, and Body Break image paths from debug and CLI path output. |
+| `hideStrictModePreferences` | Implemented for strict/override-related preference rows. |
+| `miniBreakManualFinish` | Implemented as optional completed Eye Gate manual-finish phase, without enabling early skip/postpone. |
+| `longBreakManualFinish` | Implemented as Body Break manual-finish phase. |
+| `breakHealthMode` | Implemented and visible in menu/debug surfaces. |
+| `openAtLogin` | Implemented through macOS ServiceManagement when bundled. |
+| `_migratedOpenAtLogin` | Not a product capability; Stretchly migration sentinel only. |
 
 ## Required Superset Surface
 

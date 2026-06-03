@@ -22,6 +22,7 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 - No contributor-gated preferences.
 - No third-party account-based sync in the core product.
 - No Electron-first implementation for the Mac app.
+- No commitment to copy Stretchly's full translation catalog; ShouldRest has its own localization rollout and currently bundles English plus Simplified Chinese.
 
 ## Required Superset Capabilities
 
