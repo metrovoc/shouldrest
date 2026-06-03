@@ -177,6 +177,7 @@ Implemented now:
 - Stretchly-compatible menu bar visibility preference: visible by default, hideable for CLI/URL-managed setups.
 - Language override setting for bundled translations, while defaulting to the macOS system language.
 - Packaged app build with default ad-hoc signing, optional Developer ID signing hook, optional hardened runtime hook, and strict `codesign` verification.
+- Release packaging automation for Developer ID identity selection, hardened-runtime app signing, DMG creation, optional DMG signing, optional Apple notarization, and stapling validation.
 - Continuous context-deferral state for Focus, working-hours, and app-exclusion gates: first deferral raises break-health danger, repeated ticks do not double-count, and the due rest starts immediately when context clears.
 - Stretchly-style display targeting for Body Break: all displays or a selected single display, primary/cursor/configured-display selection, separate content-display selection, optional secondary-display blanking, and backward-compatible settings decoding. Eye Gate still forces all-display coverage.
 - Sanitized Body Break rich-text rendering with remote/inline HTML images stripped; images remain available through the explicit safe local-image channel.
@@ -191,5 +192,5 @@ Implemented now:
 - Break-health danger is visible in the menu status surface, not only in debug output.
 - Eye Gate emergency override is frictional in core and app surfaces: minimum hold duration and required confirmation steps are enforced before the override is counted as a missed Eye Gate, with a configurable global shortcut for screen-covering situations.
 
-Still to implement:
-- Developer ID signing identity selection, notarization, and installer/distribution polish.
+Still to perform for public release:
+- Run `scripts/release_app.sh` with real Developer ID and Apple notarization credentials, then repeat GUI smoke on a clean user account.

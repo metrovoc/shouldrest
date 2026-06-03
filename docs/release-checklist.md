@@ -20,8 +20,18 @@ This checklist covers the remaining distribution work after the local package bu
 
 ## Apple Distribution
 
-- Build with Developer ID signing: `SIGN_IDENTITY="Developer ID Application: ..." HARDENED_RUNTIME=1 scripts/build_app.sh`.
+- Store notarization credentials once, for example:
+  `xcrun notarytool store-credentials shouldrest-notary --apple-id <apple-id> --team-id <team-id>`.
+- Build a signed DMG without notarization:
+  `SIGN_IDENTITY="Developer ID Application: ..." scripts/release_app.sh`.
+- Or let the script select the first installed Developer ID Application identity:
+  `scripts/release_app.sh`.
+- Verify the release packaging flow on a machine without Developer ID credentials:
+  `ALLOW_ADHOC=1 scripts/release_app.sh`.
 - Confirm `codesign --display --verbose=2 dist/ShouldRest.app` shows the Developer ID identity and runtime option.
-- Notarize and staple the app.
-- Package a DMG or installer.
+- Notarize and staple the DMG:
+  `NOTARIZE=1 NOTARY_KEYCHAIN_PROFILE=shouldrest-notary scripts/release_app.sh`.
+- Alternatively notarize with direct CI secrets:
+  `NOTARIZE=1 APPLE_ID=<apple-id> APPLE_TEAM_ID=<team-id> APPLE_APP_SPECIFIC_PASSWORD=<password> scripts/release_app.sh`.
+- Confirm `xcrun stapler validate dist/ShouldRest-<version>.dmg` passes after notarization.
 - Re-run GUI smoke on a clean user account.
