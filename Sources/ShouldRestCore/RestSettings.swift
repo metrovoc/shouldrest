@@ -551,6 +551,7 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
     public var notifyNewVersion: Bool
     public var updateFeedURL: String
     public var hasCompletedOnboarding: Bool
+    public var showOnboardingOnNextLaunch: Bool?
     public var pauseUntilMorningHour: Int?
     public var pauseUntilMorningMode: MorningPauseMode?
     public var pauseUntilMorningLatitude: Double?
@@ -563,6 +564,7 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
         notifyNewVersion: Bool,
         updateFeedURL: String,
         hasCompletedOnboarding: Bool,
+        showOnboardingOnNextLaunch: Bool? = nil,
         pauseUntilMorningHour: Int? = nil,
         pauseUntilMorningMode: MorningPauseMode? = nil,
         pauseUntilMorningLatitude: Double? = nil,
@@ -574,6 +576,7 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
         self.notifyNewVersion = notifyNewVersion
         self.updateFeedURL = updateFeedURL
         self.hasCompletedOnboarding = hasCompletedOnboarding
+        self.showOnboardingOnNextLaunch = showOnboardingOnNextLaunch
         self.pauseUntilMorningHour = pauseUntilMorningHour.map(Self.normalizedMorningHour)
         self.pauseUntilMorningMode = pauseUntilMorningMode
         self.pauseUntilMorningLatitude = pauseUntilMorningLatitude.map { min(89.8, max(-89.8, $0)) }
@@ -587,6 +590,7 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
         notifyNewVersion: true,
         updateFeedURL: "https://api.github.com/repos/tovkaic/shouldrest/releases/latest",
         hasCompletedOnboarding: false,
+        showOnboardingOnNextLaunch: false,
         pauseUntilMorningHour: defaultPauseUntilMorningHour,
         pauseUntilMorningMode: .hour,
         pauseUntilMorningLatitude: 0,
@@ -604,6 +608,10 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
 
     public var resolvedPauseForSuspendOrLock: Bool {
         pauseForSuspendOrLock ?? true
+    }
+
+    public var resolvedShowOnboardingOnNextLaunch: Bool {
+        showOnboardingOnNextLaunch ?? false
     }
 
     public func secondsUntilMorning(from now: Date = Date(), calendar: Calendar = .current) -> TimeInterval {

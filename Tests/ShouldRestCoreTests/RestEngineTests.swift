@@ -519,9 +519,11 @@ final class RestEngineTests: XCTestCase {
         XCTAssertNil(operations.pauseUntilMorningLatitude)
         XCTAssertNil(operations.pauseUntilMorningLongitude)
         XCTAssertNil(operations.pauseForSuspendOrLock)
+        XCTAssertNil(operations.showOnboardingOnNextLaunch)
         XCTAssertEqual(operations.resolvedPauseUntilMorningHour, OperationsSettings.defaultPauseUntilMorningHour)
         XCTAssertEqual(operations.resolvedPauseUntilMorningMode, .hour)
         XCTAssertTrue(operations.resolvedPauseForSuspendOrLock)
+        XCTAssertFalse(operations.resolvedShowOnboardingOnNextLaunch)
     }
 
     func testWorkingHoursSupportsDayAndOvernightWindows() throws {

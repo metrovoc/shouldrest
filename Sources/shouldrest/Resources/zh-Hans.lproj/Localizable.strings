@@ -73,6 +73,7 @@
 "prefs.openAtLogin" = "登录时打开";
 "prefs.checkUpdates" = "检查更新";
 "prefs.notifyNewVersion" = "发现新版本时通知";
+"prefs.showOnboardingNextLaunch" = "下次启动时显示欢迎窗口";
 "prefs.adminHideUpdates" = "管理员：隐藏更新 UI";
 "prefs.adminHideSettingsPath" = "管理员：隐藏设置文件路径";
 "prefs.adminHideStrict" = "管理员：隐藏严格模式偏好";

@@ -588,7 +588,10 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func showOnboardingIfNeeded() {
-        guard !settings.operations.hasCompletedOnboarding else { return }
+        guard !settings.operations.hasCompletedOnboarding ||
+              settings.operations.resolvedShowOnboardingOnNextLaunch else {
+            return
+        }
         onboardingWindowController = OnboardingWindowController(
             onUseDefaults: { [weak self] in
                 self?.completeOnboarding(openPreferences: false)
@@ -604,6 +607,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     private func completeOnboarding(openPreferences shouldOpenPreferences: Bool) {
         settings.operations.hasCompletedOnboarding = true
+        settings.operations.showOnboardingOnNextLaunch = false
         applySettings(settings)
         logger.log("Onboarding completed")
         if shouldOpenPreferences {

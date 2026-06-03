@@ -123,6 +123,7 @@ ShouldRest must implement or exceed these Stretchly capabilities except where ex
 
 - Local JSON settings.
 - Restore defaults.
+- First-run onboarding plus an option to show the welcome window on the next launch.
 - Open at login.
 - Update checks with disable switch.
 - Debug info: settings path, logs path, runtime state, timer state.
@@ -172,7 +173,7 @@ Implemented now:
 - Reproducible `.app` packaging script with `shouldrest://` URL-scheme Info.plist registration and localization resource bundling.
 - Advanced app-exclusion JSON editor for multi-rule configurations, plus primary-rule form controls for common cases.
 - Localized preference labels and CLI help in the SwiftPM resource bundle.
-- First-run onboarding window that lets users accept the scientific defaults or open preferences.
+- First-run onboarding window that lets users accept the scientific defaults or open preferences, plus an Operations preference to show the welcome window on the next launch.
 - Packaged-app GUI smoke check using CoreGraphics window enumeration; verified `Welcome to ShouldRest` appears on-screen in `dist/ShouldRest.app`.
 - Floating/all-spaces presentation for onboarding, preferences, and debug utility windows.
 - AppKit theme application for system/light/dark preferences, admin preferences message display, and optional current time during Body Break.

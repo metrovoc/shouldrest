@@ -73,6 +73,7 @@
 "prefs.openAtLogin" = "Open at login";
 "prefs.checkUpdates" = "Check for updates";
 "prefs.notifyNewVersion" = "Notify when a new version is found";
+"prefs.showOnboardingNextLaunch" = "Show welcome window on next launch";
 "prefs.adminHideUpdates" = "Admin: hide update UI";
 "prefs.adminHideSettingsPath" = "Admin: hide settings file path";
 "prefs.adminHideStrict" = "Admin: hide strict preferences";

@@ -86,6 +86,7 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 
 - Local JSON settings.
 - Restore defaults.
+- First-run onboarding plus an option to show the welcome window on the next launch.
 - Version/update checks with disable switch.
 - Debug panel or command with settings path, log path, runtime state, and timer state.
 - Corporate/admin controls: hide update UI, hide strict preferences, hide settings file path, custom preferences message.
