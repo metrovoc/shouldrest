@@ -1017,6 +1017,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         [
             "settingsPath=\(settingsStore.fileURL.path)",
             "logPath=\(logger.fileURL.path)",
+            "supportPath=\(AppPaths.supportDirectory.path)",
+            "bodyBreakImagePaths=\(settings.contentLibrary.localImagePaths)",
             "scheduled=\(String(describing: engine.state.scheduled))",
             "activeSession=\(String(describing: engine.state.activeSession))",
             "pause=\(String(describing: engine.state.pause))",

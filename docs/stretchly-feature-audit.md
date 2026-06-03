@@ -126,7 +126,7 @@ ShouldRest must implement or exceed these Stretchly capabilities except where ex
 - First-run onboarding plus an option to show the welcome window on the next launch.
 - Open at login.
 - Update checks with disable switch.
-- Debug info: settings path, logs path, runtime state, timer state.
+- Debug info: settings path, logs path, support path, Body Break image paths, runtime state, timer state.
 - Admin controls for update UI, strict preferences, settings path, and custom preferences message.
 
 ## Current Implementation Checkpoint
@@ -161,7 +161,7 @@ Implemented now:
 - Open-at-login setting and ServiceManagement integration when running as a bundled app.
 - Sleep, wake, lock, and unlock correction hooks.
 - Stretchly-compatible `pauseForSuspendOrLock` preference: enabled by default, with an opt-out path that preserves schedule state and lets natural rest credit absorb sleep/lock idle time.
-- Debug panel with runtime state and paths.
+- Debug panel with runtime state, timer state, settings/log/support paths, and Body Break image paths.
 - Global shortcut registration for pause, pause durations, take-now, Body Break skip-to-next, and reset.
 - Stretchly-style end-break shortcut for Body Break only: after the required duration it finishes, during the postpone window it postpones, and otherwise it uses the Body Break skip policy. Eye Gate intentionally ignores this shortcut.
 - URL-style automation parser plus Apple Event URL handler for bundled app registration.
