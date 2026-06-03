@@ -121,6 +121,7 @@
 "prefs.emergencyEyeGate" = "Emergency Eye Gate override";
 "prefs.reset" = "Reset";
 "prefs.sectionOperations" = "Operations And Admin";
+"prefs.pauseUntilMorningHour" = "Pause-until-morning hour";
 "prefs.updateFeedURL" = "Update feed URL";
 "prefs.preferencesMessage" = "Preferences message";
 "prefs.save" = "Save";

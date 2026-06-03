@@ -321,6 +321,39 @@ final class RestEngineTests: XCTestCase {
         XCTAssertNil(shortcuts.emergencyEyeGateOverride)
     }
 
+    func testOperationsSettingsCalculatesUntilMorningUsingConfiguredHour() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let earlyMorning = calendar.date(from: DateComponents(year: 2026, month: 6, day: 3, hour: 2, minute: 0))!
+        let evening = calendar.date(from: DateComponents(year: 2026, month: 6, day: 3, hour: 20, minute: 0))!
+
+        XCTAssertEqual(
+            OperationsSettings.secondsUntilMorning(from: earlyMorning, calendar: calendar, morningHour: 6),
+            4 * 60 * 60
+        )
+        XCTAssertEqual(
+            OperationsSettings.secondsUntilMorning(from: evening, calendar: calendar, morningHour: 8),
+            12 * 60 * 60
+        )
+    }
+
+    func testOperationsSettingsDecodesLegacyMissingPauseUntilMorningHour() throws {
+        let legacyJSON = #"""
+        {
+          "openAtLogin": false,
+          "checkForUpdates": true,
+          "notifyNewVersion": true,
+          "updateFeedURL": "",
+          "hasCompletedOnboarding": false
+        }
+        """#.data(using: .utf8)!
+
+        let operations = try JSONDecoder().decode(OperationsSettings.self, from: legacyJSON)
+
+        XCTAssertNil(operations.pauseUntilMorningHour)
+        XCTAssertEqual(operations.resolvedPauseUntilMorningHour, OperationsSettings.defaultPauseUntilMorningHour)
+    }
+
     func testWorkingHoursSupportsDayAndOvernightWindows() throws {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0)!

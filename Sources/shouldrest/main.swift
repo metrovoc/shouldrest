@@ -429,11 +429,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func pauseUntilMorning() {
-        let calendar = Calendar.current
-        let now = Date()
-        let tomorrow = calendar.date(byAdding: .day, value: 1, to: now) ?? now.addingTimeInterval(24 * 60 * 60)
-        let morning = calendar.date(bySettingHour: 6, minute: 0, second: 0, of: tomorrow) ?? tomorrow
-        pause(for: morning.timeIntervalSince(now), reason: .untilMorning)
+        pause(for: settings.operations.secondsUntilMorning(), reason: .untilMorning)
     }
 
     @objc private func pauseIndefinitely() {

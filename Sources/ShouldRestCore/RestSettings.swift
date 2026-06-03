@@ -519,24 +519,29 @@ public struct ShortcutSettings: Codable, Equatable, Sendable {
 }
 
 public struct OperationsSettings: Codable, Equatable, Sendable {
+    public static let defaultPauseUntilMorningHour = 6
+
     public var openAtLogin: Bool
     public var checkForUpdates: Bool
     public var notifyNewVersion: Bool
     public var updateFeedURL: String
     public var hasCompletedOnboarding: Bool
+    public var pauseUntilMorningHour: Int?
 
     public init(
         openAtLogin: Bool,
         checkForUpdates: Bool,
         notifyNewVersion: Bool,
         updateFeedURL: String,
-        hasCompletedOnboarding: Bool
+        hasCompletedOnboarding: Bool,
+        pauseUntilMorningHour: Int? = nil
     ) {
         self.openAtLogin = openAtLogin
         self.checkForUpdates = checkForUpdates
         self.notifyNewVersion = notifyNewVersion
         self.updateFeedURL = updateFeedURL
         self.hasCompletedOnboarding = hasCompletedOnboarding
+        self.pauseUntilMorningHour = pauseUntilMorningHour.map(Self.normalizedMorningHour)
     }
 
     public static let defaults = OperationsSettings(
@@ -544,8 +549,39 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
         checkForUpdates: true,
         notifyNewVersion: true,
         updateFeedURL: "https://api.github.com/repos/tovkaic/shouldrest/releases/latest",
-        hasCompletedOnboarding: false
+        hasCompletedOnboarding: false,
+        pauseUntilMorningHour: defaultPauseUntilMorningHour
     )
+
+    public var resolvedPauseUntilMorningHour: Int {
+        Self.normalizedMorningHour(pauseUntilMorningHour ?? Self.defaultPauseUntilMorningHour)
+    }
+
+    public func secondsUntilMorning(from now: Date = Date(), calendar: Calendar = .current) -> TimeInterval {
+        Self.secondsUntilMorning(
+            from: now,
+            calendar: calendar,
+            morningHour: resolvedPauseUntilMorningHour
+        )
+    }
+
+    public static func secondsUntilMorning(
+        from now: Date = Date(),
+        calendar: Calendar = .current,
+        morningHour: Int? = nil
+    ) -> TimeInterval {
+        let hour = normalizedMorningHour(morningHour ?? defaultPauseUntilMorningHour)
+        let sameDayTarget = calendar.date(bySettingHour: hour, minute: 0, second: 0, of: now)
+            ?? now.addingTimeInterval(24 * 60 * 60)
+        let target = sameDayTarget > now
+            ? sameDayTarget
+            : calendar.date(byAdding: .day, value: 1, to: sameDayTarget) ?? sameDayTarget.addingTimeInterval(24 * 60 * 60)
+        return max(1, target.timeIntervalSince(now))
+    }
+
+    private static func normalizedMorningHour(_ hour: Int) -> Int {
+        min(23, max(0, hour))
+    }
 }
 
 public struct AdminSettings: Codable, Equatable, Sendable {

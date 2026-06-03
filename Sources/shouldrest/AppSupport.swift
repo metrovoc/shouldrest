@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import ShouldRestCore
 
 enum AppPaths {
     static let supportDirectory = FileManager.default
@@ -178,7 +179,7 @@ enum CommandLineAutomation {
 
         let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
         let durationValue = components?.queryItems?.first(where: { $0.name == "duration" })?.value
-        let duration = durationValue.flatMap(parseDuration)
+        let duration = durationValue.flatMap { parseDuration($0, morningHour: configuredMorningHour()) }
         return (command, duration)
     }
 
@@ -187,19 +188,15 @@ enum CommandLineAutomation {
               args.indices.contains(index + 1) else {
             return nil
         }
-        return parseDuration(args[index + 1])
+        return parseDuration(args[index + 1], morningHour: configuredMorningHour())
     }
 
-    static func parseDuration(_ input: String) -> TimeInterval? {
+    static func parseDuration(_ input: String, morningHour: Int? = nil) -> TimeInterval? {
         if input == "indefinitely" {
             return nil
         }
         if input == "until-morning" {
-            let calendar = Calendar.current
-            let now = Date()
-            let tomorrow = calendar.date(byAdding: .day, value: 1, to: now) ?? now.addingTimeInterval(24 * 60 * 60)
-            let morning = calendar.date(bySettingHour: 6, minute: 0, second: 0, of: tomorrow) ?? tomorrow
-            return morning.timeIntervalSince(now)
+            return OperationsSettings.secondsUntilMorning(morningHour: morningHour)
         }
         if let minutes = Int(input), minutes > 0 {
             return TimeInterval(minutes * 60)
@@ -220,6 +217,10 @@ enum CommandLineAutomation {
 
         let seconds = (number(at: 1) * 60 * 60) + (number(at: 2) * 60)
         return seconds > 0 ? TimeInterval(seconds) : nil
+    }
+
+    private static func configuredMorningHour() -> Int? {
+        (try? SettingsStore(fileURL: AppPaths.settingsURL).load())?.operations.pauseUntilMorningHour
     }
 
     private static var helpText: String {

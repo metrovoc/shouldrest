@@ -121,6 +121,7 @@
 "prefs.emergencyEyeGate" = "紧急覆盖 Eye Gate";
 "prefs.reset" = "重置";
 "prefs.sectionOperations" = "操作与管理员";
+"prefs.pauseUntilMorningHour" = "暂停到早晨的小时";
 "prefs.updateFeedURL" = "更新源 URL";
 "prefs.preferencesMessage" = "偏好设置消息";
 "prefs.save" = "保存";
