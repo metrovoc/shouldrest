@@ -27,6 +27,11 @@ private enum PreferencesSaveStatus {
     case invalid
 }
 
+private enum PreferencesSectionIcon {
+    case restGate
+    case systemSymbol(String)
+}
+
 @MainActor
 final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate, NSTextViewDelegate {
     private var settings: RestSettings
@@ -228,7 +233,11 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         adminMessageLabel.lineBreakMode = .byWordWrapping
         adminMessageLabel.widthAnchor.constraint(equalToConstant: 620).isActive = true
         scheduleStack.addArrangedSubview(adminMessageLabel)
-        scheduleStack.addArrangedSubview(section(L10n.tr("prefs.sectionEyeGate"), symbolName: "circle.lefthalf.filled"))
+        scheduleStack.addArrangedSubview(section(
+            L10n.tr("prefs.sectionEyeGate"),
+            icon: .restGate,
+            identifier: "prefs.section.eyeGate"
+        ))
         scheduleStack.addArrangedSubview(eyeEnabled)
         scheduleStack.addArrangedSubview(numberRow(
             L10n.tr("prefs.everyMinutes"),
@@ -263,7 +272,11 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         self.eyeEmergencyHoldRow = eyeEmergencyHoldRow
         scheduleStack.addArrangedSubview(eyeEmergencyHoldRow)
         scheduleStack.addArrangedSubview(separator())
-        scheduleStack.addArrangedSubview(section(L10n.tr("prefs.sectionBodyBreak"), symbolName: "figure.walk"))
+        scheduleStack.addArrangedSubview(section(
+            L10n.tr("prefs.sectionBodyBreak"),
+            icon: .systemSymbol("figure.walk"),
+            identifier: "prefs.section.bodyBreak"
+        ))
         scheduleStack.addArrangedSubview(bodyEnabled)
         scheduleStack.addArrangedSubview(numberRow(
             L10n.tr("prefs.bodyIntervalMinutes"),
@@ -1545,16 +1558,42 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     }
 
     private func section(_ title: String, symbolName: String) -> NSStackView {
+        section(title, icon: .systemSymbol(symbolName), identifier: nil)
+    }
+
+    private func section(
+        _ title: String,
+        icon: PreferencesSectionIcon,
+        identifier: String?
+    ) -> NSStackView {
         let imageView = NSImageView()
-        imageView.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
+        switch icon {
+        case .restGate:
+            imageView.image = RestGateIcon.menuBarImage(accessibilityDescription: title)
+            imageView.imageScaling = .scaleProportionallyUpOrDown
+            if let identifier {
+                imageView.identifier = NSUserInterfaceItemIdentifier("\(identifier).restGateIcon")
+            }
+        case let .systemSymbol(symbolName):
+            imageView.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: title)
+            imageView.symbolConfiguration = .init(pointSize: 16, weight: .semibold)
+            if let identifier {
+                imageView.identifier = NSUserInterfaceItemIdentifier("\(identifier).systemIcon")
+            }
+        }
         imageView.contentTintColor = .secondaryLabelColor
-        imageView.symbolConfiguration = .init(pointSize: 16, weight: .semibold)
         imageView.widthAnchor.constraint(equalToConstant: 22).isActive = true
 
         let label = NSTextField(labelWithString: title)
         label.font = .systemFont(ofSize: 15, weight: .semibold)
+        if let identifier {
+            label.identifier = NSUserInterfaceItemIdentifier("\(identifier).label")
+        }
 
         let stack = NSStackView(views: [imageView, label])
+        if let identifier {
+            stack.identifier = NSUserInterfaceItemIdentifier(identifier)
+        }
         stack.orientation = .horizontal
         stack.spacing = 8
         stack.alignment = .centerY

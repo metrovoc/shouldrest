@@ -18,6 +18,11 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.brandIcon"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.featureList"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.feature.eye"))
+        let eyeIcon = try XCTUnwrap(
+            contentView.descendant(withIdentifier: "onboarding.feature.eye.restGateIcon") as? NSImageView
+        )
+        XCTAssertEqual(eyeIcon.image?.size, NSSize(width: 18, height: 18))
+        XCTAssertTrue(eyeIcon.image?.isTemplate ?? false)
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.feature.emergency"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.feature.body"))
     }

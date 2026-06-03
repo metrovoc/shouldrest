@@ -1,6 +1,11 @@
 import AppKit
 import Foundation
 
+private enum OnboardingFeatureIcon {
+    case restGate
+    case systemSymbol(String)
+}
+
 @MainActor
 final class OnboardingWindowController: NSWindowController {
     private let onUseDefaults: () -> Void
@@ -124,19 +129,19 @@ final class OnboardingWindowController: NSWindowController {
 
         list.addArrangedSubview(featureRow(
             identifier: "onboarding.feature.eye",
-            symbolName: "circle.lefthalf.filled",
+            icon: .restGate,
             title: L10n.tr("onboarding.eyeFeatureTitle"),
             body: L10n.tr("onboarding.eyeFeatureBody")
         ))
         list.addArrangedSubview(featureRow(
             identifier: "onboarding.feature.emergency",
-            symbolName: "exclamationmark.triangle",
+            icon: .systemSymbol("exclamationmark.triangle"),
             title: L10n.tr("onboarding.emergencyFeatureTitle"),
             body: L10n.tr("onboarding.emergencyFeatureBody")
         ))
         list.addArrangedSubview(featureRow(
             identifier: "onboarding.feature.body",
-            symbolName: "figure.walk",
+            icon: .systemSymbol("figure.walk"),
             title: L10n.tr("onboarding.bodyFeatureTitle"),
             body: L10n.tr("onboarding.bodyFeatureBody")
         ))
@@ -151,15 +156,24 @@ final class OnboardingWindowController: NSWindowController {
         return panel
     }
 
-    private func featureRow(identifier: String, symbolName: String, title: String, body: String) -> NSView {
+    private func featureRow(identifier: String, icon: OnboardingFeatureIcon, title: String, body: String) -> NSView {
         let row = NSStackView()
         row.identifier = NSUserInterfaceItemIdentifier(identifier)
         row.orientation = .horizontal
         row.alignment = .top
         row.spacing = 12
 
-        let imageView = NSImageView(image: symbolImage(symbolName))
-        imageView.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 17, weight: .medium)
+        let imageView = NSImageView()
+        switch icon {
+        case .restGate:
+            imageView.image = RestGateIcon.menuBarImage(accessibilityDescription: title)
+            imageView.imageScaling = .scaleProportionallyUpOrDown
+            imageView.identifier = NSUserInterfaceItemIdentifier("\(identifier).restGateIcon")
+        case let .systemSymbol(symbolName):
+            imageView.image = symbolImage(symbolName, accessibilityDescription: title)
+            imageView.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 17, weight: .medium)
+            imageView.identifier = NSUserInterfaceItemIdentifier("\(identifier).systemIcon")
+        }
         imageView.contentTintColor = .secondaryLabelColor
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.widthAnchor.constraint(equalToConstant: 24).isActive = true
@@ -225,7 +239,7 @@ final class OnboardingWindowController: NSWindowController {
     private func onboardingButton(title: String, symbolName: String, action: Selector) -> NSButton {
         let button = NSButton(title: title, target: self, action: action)
         button.bezelStyle = .rounded
-        button.image = symbolImage(symbolName)
+        button.image = symbolImage(symbolName, accessibilityDescription: title)
         button.imagePosition = .imageLeading
         button.imageHugsTitle = true
         button.setContentHuggingPriority(.required, for: .horizontal)
@@ -240,8 +254,8 @@ final class OnboardingWindowController: NSWindowController {
         return RestGateIcon.fallbackAppImage(size: 64, accessibilityDescription: L10n.tr("app.name"))
     }
 
-    private func symbolImage(_ symbolName: String) -> NSImage {
-        NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
+    private func symbolImage(_ symbolName: String, accessibilityDescription: String?) -> NSImage {
+        NSImage(systemSymbolName: symbolName, accessibilityDescription: accessibilityDescription)
             ?? NSImage(systemSymbolName: "circle", accessibilityDescription: nil)
             ?? NSImage(size: NSSize(width: 16, height: 16))
     }
