@@ -17,7 +17,7 @@ final class OnboardingWindowController: NSWindowController {
         self.onLearnMore = onLearnMore
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 520, height: 260),
+            contentRect: NSRect(x: 0, y: 0, width: 640, height: 380),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -40,27 +40,14 @@ final class OnboardingWindowController: NSWindowController {
         let stack = NSStackView()
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 16
-        stack.edgeInsets = NSEdgeInsets(top: 24, left: 24, bottom: 24, right: 24)
+        stack.spacing = 22
+        stack.edgeInsets = NSEdgeInsets(top: 28, left: 30, bottom: 24, right: 30)
         stack.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(stack)
 
-        let title = NSTextField(labelWithString: L10n.tr("onboarding.heading"))
-        title.font = .systemFont(ofSize: 20, weight: .semibold)
-        let body = NSTextField(labelWithString: L10n.tr("onboarding.body"))
-        body.lineBreakMode = .byWordWrapping
-        body.widthAnchor.constraint(equalToConstant: 460).isActive = true
-
-        let buttons = NSStackView()
-        buttons.orientation = .horizontal
-        buttons.spacing = 12
-        buttons.addArrangedSubview(NSButton(title: L10n.tr("onboarding.learnMore"), target: self, action: #selector(learnMore)))
-        buttons.addArrangedSubview(NSButton(title: L10n.tr("onboarding.useDefaults"), target: self, action: #selector(useDefaults)))
-        buttons.addArrangedSubview(NSButton(title: L10n.tr("onboarding.preferences"), target: self, action: #selector(openPreferences)))
-
-        stack.addArrangedSubview(title)
-        stack.addArrangedSubview(body)
-        stack.addArrangedSubview(buttons)
+        stack.addArrangedSubview(heroView())
+        stack.addArrangedSubview(featureList())
+        stack.addArrangedSubview(buttonRow())
 
         NSLayoutConstraint.activate([
             stack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
@@ -68,6 +55,195 @@ final class OnboardingWindowController: NSWindowController {
             stack.topAnchor.constraint(equalTo: contentView.topAnchor),
             stack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
         ])
+    }
+
+    private func heroView() -> NSView {
+        let hero = NSStackView()
+        hero.orientation = .horizontal
+        hero.alignment = .centerY
+        hero.spacing = 18
+
+        let icon = NSImageView(image: brandImage())
+        icon.identifier = NSUserInterfaceItemIdentifier("onboarding.brandIcon")
+        icon.imageScaling = .scaleProportionallyUpOrDown
+        icon.translatesAutoresizingMaskIntoConstraints = false
+        icon.widthAnchor.constraint(equalToConstant: 64).isActive = true
+        icon.heightAnchor.constraint(equalToConstant: 64).isActive = true
+        hero.addArrangedSubview(icon)
+
+        let copy = NSStackView()
+        copy.orientation = .vertical
+        copy.alignment = .leading
+        copy.spacing = 6
+
+        let title = NSTextField(labelWithString: L10n.tr("onboarding.heading"))
+        title.identifier = NSUserInterfaceItemIdentifier("onboarding.heading")
+        title.font = .systemFont(ofSize: 24, weight: .semibold)
+        title.lineBreakMode = .byWordWrapping
+        title.maximumNumberOfLines = 2
+
+        let subtitle = NSTextField(labelWithString: L10n.tr("onboarding.subtitle"))
+        subtitle.identifier = NSUserInterfaceItemIdentifier("onboarding.subtitle")
+        subtitle.font = .systemFont(ofSize: 13, weight: .regular)
+        subtitle.textColor = .secondaryLabelColor
+        subtitle.lineBreakMode = .byWordWrapping
+        subtitle.maximumNumberOfLines = 2
+
+        let body = NSTextField(labelWithString: L10n.tr("onboarding.body"))
+        body.identifier = NSUserInterfaceItemIdentifier("onboarding.body")
+        body.font = .systemFont(ofSize: 13, weight: .regular)
+        body.textColor = .secondaryLabelColor
+        body.lineBreakMode = .byWordWrapping
+        body.maximumNumberOfLines = 3
+
+        [title, subtitle, body].forEach { label in
+            label.widthAnchor.constraint(lessThanOrEqualToConstant: 480).isActive = true
+            copy.addArrangedSubview(label)
+        }
+        hero.addArrangedSubview(copy)
+        return hero
+    }
+
+    private func featureList() -> NSView {
+        let panel = NSView()
+        panel.identifier = NSUserInterfaceItemIdentifier("onboarding.featureList")
+        panel.wantsLayer = true
+        panel.layer?.cornerRadius = 8
+        panel.layer?.borderWidth = 1
+        panel.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.8).cgColor
+        panel.layer?.backgroundColor = NSColor.controlBackgroundColor.withAlphaComponent(0.72).cgColor
+        panel.setContentHuggingPriority(.required, for: .vertical)
+        panel.setContentCompressionResistancePriority(.required, for: .vertical)
+
+        let list = NSStackView()
+        list.orientation = .vertical
+        list.alignment = .leading
+        list.spacing = 14
+        list.translatesAutoresizingMaskIntoConstraints = false
+        panel.addSubview(list)
+
+        list.addArrangedSubview(featureRow(
+            identifier: "onboarding.feature.eye",
+            symbolName: "circle.lefthalf.filled",
+            title: L10n.tr("onboarding.eyeFeatureTitle"),
+            body: L10n.tr("onboarding.eyeFeatureBody")
+        ))
+        list.addArrangedSubview(featureRow(
+            identifier: "onboarding.feature.emergency",
+            symbolName: "exclamationmark.triangle",
+            title: L10n.tr("onboarding.emergencyFeatureTitle"),
+            body: L10n.tr("onboarding.emergencyFeatureBody")
+        ))
+        list.addArrangedSubview(featureRow(
+            identifier: "onboarding.feature.body",
+            symbolName: "figure.walk",
+            title: L10n.tr("onboarding.bodyFeatureTitle"),
+            body: L10n.tr("onboarding.bodyFeatureBody")
+        ))
+
+        NSLayoutConstraint.activate([
+            list.leadingAnchor.constraint(equalTo: panel.leadingAnchor, constant: 16),
+            list.trailingAnchor.constraint(equalTo: panel.trailingAnchor, constant: -16),
+            list.topAnchor.constraint(equalTo: panel.topAnchor, constant: 14),
+            list.bottomAnchor.constraint(equalTo: panel.bottomAnchor, constant: -14)
+        ])
+        panel.widthAnchor.constraint(equalToConstant: 580).isActive = true
+        return panel
+    }
+
+    private func featureRow(identifier: String, symbolName: String, title: String, body: String) -> NSView {
+        let row = NSStackView()
+        row.identifier = NSUserInterfaceItemIdentifier(identifier)
+        row.orientation = .horizontal
+        row.alignment = .top
+        row.spacing = 12
+
+        let imageView = NSImageView(image: symbolImage(symbolName))
+        imageView.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 17, weight: .medium)
+        imageView.contentTintColor = .secondaryLabelColor
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.widthAnchor.constraint(equalToConstant: 24).isActive = true
+        imageView.heightAnchor.constraint(equalToConstant: 24).isActive = true
+        row.addArrangedSubview(imageView)
+
+        let copy = NSStackView()
+        copy.orientation = .vertical
+        copy.alignment = .leading
+        copy.spacing = 3
+
+        let titleLabel = NSTextField(labelWithString: title)
+        titleLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+
+        let bodyLabel = NSTextField(labelWithString: body)
+        bodyLabel.font = .systemFont(ofSize: 12, weight: .regular)
+        bodyLabel.textColor = .secondaryLabelColor
+        bodyLabel.lineBreakMode = .byWordWrapping
+        bodyLabel.maximumNumberOfLines = 2
+        bodyLabel.widthAnchor.constraint(lessThanOrEqualToConstant: 500).isActive = true
+
+        copy.addArrangedSubview(titleLabel)
+        copy.addArrangedSubview(bodyLabel)
+        row.addArrangedSubview(copy)
+        return row
+    }
+
+    private func buttonRow() -> NSView {
+        let row = NSStackView()
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        row.spacing = 10
+        row.widthAnchor.constraint(equalToConstant: 580).isActive = true
+
+        let learnMoreButton = onboardingButton(
+            title: L10n.tr("onboarding.learnMore"),
+            symbolName: "questionmark.circle",
+            action: #selector(learnMore)
+        )
+        let preferencesButton = onboardingButton(
+            title: L10n.tr("onboarding.preferences"),
+            symbolName: "slider.horizontal.3",
+            action: #selector(openPreferences)
+        )
+        let useDefaultsButton = onboardingButton(
+            title: L10n.tr("onboarding.useDefaults"),
+            symbolName: "checkmark.circle.fill",
+            action: #selector(useDefaults)
+        )
+        useDefaultsButton.keyEquivalent = "\r"
+
+        let spacer = NSView()
+        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        spacer.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        row.addArrangedSubview(learnMoreButton)
+        row.addArrangedSubview(spacer)
+        row.addArrangedSubview(preferencesButton)
+        row.addArrangedSubview(useDefaultsButton)
+        return row
+    }
+
+    private func onboardingButton(title: String, symbolName: String, action: Selector) -> NSButton {
+        let button = NSButton(title: title, target: self, action: action)
+        button.bezelStyle = .rounded
+        button.image = symbolImage(symbolName)
+        button.imagePosition = .imageLeading
+        button.imageHugsTitle = true
+        button.setContentHuggingPriority(.required, for: .horizontal)
+        button.setContentCompressionResistancePriority(.required, for: .horizontal)
+        return button
+    }
+
+    private func brandImage() -> NSImage {
+        if let appIcon = NSImage(named: "AppIcon") {
+            return appIcon
+        }
+        return symbolImage("circle.lefthalf.filled")
+    }
+
+    private func symbolImage(_ symbolName: String) -> NSImage {
+        NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
+            ?? NSImage(systemSymbolName: "circle", accessibilityDescription: nil)
+            ?? NSImage(size: NSSize(width: 16, height: 16))
     }
 
     @objc private func useDefaults() {

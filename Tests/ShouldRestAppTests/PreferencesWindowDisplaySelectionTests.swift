@@ -57,18 +57,20 @@ final class PreferencesWindowDisplaySelectionTests: XCTestCase {
         var settings = RestSettings.defaults
         settings.bodyBreak.enforcement.contentDisplay = .configured
         settings.bodyBreak.enforcement.configuredDisplayIndex = 0
-        var savedSettings: RestSettings?
-        let controller = PreferencesWindowController(settings: settings) { savedSettings = $0 }
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
         let contentView = try XCTUnwrap(controller.window?.contentView)
         let popup = try XCTUnwrap(configuredDisplayPopup(in: contentView))
         let targetItemIndex = min(1, max(0, popup.numberOfItems - 1))
 
+        XCTAssertNotNil(popup.target)
+        XCTAssertNotNil(popup.action)
         popup.selectItem(at: targetItemIndex)
         popup.sendAction(popup.action, to: popup.target)
-        RunLoop.current.run(until: Date().addingTimeInterval(0.4))
+        waitUntilSavedSettingsArrive(savedSettings)
 
         XCTAssertEqual(
-            savedSettings?.bodyBreak.enforcement.configuredDisplayIndex,
+            savedSettings.value?.bodyBreak.enforcement.configuredDisplayIndex,
             popup.selectedItem?.representedObject as? Int
         )
     }
@@ -79,7 +81,7 @@ final class PreferencesWindowDisplaySelectionTests: XCTestCase {
 
     private func configuredDisplayPopup(in view: NSView) -> NSPopUpButton? {
         if let popup = view as? NSPopUpButton,
-           popup.itemArray.contains(where: { $0.representedObject is Int }) {
+           popup.identifier?.rawValue == "prefs.bodyConfiguredDisplay" {
             return popup
         }
         for subview in view.subviews {
@@ -88,6 +90,13 @@ final class PreferencesWindowDisplaySelectionTests: XCTestCase {
             }
         }
         return nil
+    }
+
+    private func waitUntilSavedSettingsArrive(_ settings: SavedSettingsBox) {
+        let deadline = Date().addingTimeInterval(2)
+        while settings.value == nil && Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.05))
+        }
     }
 
     private func visibleTexts(in view: NSView, ancestorHidden: Bool = false) -> [String] {
@@ -107,4 +116,8 @@ final class PreferencesWindowDisplaySelectionTests: XCTestCase {
         }
         return texts
     }
+}
+
+private final class SavedSettingsBox {
+    var value: RestSettings?
 }

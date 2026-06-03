@@ -235,8 +235,15 @@
 "shortcut.clearHelp" = "点击可替换该快捷键。录制中按 Delete 清空。";
 "cli.help" = "用法：shouldrest <命令> [选项]\n\n命令：\n  help                         显示帮助。\n  version                      显示版本。\n  settings                     输出设置文件路径，除非管理员隐藏。\n  logs                         输出日志路径。\n  pause [-d duration]          暂停休息。时长：indefinitely、until-morning、60、1h、1h20m。\n  resume                       恢复休息。\n  toggle                       暂停或恢复休息。\n  reset                        重置计划和健康值。\n  eye|mini [-w wait] [-n]      立即或延迟开始护眼休息；不支持自定义可阅读内容。\n  body|long [-T title] [-t text] [-w wait] [-n]  立即开始或自定义活动休息。\n  preferences                  打开运行中 app 的偏好设置。\n  debug                        复制运行中 app 的调试信息。\n  url shouldrest://<command>    发送 URL 风格自动化命令。";
 "onboarding.title" = "欢迎使用 ShouldRest";
-"onboarding.heading" = "使用默认休息节奏开始";
-"onboarding.body" = "护眼休息使用短而频繁的不透明间隔。活动休息保持可配置，用于更长的身体活动。";
+"onboarding.heading" = "从更严格的休息节奏开始";
+"onboarding.subtitle" = "先保护眼睛，活动休息保持灵活。";
+"onboarding.body" = "默认设置适合频繁、短暂、不透明的 20 秒护眼休息；活动休息可继续配置。";
+"onboarding.eyeFeatureTitle" = "短而频繁的护眼休息";
+"onboarding.eyeFeatureBody" = "短暂不透明的覆盖层，减少 20 秒休息被忽视或习惯性跳过。";
+"onboarding.emergencyFeatureTitle" = "紧急覆盖不再锁死";
+"onboarding.emergencyFeatureBody" = "等待时间结束后，本地触发一次即可退出，并计为未完成的护眼休息。";
+"onboarding.bodyFeatureTitle" = "活动休息可配置";
+"onboarding.bodyFeatureBody" = "更长的活动休息支持推迟、图片、显示器规则和手动完成。";
 "onboarding.learnMore" = "了解更多";
 "onboarding.useDefaults" = "使用默认值";
 "onboarding.preferences" = "打开偏好设置";

@@ -516,6 +516,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             (DisplaySelection.configured.rawValue, L10n.tr("prefs.display.configured")),
             (DisplaySelection.none.rawValue, L10n.tr("prefs.display.none"))
         ])
+        bodyConfiguredDisplay.identifier = NSUserInterfaceItemIdentifier("prefs.bodyConfiguredDisplay")
     }
 
     private func configureFieldWidths() {
