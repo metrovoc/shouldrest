@@ -23,4 +23,14 @@ if [[ -n "${RESOURCE_BUNDLE:-}" ]]; then
 fi
 
 chmod +x "$MACOS/shouldrest"
+
+SIGN_IDENTITY="${SIGN_IDENTITY:--}"
+CODESIGN_ARGS=(--force --sign "$SIGN_IDENTITY" --deep)
+if [[ "${HARDENED_RUNTIME:-0}" == "1" ]]; then
+    CODESIGN_ARGS+=(--options runtime)
+fi
+
+codesign "${CODESIGN_ARGS[@]}" "$APP_DIR" >/dev/null
+codesign --verify --deep --strict "$APP_DIR"
+
 echo "$APP_DIR"

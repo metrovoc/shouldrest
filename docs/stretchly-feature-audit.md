@@ -168,6 +168,7 @@ Implemented now:
 - Packaged-app GUI smoke check using CoreGraphics window enumeration; verified `Welcome to ShouldRest` appears on-screen in `dist/ShouldRest.app`.
 - Floating/all-spaces presentation for onboarding, preferences, and debug utility windows.
 - AppKit theme application for system/light/dark preferences, admin preferences message display, and optional current time during Body Break.
+- Packaged app build with default ad-hoc signing, optional Developer ID signing hook, optional hardened runtime hook, and strict `codesign` verification.
 
 Still to implement:
-- Code signing, notarization, and installer/distribution polish.
+- Developer ID signing identity selection, notarization, and installer/distribution polish.
