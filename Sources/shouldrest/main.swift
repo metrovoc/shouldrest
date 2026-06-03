@@ -698,7 +698,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         case .preferences:
             openPreferences()
         case .debug:
-            openDebugPanel()
+            copyDebugInfo()
         }
         logger.log("Handled automation command \(command.rawValue)")
     }
