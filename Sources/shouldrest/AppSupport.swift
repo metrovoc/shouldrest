@@ -222,21 +222,7 @@ enum CommandLineAutomation {
         return seconds > 0 ? TimeInterval(seconds) : nil
     }
 
-    private static let helpText = """
-    Usage: shouldrest <command> [options]
-
-    Commands:
-      help                         Show this help.
-      version                      Show version.
-      settings                     Print settings path.
-      logs                         Print log path.
-      pause [-d duration]          Pause breaks. Duration: indefinitely, until-morning, 60, 1h, 1h20m.
-      resume                       Resume breaks.
-      reset                        Reset schedule and health.
-      eye                          Start Eye Gate now.
-      body                         Start Body Break now.
-      preferences                  Open preferences in the running app.
-      debug                        Copy debug info in the running app.
-      url shouldrest://<command>    Send URL-style automation.
-    """
+    private static var helpText: String {
+        L10n.tr("cli.help")
+    }
 }

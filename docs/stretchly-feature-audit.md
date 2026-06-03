@@ -163,7 +163,7 @@ Implemented now:
 - Safe local image Body Break content path support and overlay renderer.
 - Reproducible `.app` packaging script with `shouldrest://` URL-scheme Info.plist registration and localization resource bundling.
 - Advanced app-exclusion JSON editor for multi-rule configurations, plus primary-rule form controls for common cases.
+- Localized preference labels and CLI help in the SwiftPM resource bundle.
 
 Still to implement:
-
-- Broader localization coverage for every preference label and CLI help line.
+- First-run onboarding and polished visual QA for the packaged `.app`.
