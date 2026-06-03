@@ -868,6 +868,7 @@ final class RestOverlayView: NSView {
     private let detailLabel = NSTextField(labelWithString: "")
     private let countdownLabel = NSTextField(labelWithString: "")
     private let imageView = NSImageView()
+    private var detailCacheKey: String?
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -930,7 +931,7 @@ final class RestOverlayView: NSView {
 
         if manualAwaiting {
             titleLabel.stringValue = L10n.tr("overlay.completeTitle")
-            detailLabel.stringValue = L10n.tr("overlay.completeBody")
+            setDetailText(L10n.tr("overlay.completeBody"), allowsRichText: false)
             countdownLabel.stringValue = L10n.tr("overlay.ready")
             return
         }
@@ -939,13 +940,13 @@ final class RestOverlayView: NSView {
         case .eyeGate:
             let idea = settings.contentLibrary.ideas(for: .eyeGate).first
             titleLabel.stringValue = idea?.title ?? L10n.tr("overlay.eyeTitle")
-            detailLabel.stringValue = idea?.body ?? L10n.tr("overlay.eyeBody")
+            setDetailText(idea?.body ?? L10n.tr("overlay.eyeBody"), allowsRichText: false)
         case .bodyBreak:
             let ideas = settings.contentLibrary.ideas(for: .bodyBreak)
             let index = Int(session.startedAt.timeIntervalSinceReferenceDate) % max(1, ideas.count)
             let idea = ideas[safe: index]
             titleLabel.stringValue = idea?.title ?? L10n.tr("overlay.bodyTitle")
-            detailLabel.stringValue = idea?.body ?? L10n.tr("overlay.bodyBody")
+            setDetailText(idea?.body ?? L10n.tr("overlay.bodyBody"), allowsRichText: true)
             if let image = localBodyBreakImage(settings: settings) {
                 imageView.image = image
                 imageView.isHidden = false
@@ -965,6 +966,48 @@ final class RestOverlayView: NSView {
             return nil
         }
         return NSImage(contentsOfFile: path)
+    }
+
+    private func setDetailText(_ text: String, allowsRichText: Bool) {
+        let key = "\(allowsRichText):\(text)"
+        guard detailCacheKey != key else { return }
+        detailCacheKey = key
+
+        guard allowsRichText,
+              let attributed = attributedHTML(from: ContentSanitizer.sanitizeRichText(text)) else {
+            detailLabel.stringValue = text
+            return
+        }
+
+        detailLabel.attributedStringValue = attributed
+    }
+
+    private func attributedHTML(from sanitized: String) -> NSAttributedString? {
+        let html = """
+        <html>
+        <head>
+        <style>
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+          font-size: 18px;
+          color: white;
+          text-align: center;
+        }
+        a { color: #b7ecff; }
+        </style>
+        </head>
+        <body>\(sanitized)</body>
+        </html>
+        """
+        guard let data = html.data(using: .utf8) else { return nil }
+        return try? NSAttributedString(
+            data: data,
+            options: [
+                .documentType: NSAttributedString.DocumentType.html,
+                .characterEncoding: String.Encoding.utf8.rawValue
+            ],
+            documentAttributes: nil
+        )
     }
 }
 

@@ -62,7 +62,7 @@ These Stretchly behaviors are design divergences, not missing features.
 | App exclusions | Supported with per-rest-kind targeting, so rules can pause Body Break without weakening Eye Gate. |
 | Current time during breaks | Body Break only by default. |
 | Break health/danger | Kept and strengthened: Eye Gate overrides increase danger; completed/natural rests reduce it. |
-| Custom HTML/rich text | Body Break only, with sanitization planned. |
+| Custom HTML/rich text | Body Break only, sanitized before rendering. |
 | Fullscreen/all screens/content screen | Kept, but implemented with native multi-display overlays. |
 
 ## Required Superset Surface
@@ -171,6 +171,7 @@ Implemented now:
 - Packaged app build with default ad-hoc signing, optional Developer ID signing hook, optional hardened runtime hook, and strict `codesign` verification.
 - Continuous context-deferral state for Focus, working-hours, and app-exclusion gates: first deferral raises break-health danger, repeated ticks do not double-count, and the due rest starts immediately when context clears.
 - Stretchly-style display targeting for Body Break: all displays or a selected single display, primary/cursor/configured-display selection, separate content-display selection, optional secondary-display blanking, and backward-compatible settings decoding. Eye Gate still forces all-display coverage.
+- Sanitized Body Break rich-text rendering with remote/inline HTML images stripped; images remain available through the explicit safe local-image channel.
 
 Still to implement:
 - Developer ID signing identity selection, notarization, and installer/distribution polish.

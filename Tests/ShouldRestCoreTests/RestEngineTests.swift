@@ -234,6 +234,7 @@ final class RestEngineTests: XCTestCase {
         <script>alert("x")</script>
         <a href="javascript:alert(1)">bad</a>
         <img src="data:text/html;base64,abc">
+        <img src="https://example.com/pixel.png">
         """#
 
         let sanitized = ContentSanitizer.sanitizeRichText(unsafe)
@@ -242,6 +243,7 @@ final class RestEngineTests: XCTestCase {
         XCTAssertFalse(sanitized.localizedCaseInsensitiveContains("onclick"))
         XCTAssertFalse(sanitized.localizedCaseInsensitiveContains("javascript:"))
         XCTAssertFalse(sanitized.localizedCaseInsensitiveContains("data:"))
+        XCTAssertFalse(sanitized.localizedCaseInsensitiveContains("<img"))
         XCTAssertTrue(sanitized.contains("Stretch"))
     }
 

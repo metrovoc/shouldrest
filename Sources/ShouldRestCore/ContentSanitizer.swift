@@ -5,6 +5,7 @@ public enum ContentSanitizer {
         var output = input
         output = removeTagAndBody("script", from: output)
         output = removeTagAndBody("style", from: output)
+        output = removeStandaloneTag("img", from: output)
         output = removeDangerousAttributes(from: output)
         output = removeDangerousURLSchemes(from: output)
         return output.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -12,6 +13,15 @@ public enum ContentSanitizer {
 
     private static func removeTagAndBody(_ tag: String, from input: String) -> String {
         let pattern = #"<\#(tag)\b[^>]*>[\s\S]*?</\#(tag)>"#
+        return input.replacingOccurrences(
+            of: pattern,
+            with: "",
+            options: [.regularExpression, .caseInsensitive]
+        )
+    }
+
+    private static func removeStandaloneTag(_ tag: String, from input: String) -> String {
+        let pattern = #"<\#(tag)\b[^>]*>"#
         return input.replacingOccurrences(
             of: pattern,
             with: "",
@@ -35,4 +45,3 @@ public enum ContentSanitizer {
         )
     }
 }
-
