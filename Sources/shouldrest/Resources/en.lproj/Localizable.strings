@@ -19,7 +19,6 @@
 "menu.preferences" = "Preferences...";
 "menu.checkUpdates" = "Check for Updates";
 "menu.downloadLatest" = "Download Latest Version";
-"menu.saveSettings" = "Save Settings";
 "menu.copyDebug" = "Copy Debug Info";
 "menu.debugPanel" = "Debug Panel...";
 "menu.about" = "About ShouldRest...";
@@ -205,7 +204,6 @@
 "prefs.preferencesMessage" = "Preferences message";
 "prefs.showAdminControls" = "Administrative controls";
 "prefs.hideAdminControls" = "Hide administrative controls";
-"prefs.save" = "Save";
 "prefs.autosaveReady" = "Autosave on";
 "prefs.autosaveEditing" = "Editing...";
 "prefs.autosaveSaving" = "Saving...";

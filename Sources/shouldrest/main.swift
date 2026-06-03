@@ -829,16 +829,6 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         NSWorkspace.shared.open(latestReleaseURL)
     }
 
-    @objc private func saveSettings() {
-        do {
-            try settingsStore.save(settings)
-            logger.log("Settings saved")
-        } catch {
-            logger.log("Settings save failed: \(error.localizedDescription)")
-        }
-        rebuildMenu()
-    }
-
     @objc private func copyDebugInfo() {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(debugInfo(), forType: .string)

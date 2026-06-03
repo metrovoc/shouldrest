@@ -17,11 +17,21 @@ private struct NumberInput {
     var max: Double
 }
 
+private enum PreferencesSaveStatus {
+    case ready
+    case editing
+    case saving
+    case saved
+    case restored
+    case invalid
+}
+
 @MainActor
 final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate, NSTextViewDelegate {
     private var settings: RestSettings
     private let onSave: (RestSettings) -> Void
     private let adminMessageLabel = NSTextField(labelWithString: "")
+    private let saveStatusIcon = NSImageView()
     private let saveStatusLabel = NSTextField(labelWithString: "")
     private let soundPlayer = SoundPlayer()
     private var isLoadingSettings = false
@@ -197,6 +207,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         configureSoundPreviewButtons()
         configureShortcutConflictWarning()
         configureEnablementGuards()
+        configureSaveStatusControls()
         configureAutosave()
 
         let root = NSStackView()
@@ -386,10 +397,13 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         let restoreDefaultsButton = NSButton(title: L10n.tr("prefs.restoreDefaults"), target: self, action: #selector(restoreDefaultsPressed))
         restoreDefaultsButton.image = NSImage(systemSymbolName: "arrow.counterclockwise", accessibilityDescription: nil)
         restoreDefaultsButton.imagePosition = .imageLeading
-        saveStatusLabel.textColor = .secondaryLabelColor
+        let statusStack = NSStackView(views: [saveStatusIcon, saveStatusLabel])
+        statusStack.orientation = .horizontal
+        statusStack.spacing = 6
+        statusStack.alignment = .centerY
         let spacer = NSView()
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        footer.addArrangedSubview(saveStatusLabel)
+        footer.addArrangedSubview(statusStack)
         footer.addArrangedSubview(spacer)
         footer.addArrangedSubview(restoreDefaultsButton)
         return footer
@@ -539,6 +553,17 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         soundPreviewStatusLabel.font = .systemFont(ofSize: 12)
         soundPreviewStatusLabel.isHidden = true
         soundPreviewStatusLabel.widthAnchor.constraint(equalToConstant: 620).isActive = true
+    }
+
+    private func configureSaveStatusControls() {
+        saveStatusIcon.identifier = NSUserInterfaceItemIdentifier("autosaveStatusIcon")
+        saveStatusIcon.symbolConfiguration = .init(pointSize: 13, weight: .semibold)
+        saveStatusIcon.widthAnchor.constraint(equalToConstant: 16).isActive = true
+        saveStatusIcon.heightAnchor.constraint(equalToConstant: 16).isActive = true
+        saveStatusLabel.identifier = NSUserInterfaceItemIdentifier("autosaveStatusLabel")
+        saveStatusLabel.textColor = .secondaryLabelColor
+        saveStatusLabel.font = .systemFont(ofSize: 12)
+        setSaveStatus(.ready)
     }
 
     private func configureCustomBodyTextEditor() {
@@ -728,7 +753,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         isLoadingSettings = true
         defer {
             isLoadingSettings = false
-            saveStatusLabel.stringValue = L10n.tr("prefs.autosaveReady")
+            setSaveStatus(.ready)
         }
 
         adminMessageLabel.stringValue = settings.admin.customPreferencesMessage
@@ -853,10 +878,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         applyAdminVisibility()
     }
 
-    @objc private func savePressed() {
-        _ = saveCurrentSettings(showAlerts: true)
-    }
-
     @discardableResult
     private func saveCurrentSettings(showAlerts: Bool) -> Bool {
         let advancedAppExclusions: [AppExclusionRule]?
@@ -868,7 +889,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             if showAlerts {
                 showInvalidJSONAlert(error)
             } else {
-                saveStatusLabel.stringValue = L10n.tr("prefs.autosaveInvalid")
+                setSaveStatus(.invalid)
             }
             return false
         }
@@ -979,7 +1000,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         settings = next
         applyAdminVisibility()
         onSave(next)
-        saveStatusLabel.stringValue = L10n.tr("prefs.autosaveSaved")
+        setSaveStatus(.saved)
         return true
     }
 
@@ -1122,7 +1143,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         settings = .restoredDefaults
         loadSettings()
         onSave(settings)
-        saveStatusLabel.stringValue = L10n.tr("prefs.autosaveRestored")
+        setSaveStatus(.restored)
     }
 
     private func confirmRestoreDefaults() -> Bool {
@@ -1192,7 +1213,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     func controlTextDidChange(_ obj: Notification) {
         guard !isLoadingSettings else { return }
-        saveStatusLabel.stringValue = L10n.tr("prefs.autosaveEditing")
+        setSaveStatus(.editing)
     }
 
     func controlTextDidEndEditing(_ obj: Notification) {
@@ -1205,7 +1226,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     func textDidChange(_ notification: Notification) {
         guard !isLoadingSettings else { return }
-        saveStatusLabel.stringValue = L10n.tr("prefs.autosaveEditing")
+        setSaveStatus(.editing)
         scheduleAutosave()
     }
 
@@ -1216,12 +1237,50 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private func scheduleAutosave() {
         guard !isLoadingSettings else { return }
         autosaveTask?.cancel()
-        saveStatusLabel.stringValue = L10n.tr("prefs.autosaveSaving")
+        setSaveStatus(.saving)
         autosaveTask = Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: 250_000_000)
             guard !Task.isCancelled else { return }
             self?.saveCurrentSettings(showAlerts: false)
         }
+    }
+
+    private func setSaveStatus(_ status: PreferencesSaveStatus) {
+        let symbolName: String
+        let color: NSColor
+        let title: String
+
+        switch status {
+        case .ready:
+            symbolName = "checkmark.circle"
+            color = .secondaryLabelColor
+            title = L10n.tr("prefs.autosaveReady")
+        case .editing:
+            symbolName = "pencil.circle"
+            color = .secondaryLabelColor
+            title = L10n.tr("prefs.autosaveEditing")
+        case .saving:
+            symbolName = "arrow.triangle.2.circlepath.circle"
+            color = .secondaryLabelColor
+            title = L10n.tr("prefs.autosaveSaving")
+        case .saved:
+            symbolName = "checkmark.circle.fill"
+            color = .systemGreen
+            title = L10n.tr("prefs.autosaveSaved")
+        case .restored:
+            symbolName = "arrow.counterclockwise.circle.fill"
+            color = .systemBlue
+            title = L10n.tr("prefs.autosaveRestored")
+        case .invalid:
+            symbolName = "exclamationmark.triangle.fill"
+            color = .systemOrange
+            title = L10n.tr("prefs.autosaveInvalid")
+        }
+
+        saveStatusIcon.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: title)
+        saveStatusIcon.contentTintColor = color
+        saveStatusLabel.stringValue = title
+        saveStatusLabel.textColor = color == .secondaryLabelColor ? .secondaryLabelColor : color
     }
 
     @objc private func previewSound(_ sender: NSButton) {

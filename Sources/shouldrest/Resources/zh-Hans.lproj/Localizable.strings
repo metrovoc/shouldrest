@@ -19,7 +19,6 @@
 "menu.preferences" = "偏好设置...";
 "menu.checkUpdates" = "检查更新";
 "menu.downloadLatest" = "下载最新版本";
-"menu.saveSettings" = "保存设置";
 "menu.copyDebug" = "复制调试信息";
 "menu.debugPanel" = "调试面板...";
 "menu.about" = "关于 ShouldRest...";
@@ -205,7 +204,6 @@
 "prefs.preferencesMessage" = "偏好设置消息";
 "prefs.showAdminControls" = "管理员控制";
 "prefs.hideAdminControls" = "隐藏管理员控制";
-"prefs.save" = "保存";
 "prefs.autosaveReady" = "自动保存已开启";
 "prefs.autosaveEditing" = "正在编辑...";
 "prefs.autosaveSaving" = "正在保存...";
