@@ -67,7 +67,7 @@
 "overlay.emergencyOverrideIn" = "%d 秒后紧急";
 "overlay.emergencyOverrideHelp" = "只在真正中断时使用。仍需确认，并计为未完成的 Eye Gate。";
 "overlay.emergencyConfirmStep" = "确认 %d/%d";
-"overlay.emergencyConfirmHelp" = "只用于真正中断。此次计为未完成的 Eye Gate。";
+"overlay.emergencyConfirmHelp" = "再次触发紧急、按 Return 或 Space。此次计为未完成的 Eye Gate。";
 "preferences.title" = "ShouldRest 偏好设置";
 "debug.title" = "ShouldRest 调试";
 "prefs.enableEyeGate" = "启用 Eye Gate";
@@ -183,7 +183,7 @@
 "prefs.endBodyBreak" = "结束当前活动休息";
 "prefs.emergencyEyeGate" = "紧急覆盖 Eye Gate";
 "prefs.reset" = "重置";
-"prefs.sectionOperations" = "操作与管理员";
+"prefs.sectionOperations" = "操作";
 "prefs.pauseUntilMorningMode" = "暂停到早晨模式";
 "prefs.pauseUntilMorningHour" = "恢复小时";
 "prefs.pauseUntilMorningLatitude" = "日出纬度";
@@ -191,6 +191,8 @@
 "prefs.pauseForSuspendOrLock" = "睡眠或锁屏时暂停调度器";
 "prefs.updateFeedURL" = "更新源 URL";
 "prefs.preferencesMessage" = "偏好设置消息";
+"prefs.showAdminControls" = "管理员控制";
+"prefs.hideAdminControls" = "隐藏管理员控制";
 "prefs.save" = "保存";
 "prefs.autosaveReady" = "自动保存已开启";
 "prefs.autosaveEditing" = "正在编辑...";

@@ -67,7 +67,7 @@
 "overlay.emergencyOverrideIn" = "Emergency in %ds";
 "overlay.emergencyOverrideHelp" = "Use only for a genuine interruption. It still requires confirmation and counts as a missed Eye Gate.";
 "overlay.emergencyConfirmStep" = "Confirm %d/%d";
-"overlay.emergencyConfirmHelp" = "Genuine interruption only. Counts as a missed Eye Gate.";
+"overlay.emergencyConfirmHelp" = "Press Emergency again, Return, or Space. Counts as a missed Eye Gate.";
 "preferences.title" = "ShouldRest Preferences";
 "debug.title" = "ShouldRest Debug";
 "prefs.enableEyeGate" = "Enable Eye Gate";
@@ -183,7 +183,7 @@
 "prefs.endBodyBreak" = "End active rest";
 "prefs.emergencyEyeGate" = "Emergency Eye Gate override";
 "prefs.reset" = "Reset";
-"prefs.sectionOperations" = "Operations And Admin";
+"prefs.sectionOperations" = "Operations";
 "prefs.pauseUntilMorningMode" = "Pause-until-morning mode";
 "prefs.pauseUntilMorningHour" = "Resume at hour";
 "prefs.pauseUntilMorningLatitude" = "Sunrise latitude";
@@ -191,6 +191,8 @@
 "prefs.pauseForSuspendOrLock" = "Pause scheduler on sleep or lock";
 "prefs.updateFeedURL" = "Update feed URL";
 "prefs.preferencesMessage" = "Preferences message";
+"prefs.showAdminControls" = "Administrative controls";
+"prefs.hideAdminControls" = "Hide administrative controls";
 "prefs.save" = "Save";
 "prefs.autosaveReady" = "Autosave on";
 "prefs.autosaveEditing" = "Editing...";

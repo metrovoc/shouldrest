@@ -137,6 +137,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let hideSettingsPath = NSButton(checkboxWithTitle: L10n.tr("prefs.adminHideSettingsPath"), target: nil, action: nil)
     private let hideStrictPreferences = NSButton(checkboxWithTitle: L10n.tr("prefs.adminHideStrict"), target: nil, action: nil)
     private let customPreferencesMessage = NSTextField()
+    private let adminControlsAdvancedButton = NSButton()
+    private let adminControlsStack = NSStackView()
 
     init(settings: RestSettings, onSave: @escaping (RestSettings) -> Void) {
         self.settings = settings
@@ -310,10 +312,17 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         let updateFeedURLRow = row(L10n.tr("prefs.updateFeedURL"), updateFeedURL)
         self.updateFeedURLRow = updateFeedURLRow
         advancedStack.addArrangedSubview(updateFeedURLRow)
-        advancedStack.addArrangedSubview(disableUpdateFeatures)
-        advancedStack.addArrangedSubview(hideSettingsPath)
-        advancedStack.addArrangedSubview(hideStrictPreferences)
-        advancedStack.addArrangedSubview(row(L10n.tr("prefs.preferencesMessage"), customPreferencesMessage))
+        advancedStack.addArrangedSubview(separator())
+        adminControlsStack.orientation = .vertical
+        adminControlsStack.alignment = .leading
+        adminControlsStack.spacing = 14
+        adminControlsStack.edgeInsets = NSEdgeInsets(top: 0, left: 22, bottom: 0, right: 0)
+        adminControlsStack.addArrangedSubview(disableUpdateFeatures)
+        adminControlsStack.addArrangedSubview(hideSettingsPath)
+        adminControlsStack.addArrangedSubview(hideStrictPreferences)
+        adminControlsStack.addArrangedSubview(row(L10n.tr("prefs.preferencesMessage"), customPreferencesMessage))
+        advancedStack.addArrangedSubview(adminControlsAdvancedButton)
+        advancedStack.addArrangedSubview(adminControlsStack)
         addTab(to: tabView, title: L10n.tr("prefs.tabAdvanced"), stack: advancedStack)
 
         let footer = footerBar()
@@ -460,6 +469,11 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             identifier: "customIdeas",
             expanded: false
         )
+        configureDisclosureButton(
+            adminControlsAdvancedButton,
+            identifier: "adminControls",
+            expanded: false
+        )
     }
 
     private func configureTimePickers() {
@@ -520,10 +534,16 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     }
 
     private func updateDisclosureButton(_ button: NSButton, expanded: Bool) {
-        let isCustomIdeas = button.identifier?.rawValue == "customIdeas"
-        button.title = expanded
-            ? (isCustomIdeas ? L10n.tr("prefs.hideAdvancedIdeas") : L10n.tr("prefs.hideAdvancedRules"))
-            : (isCustomIdeas ? L10n.tr("prefs.showAdvancedIdeas") : L10n.tr("prefs.showAdvancedRules"))
+        let title: String
+        switch button.identifier?.rawValue {
+        case "customIdeas":
+            title = expanded ? L10n.tr("prefs.hideAdvancedIdeas") : L10n.tr("prefs.showAdvancedIdeas")
+        case "adminControls":
+            title = expanded ? L10n.tr("prefs.hideAdminControls") : L10n.tr("prefs.showAdminControls")
+        default:
+            title = expanded ? L10n.tr("prefs.hideAdvancedRules") : L10n.tr("prefs.showAdvancedRules")
+        }
+        button.title = title
         button.image = NSImage(
             systemSymbolName: expanded ? "chevron.down" : "chevron.right",
             accessibilityDescription: nil
@@ -733,6 +753,11 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         hideSettingsPath.state = state(settings.admin.hideSettingsFileLocation)
         hideStrictPreferences.state = state(settings.admin.hideStrictPreferences)
         customPreferencesMessage.stringValue = settings.admin.customPreferencesMessage
+        setAdvancedDisclosure(
+            row: adminControlsStack,
+            button: adminControlsAdvancedButton,
+            expanded: hasVisibleAdminOverrides(settings.admin)
+        )
         syncNumberSteppersFromFields()
         updateDependentControlEnablement()
         applyAdminVisibility()
@@ -873,6 +898,13 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         updateFeedURLRow?.isHidden = hideUpdateControls
     }
 
+    private func hasVisibleAdminOverrides(_ admin: AdminSettings) -> Bool {
+        admin.disableAppUpdateFeatures ||
+            admin.hideSettingsFileLocation ||
+            admin.hideStrictPreferences ||
+            !admin.customPreferencesMessage.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
     private func updateDependentControlEnablement() {
         let eyeGateEnabled = isOn(eyeEnabled)
         setNumberInputEnabled(eyeInterval, eyeGateEnabled)
@@ -974,6 +1006,12 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
                 row: customBodyIdeasJSONRow,
                 button: customBodyIdeasAdvancedButton,
                 expanded: customBodyIdeasJSONRow?.isHidden ?? true
+            )
+        case "adminControls":
+            setAdvancedDisclosure(
+                row: adminControlsStack,
+                button: adminControlsAdvancedButton,
+                expanded: adminControlsStack.isHidden
             )
         default:
             break

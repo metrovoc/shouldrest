@@ -578,15 +578,17 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             completedSteps = completedConfirmationSteps
         } else if policy.confirmationSteps == 0 {
             completedSteps = 0
-        } else if overlayController.requestEmergencyOverrideConfirmation() {
-            logger.log("Emergency override confirmation shown in overlay")
-            return
         } else {
-            guard confirmEmergencyOverride(steps: policy.confirmationSteps) else {
-                logger.log("Emergency override cancelled during confirmation")
+            switch requestOverlayEmergencyOverrideConfirmation(for: active) {
+            case .confirmed(let steps):
+                completedSteps = steps
+            case .waitingForConfirmation:
+                logger.log("Emergency override confirmation waiting in overlay")
+                return
+            case .unavailable:
+                logger.log("Emergency override confirmation unavailable in overlay")
                 return
             }
-            completedSteps = policy.confirmationSteps
         }
 
         let result = engine.emergencyOverride(
@@ -605,20 +607,17 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         rebuildMenu()
     }
 
-    private func confirmEmergencyOverride(steps: Int) -> Bool {
-        guard steps > 0 else { return true }
-        for step in 1...steps {
-            let alert = NSAlert()
-            alert.messageText = L10n.format("emergency.confirmTitle", step, steps)
-            alert.informativeText = L10n.tr("emergency.confirmBody")
-            alert.addButton(withTitle: L10n.tr("emergency.continue"))
-            alert.addButton(withTitle: L10n.tr("emergency.cancel"))
-            alert.window.level = .screenSaver
-            guard alert.runModal() == .alertFirstButtonReturn else {
-                return false
-            }
-        }
-        return true
+    private func requestOverlayEmergencyOverrideConfirmation(for session: RestSession) -> EmergencyOverlayCommandResult {
+        let result = overlayController.advanceEmergencyOverrideConfirmation()
+        guard result == .unavailable else { return result }
+
+        overlayController.present(
+            session: session,
+            settings: overlaySettings(for: session),
+            now: Date(),
+            emergencyOverrideAction: overlayEmergencyOverrideAction(for: session)
+        )
+        return overlayController.advanceEmergencyOverrideConfirmation()
     }
 
     private func playRestSound(_ policy: SoundPolicy) {
@@ -1265,6 +1264,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
+enum EmergencyOverlayCommandResult: Equatable {
+    case unavailable
+    case waitingForConfirmation
+    case confirmed(Int)
+}
+
 @MainActor
 final class OverlayController {
     private var windows: [CGDirectDisplayID: OverlayWindow] = [:]
@@ -1334,19 +1339,31 @@ final class OverlayController {
             windows[id]?.level = level
             windows[id]?.makeKeyAndOrderFront(nil)
             windows[id]?.orderFrontRegardless()
+            if let window = windows[id] {
+                window.makeFirstResponder(window.overlayView)
+            }
         }
     }
 
-    func requestEmergencyOverrideConfirmation() -> Bool {
-        var didRequestConfirmation = false
+    fileprivate func advanceEmergencyOverrideConfirmation() -> EmergencyOverlayCommandResult {
+        var didAdvanceConfirmation = false
         for window in windows.values {
-            if window.overlayView.requestEmergencyOverrideConfirmationIfAvailable() {
+            switch window.overlayView.advanceEmergencyOverrideConfirmationIfAvailable() {
+            case .confirmed(let steps):
                 window.makeKeyAndOrderFront(nil)
                 window.orderFrontRegardless()
-                didRequestConfirmation = true
+                window.makeFirstResponder(window.overlayView)
+                return .confirmed(steps)
+            case .waitingForConfirmation:
+                window.makeKeyAndOrderFront(nil)
+                window.orderFrontRegardless()
+                window.makeFirstResponder(window.overlayView)
+                didAdvanceConfirmation = true
+            case .unavailable:
+                break
             }
         }
-        return didRequestConfirmation
+        return didAdvanceConfirmation ? .waitingForConfirmation : .unavailable
     }
 
     func reconcile() {
@@ -1369,6 +1386,9 @@ final class OverlayController {
             windows[id]?.setFrame(screen.frame, display: true)
             windows[id]?.makeKeyAndOrderFront(nil)
             windows[id]?.orderFrontRegardless()
+            if let window = windows[id] {
+                window.makeFirstResponder(window.overlayView)
+            }
         }
     }
 
@@ -1486,6 +1506,17 @@ final class OverlayWindow: NSWindow {
     override var canBecomeMain: Bool {
         false
     }
+
+    override func keyDown(with event: NSEvent) {
+        switch event.keyCode {
+        case 36, 49, 76:
+            overlayView.performEmergencyOverrideKeyCommand()
+        case 53:
+            overlayView.cancelEmergencyOverrideConfirmation()
+        default:
+            super.keyDown(with: event)
+        }
+    }
 }
 
 final class OverlayActionButton: NSButton {
@@ -1496,6 +1527,11 @@ final class OverlayActionButton: NSButton {
 
 @MainActor
 final class RestOverlayView: NSView {
+    private enum EmergencyHitTarget {
+        case emergency
+        case cancel
+    }
+
     private let titleLabel = NSTextField(labelWithString: "")
     private let detailLabel = NSTextField(labelWithString: "")
     private let countdownLabel = NSTextField(labelWithString: "")
@@ -1595,6 +1631,52 @@ final class RestOverlayView: NSView {
         nil
     }
 
+    override var acceptsFirstResponder: Bool {
+        true
+    }
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        if emergencyHitTarget(at: point) != nil {
+            return self
+        }
+        return super.hitTest(point)
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        switch emergencyHitTarget(at: point) {
+        case .emergency:
+            emergencyOverridePressed()
+        case .cancel:
+            cancelEmergencyOverrideConfirmation()
+        case nil:
+            super.mouseDown(with: event)
+        }
+    }
+
+    override func keyDown(with event: NSEvent) {
+        switch event.keyCode {
+        case 36, 49, 76:
+            performEmergencyOverrideKeyCommand()
+        case 53 where isEmergencyConfirming:
+            cancelEmergencyOverrideConfirmation()
+        default:
+            super.keyDown(with: event)
+        }
+    }
+
+    private func emergencyHitTarget(at point: NSPoint) -> EmergencyHitTarget? {
+        if !emergencyCancelButton.isHidden,
+           emergencyCancelButton.frame.insetBy(dx: -14, dy: -10).contains(point) {
+            return .cancel
+        }
+        if !emergencyButton.isHidden,
+           emergencyButton.frame.insetBy(dx: -18, dy: -12).contains(point) {
+            return .emergency
+        }
+        return nil
+    }
+
     func configure(
         session: RestSession,
         remainingSeconds: Int,
@@ -1651,50 +1733,57 @@ final class RestOverlayView: NSView {
     }
 
     @objc private func emergencyOverridePressed() {
-        guard let remainingSeconds = emergencyRemainingSeconds else { return }
-        guard remainingSeconds == 0 else {
+        if let remainingSeconds = emergencyRemainingSeconds, remainingSeconds > 0 {
             onEmergencyOverrideConfirmed?(0)
             return
         }
 
-        guard emergencyConfirmationSteps > 0 else {
-            onEmergencyOverrideConfirmed?(0)
-            return
-        }
-
-        if !isEmergencyConfirming {
-            isEmergencyConfirming = true
-            emergencyConfirmationProgress = 0
-            updateEmergencyConfirmationUI()
-            return
-        }
-
-        emergencyConfirmationProgress += 1
-        if emergencyConfirmationProgress >= emergencyConfirmationSteps {
-            onEmergencyOverrideConfirmed?(emergencyConfirmationSteps)
-        } else {
-            updateEmergencyConfirmationUI()
+        switch advanceEmergencyOverrideConfirmationIfAvailable() {
+        case .confirmed(let steps):
+            onEmergencyOverrideConfirmed?(steps)
+        case .waitingForConfirmation, .unavailable:
+            break
         }
     }
 
     @objc private func cancelEmergencyConfirmationPressed() {
+        cancelEmergencyOverrideConfirmation()
+    }
+
+    func performEmergencyOverrideKeyCommand() {
+        emergencyOverridePressed()
+    }
+
+    func cancelEmergencyOverrideConfirmation() {
+        guard isEmergencyConfirming else { return }
         isEmergencyConfirming = false
         emergencyConfirmationProgress = 0
         updateEmergencyConfirmationUI()
     }
 
-    func requestEmergencyOverrideConfirmationIfAvailable() -> Bool {
+    func advanceEmergencyOverrideConfirmationIfAvailable() -> EmergencyOverlayCommandResult {
         guard !emergencyButton.isHidden,
-              emergencyRemainingSeconds == 0,
-              emergencyConfirmationSteps > 0 else {
-            return false
+              emergencyRemainingSeconds == 0 else {
+            return .unavailable
         }
+
+        guard emergencyConfirmationSteps > 0 else {
+            return .confirmed(0)
+        }
+
         if !isEmergencyConfirming {
             isEmergencyConfirming = true
             emergencyConfirmationProgress = 0
             updateEmergencyConfirmationUI()
+            return .waitingForConfirmation
         }
-        return true
+
+        emergencyConfirmationProgress += 1
+        if emergencyConfirmationProgress >= emergencyConfirmationSteps {
+            return .confirmed(emergencyConfirmationSteps)
+        }
+        updateEmergencyConfirmationUI()
+        return .waitingForConfirmation
     }
 
     private func configureEmergencyButton(
