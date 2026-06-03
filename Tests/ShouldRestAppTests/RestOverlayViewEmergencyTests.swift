@@ -15,7 +15,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
     func testOverlayKeyboardCommandCompletesEmergencyOnFirstTrigger() {
         let view = configuredEyeGateOverlay()
         var didRequestEmergency = false
-        view.onEmergencyOverrideConfirmed = {
+        view.onEmergencyOverrideRequested = {
             didRequestEmergency = true
         }
 
@@ -26,7 +26,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
     func testEscapeKeyTriggersEmergencyInsideOverlay() throws {
         let view = configuredEyeGateOverlay()
         var didRequestEmergency = false
-        view.onEmergencyOverrideConfirmed = {
+        view.onEmergencyOverrideRequested = {
             didRequestEmergency = true
         }
 
@@ -50,7 +50,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
     func testSpaceKeyDoesNotTriggerEmergencyInsideOverlay() throws {
         let view = configuredEyeGateOverlay()
         var didRequestEmergency = false
-        view.onEmergencyOverrideConfirmed = {
+        view.onEmergencyOverrideRequested = {
             didRequestEmergency = true
         }
 
@@ -77,7 +77,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         let window = OverlayWindow(screen: screen, session: session, settings: .defaults)
         defer { window.close() }
         var didRequestEmergency = false
-        window.overlayView.onEmergencyOverrideConfirmed = {
+        window.overlayView.onEmergencyOverrideRequested = {
             didRequestEmergency = true
         }
         window.overlayView.configure(
@@ -113,7 +113,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             isArmed: false
         )
         var requestCount = 0
-        view.onEmergencyOverrideConfirmed = {
+        view.onEmergencyOverrideRequested = {
             requestCount += 1
         }
 

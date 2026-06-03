@@ -65,7 +65,7 @@
 "overlay.ready" = "就绪";
 "overlay.emergencyOverride" = "紧急 · Esc";
 "overlay.emergencyOverrideIn" = "%d 秒后紧急 · Esc";
-"overlay.emergencyOverrideArmed" = "已触发 · %d 秒";
+"overlay.emergencyOverrideArmed" = "%d 秒后自动退出";
 "overlay.emergencyOverrideHelp" = "只在真正中断时使用。护眼休息期间，Esc 由覆盖层直接处理，并计为一次未完成护眼休息。";
 "overlay.bodyPostpone" = "推迟";
 "overlay.bodySkip" = "跳过";

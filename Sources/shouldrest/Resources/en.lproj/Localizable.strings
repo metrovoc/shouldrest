@@ -65,7 +65,7 @@
 "overlay.ready" = "ready";
 "overlay.emergencyOverride" = "Emergency · Esc";
 "overlay.emergencyOverrideIn" = "Emergency in %ds · Esc";
-"overlay.emergencyOverrideArmed" = "Armed · %ds";
+"overlay.emergencyOverrideArmed" = "Auto exits in %ds";
 "overlay.emergencyOverrideHelp" = "Use only for a genuine interruption. During Eye Gate, Esc is handled inside the overlay and counts as a missed Eye Gate.";
 "overlay.bodyPostpone" = "Postpone";
 "overlay.bodySkip" = "Skip";

@@ -65,6 +65,37 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
         XCTAssertTrue(didFinish)
     }
 
+    func testManualAwaitingEyeGateOverlayCanFinishInsideOverlay() throws {
+        var didFinish = false
+        let view = configuredEyeGateOverlay(
+            manualAwaiting: true,
+            actions: BodyOverlayActions(
+                canPostpone: false,
+                canFinish: true,
+                canSkip: false,
+                postpone: nil,
+                finish: { didFinish = true },
+                skip: nil
+            )
+        )
+
+        let finishButton = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodyFinish.button") as? NSButton)
+        XCTAssertFalse(finishButton.isHidden)
+        view.performBodyFinishAction()
+
+        XCTAssertTrue(didFinish)
+    }
+
+    func testEyeGateOverlayDoesNotShowFinishBeforeManualAwaiting() throws {
+        let view = configuredEyeGateOverlay(
+            manualAwaiting: false,
+            actions: nil
+        )
+
+        let finishButton = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodyFinish.button") as? NSButton)
+        XCTAssertTrue(finishButton.isHidden)
+    }
+
     func testBodyOverlayActionsRemainAvailableWhenContentIsHidden() {
         var didSkip = false
         let view = configuredBodyOverlay(
@@ -108,5 +139,44 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
             bodyActions: actions
         )
         return view
+    }
+
+    private func configuredEyeGateOverlay(
+        manualAwaiting: Bool,
+        actions: BodyOverlayActions?
+    ) -> RestOverlayView {
+        let start = Date()
+        let session = RestSession(
+            kind: .eyeGate,
+            startedAt: start,
+            scheduledAt: start,
+            duration: 20,
+            manualFinishEnabled: true
+        )
+        let view = RestOverlayView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
+        view.configure(
+            session: session,
+            remainingSeconds: manualAwaiting ? 0 : 20,
+            settings: .defaults,
+            showsContent: true,
+            manualAwaiting: manualAwaiting,
+            emergencyOverrideRemainingSeconds: nil,
+            bodyActions: actions
+        )
+        return view
+    }
+}
+
+private extension NSView {
+    func descendant(withIdentifier rawIdentifier: String) -> NSView? {
+        if identifier?.rawValue == rawIdentifier {
+            return self
+        }
+        for subview in subviews {
+            if let match = subview.descendant(withIdentifier: rawIdentifier) {
+                return match
+            }
+        }
+        return nil
     }
 }

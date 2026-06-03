@@ -566,16 +566,34 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func overlayBodyActions(for session: RestSession, now: Date) -> BodyOverlayActions? {
-        guard session.kind == .bodyBreak else { return nil }
-        let canFinish = now.timeIntervalSince(session.startedAt) >= session.duration
-        return BodyOverlayActions(
-            canPostpone: !canFinish && canPostponeBodyBreak(session, now: now),
-            canFinish: canFinish,
-            canSkip: !canFinish && canSkipBodyBreak(session, now: now),
-            postpone: { [weak self] in self?.postponeBodyBreak() },
-            finish: { [weak self] in self?.finishActiveBreak() },
-            skip: { [weak self] in self?.skipBodyBreak() }
+        let availability = OverlayActionPolicy.availability(
+            for: session,
+            now: now,
+            canPostponeBodyBreak: canPostponeBodyBreak(session, now: now),
+            canSkipBodyBreak: canSkipBodyBreak(session, now: now)
         )
+
+        switch session.kind {
+        case .eyeGate:
+            guard availability.canFinish else { return nil }
+            return BodyOverlayActions(
+                canPostpone: false,
+                canFinish: true,
+                canSkip: false,
+                postpone: nil,
+                finish: { [weak self] in self?.finishActiveBreak() },
+                skip: nil
+            )
+        case .bodyBreak:
+            return BodyOverlayActions(
+                canPostpone: availability.canPostpone,
+                canFinish: availability.canFinish,
+                canSkip: availability.canSkip,
+                postpone: { [weak self] in self?.postponeBodyBreak() },
+                finish: { [weak self] in self?.finishActiveBreak() },
+                skip: { [weak self] in self?.skipBodyBreak() }
+            )
+        }
     }
 
     @objc private func takeEyeGateNow() {
@@ -1583,6 +1601,37 @@ struct BodyOverlayActions {
     var skip: (() -> Void)?
 }
 
+struct OverlayActionAvailability: Equatable {
+    var canPostpone: Bool
+    var canFinish: Bool
+    var canSkip: Bool
+}
+
+enum OverlayActionPolicy {
+    static func availability(
+        for session: RestSession,
+        now: Date,
+        canPostponeBodyBreak: Bool,
+        canSkipBodyBreak: Bool
+    ) -> OverlayActionAvailability {
+        let canFinish = now.timeIntervalSince(session.startedAt) >= session.duration
+        switch session.kind {
+        case .eyeGate:
+            return OverlayActionAvailability(
+                canPostpone: false,
+                canFinish: session.manualFinishEnabled && canFinish,
+                canSkip: false
+            )
+        case .bodyBreak:
+            return OverlayActionAvailability(
+                canPostpone: !canFinish && canPostponeBodyBreak,
+                canFinish: canFinish,
+                canSkip: !canFinish && canSkipBodyBreak
+            )
+        }
+    }
+}
+
 private func isEmergencyOverrideKey(_ event: NSEvent) -> Bool {
     switch Int(event.keyCode) {
     case kVK_Escape:
@@ -1650,7 +1699,7 @@ final class OverlayController {
         for screen in screens {
             let id = screen.displayID
             let isContentScreen = shouldShowContent(on: screen, contentScreen: contentScreen, session: session, settings: settings)
-            windows[id]?.overlayView.onEmergencyOverrideConfirmed = emergencyOverrideAction
+            windows[id]?.overlayView.onEmergencyOverrideRequested = emergencyOverrideAction
             windows[id]?.overlayView.bodyActions = bodyActions
             windows[id]?.setFrame(screen.frame, display: true)
             windows[id]?.overlayView.configure(
@@ -1910,7 +1959,7 @@ final class RestOverlayView: NSView {
     private var emergencySessionID: UUID?
     private var emergencyPanelWidthConstraint: NSLayoutConstraint?
     private var emergencyPanelHeightConstraint: NSLayoutConstraint?
-    var onEmergencyOverrideConfirmed: (() -> Void)?
+    var onEmergencyOverrideRequested: (() -> Void)?
     var bodyActions: BodyOverlayActions? {
         didSet {
             updateBodyActionButtons()
@@ -1960,18 +2009,21 @@ final class RestOverlayView: NSView {
 
         configureBodyActionButton(
             bodyPostponeButton,
+            identifier: "overlay.bodyPostpone.button",
             title: L10n.tr("overlay.bodyPostpone"),
             symbolName: "clock.arrow.circlepath",
             action: #selector(bodyPostponePressed)
         )
         configureBodyActionButton(
             bodySkipButton,
+            identifier: "overlay.bodySkip.button",
             title: L10n.tr("overlay.bodySkip"),
             symbolName: "forward.end",
             action: #selector(bodySkipPressed)
         )
         configureBodyActionButton(
             bodyFinishButton,
+            identifier: "overlay.bodyFinish.button",
             title: L10n.tr("overlay.bodyFinish"),
             symbolName: "checkmark.circle",
             action: #selector(bodyFinishPressed)
@@ -2135,7 +2187,7 @@ final class RestOverlayView: NSView {
 
     @objc private func emergencyOverridePressed() {
         if case .activated = activateEmergencyOverrideIfAvailable() {
-            onEmergencyOverrideConfirmed?()
+            onEmergencyOverrideRequested?()
         }
     }
 
@@ -2248,7 +2300,14 @@ final class RestOverlayView: NSView {
         emergencyButton.attributedTitle = NSAttributedString(string: title, attributes: attributes)
     }
 
-    private func configureBodyActionButton(_ button: OverlayActionButton, title: String, symbolName: String, action: Selector) {
+    private func configureBodyActionButton(
+        _ button: OverlayActionButton,
+        identifier: String,
+        title: String,
+        symbolName: String,
+        action: Selector
+    ) {
+        button.identifier = NSUserInterfaceItemIdentifier(identifier)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.bezelStyle = .inline
         button.isBordered = false
