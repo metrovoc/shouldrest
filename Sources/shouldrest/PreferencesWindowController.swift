@@ -53,6 +53,10 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let eyeManualFinish = NSButton(checkboxWithTitle: L10n.tr("prefs.eyeManualFinish"), target: nil, action: nil)
     private let eyeEmergencyOverride = NSButton(checkboxWithTitle: L10n.tr("prefs.eyeEmergencyOverride"), target: nil, action: nil)
     private let eyeEmergencyHoldSeconds = NSTextField()
+    private var eyeIntervalRow: NSView?
+    private var eyeDurationRow: NSView?
+    private var eyeColorRow: NSView?
+    private var eyeLeadRow: NSView?
     private var eyeEmergencyHoldRow: NSView?
 
     private let bodyEnabled = NSButton(checkboxWithTitle: L10n.tr("prefs.enableBodyBreak"), target: nil, action: nil)
@@ -69,8 +73,17 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let bodyManualFinish = NSButton(checkboxWithTitle: L10n.tr("prefs.manualFinish"), target: nil, action: nil)
     private let bodyCoversAllDisplays = NSButton(checkboxWithTitle: L10n.tr("prefs.bodyAllDisplays"), target: nil, action: nil)
     private let bodyCoveredDisplay = NSPopUpButton()
+    private var bodyIntervalRow: NSView?
+    private var bodyDurationRow: NSView?
+    private var bodyAfterEyeGatesRow: NSView?
+    private var bodyColorRow: NSView?
+    private var bodyLeadRow: NSView?
+    private var bodyPostponeMinutesRow: NSView?
+    private var bodyPostponeLimitRow: NSView?
+    private var bodyPostponeWindowPercentRow: NSView?
     private var bodyCoveredDisplayRow: NSView?
     private let bodyContentDisplay = NSPopUpButton()
+    private var bodyContentDisplayRow: NSView?
     private let bodyBlankSecondaryDisplays = NSButton(checkboxWithTitle: L10n.tr("prefs.bodyBlankSecondary"), target: nil, action: nil)
     private let bodyConfiguredDisplay = NSPopUpButton()
     private var bodyConfiguredDisplayRow: NSView?
@@ -250,8 +263,9 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             icon: .restGate,
             identifier: "prefs.section.eyeGate"
         ))
+        eyeEnabled.identifier = NSUserInterfaceItemIdentifier("prefs.eyeEnabled")
         scheduleStack.addArrangedSubview(eyeEnabled)
-        scheduleStack.addArrangedSubview(numberRow(
+        let eyeIntervalRow = numberRow(
             L10n.tr("prefs.everyMinutes"),
             eyeInterval,
             unit: L10n.tr("prefs.unit.minutes"),
@@ -259,8 +273,11 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             max: 240,
             identifier: "eyeInterval",
             showsSlider: true
-        ))
-        scheduleStack.addArrangedSubview(numberRow(
+        )
+        eyeIntervalRow.identifier = NSUserInterfaceItemIdentifier("prefs.eyeIntervalRow")
+        self.eyeIntervalRow = eyeIntervalRow
+        scheduleStack.addArrangedSubview(eyeIntervalRow)
+        let eyeDurationRow = numberRow(
             L10n.tr("prefs.durationSeconds"),
             eyeDuration,
             unit: L10n.tr("prefs.unit.seconds"),
@@ -268,11 +285,29 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             max: 300,
             identifier: "eyeDuration",
             showsSlider: true
-        ))
-        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.overlayColor"), eyeColor))
+        )
+        eyeDurationRow.identifier = NSUserInterfaceItemIdentifier("prefs.eyeDurationRow")
+        self.eyeDurationRow = eyeDurationRow
+        scheduleStack.addArrangedSubview(eyeDurationRow)
+        let eyeColorRow = row(L10n.tr("prefs.overlayColor"), eyeColor)
+        eyeColorRow.identifier = NSUserInterfaceItemIdentifier("prefs.eyeColorRow")
+        self.eyeColorRow = eyeColorRow
+        scheduleStack.addArrangedSubview(eyeColorRow)
+        eyeNotify.identifier = NSUserInterfaceItemIdentifier("prefs.eyeNotify")
         scheduleStack.addArrangedSubview(eyeNotify)
-        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.notificationLead"), eyeLead, unit: L10n.tr("prefs.unit.seconds"), min: 0, max: 3600))
+        let eyeLeadRow = numberRow(
+            L10n.tr("prefs.notificationLead"),
+            eyeLead,
+            unit: L10n.tr("prefs.unit.seconds"),
+            min: 0,
+            max: 3600
+        )
+        eyeLeadRow.identifier = NSUserInterfaceItemIdentifier("prefs.eyeLeadRow")
+        self.eyeLeadRow = eyeLeadRow
+        scheduleStack.addArrangedSubview(eyeLeadRow)
+        eyeManualFinish.identifier = NSUserInterfaceItemIdentifier("prefs.eyeManualFinish")
         scheduleStack.addArrangedSubview(eyeManualFinish)
+        eyeEmergencyOverride.identifier = NSUserInterfaceItemIdentifier("prefs.eyeEmergencyOverride")
         scheduleStack.addArrangedSubview(eyeEmergencyOverride)
         let eyeEmergencyHoldRow = numberRow(
             L10n.tr("prefs.eyeEmergencyHold"),
@@ -281,6 +316,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             min: 0,
             max: 300
         )
+        eyeEmergencyHoldRow.identifier = NSUserInterfaceItemIdentifier("prefs.eyeEmergencyHoldRow")
         self.eyeEmergencyHoldRow = eyeEmergencyHoldRow
         scheduleStack.addArrangedSubview(eyeEmergencyHoldRow)
         scheduleStack.addArrangedSubview(separator())
@@ -289,8 +325,9 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             icon: .systemSymbol("figure.walk"),
             identifier: "prefs.section.bodyBreak"
         ))
+        bodyEnabled.identifier = NSUserInterfaceItemIdentifier("prefs.bodyEnabled")
         scheduleStack.addArrangedSubview(bodyEnabled)
-        scheduleStack.addArrangedSubview(numberRow(
+        let bodyIntervalRow = numberRow(
             L10n.tr("prefs.bodyIntervalMinutes"),
             bodyInterval,
             unit: L10n.tr("prefs.unit.minutes"),
@@ -298,8 +335,11 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             max: 720,
             identifier: "bodyInterval",
             showsSlider: true
-        ))
-        scheduleStack.addArrangedSubview(numberRow(
+        )
+        bodyIntervalRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyIntervalRow")
+        self.bodyIntervalRow = bodyIntervalRow
+        scheduleStack.addArrangedSubview(bodyIntervalRow)
+        let bodyDurationRow = numberRow(
             L10n.tr("prefs.durationMinutes"),
             bodyDuration,
             unit: L10n.tr("prefs.unit.minutes"),
@@ -307,8 +347,11 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             max: 180,
             identifier: "bodyDuration",
             showsSlider: true
-        ))
-        scheduleStack.addArrangedSubview(numberRow(
+        )
+        bodyDurationRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyDurationRow")
+        self.bodyDurationRow = bodyDurationRow
+        scheduleStack.addArrangedSubview(bodyDurationRow)
+        let bodyAfterEyeGatesRow = numberRow(
             L10n.tr("prefs.afterEyeGates"),
             bodyAfterEyeGates,
             unit: L10n.tr("prefs.unit.eyeGates"),
@@ -316,22 +359,50 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             max: 99,
             identifier: "bodyAfterEyeGates",
             showsSlider: true
-        ))
-        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.overlayColor"), bodyColor))
+        )
+        bodyAfterEyeGatesRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyAfterEyeGatesRow")
+        self.bodyAfterEyeGatesRow = bodyAfterEyeGatesRow
+        scheduleStack.addArrangedSubview(bodyAfterEyeGatesRow)
+        let bodyColorRow = row(L10n.tr("prefs.overlayColor"), bodyColor)
+        bodyColorRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyColorRow")
+        self.bodyColorRow = bodyColorRow
+        scheduleStack.addArrangedSubview(bodyColorRow)
+        bodyNotify.identifier = NSUserInterfaceItemIdentifier("prefs.bodyNotify")
         scheduleStack.addArrangedSubview(bodyNotify)
-        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.notificationLead"), bodyLead, unit: L10n.tr("prefs.unit.seconds"), min: 0, max: 3600))
-        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.postponeMinutes"), bodyPostponeMinutes, unit: L10n.tr("prefs.unit.minutes"), min: 1, max: 120))
-        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.maxPostpones"), bodyPostponeLimit, unit: L10n.tr("prefs.unit.times"), min: 0, max: 20))
-        scheduleStack.addArrangedSubview(numberRow(L10n.tr("prefs.postponeWindowPercent"), bodyPostponeWindowPercent, unit: L10n.tr("prefs.unit.percent"), min: 0, max: 100))
+        let bodyLeadRow = numberRow(L10n.tr("prefs.notificationLead"), bodyLead, unit: L10n.tr("prefs.unit.seconds"), min: 0, max: 3600)
+        bodyLeadRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyLeadRow")
+        self.bodyLeadRow = bodyLeadRow
+        scheduleStack.addArrangedSubview(bodyLeadRow)
+        let bodyPostponeMinutesRow = numberRow(L10n.tr("prefs.postponeMinutes"), bodyPostponeMinutes, unit: L10n.tr("prefs.unit.minutes"), min: 1, max: 120)
+        bodyPostponeMinutesRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyPostponeMinutesRow")
+        self.bodyPostponeMinutesRow = bodyPostponeMinutesRow
+        scheduleStack.addArrangedSubview(bodyPostponeMinutesRow)
+        let bodyPostponeLimitRow = numberRow(L10n.tr("prefs.maxPostpones"), bodyPostponeLimit, unit: L10n.tr("prefs.unit.times"), min: 0, max: 20)
+        bodyPostponeLimitRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyPostponeLimitRow")
+        self.bodyPostponeLimitRow = bodyPostponeLimitRow
+        scheduleStack.addArrangedSubview(bodyPostponeLimitRow)
+        let bodyPostponeWindowPercentRow = numberRow(L10n.tr("prefs.postponeWindowPercent"), bodyPostponeWindowPercent, unit: L10n.tr("prefs.unit.percent"), min: 0, max: 100)
+        bodyPostponeWindowPercentRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyPostponeWindowPercentRow")
+        self.bodyPostponeWindowPercentRow = bodyPostponeWindowPercentRow
+        scheduleStack.addArrangedSubview(bodyPostponeWindowPercentRow)
+        bodyAllowSkip.identifier = NSUserInterfaceItemIdentifier("prefs.bodyAllowSkip")
         scheduleStack.addArrangedSubview(bodyAllowSkip)
+        bodyManualFinish.identifier = NSUserInterfaceItemIdentifier("prefs.bodyManualFinish")
         scheduleStack.addArrangedSubview(bodyManualFinish)
+        bodyCoversAllDisplays.identifier = NSUserInterfaceItemIdentifier("prefs.bodyCoversAllDisplays")
         scheduleStack.addArrangedSubview(bodyCoversAllDisplays)
         let bodyCoveredDisplayRow = row(L10n.tr("prefs.bodyCoveredDisplay"), bodyCoveredDisplay)
+        bodyCoveredDisplayRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyCoveredDisplayRow")
         self.bodyCoveredDisplayRow = bodyCoveredDisplayRow
         scheduleStack.addArrangedSubview(bodyCoveredDisplayRow)
-        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.bodyContentDisplay"), bodyContentDisplay))
+        let bodyContentDisplayRow = row(L10n.tr("prefs.bodyContentDisplay"), bodyContentDisplay)
+        bodyContentDisplayRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyContentDisplayRow")
+        self.bodyContentDisplayRow = bodyContentDisplayRow
+        scheduleStack.addArrangedSubview(bodyContentDisplayRow)
+        bodyBlankSecondaryDisplays.identifier = NSUserInterfaceItemIdentifier("prefs.bodyBlankSecondaryDisplays")
         scheduleStack.addArrangedSubview(bodyBlankSecondaryDisplays)
         let bodyConfiguredDisplayRow = row(L10n.tr("prefs.configuredDisplayIndex"), bodyConfiguredDisplay)
+        bodyConfiguredDisplayRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyConfiguredDisplayRow")
         self.bodyConfiguredDisplayRow = bodyConfiguredDisplayRow
         scheduleStack.addArrangedSubview(bodyConfiguredDisplayRow)
         addTab(to: tabView, title: L10n.tr("prefs.tabSchedule"), stack: scheduleStack)
@@ -1204,9 +1275,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     }
 
     private func applyAdminVisibility() {
-        eyeEmergencyOverride.isHidden = settings.admin.hideStrictPreferences
-        eyeEmergencyHoldRow?.isHidden = settings.admin.hideStrictPreferences
-        bodyAllowSkip.isHidden = settings.admin.hideStrictPreferences
+        updateDependentControlEnablement()
         shortcutEmergencyEyeRow?.isHidden = settings.admin.hideStrictPreferences
 
         updateUpdatePreferencesVisibility()
@@ -1283,17 +1352,40 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
     private func updateDependentControlEnablement() {
         let eyeGateEnabled = isOn(eyeEnabled)
+        let strictPreferencesHidden = isOn(hideStrictPreferences)
+        [eyeIntervalRow, eyeDurationRow, eyeColorRow].forEach { $0?.isHidden = !eyeGateEnabled }
+        [eyeNotify, eyeManualFinish].forEach { $0.isHidden = !eyeGateEnabled }
         setNumberInputEnabled(eyeInterval, eyeGateEnabled)
         setNumberInputEnabled(eyeDuration, eyeGateEnabled)
         eyeColor.isEnabled = eyeGateEnabled
         eyeNotify.isEnabled = eyeGateEnabled
-        setNumberInputEnabled(eyeLead, eyeGateEnabled && isOn(eyeNotify))
+        let eyeNotificationEnabled = eyeGateEnabled && isOn(eyeNotify)
+        eyeLeadRow?.isHidden = !eyeNotificationEnabled
+        setNumberInputEnabled(eyeLead, eyeNotificationEnabled)
         eyeManualFinish.isEnabled = eyeGateEnabled
+        eyeEmergencyOverride.isHidden = strictPreferencesHidden || !eyeGateEnabled
         eyeEmergencyOverride.isEnabled = eyeGateEnabled
-        let emergencyEnabled = eyeGateEnabled && isOn(eyeEmergencyOverride)
+        let emergencyEnabled = eyeGateEnabled && !strictPreferencesHidden && isOn(eyeEmergencyOverride)
+        eyeEmergencyHoldRow?.isHidden = !emergencyEnabled
         setNumberInputEnabled(eyeEmergencyHoldSeconds, emergencyEnabled)
 
         let bodyBreakEnabled = isOn(bodyEnabled)
+        [
+            bodyIntervalRow,
+            bodyDurationRow,
+            bodyAfterEyeGatesRow,
+            bodyColorRow,
+            bodyPostponeMinutesRow,
+            bodyPostponeLimitRow,
+            bodyPostponeWindowPercentRow,
+            bodyContentDisplayRow
+        ].forEach { $0?.isHidden = !bodyBreakEnabled }
+        [
+            bodyNotify,
+            bodyManualFinish,
+            bodyCoversAllDisplays
+        ].forEach { $0.isHidden = !bodyBreakEnabled }
+        bodyAllowSkip.isHidden = strictPreferencesHidden || !bodyBreakEnabled
         [
             bodyColor, bodyNotify, bodyAllowSkip, bodyManualFinish, bodyCoversAllDisplays,
             bodyCoveredDisplay, bodyContentDisplay, bodyBlankSecondaryDisplays
@@ -1302,18 +1394,20 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             bodyInterval, bodyDuration, bodyAfterEyeGates, bodyLead, bodyPostponeMinutes,
             bodyPostponeLimit, bodyPostponeWindowPercent
         ].forEach { setNumberInputEnabled($0, bodyBreakEnabled) }
-        setNumberInputEnabled(bodyLead, bodyBreakEnabled && isOn(bodyNotify))
+        let bodyNotificationEnabled = bodyBreakEnabled && isOn(bodyNotify)
+        bodyLeadRow?.isHidden = !bodyNotificationEnabled
+        setNumberInputEnabled(bodyLead, bodyNotificationEnabled)
         let coversAllDisplays = isOn(bodyCoversAllDisplays)
         let coveredDisplaySelection = selected(DisplaySelection.self, from: bodyCoveredDisplay, fallback: .primary)
         let contentDisplaySelection = selected(DisplaySelection.self, from: bodyContentDisplay, fallback: .all)
-        bodyCoveredDisplayRow?.isHidden = coversAllDisplays
+        bodyCoveredDisplayRow?.isHidden = !bodyBreakEnabled || coversAllDisplays
         bodyCoveredDisplay.isEnabled = bodyBreakEnabled && !coversAllDisplays
         let canBlankSecondaryDisplays = contentDisplaySelection != .all && contentDisplaySelection != .none
-        bodyBlankSecondaryDisplays.isHidden = !canBlankSecondaryDisplays
+        bodyBlankSecondaryDisplays.isHidden = !bodyBreakEnabled || !canBlankSecondaryDisplays
         bodyBlankSecondaryDisplays.isEnabled = bodyBreakEnabled && canBlankSecondaryDisplays
         let usesConfiguredDisplay = (!coversAllDisplays && coveredDisplaySelection == .configured) ||
             contentDisplaySelection == .configured
-        bodyConfiguredDisplayRow?.isHidden = !usesConfiguredDisplay
+        bodyConfiguredDisplayRow?.isHidden = !bodyBreakEnabled || !usesConfiguredDisplay
         bodyConfiguredDisplay.isEnabled = bodyBreakEnabled && usesConfiguredDisplay
 
         let naturalBreaksEnabled = isOn(naturalBreaks)
