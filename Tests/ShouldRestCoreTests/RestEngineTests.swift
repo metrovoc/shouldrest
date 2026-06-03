@@ -267,6 +267,18 @@ final class RestEngineTests: XCTestCase {
         XCTAssertTrue(sanitized.contains("Stretch"))
     }
 
+    func testContentLibraryCanDisableBuiltInIdeasWhileKeepingCustomBodyIdeas() {
+        let custom = RestIdea(id: "custom", kind: .bodyBreak, title: "Custom", body: "Move")
+        let library = ContentLibrarySettings(
+            useBuiltInIdeas: false,
+            customBodyBreakIdeas: [custom],
+            localImagePaths: []
+        )
+
+        XCTAssertEqual(library.ideas(for: .eyeGate), [])
+        XCTAssertEqual(library.ideas(for: .bodyBreak), [custom])
+    }
+
     func testSettingsStoreRoundTripsDefaults() throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)

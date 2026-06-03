@@ -58,6 +58,7 @@ final class PreferencesWindowController: NSWindowController {
     private let customBodyTitle = NSTextField()
     private let customBodyText = NSTextField()
     private let localImagePath = NSTextField()
+    private let useBuiltInIdeas = NSButton(checkboxWithTitle: L10n.tr("prefs.useBuiltInIdeas"), target: nil, action: nil)
 
     private let shortcutPauseToggle = NSTextField()
     private let shortcutPause30 = NSTextField()
@@ -208,6 +209,7 @@ final class PreferencesWindowController: NSWindowController {
 
         stack.addArrangedSubview(separator())
         stack.addArrangedSubview(section(L10n.tr("prefs.sectionCustomIdea")))
+        stack.addArrangedSubview(useBuiltInIdeas)
         stack.addArrangedSubview(row(L10n.tr("prefs.title"), customBodyTitle))
         stack.addArrangedSubview(row(L10n.tr("prefs.text"), customBodyText))
         stack.addArrangedSubview(row(L10n.tr("prefs.localImagePath"), localImagePath))
@@ -337,6 +339,7 @@ final class PreferencesWindowController: NSWindowController {
         soundVolume.stringValue = String(soundVolumeValue(settings.bodyBreak.finishSound))
 
         let custom = settings.contentLibrary.customBodyBreakIdeas.first
+        useBuiltInIdeas.state = state(settings.contentLibrary.useBuiltInIdeas)
         customBodyTitle.stringValue = custom?.title ?? ""
         customBodyText.stringValue = custom?.body ?? ""
         localImagePath.stringValue = settings.contentLibrary.localImagePaths.first ?? ""
@@ -415,6 +418,7 @@ final class PreferencesWindowController: NSWindowController {
         next.bodyBreak.finishSound = soundPolicy(name: bodyFinishSound.stringValue, volume: volume)
         next.eyeGate.finishSound = next.bodyBreak.finishSound
 
+        next.contentLibrary.useBuiltInIdeas = isOn(useBuiltInIdeas)
         next.contentLibrary.customBodyBreakIdeas = savedCustomIdeas()
         next.contentLibrary.localImagePaths = savedLocalImagePaths()
         next.bodyBreak.content = next.contentLibrary.localImagePaths.isEmpty ? .richRestIdea : .localImage

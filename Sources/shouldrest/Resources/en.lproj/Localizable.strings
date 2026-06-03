@@ -105,6 +105,7 @@
 "prefs.finishSound" = "Finish sound";
 "prefs.volume" = "Volume 0...1";
 "prefs.sectionCustomIdea" = "Custom Body Break Idea";
+"prefs.useBuiltInIdeas" = "Use built-in rest ideas";
 "prefs.title" = "Title";
 "prefs.text" = "Text";
 "prefs.localImagePath" = "Local image path";

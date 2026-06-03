@@ -105,6 +105,7 @@
 "prefs.finishSound" = "结束声音";
 "prefs.volume" = "音量 0...1";
 "prefs.sectionCustomIdea" = "自定义 Body Break 内容";
+"prefs.useBuiltInIdeas" = "使用内置休息提示";
 "prefs.title" = "标题";
 "prefs.text" = "文本";
 "prefs.localImagePath" = "本地图片路径";
