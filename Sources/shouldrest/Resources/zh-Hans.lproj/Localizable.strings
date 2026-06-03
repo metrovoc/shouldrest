@@ -217,6 +217,7 @@
 "prefs.showAdminControls" = "管理员控制";
 "prefs.hideAdminControls" = "隐藏管理员控制";
 "prefs.autosaveReady" = "自动保存已开启";
+"prefs.headerSubtitle" = "严格护眼休息，灵活活动休息，设置会自动保存。";
 "prefs.autosaveEditing" = "正在编辑...";
 "prefs.autosaveSaving" = "正在保存...";
 "prefs.autosaveSaved" = "已保存";

@@ -217,6 +217,7 @@
 "prefs.showAdminControls" = "Administrative controls";
 "prefs.hideAdminControls" = "Hide administrative controls";
 "prefs.autosaveReady" = "Autosave on";
+"prefs.headerSubtitle" = "Strict Eye Gates, flexible Body Breaks, and settings that save themselves.";
 "prefs.autosaveEditing" = "Editing...";
 "prefs.autosaveSaving" = "Saving...";
 "prefs.autosaveSaved" = "Saved";

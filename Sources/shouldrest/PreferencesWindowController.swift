@@ -223,6 +223,9 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         root.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(root)
 
+        let header = preferencesHeaderBar()
+        root.addArrangedSubview(header)
+
         let tabView = NSTabView()
         tabView.translatesAutoresizingMaskIntoConstraints = false
         tabView.setContentHuggingPriority(.defaultLow, for: .vertical)
@@ -428,9 +431,63 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             root.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             root.topAnchor.constraint(equalTo: contentView.topAnchor),
             root.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            header.widthAnchor.constraint(equalTo: root.widthAnchor),
             tabView.widthAnchor.constraint(equalTo: root.widthAnchor),
             footer.widthAnchor.constraint(equalTo: root.widthAnchor)
         ])
+    }
+
+    private func preferencesHeaderBar() -> NSStackView {
+        let icon = NSImageView(image: RestGateIcon.fallbackAppImage(
+            size: 36,
+            accessibilityDescription: L10n.tr("app.name")
+        ))
+        icon.identifier = NSUserInterfaceItemIdentifier("prefs.headerIcon")
+        icon.translatesAutoresizingMaskIntoConstraints = false
+        icon.imageScaling = .scaleProportionallyUpOrDown
+        icon.widthAnchor.constraint(equalToConstant: 36).isActive = true
+        icon.heightAnchor.constraint(equalToConstant: 36).isActive = true
+
+        let title = NSTextField(labelWithString: L10n.tr("preferences.title"))
+        title.identifier = NSUserInterfaceItemIdentifier("prefs.headerTitle")
+        title.font = .systemFont(ofSize: 17, weight: .semibold)
+
+        let subtitle = NSTextField(labelWithString: L10n.tr("prefs.headerSubtitle"))
+        subtitle.identifier = NSUserInterfaceItemIdentifier("prefs.headerSubtitle")
+        subtitle.font = .systemFont(ofSize: 12, weight: .regular)
+        subtitle.textColor = .secondaryLabelColor
+        subtitle.lineBreakMode = .byWordWrapping
+        subtitle.maximumNumberOfLines = 2
+        subtitle.widthAnchor.constraint(lessThanOrEqualToConstant: 460).isActive = true
+
+        let copy = NSStackView(views: [title, subtitle])
+        copy.orientation = .vertical
+        copy.alignment = .leading
+        copy.spacing = 2
+
+        let statusStack = NSStackView(views: [saveStatusIcon, saveStatusLabel])
+        statusStack.identifier = NSUserInterfaceItemIdentifier("prefs.headerAutosave")
+        statusStack.orientation = .horizontal
+        statusStack.spacing = 6
+        statusStack.alignment = .centerY
+        statusStack.setContentHuggingPriority(.required, for: .horizontal)
+        statusStack.setContentCompressionResistancePriority(.required, for: .horizontal)
+
+        let spacer = NSView()
+        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        spacer.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        let header = NSStackView(views: [icon, copy, spacer, statusStack])
+        header.identifier = NSUserInterfaceItemIdentifier("prefs.header")
+        header.orientation = .horizontal
+        header.alignment = .centerY
+        header.spacing = 12
+        header.edgeInsets = NSEdgeInsets(top: 14, left: 24, bottom: 14, right: 24)
+        header.wantsLayer = true
+        header.layer?.backgroundColor = NSColor.controlBackgroundColor.withAlphaComponent(0.55).cgColor
+        header.layer?.borderWidth = 1
+        header.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.7).cgColor
+        return header
     }
 
     private func footerBar() -> NSStackView {
@@ -440,15 +497,11 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         footer.alignment = .centerY
         footer.edgeInsets = NSEdgeInsets(top: 10, left: 24, bottom: 14, right: 24)
         let restoreDefaultsButton = NSButton(title: L10n.tr("prefs.restoreDefaults"), target: self, action: #selector(restoreDefaultsPressed))
+        restoreDefaultsButton.identifier = NSUserInterfaceItemIdentifier("prefs.restoreDefaultsButton")
         restoreDefaultsButton.image = NSImage(systemSymbolName: "arrow.counterclockwise", accessibilityDescription: nil)
         restoreDefaultsButton.imagePosition = .imageLeading
-        let statusStack = NSStackView(views: [saveStatusIcon, saveStatusLabel])
-        statusStack.orientation = .horizontal
-        statusStack.spacing = 6
-        statusStack.alignment = .centerY
         let spacer = NSView()
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        footer.addArrangedSubview(statusStack)
         footer.addArrangedSubview(spacer)
         footer.addArrangedSubview(restoreDefaultsButton)
         return footer
