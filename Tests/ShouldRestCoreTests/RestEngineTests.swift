@@ -100,10 +100,7 @@ final class RestEngineTests: XCTestCase {
     func testEyeGateEmergencyOverrideIsTrackedAsMissedRest() {
         var engine = RestEngine(settings: .defaults, now: start)
         _ = engine.takeNow(.eyeGate, now: start)
-        let result = engine.emergencyOverride(
-            now: start,
-            completedConfirmationSteps: 0
-        )
+        let result = engine.emergencyOverride(now: start)
 
         guard case .completed(let session, let reason) = result else {
             return XCTFail("Expected emergency override completion")
@@ -126,10 +123,7 @@ final class RestEngineTests: XCTestCase {
         var engine = RestEngine(settings: settings, now: start)
         _ = engine.takeNow(.eyeGate, now: start)
 
-        guard case .completed(let session, let reason) = engine.emergencyOverride(
-            now: start.addingTimeInterval(1),
-            completedConfirmationSteps: 0
-        ) else {
+        guard case .completed(let session, let reason) = engine.emergencyOverride(now: start.addingTimeInterval(1)) else {
             return XCTFail("Expected emergency override without legacy confirmation or hold")
         }
         XCTAssertEqual(session.kind, .eyeGate)

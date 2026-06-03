@@ -348,11 +348,7 @@ public struct RestEngine: Equatable, Sendable {
     }
 
     @discardableResult
-    public mutating func emergencyOverride(
-        now: Date = Date(),
-        completedConfirmationSteps _: Int = 0,
-        heldDuration: TimeInterval? = nil
-    ) -> RestEngineResult {
+    public mutating func emergencyOverride(now: Date = Date()) -> RestEngineResult {
         guard let session = state.activeSession else {
             return .denied(.noActiveSession)
         }

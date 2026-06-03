@@ -13,7 +13,7 @@ final class EmergencyOverrideCoordinatorTests: XCTestCase {
 
         XCTAssertEqual(
             coordinator.request(session: session, policy: policy, now: start.addingTimeInterval(1)),
-            .complete(heldDuration: 1)
+            .complete
         )
         XCTAssertFalse(coordinator.isArmed(for: session))
         XCTAssertNil(coordinator.completionIfArmedAndReady(
@@ -30,7 +30,7 @@ final class EmergencyOverrideCoordinatorTests: XCTestCase {
 
         XCTAssertEqual(
             coordinator.request(session: session, policy: policy, now: start.addingTimeInterval(4)),
-            .complete(heldDuration: 4)
+            .complete
         )
     }
 
@@ -62,7 +62,7 @@ final class EmergencyOverrideCoordinatorTests: XCTestCase {
 
         XCTAssertEqual(
             coordinator.request(session: session, policy: policy, now: start.addingTimeInterval(18)),
-            .complete(heldDuration: 18)
+            .complete
         )
         XCTAssertFalse(coordinator.isArmed(for: session))
         XCTAssertEqual(
@@ -79,7 +79,7 @@ final class EmergencyOverrideCoordinatorTests: XCTestCase {
 
         XCTAssertEqual(
             coordinator.request(session: session, policy: enabled, now: start.addingTimeInterval(1)),
-            .complete(heldDuration: 1)
+            .complete
         )
         XCTAssertFalse(coordinator.isArmed(for: session))
 

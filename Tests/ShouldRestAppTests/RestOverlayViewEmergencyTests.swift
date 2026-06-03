@@ -285,6 +285,14 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertTrue(view.hitTest(NSPoint(x: 790, y: 12)) === view)
     }
 
+    func testEmergencyCornerEscapeZoneExtendsBeyondVisibleButton() {
+        let view = configuredEyeGateOverlay()
+
+        view.layoutSubtreeIfNeeded()
+
+        XCTAssertTrue(view.hitTest(NSPoint(x: 460, y: 132)) === view)
+    }
+
     func testOverlayAcceptsFirstMouseForInactiveWindowEmergencyClicks() {
         let view = configuredEyeGateOverlay()
 

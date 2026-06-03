@@ -22,12 +22,11 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertTrue(try view(withIdentifier: "prefs.eyeLeadRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.eyeManualFinish", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.eyeEmergencyOverride", in: contentView).isHidden)
-        XCTAssertTrue(try view(withIdentifier: "prefs.eyeEmergencyHoldRow", in: contentView).isHidden)
+        XCTAssertNil(findView(withIdentifier: "prefs.eyeEmergencyHoldRow", in: contentView))
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyAfterEyeGatesRow", in: contentView).isHidden)
 
         let visibleTexts = visibleTexts(in: contentView)
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.everyMinutes")))
-        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.eyeEmergencyHold")))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.afterEyeGates")))
     }
 
@@ -70,7 +69,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         emergency.state = .off
 
         XCTAssertTrue(sendAction(from: emergency))
-        XCTAssertTrue(try view(withIdentifier: "prefs.eyeEmergencyHoldRow", in: contentView).isHidden)
+        XCTAssertNil(findView(withIdentifier: "prefs.eyeEmergencyHoldRow", in: contentView))
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(savedSettings.value?.eyeGate.emergencyOverride.isEnabled, false)
     }

@@ -4,7 +4,7 @@ import ShouldRestCore
 enum EmergencyOverrideDecision: Equatable {
     case unavailable
     case waiting(remainingSeconds: Int)
-    case complete(heldDuration: TimeInterval)
+    case complete
 }
 
 struct EmergencyOverrideCoordinator {
@@ -33,7 +33,7 @@ struct EmergencyOverrideCoordinator {
         }
 
         armedSessionID = nil
-        return .complete(heldDuration: max(0, now.timeIntervalSince(session.startedAt)))
+        return .complete
     }
 
     mutating func completionIfArmedAndReady(

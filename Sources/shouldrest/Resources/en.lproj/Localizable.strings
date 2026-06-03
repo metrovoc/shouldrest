@@ -35,7 +35,6 @@
 "notification.updateNoFeed" = "No update feed is configured.";
 "notification.updateFailed" = "Update check failed: %@";
 "notification.shortcutsUnavailable" = "Some shortcuts could not be registered: %@.";
-"notification.emergencyHold" = "Emergency exit is available in %d seconds.";
 "notification.resumingBreaks" = "Resuming breaks";
 "notification.quitBlocked" = "Finish %@ before quitting.";
 "notification.resetBlocked" = "Finish %@ before resetting the schedule.";
@@ -93,7 +92,6 @@
 "prefs.notifyEyeGate" = "Notify before Eye Gate";
 "prefs.eyeManualFinish" = "Manual finish after Eye Gate duration";
 "prefs.eyeEmergencyOverride" = "Enable Emergency Exit";
-"prefs.eyeEmergencyHold" = "Emergency Exit hold time";
 "prefs.enableBodyBreak" = "Enable Body Break";
 "prefs.notifyBodyBreak" = "Notify before Body Break";
 "prefs.manualFinish" = "Manual finish after Body Break duration";

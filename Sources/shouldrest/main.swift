@@ -830,7 +830,6 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         completeEmergencyOverrideEyeGate(
             session: active,
             now: now,
-            heldDuration: max(0, now.timeIntervalSince(active.startedAt)),
             playSound: false
         )
     }
@@ -876,13 +875,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             )
             logger.log("Emergency override waiting for \(session.kind.rawValue), available in \(remainingSeconds)s")
             rebuildMenu()
-        case .complete(let heldDuration):
-        completeEmergencyOverrideEyeGate(
-            session: session,
-            now: now,
-            heldDuration: heldDuration,
-            playSound: true
-        )
+        case .complete:
+            completeEmergencyOverrideEyeGate(
+                session: session,
+                now: now,
+                playSound: true
+            )
         case .unavailable:
             logger.log("Emergency override unavailable for \(session.kind.rawValue)")
             rebuildMenu()
@@ -892,14 +890,10 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func completeEmergencyOverrideEyeGate(
         session: RestSession,
         now: Date,
-        heldDuration: TimeInterval,
         playSound shouldPlaySound: Bool
     ) {
         logger.log("Emergency override completing for \(session.kind.rawValue)")
-        let result = engine.emergencyOverride(
-            now: now,
-            heldDuration: heldDuration
-        )
+        let result = engine.emergencyOverride(now: now)
         logger.log("Emergency override engine result=\(result)")
         if case .completed(let completedSession, _) = result {
             if shouldPlaySound {
@@ -2246,10 +2240,10 @@ final class RestOverlayView: NSView {
             buttonFrame = buttonFrame.union(emergencyPanel.frame.insetBy(dx: -10, dy: -10))
         }
         let safetyFrame = NSRect(
-            x: max(bounds.minX, bounds.maxX - 260),
+            x: max(bounds.minX, bounds.maxX - 360),
             y: bounds.minY,
-            width: min(260, bounds.width),
-            height: min(88, bounds.height)
+            width: min(360, bounds.width),
+            height: min(140, bounds.height)
         )
         return buttonFrame.union(safetyFrame)
     }

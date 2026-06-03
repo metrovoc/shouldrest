@@ -35,7 +35,6 @@
 "notification.updateNoFeed" = "未配置更新源。";
 "notification.updateFailed" = "更新检查失败：%@";
 "notification.shortcutsUnavailable" = "部分快捷键无法注册：%@。";
-"notification.emergencyHold" = "%d 秒后可使用紧急退出。";
 "notification.resumingBreaks" = "正在恢复休息";
 "notification.quitBlocked" = "请先完成%@，再退出。";
 "notification.resetBlocked" = "请先完成%@，再重置计划。";
@@ -93,7 +92,6 @@
 "prefs.notifyEyeGate" = "护眼休息前通知";
 "prefs.eyeManualFinish" = "护眼休息到时后手动完成";
 "prefs.eyeEmergencyOverride" = "启用紧急退出";
-"prefs.eyeEmergencyHold" = "紧急退出等待时长";
 "prefs.enableBodyBreak" = "启用活动休息";
 "prefs.notifyBodyBreak" = "活动休息前通知";
 "prefs.manualFinish" = "活动休息到时后手动完成";

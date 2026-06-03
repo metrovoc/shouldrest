@@ -52,12 +52,10 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let eyeLead = NSTextField()
     private let eyeManualFinish = NSButton(checkboxWithTitle: L10n.tr("prefs.eyeManualFinish"), target: nil, action: nil)
     private let eyeEmergencyOverride = NSButton(checkboxWithTitle: L10n.tr("prefs.eyeEmergencyOverride"), target: nil, action: nil)
-    private let eyeEmergencyHoldSeconds = NSTextField()
     private var eyeIntervalRow: NSView?
     private var eyeDurationRow: NSView?
     private var eyeColorRow: NSView?
     private var eyeLeadRow: NSView?
-    private var eyeEmergencyHoldRow: NSView?
 
     private let bodyEnabled = NSButton(checkboxWithTitle: L10n.tr("prefs.enableBodyBreak"), target: nil, action: nil)
     private let bodyInterval = NSTextField()
@@ -319,16 +317,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         scheduleStack.addArrangedSubview(eyeManualFinish)
         eyeEmergencyOverride.identifier = NSUserInterfaceItemIdentifier("prefs.eyeEmergencyOverride")
         scheduleStack.addArrangedSubview(eyeEmergencyOverride)
-        let eyeEmergencyHoldRow = numberRow(
-            L10n.tr("prefs.eyeEmergencyHold"),
-            eyeEmergencyHoldSeconds,
-            unit: L10n.tr("prefs.unit.seconds"),
-            min: 0,
-            max: 300
-        )
-        eyeEmergencyHoldRow.identifier = NSUserInterfaceItemIdentifier("prefs.eyeEmergencyHoldRow")
-        self.eyeEmergencyHoldRow = eyeEmergencyHoldRow
-        scheduleStack.addArrangedSubview(eyeEmergencyHoldRow)
         scheduleStack.addArrangedSubview(separator())
         scheduleStack.addArrangedSubview(section(
             L10n.tr("prefs.sectionBodyBreak"),
@@ -804,7 +792,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private func configureFieldWidths() {
         let compactFields = [
             eyeInterval, eyeDuration, bodyInterval, bodyDuration, bodyAfterEyeGates, eyeLead, bodyLead,
-            eyeEmergencyHoldSeconds,
             bodyPostponeMinutes, bodyPostponeLimit, bodyPostponeWindowPercent, naturalIdleMinutes,
             pauseUntilMorningHour,
             pauseUntilMorningLatitude, pauseUntilMorningLongitude
@@ -1012,7 +999,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private func configureAutosave() {
         let textFields = [
             eyeInterval, eyeDuration, eyeLead, bodyInterval, bodyDuration, bodyAfterEyeGates,
-            eyeEmergencyHoldSeconds,
             bodyLead, bodyPostponeMinutes, bodyPostponeLimit, bodyPostponeWindowPercent, naturalIdleMinutes,
             appExclusionName, appExclusionTerms,
             customBodyTitle, localImagePath,
@@ -1120,7 +1106,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         eyeLead.stringValue = String(Int(settings.notifications.eyeGateLeadTime))
         eyeManualFinish.state = state(settings.eyeGate.manualFinishEnabled)
         eyeEmergencyOverride.state = state(settings.eyeGate.emergencyOverride.isEnabled)
-        eyeEmergencyHoldSeconds.stringValue = "0"
 
         bodyEnabled.state = state(settings.bodyBreak.isEnabled)
         bodyInterval.stringValue = String(Int(settings.bodyBreak.interval / 60))
@@ -1449,8 +1434,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         eyeManualFinish.isEnabled = eyeGateEnabled
         eyeEmergencyOverride.isHidden = strictPreferencesHidden || !eyeGateEnabled
         eyeEmergencyOverride.isEnabled = eyeGateEnabled
-        eyeEmergencyHoldRow?.isHidden = true
-        setNumberInputEnabled(eyeEmergencyHoldSeconds, false)
 
         let bodyBreakEnabled = isOn(bodyEnabled)
         [
