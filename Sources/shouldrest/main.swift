@@ -69,6 +69,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private var activeBreakShortcutSessionID: UUID?
     private var activeBreakShortcutValue: String?
     private var activeBreakShortcutRegistered = false
+    private var lastGlobalShortcutFailureKey: String?
+    private var lastActiveBreakShortcutFailureKey: String?
     private var automationTasks: [UUID: Task<Void, Never>] = [:]
 
     override init() {
@@ -658,8 +660,14 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
         if activeBreakShortcutRegistered {
             logger.log("Active rest end shortcut registered kind=\(active.kind.rawValue) shortcut=\(shortcut)")
+            lastActiveBreakShortcutFailureKey = nil
         } else {
             logger.log("Active rest end shortcut unavailable kind=\(active.kind.rawValue) shortcut=\(shortcut)")
+            reportShortcutRegistrationFailures(
+                [(L10n.tr("prefs.endBodyBreak"), shortcut)],
+                rememberedKey: \.lastActiveBreakShortcutFailureKey,
+                namespace: "active"
+            )
         }
     }
 
@@ -1116,47 +1124,65 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     private func configureGlobalShortcuts() {
         globalShortcuts.unregisterAll()
-        registerShortcut(settings.shortcuts.pauseToggle) { [weak self] in
+        var failures: [(title: String, shortcut: String)] = []
+
+        func register(_ title: String, _ shortcut: String, action: @MainActor @escaping () -> Void) {
+            if !registerShortcut(shortcut, action: action) {
+                failures.append((title, shortcut))
+            }
+        }
+
+        register(L10n.tr("prefs.pauseToggle"), settings.shortcuts.pauseToggle) { [weak self] in
             if self?.engine.state.pause == nil {
                 self?.pause(for: nil, reason: .user)
             } else {
                 self?.resumeBreaks()
             }
         }
-        registerShortcut(settings.shortcuts.pauseFor30Minutes) { [weak self] in
+        register(L10n.tr("prefs.pause30Shortcut"), settings.shortcuts.pauseFor30Minutes) { [weak self] in
             self?.pause(for: 30 * 60, reason: .user)
         }
-        registerShortcut(settings.shortcuts.pauseFor1Hour) { [weak self] in
+        register(L10n.tr("prefs.pause1hShortcut"), settings.shortcuts.pauseFor1Hour) { [weak self] in
             self?.pause(for: 60 * 60, reason: .user)
         }
-        registerShortcut(settings.shortcuts.pauseFor2Hours) { [weak self] in
+        register(L10n.tr("prefs.pause2hShortcut"), settings.shortcuts.pauseFor2Hours) { [weak self] in
             self?.pause(for: 2 * 60 * 60, reason: .user)
         }
-        registerShortcut(settings.shortcuts.pauseFor5Hours) { [weak self] in
+        register(L10n.tr("prefs.pause5hShortcut"), settings.shortcuts.pauseFor5Hours) { [weak self] in
             self?.pause(for: 5 * 60 * 60, reason: .user)
         }
-        registerShortcut(settings.shortcuts.pauseUntilMorning) { [weak self] in
+        register(L10n.tr("prefs.pauseUntilMorningShortcut"), settings.shortcuts.pauseUntilMorning) { [weak self] in
             self?.pauseUntilMorning()
         }
-        registerShortcut(settings.shortcuts.skipToNextScheduledRest ?? "") { [weak self] in
+        register(L10n.tr("prefs.nextScheduledRest"), settings.shortcuts.skipToNextScheduledRest ?? "") { [weak self] in
             self?.takeNextScheduledRestNow()
         }
-        registerShortcut(settings.shortcuts.takeEyeGateNow) { [weak self] in
+        register(L10n.tr("prefs.eyeGateNow"), settings.shortcuts.takeEyeGateNow) { [weak self] in
             self?.takeEyeGateNow()
         }
-        registerShortcut(settings.shortcuts.takeBodyBreakNow) { [weak self] in
+        register(L10n.tr("prefs.bodyBreakNow"), settings.shortcuts.takeBodyBreakNow) { [weak self] in
             self?.takeBodyBreakNow()
         }
-        registerShortcut(settings.shortcuts.skipToNextBodyBreak) { [weak self] in
+        register(L10n.tr("prefs.skipToBodyBreak"), settings.shortcuts.skipToNextBodyBreak) { [weak self] in
             self?.takeBodyBreakNow()
         }
-        registerShortcut(settings.shortcuts.emergencyEyeGateOverride ?? "") { [weak self] in
+        register(L10n.tr("prefs.emergencyEyeGate"), settings.shortcuts.emergencyEyeGateOverride ?? "") { [weak self] in
             self?.emergencyOverrideEyeGate()
         }
-        registerShortcut(settings.shortcuts.reset) { [weak self] in
+        register(L10n.tr("prefs.reset"), settings.shortcuts.reset) { [weak self] in
             self?.resetBreaks()
         }
-        logger.log("Global shortcuts configured")
+        if failures.isEmpty {
+            lastGlobalShortcutFailureKey = nil
+            logger.log("Global shortcuts configured")
+        } else {
+            reportShortcutRegistrationFailures(
+                failures,
+                rememberedKey: \.lastGlobalShortcutFailureKey,
+                namespace: "global"
+            )
+            logger.log("Global shortcuts configured with unavailable shortcuts=\(shortcutFailureDescription(failures))")
+        }
     }
 
     private func scheduleAutomaticUpdateCheck() {
@@ -1228,13 +1254,50 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         UNUserNotificationCenter.current().add(request)
     }
 
-    private func registerShortcut(_ shortcut: String, action: @MainActor @escaping () -> Void) {
-        guard !shortcut.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
-        globalShortcuts.register(shortcut: shortcut) {
+    private func registerShortcut(_ shortcut: String, action: @MainActor @escaping () -> Void) -> Bool {
+        let trimmedShortcut = shortcut.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedShortcut.isEmpty else { return true }
+        let didRegister = globalShortcuts.register(shortcut: trimmedShortcut) {
             Task { @MainActor in
                 action()
             }
         }
+        if !didRegister {
+            logger.log("Global shortcut unavailable shortcut=\(trimmedShortcut)")
+        }
+        return didRegister
+    }
+
+    private func reportShortcutRegistrationFailures(
+        _ failures: [(title: String, shortcut: String)],
+        rememberedKey: ReferenceWritableKeyPath<ShouldRestAppDelegate, String?>,
+        namespace: String
+    ) {
+        guard !failures.isEmpty else {
+            self[keyPath: rememberedKey] = nil
+            return
+        }
+
+        let key = "\(namespace):\(shortcutFailureDescription(failures))"
+        guard self[keyPath: rememberedKey] != key else { return }
+        self[keyPath: rememberedKey] = key
+        showAppNotification(
+            title: L10n.tr("app.name"),
+            body: L10n.format("notification.shortcutsUnavailable", shortcutFailureSummary(failures))
+        )
+    }
+
+    private func shortcutFailureSummary(_ failures: [(title: String, shortcut: String)]) -> String {
+        failures
+            .map { "\($0.title) (\(ShortcutDisplay.string($0.shortcut)))" }
+            .joined(separator: ", ")
+    }
+
+    private func shortcutFailureDescription(_ failures: [(title: String, shortcut: String)]) -> String {
+        failures
+            .map { "\($0.title)=\($0.shortcut.trimmingCharacters(in: .whitespacesAndNewlines))" }
+            .sorted()
+            .joined(separator: "|")
     }
 
     private func debugInfo() -> String {

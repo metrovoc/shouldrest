@@ -31,6 +31,7 @@
 "notification.updateCurrent" = "ShouldRest 已是最新。";
 "notification.updateNoFeed" = "未配置更新源。";
 "notification.updateFailed" = "更新检查失败：%@";
+"notification.shortcutsUnavailable" = "部分快捷键无法注册：%@。";
 "notification.emergencyHold" = "%d 秒后可使用紧急覆盖。";
 "notification.resumingBreaks" = "正在恢复休息";
 "notification.quitBlocked" = "严格 %@ 期间不能退出。";
@@ -203,6 +204,8 @@
 "prefs.autosaveSaved" = "已保存";
 "prefs.autosaveRestored" = "已恢复默认";
 "prefs.autosaveInvalid" = "修复无效 JSON 后保存";
+"prefs.shortcutConflict" = "快捷键冲突：%@ 同时分配给 %@。";
+"prefs.shortcutUnsupported" = "不支持的快捷键：%@（%@）。";
 "prefs.display.all" = "所有显示器";
 "prefs.display.primary" = "主显示器";
 "prefs.display.cursor" = "鼠标所在显示器";

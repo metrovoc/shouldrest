@@ -30,4 +30,8 @@ final class GlobalShortcutParsingTests: XCTestCase {
         XCTAssertNil(ParsedShortcut("CmdOrCtrl+F13"))
         XCTAssertNil(ParsedShortcut("Meta+X"))
     }
+
+    func testDisplaysShortcutWithSystemModifierSymbols() {
+        XCTAssertEqual(ShortcutDisplay.string("CmdOrCtrl+Option+Shift+Space"), "⌘⌥⇧Space")
+    }
 }

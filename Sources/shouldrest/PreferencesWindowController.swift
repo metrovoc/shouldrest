@@ -122,6 +122,9 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let shortcutEmergencyEye = ShortcutRecorderButton()
     private var shortcutEmergencyEyeRow: NSView?
     private let shortcutReset = ShortcutRecorderButton()
+    private let shortcutConflictRow = NSStackView()
+    private let shortcutConflictIcon = NSImageView()
+    private let shortcutConflictLabel = NSTextField(labelWithString: "")
 
     private let openAtLogin = NSButton(checkboxWithTitle: L10n.tr("prefs.openAtLogin"), target: nil, action: nil)
     private let checkUpdates = NSButton(checkboxWithTitle: L10n.tr("prefs.checkUpdates"), target: nil, action: nil)
@@ -187,6 +190,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         configureCustomBodyTextEditor()
         configureAppExclusionTokenField()
         configureSoundPreviewButtons()
+        configureShortcutConflictWarning()
         configureEnablementGuards()
         configureAutosave()
 
@@ -305,6 +309,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
         let shortcutsStack = contentStack()
         shortcutsStack.addArrangedSubview(section(L10n.tr("prefs.sectionShortcuts"), symbolName: "keyboard"))
+        shortcutsStack.addArrangedSubview(shortcutConflictRow)
         shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.pauseToggle"), shortcutPauseToggle))
         shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.pause30Shortcut"), shortcutPause30))
         shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.pause1hShortcut"), shortcutPause1h))
@@ -638,9 +643,29 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             shortcutEndBody, shortcutEmergencyEye, shortcutReset
         ].forEach { recorder in
             recorder.onChange = { [weak self] in
+                self?.updateShortcutConflictWarning()
                 self?.scheduleAutosave()
             }
         }
+    }
+
+    private func configureShortcutConflictWarning() {
+        shortcutConflictIcon.image = NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: nil)
+        shortcutConflictIcon.contentTintColor = .systemOrange
+        shortcutConflictIcon.symbolConfiguration = .init(pointSize: 14, weight: .semibold)
+        shortcutConflictIcon.widthAnchor.constraint(equalToConstant: 18).isActive = true
+
+        shortcutConflictLabel.textColor = .systemOrange
+        shortcutConflictLabel.lineBreakMode = .byWordWrapping
+        shortcutConflictLabel.widthAnchor.constraint(equalToConstant: 590).isActive = true
+
+        shortcutConflictRow.orientation = .horizontal
+        shortcutConflictRow.alignment = .top
+        shortcutConflictRow.spacing = 8
+        shortcutConflictRow.edgeInsets = NSEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        shortcutConflictRow.addArrangedSubview(shortcutConflictIcon)
+        shortcutConflictRow.addArrangedSubview(shortcutConflictLabel)
+        shortcutConflictRow.isHidden = true
     }
 
     private func configureSoundPopup(_ popup: NSPopUpButton) {
@@ -933,6 +958,58 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         checkUpdates.isHidden = hideUpdateControls
         notifyNewVersion.isHidden = hideUpdateControls
         updateFeedURLRow?.isHidden = hideUpdateControls
+        updateShortcutConflictWarning()
+    }
+
+    private func updateShortcutConflictWarning() {
+        guard let message = shortcutConflictWarningMessage() else {
+            shortcutConflictLabel.stringValue = ""
+            shortcutConflictRow.isHidden = true
+            return
+        }
+        shortcutConflictLabel.stringValue = message
+        shortcutConflictRow.isHidden = false
+    }
+
+    private func shortcutConflictWarningMessage() -> String? {
+        var entriesByShortcut: [String: [(title: String, displayValue: String)]] = [:]
+        for entry in visibleShortcutPreferenceEntries() {
+            let rawValue = entry.recorder.shortcutValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !rawValue.isEmpty else { continue }
+            guard let parsed = ParsedShortcut(rawValue) else {
+                return L10n.format("prefs.shortcutUnsupported", entry.recorder.displayValue, entry.title)
+            }
+            let key = "\(parsed.modifiers):\(parsed.keyCode)"
+            entriesByShortcut[key, default: []].append((entry.title, entry.recorder.displayValue))
+        }
+
+        guard let conflict = entriesByShortcut.values.first(where: { $0.count > 1 }),
+              let shortcut = conflict.first?.displayValue else {
+            return nil
+        }
+        let actions = conflict.map(\.title).joined(separator: ", ")
+        return L10n.format("prefs.shortcutConflict", shortcut, actions)
+    }
+
+    private func visibleShortcutPreferenceEntries() -> [(title: String, recorder: ShortcutRecorderButton)] {
+        var entries: [(title: String, recorder: ShortcutRecorderButton)] = [
+            (L10n.tr("prefs.pauseToggle"), shortcutPauseToggle),
+            (L10n.tr("prefs.pause30Shortcut"), shortcutPause30),
+            (L10n.tr("prefs.pause1hShortcut"), shortcutPause1h),
+            (L10n.tr("prefs.pause2hShortcut"), shortcutPause2h),
+            (L10n.tr("prefs.pause5hShortcut"), shortcutPause5h),
+            (L10n.tr("prefs.pauseUntilMorningShortcut"), shortcutPauseUntilMorning),
+            (L10n.tr("prefs.nextScheduledRest"), shortcutNextScheduled),
+            (L10n.tr("prefs.eyeGateNow"), shortcutEyeNow),
+            (L10n.tr("prefs.bodyBreakNow"), shortcutBodyNow),
+            (L10n.tr("prefs.skipToBodyBreak"), shortcutSkipBody),
+            (L10n.tr("prefs.endBodyBreak"), shortcutEndBody)
+        ]
+        if !(shortcutEmergencyEyeRow?.isHidden ?? false) {
+            entries.append((L10n.tr("prefs.emergencyEyeGate"), shortcutEmergencyEye))
+        }
+        entries.append((L10n.tr("prefs.reset"), shortcutReset))
+        return entries
     }
 
     private func hasVisibleAdminOverrides(_ admin: AdminSettings) -> Bool {
@@ -1567,6 +1644,9 @@ final class ShortcutRecorderButton: NSButton {
             }
         }
     }
+    var displayValue: String {
+        ShortcutDisplay.string(shortcutValue)
+    }
     var onChange: (() -> Void)?
     private var isRecording = false
 
@@ -1640,7 +1720,7 @@ final class ShortcutRecorderButton: NSButton {
             title = L10n.tr("shortcut.record")
             toolTip = L10n.tr("shortcut.recordHelp")
         } else {
-            title = Self.displayString(shortcutValue)
+            title = ShortcutDisplay.string(shortcutValue)
             toolTip = L10n.tr("shortcut.clearHelp")
         }
     }
@@ -1663,28 +1743,6 @@ final class ShortcutRecorderButton: NSButton {
 
     private static func keyName(for keyCode: Int) -> String? {
         keyNames[keyCode]
-    }
-
-    private static func displayString(_ shortcut: String) -> String {
-        shortcut
-            .split(separator: "+")
-            .map { part in
-                switch part.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
-                case "cmd", "command", "cmdorctrl":
-                    return "⌘"
-                case "ctrl", "control":
-                    return "⌃"
-                case "alt", "option", "opt":
-                    return "⌥"
-                case "shift":
-                    return "⇧"
-                case "space":
-                    return "Space"
-                default:
-                    return part.uppercased()
-                }
-            }
-            .joined()
     }
 
     private static let keyNames: [Int: String] = [

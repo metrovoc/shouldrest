@@ -31,6 +31,7 @@
 "notification.updateCurrent" = "ShouldRest is up to date.";
 "notification.updateNoFeed" = "No update feed is configured.";
 "notification.updateFailed" = "Update check failed: %@";
+"notification.shortcutsUnavailable" = "Some shortcuts could not be registered: %@.";
 "notification.emergencyHold" = "Emergency override is available in %d seconds.";
 "notification.resumingBreaks" = "Resuming breaks";
 "notification.quitBlocked" = "Cannot quit during strict %@.";
@@ -203,6 +204,8 @@
 "prefs.autosaveSaved" = "Saved";
 "prefs.autosaveRestored" = "Defaults restored";
 "prefs.autosaveInvalid" = "Fix invalid JSON to save";
+"prefs.shortcutConflict" = "Shortcut conflict: %@ is assigned to %@.";
+"prefs.shortcutUnsupported" = "Unsupported shortcut: %@ for %@.";
 "prefs.display.all" = "All displays";
 "prefs.display.primary" = "Primary display";
 "prefs.display.cursor" = "Display with pointer";

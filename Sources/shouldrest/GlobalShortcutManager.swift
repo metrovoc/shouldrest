@@ -138,3 +138,27 @@ struct ParsedShortcut: Equatable {
         "n": 45, "m": 46, ".": 47, "`": 50, "space": 49
     ]
 }
+
+enum ShortcutDisplay {
+    static func string(_ shortcut: String) -> String {
+        shortcut
+            .split(separator: "+")
+            .map { part in
+                switch part.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+                case "cmd", "command", "cmdorctrl":
+                    return "⌘"
+                case "ctrl", "control":
+                    return "⌃"
+                case "alt", "option", "opt":
+                    return "⌥"
+                case "shift":
+                    return "⇧"
+                case "space":
+                    return "Space"
+                default:
+                    return part.uppercased()
+                }
+            }
+            .joined()
+    }
+}
