@@ -5,10 +5,16 @@ import Foundation
 final class OnboardingWindowController: NSWindowController {
     private let onUseDefaults: () -> Void
     private let onOpenPreferences: () -> Void
+    private let onLearnMore: () -> Void
 
-    init(onUseDefaults: @escaping () -> Void, onOpenPreferences: @escaping () -> Void) {
+    init(
+        onUseDefaults: @escaping () -> Void,
+        onOpenPreferences: @escaping () -> Void,
+        onLearnMore: @escaping () -> Void
+    ) {
         self.onUseDefaults = onUseDefaults
         self.onOpenPreferences = onOpenPreferences
+        self.onLearnMore = onLearnMore
 
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 520, height: 260),
@@ -48,6 +54,7 @@ final class OnboardingWindowController: NSWindowController {
         let buttons = NSStackView()
         buttons.orientation = .horizontal
         buttons.spacing = 12
+        buttons.addArrangedSubview(NSButton(title: L10n.tr("onboarding.learnMore"), target: self, action: #selector(learnMore)))
         buttons.addArrangedSubview(NSButton(title: L10n.tr("onboarding.useDefaults"), target: self, action: #selector(useDefaults)))
         buttons.addArrangedSubview(NSButton(title: L10n.tr("onboarding.preferences"), target: self, action: #selector(openPreferences)))
 
@@ -71,6 +78,10 @@ final class OnboardingWindowController: NSWindowController {
     @objc private func openPreferences() {
         onOpenPreferences()
         close()
+    }
+
+    @objc private func learnMore() {
+        onLearnMore()
     }
 
     func show() {

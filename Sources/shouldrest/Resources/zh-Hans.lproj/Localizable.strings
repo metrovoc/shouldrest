@@ -22,6 +22,7 @@
 "menu.saveSettings" = "保存设置";
 "menu.copyDebug" = "复制调试信息";
 "menu.debugPanel" = "调试面板...";
+"menu.about" = "关于 ShouldRest...";
 "menu.quit" = "退出 ShouldRest";
 "notification.eyeGateSoon" = "Eye Gate 即将开始";
 "notification.bodyBreakSoon" = "Body Break 即将开始";
@@ -163,5 +164,10 @@
 "onboarding.title" = "欢迎使用 ShouldRest";
 "onboarding.heading" = "使用默认休息节奏开始";
 "onboarding.body" = "Eye Gate 使用短而频繁的不透明休息间隔。Body Break 保持可配置，用于更长的身体活动休息。";
+"onboarding.learnMore" = "了解更多";
 "onboarding.useDefaults" = "使用默认值";
 "onboarding.preferences" = "打开偏好设置";
+"about.title" = "关于 ShouldRest";
+"about.body" = "ShouldRest %@\n\nShouldRest 是一个 Mac-first 的休息提醒应用，围绕短、频繁、难以忽视的 Eye Gate 和可配置的 Body Break 构建。\n\n在符合产品目标的地方，它保留 Stretchly 兼容的调度、自动化、更新、调试和偏好能力；同时有意用更严格的眼睛休息约束替代薄弱的 20 秒 skip/postpone 行为。";
+"about.ok" = "好";
+"about.debug" = "调试信息";

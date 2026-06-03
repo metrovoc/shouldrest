@@ -356,6 +356,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(actionItem(L10n.tr("menu.saveSettings"), #selector(saveSettings)))
         menu.addItem(actionItem(L10n.tr("menu.copyDebug"), #selector(copyDebugInfo)))
         menu.addItem(actionItem(L10n.tr("menu.debugPanel"), #selector(openDebugPanel)))
+        menu.addItem(actionItem(L10n.tr("menu.about"), #selector(showAboutPanel)))
 
         if !settings.admin.hideSettingsFileLocation {
             let pathItem = disabledItem(settingsStore.fileURL.path)
@@ -741,6 +742,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             },
             onOpenPreferences: { [weak self] in
                 self?.completeOnboarding(openPreferences: true)
+            },
+            onLearnMore: { [weak self] in
+                self?.showAboutPanel()
             }
         )
         onboardingWindowController?.show()
@@ -795,6 +799,20 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         debugWindowController?.window?.orderFrontRegardless()
         NSApp.activate(ignoringOtherApps: true)
         logger.log("Debug panel opened")
+    }
+
+    @objc private func showAboutPanel() {
+        let alert = NSAlert()
+        alert.messageText = L10n.tr("about.title")
+        alert.informativeText = L10n.format("about.body", AppVersion.current)
+        alert.addButton(withTitle: L10n.tr("about.ok"))
+        alert.addButton(withTitle: L10n.tr("about.debug"))
+        alert.window.level = .floating
+        NSApp.activate(ignoringOtherApps: true)
+        if alert.runModal() == .alertSecondButtonReturn {
+            openDebugPanel()
+        }
+        logger.log("About panel opened")
     }
 
     private func applySettings(_ nextSettings: RestSettings) {

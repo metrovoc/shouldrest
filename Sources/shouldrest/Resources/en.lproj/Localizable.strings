@@ -22,6 +22,7 @@
 "menu.saveSettings" = "Save Settings";
 "menu.copyDebug" = "Copy Debug Info";
 "menu.debugPanel" = "Debug Panel...";
+"menu.about" = "About ShouldRest...";
 "menu.quit" = "Quit ShouldRest";
 "notification.eyeGateSoon" = "Eye Gate soon";
 "notification.bodyBreakSoon" = "Body Break soon";
@@ -163,5 +164,10 @@
 "onboarding.title" = "Welcome to ShouldRest";
 "onboarding.heading" = "Start with the default rest cadence";
 "onboarding.body" = "Eye Gate uses short, frequent, opaque rest intervals. Body Break remains configurable for longer movement breaks.";
+"onboarding.learnMore" = "Learn More";
 "onboarding.useDefaults" = "Use Defaults";
 "onboarding.preferences" = "Open Preferences";
+"about.title" = "About ShouldRest";
+"about.body" = "ShouldRest %@\n\nShouldRest is a Mac-first rest reminder built around short, frequent, hard-to-ignore Eye Gates and configurable Body Breaks.\n\nIt keeps Stretchly-compatible scheduling, automation, update, debug, and preference capabilities where they support the product goal, while intentionally replacing weak 20-second skip/postpone behavior with stricter eye-rest enforcement.";
+"about.ok" = "OK";
+"about.debug" = "Debug Info";
