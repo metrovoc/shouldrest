@@ -561,6 +561,17 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(disabled.resolvedEmergencyEyeGateOverride, "")
     }
 
+    func testShortcutSettingsResolvesLegacyBodyBreakNowAlias() {
+        var shortcuts = ShortcutSettings.defaults
+        shortcuts.takeBodyBreakNow = ""
+        shortcuts.skipToNextBodyBreak = "Cmd+3"
+
+        XCTAssertEqual(shortcuts.resolvedTakeBodyBreakNowShortcut, "Cmd+3")
+
+        shortcuts.takeBodyBreakNow = "Cmd+4"
+        XCTAssertEqual(shortcuts.resolvedTakeBodyBreakNowShortcut, "Cmd+4")
+    }
+
     func testRestoredDefaultsDoNotReopenFirstRunOnboarding() {
         let restored = RestSettings.restoredDefaults
 

@@ -93,13 +93,13 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertTrue(try view(withIdentifier: "prefs.shortcutEyeNowRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.shortcutEmergencyEyeRow", in: contentView).isHidden)
         XCTAssertFalse(try view(withIdentifier: "prefs.shortcutBodyNowRow", in: contentView).isHidden)
-        XCTAssertFalse(try view(withIdentifier: "prefs.shortcutSkipBodyRow", in: contentView).isHidden)
         XCTAssertFalse(try view(withIdentifier: "prefs.shortcutEndBodyRow", in: contentView).isHidden)
 
         let visibleTexts = visibleTexts(in: contentView)
         XCTAssertFalse(visibleTexts.contains { $0.contains(L10n.tr("prefs.shortcutConflict").prefix(12)) })
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.eyeGateNow")))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.emergencyEyeGate")))
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.skipToBodyBreak")))
     }
 
     func testDisabledBodyBreakHidesBodyShortcutRowsAndIgnoresHiddenConflicts() throws {
@@ -116,7 +116,6 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertFalse(try view(withIdentifier: "prefs.shortcutEyeNowRow", in: contentView).isHidden)
         XCTAssertFalse(try view(withIdentifier: "prefs.shortcutEmergencyEyeRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.shortcutBodyNowRow", in: contentView).isHidden)
-        XCTAssertTrue(try view(withIdentifier: "prefs.shortcutSkipBodyRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.shortcutEndBodyRow", in: contentView).isHidden)
 
         let visibleTexts = visibleTexts(in: contentView)
@@ -135,7 +134,6 @@ final class PreferencesWindowShortcutTests: XCTestCase {
 
         try selectShortcutsTab(in: contentView)
         XCTAssertTrue(try view(withIdentifier: "prefs.shortcutBodyNowRow", in: contentView).isHidden)
-        XCTAssertTrue(try view(withIdentifier: "prefs.shortcutSkipBodyRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.shortcutEndBodyRow", in: contentView).isHidden)
 
         try selectScheduleTab(in: contentView)
@@ -148,8 +146,32 @@ final class PreferencesWindowShortcutTests: XCTestCase {
 
         try selectShortcutsTab(in: contentView)
         XCTAssertFalse(try view(withIdentifier: "prefs.shortcutBodyNowRow", in: contentView).isHidden)
-        XCTAssertFalse(try view(withIdentifier: "prefs.shortcutSkipBodyRow", in: contentView).isHidden)
         XCTAssertFalse(try view(withIdentifier: "prefs.shortcutEndBodyRow", in: contentView).isHidden)
+    }
+
+    func testLegacySkipToBodyShortcutIsShownAsBodyBreakNowWithoutDuplicateRow() throws {
+        var settings = RestSettings.defaults
+        settings.shortcuts.takeBodyBreakNow = ""
+        settings.shortcuts.skipToNextBodyBreak = "Cmd+3"
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectShortcutsTab(in: contentView)
+        let visibleTexts = visibleTexts(in: contentView)
+
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.bodyBreakNow")))
+        XCTAssertTrue(visibleTexts.contains("⌘3"))
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.skipToBodyBreak")))
+        XCTAssertNil(findView(withIdentifier: "prefs.shortcutSkipBodyRow", in: contentView))
+
+        let bodyNow = try XCTUnwrap(control(withIdentifier: "shortcut.bodyNow", in: contentView) as? ShortcutRecorderButton)
+        bodyNow.shortcutValue = "Cmd+4"
+        bodyNow.onChange?()
+        waitUntilSavedSettingsArrive(savedSettings)
+
+        XCTAssertEqual(savedSettings.value?.shortcuts.takeBodyBreakNow, "Cmd+4")
+        XCTAssertEqual(savedSettings.value?.shortcuts.skipToNextBodyBreak, "")
     }
 
     private func selectShortcutsTab(in view: NSView) throws {
@@ -176,6 +198,10 @@ final class PreferencesWindowShortcutTests: XCTestCase {
 
     private func view(withIdentifier identifier: String, in rootView: NSView) throws -> NSView {
         try XCTUnwrap(findView(withIdentifier: identifier, in: rootView))
+    }
+
+    private func control(withIdentifier identifier: String, in rootView: NSView) throws -> NSControl {
+        try XCTUnwrap(findView(withIdentifier: identifier, in: rootView) as? NSControl)
     }
 
     private func findView(withIdentifier identifier: String, in view: NSView) -> NSView? {

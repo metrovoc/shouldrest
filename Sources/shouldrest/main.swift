@@ -1402,10 +1402,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         if settings.bodyBreak.isEnabled {
-            register(L10n.tr("prefs.bodyBreakNow"), settings.shortcuts.takeBodyBreakNow) { [weak self] in
-                self?.takeBodyBreakNow()
-            }
-            register(L10n.tr("prefs.skipToBodyBreak"), settings.shortcuts.skipToNextBodyBreak) { [weak self] in
+            register(L10n.tr("prefs.bodyBreakNow"), settings.shortcuts.resolvedTakeBodyBreakNowShortcut) { [weak self] in
                 self?.takeBodyBreakNow()
             }
         }

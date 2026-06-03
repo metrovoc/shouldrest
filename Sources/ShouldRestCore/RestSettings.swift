@@ -525,6 +525,11 @@ public struct ShortcutSettings: Codable, Equatable, Sendable {
         emergencyEyeGateOverride ?? Self.defaultEmergencyEyeGateOverride
     }
 
+    public var resolvedTakeBodyBreakNowShortcut: String {
+        let primary = takeBodyBreakNow.trimmingCharacters(in: .whitespacesAndNewlines)
+        return primary.isEmpty ? skipToNextBodyBreak : takeBodyBreakNow
+    }
+
     public init(
         pauseToggle: String,
         pauseFor30Minutes: String,

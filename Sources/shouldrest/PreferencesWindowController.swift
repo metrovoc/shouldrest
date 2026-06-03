@@ -164,12 +164,10 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let shortcutNextScheduled = ShortcutRecorderButton()
     private let shortcutEyeNow = ShortcutRecorderButton()
     private let shortcutBodyNow = ShortcutRecorderButton()
-    private let shortcutSkipBody = ShortcutRecorderButton()
     private let shortcutEndBody = ShortcutRecorderButton()
     private let shortcutEmergencyEye = ShortcutRecorderButton()
     private var shortcutEyeNowRow: NSView?
     private var shortcutBodyNowRow: NSView?
-    private var shortcutSkipBodyRow: NSView?
     private var shortcutEndBodyRow: NSView?
     private var shortcutEmergencyEyeRow: NSView?
     private let shortcutReset = ShortcutRecorderButton()
@@ -551,6 +549,18 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         let shortcutsStack = contentStack()
         shortcutsStack.addArrangedSubview(section(L10n.tr("prefs.sectionShortcuts"), symbolName: "keyboard"))
         shortcutsStack.addArrangedSubview(shortcutConflictRow)
+        shortcutPauseToggle.identifier = NSUserInterfaceItemIdentifier("shortcut.pauseToggle")
+        shortcutPause30.identifier = NSUserInterfaceItemIdentifier("shortcut.pause30")
+        shortcutPause1h.identifier = NSUserInterfaceItemIdentifier("shortcut.pause1h")
+        shortcutPause2h.identifier = NSUserInterfaceItemIdentifier("shortcut.pause2h")
+        shortcutPause5h.identifier = NSUserInterfaceItemIdentifier("shortcut.pause5h")
+        shortcutPauseUntilMorning.identifier = NSUserInterfaceItemIdentifier("shortcut.pauseUntilMorning")
+        shortcutNextScheduled.identifier = NSUserInterfaceItemIdentifier("shortcut.nextScheduled")
+        shortcutEyeNow.identifier = NSUserInterfaceItemIdentifier("shortcut.eyeNow")
+        shortcutBodyNow.identifier = NSUserInterfaceItemIdentifier("shortcut.bodyNow")
+        shortcutEndBody.identifier = NSUserInterfaceItemIdentifier("shortcut.endBody")
+        shortcutEmergencyEye.identifier = NSUserInterfaceItemIdentifier("shortcut.emergencyEye")
+        shortcutReset.identifier = NSUserInterfaceItemIdentifier("shortcut.reset")
         shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.pauseToggle"), shortcutPauseToggle))
         shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.pause30Shortcut"), shortcutPause30))
         shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.pause1hShortcut"), shortcutPause1h))
@@ -566,10 +576,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         shortcutBodyNowRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutBodyNowRow")
         self.shortcutBodyNowRow = shortcutBodyNowRow
         shortcutsStack.addArrangedSubview(shortcutBodyNowRow)
-        let shortcutSkipBodyRow = row(L10n.tr("prefs.skipToBodyBreak"), shortcutSkipBody)
-        shortcutSkipBodyRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutSkipBodyRow")
-        self.shortcutSkipBodyRow = shortcutSkipBodyRow
-        shortcutsStack.addArrangedSubview(shortcutSkipBodyRow)
         let shortcutEndBodyRow = row(L10n.tr("prefs.endBodyBreak"), shortcutEndBody)
         shortcutEndBodyRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutEndBodyRow")
         self.shortcutEndBodyRow = shortcutEndBodyRow
@@ -812,7 +818,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
             eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, customBodyTitle,
             localImagePath, languageIdentifier, shortcutPauseToggle,
             shortcutPause30, shortcutPause1h, shortcutPause2h, shortcutPause5h, shortcutPauseUntilMorning,
-            shortcutNextScheduled, shortcutEyeNow, shortcutBodyNow, shortcutSkipBody, shortcutEndBody,
+            shortcutNextScheduled, shortcutEyeNow, shortcutBodyNow, shortcutEndBody,
             shortcutEmergencyEye, shortcutReset,
             appExclusionName, appExclusionTerms, bodyConfiguredDisplay, updateFeedURL,
             customPreferencesMessage
@@ -1038,7 +1044,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
         [
             shortcutPauseToggle, shortcutPause30, shortcutPause1h, shortcutPause2h, shortcutPause5h,
-            shortcutPauseUntilMorning, shortcutNextScheduled, shortcutEyeNow, shortcutBodyNow, shortcutSkipBody,
+            shortcutPauseUntilMorning, shortcutNextScheduled, shortcutEyeNow, shortcutBodyNow,
             shortcutEndBody, shortcutEmergencyEye, shortcutReset
         ].forEach { recorder in
             recorder.onChange = { [weak self] in
@@ -1189,8 +1195,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         shortcutPauseUntilMorning.shortcutValue = settings.shortcuts.pauseUntilMorning
         shortcutNextScheduled.shortcutValue = settings.shortcuts.skipToNextScheduledRest ?? ""
         shortcutEyeNow.shortcutValue = settings.shortcuts.takeEyeGateNow
-        shortcutBodyNow.shortcutValue = settings.shortcuts.takeBodyBreakNow
-        shortcutSkipBody.shortcutValue = settings.shortcuts.skipToNextBodyBreak
+        shortcutBodyNow.shortcutValue = settings.shortcuts.resolvedTakeBodyBreakNowShortcut
         shortcutEndBody.shortcutValue = settings.shortcuts.resolvedEndBodyBreakShortcut
         shortcutEmergencyEye.shortcutValue = settings.shortcuts.resolvedEmergencyEyeGateOverride
         shortcutReset.shortcutValue = settings.shortcuts.reset
@@ -1317,7 +1322,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         next.shortcuts.skipToNextScheduledRest = shortcutNextScheduled.shortcutValue
         next.shortcuts.takeEyeGateNow = shortcutEyeNow.shortcutValue
         next.shortcuts.takeBodyBreakNow = shortcutBodyNow.shortcutValue
-        next.shortcuts.skipToNextBodyBreak = shortcutSkipBody.shortcutValue
+        next.shortcuts.skipToNextBodyBreak = ""
         next.shortcuts.endBodyBreak = shortcutEndBody.shortcutValue
         if !(shortcutEmergencyEyeRow?.isHidden ?? false) {
             next.shortcuts.emergencyEyeGateOverride = shortcutEmergencyEye.shortcutValue
@@ -1411,7 +1416,6 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
 
         appendIfVisible(shortcutEyeNowRow, L10n.tr("prefs.eyeGateNow"), shortcutEyeNow)
         appendIfVisible(shortcutBodyNowRow, L10n.tr("prefs.bodyBreakNow"), shortcutBodyNow)
-        appendIfVisible(shortcutSkipBodyRow, L10n.tr("prefs.skipToBodyBreak"), shortcutSkipBody)
         appendIfVisible(shortcutEndBodyRow, L10n.tr("prefs.endBodyBreak"), shortcutEndBody)
         appendIfVisible(shortcutEmergencyEyeRow, L10n.tr("prefs.emergencyEyeGate"), shortcutEmergencyEye)
         entries.append((L10n.tr("prefs.reset"), shortcutReset))
@@ -1564,10 +1568,10 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         shortcutEyeNowRow?.isHidden = !eyeGateEnabled
         shortcutEyeNow.isEnabled = eyeGateEnabled
 
-        [shortcutBodyNowRow, shortcutSkipBodyRow, shortcutEndBodyRow].forEach {
+        [shortcutBodyNowRow, shortcutEndBodyRow].forEach {
             $0?.isHidden = !bodyBreakEnabled
         }
-        [shortcutBodyNow, shortcutSkipBody, shortcutEndBody].forEach {
+        [shortcutBodyNow, shortcutEndBody].forEach {
             $0.isEnabled = bodyBreakEnabled
         }
 
