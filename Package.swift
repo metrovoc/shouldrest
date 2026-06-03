@@ -32,6 +32,10 @@ let package = Package(
         .testTarget(
             name: "ShouldRestCoreTests",
             dependencies: ["ShouldRestCore"]
+        ),
+        .testTarget(
+            name: "ShouldRestAppTests",
+            dependencies: ["shouldrest"]
         )
     ]
 )

@@ -262,6 +262,9 @@ enum CommandLineAutomation {
     }
 
     static func request(from url: URL) -> AutomationRequest? {
+        guard url.scheme == "shouldrest" else {
+            return nil
+        }
         let name = url.host ?? url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         let command: AutomationCommand
         switch name {

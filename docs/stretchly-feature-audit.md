@@ -155,6 +155,7 @@ Implemented now:
 - Expanded preferences for notification lead times, overlay colors, sounds, Body Break interval/postpone/skip policy, natural break settings, working hours, primary app exclusion, custom Body Break idea, shortcuts, update settings, and admin controls.
 - CLI command surface for help, version, settings/log paths, pause/resume/reset, take-now, preferences, and debug requests; the settings-path command respects admin path hiding.
 - Stretchly-compatible `toggle`, `mini`, and `long` command aliases, delayed take-now automation, and `body`/`long` one-shot Body Break title, text, wait, and noskip options.
+- App-level CLI/URL parser tests for Stretchly-style durations, `mini`/`long` aliases, wait, noskip, pause URLs, and invalid URL rejection.
 - Distributed notification bridge for CLI-to-running-app automation.
 - CLI and URL automation requests now start ShouldRest and execute after launch when no existing app instance is running; with an existing instance they are forwarded to it.
 - Local log file.
