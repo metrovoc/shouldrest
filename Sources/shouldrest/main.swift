@@ -2134,10 +2134,6 @@ final class RestOverlayView: NSView {
     }
 
     @objc private func emergencyOverridePressed() {
-        if let remainingSeconds = emergencyRemainingSeconds, remainingSeconds > 0 {
-            return
-        }
-
         if case .activated = activateEmergencyOverrideIfAvailable() {
             onEmergencyOverrideConfirmed?()
         }
@@ -2176,7 +2172,11 @@ final class RestOverlayView: NSView {
 
     func activateEmergencyOverrideIfAvailable() -> EmergencyOverlayActivationResult {
         guard !emergencyButton.isHidden,
-              emergencyRemainingSeconds == 0 else {
+              emergencyRemainingSeconds != nil else {
+            return .unavailable
+        }
+
+        if emergencyOverrideArmed, (emergencyRemainingSeconds ?? 0) > 0 {
             return .unavailable
         }
 

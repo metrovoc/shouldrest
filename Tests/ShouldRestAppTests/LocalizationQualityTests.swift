@@ -21,6 +21,13 @@ final class LocalizationQualityTests: XCTestCase {
         }
     }
 
+    func testSimplifiedChineseEmergencyCopyUsesExitInsteadOfOverride() throws {
+        let values = try simplifiedChineseLocalizedValues().joined(separator: "\n")
+
+        XCTAssertTrue(values.contains("紧急退出"))
+        XCTAssertFalse(values.contains("紧急覆盖"))
+    }
+
     private func simplifiedChineseLocalizedValues() throws -> [String] {
         let testFileURL = URL(fileURLWithPath: #filePath)
         let packageRoot = testFileURL

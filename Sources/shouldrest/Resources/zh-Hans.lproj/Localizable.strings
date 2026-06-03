@@ -6,7 +6,7 @@
 "menu.finishBodyBreak" = "完成活动休息";
 "menu.finishEyeGate" = "完成护眼休息";
 "menu.skipBodyBreak" = "跳过活动休息";
-"menu.emergencyOverride" = "紧急覆盖护眼休息";
+"menu.emergencyOverride" = "紧急退出护眼休息";
 "menu.resume" = "恢复";
 "menu.pause" = "暂停";
 "menu.pause30" = "30 分钟";
@@ -34,7 +34,7 @@
 "notification.updateNoFeed" = "未配置更新源。";
 "notification.updateFailed" = "更新检查失败：%@";
 "notification.shortcutsUnavailable" = "部分快捷键无法注册：%@。";
-"notification.emergencyHold" = "%d 秒后可使用紧急覆盖。";
+"notification.emergencyHold" = "%d 秒后可使用紧急退出。";
 "notification.resumingBreaks" = "正在恢复休息";
 "notification.quitBlocked" = "严格 %@ 期间不能退出。";
 "notification.resetBlocked" = "严格 %@ 期间不能重置。";
@@ -66,7 +66,7 @@
 "overlay.emergencyOverride" = "紧急 · Esc";
 "overlay.emergencyOverrideIn" = "%d 秒后紧急 · Esc";
 "overlay.emergencyOverrideArmed" = "已触发 · %d 秒";
-"overlay.emergencyOverrideHelp" = "只在真正中断时使用。护眼休息期间，Esc 由覆盖层直接监听，并计为未完成的护眼休息。";
+"overlay.emergencyOverrideHelp" = "只在真正中断时使用。护眼休息期间，Esc 由覆盖层直接处理，并计为一次未完成护眼休息。";
 "overlay.bodyPostpone" = "推迟";
 "overlay.bodySkip" = "跳过";
 "overlay.bodyFinish" = "完成";
@@ -90,8 +90,8 @@
 "prefs.cannotDisableBothRests" = "至少需要保留一种休息类型。";
 "prefs.notifyEyeGate" = "护眼休息前通知";
 "prefs.eyeManualFinish" = "护眼休息到时后手动完成";
-"prefs.eyeEmergencyOverride" = "启用紧急覆盖";
-"prefs.eyeEmergencyHold" = "紧急覆盖可用等待";
+"prefs.eyeEmergencyOverride" = "启用紧急退出";
+"prefs.eyeEmergencyHold" = "紧急退出可用等待";
 "prefs.enableBodyBreak" = "启用活动休息";
 "prefs.notifyBodyBreak" = "活动休息前通知";
 "prefs.manualFinish" = "活动休息到时后手动完成";
@@ -204,7 +204,7 @@
 "prefs.bodyBreakNow" = "立即活动休息";
 "prefs.skipToBodyBreak" = "跳到活动休息";
 "prefs.endBodyBreak" = "结束当前活动休息";
-"prefs.emergencyEyeGate" = "紧急覆盖护眼休息";
+"prefs.emergencyEyeGate" = "护眼紧急退出";
 "prefs.reset" = "重置";
 "prefs.sectionOperations" = "操作";
 "prefs.pauseUntilMorningMode" = "暂停到早晨模式";
@@ -260,8 +260,8 @@
 "onboarding.body" = "默认设置适合频繁、短暂、不透明的 20 秒护眼休息；活动休息可继续配置。";
 "onboarding.eyeFeatureTitle" = "短而频繁的护眼休息";
 "onboarding.eyeFeatureBody" = "短暂不透明的覆盖层，减少 20 秒休息被忽视或习惯性跳过。";
-"onboarding.emergencyFeatureTitle" = "紧急覆盖不再锁死";
-"onboarding.emergencyFeatureBody" = "逃生入口属于覆盖层自身：等待时间结束后，Esc 或淡红色紧急入口可退出，不再打开单独确认窗口。";
+"onboarding.emergencyFeatureTitle" = "紧急退出不再锁死";
+"onboarding.emergencyFeatureBody" = "紧急退出由覆盖层自身处理：等待时间结束后，Esc 或淡红色紧急入口可退出，不再打开单独确认窗口。";
 "onboarding.bodyFeatureTitle" = "活动休息可配置";
 "onboarding.bodyFeatureBody" = "更长的活动休息支持推迟、图片、显示器规则和手动完成。";
 "onboarding.learnMore" = "了解更多";
