@@ -148,14 +148,15 @@ Implemented now:
 - Local log file.
 - Custom rich-text sanitizer for Body Break content.
 - Settings-store round-trip coverage.
+- Open-at-login setting and ServiceManagement integration when running as a bundled app.
+- Sleep, wake, lock, and unlock correction hooks.
+- Debug panel with runtime state and paths.
 
 Still to implement:
 
 - Global shortcuts.
 - URL automation.
-- Open-at-login integration.
 - Update check and admin policy UI.
-- Full debug panel.
 - Full manual-finish overlay interaction model.
 - Suspend/lock correction hooks.
 - Localization files.

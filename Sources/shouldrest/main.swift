@@ -14,10 +14,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private let focusDetector = FocusModeDetector()
     private let soundPlayer = SoundPlayer()
     private var preferencesWindowController: PreferencesWindowController?
+    private var debugWindowController: DebugWindowController?
     private var statusItem: NSStatusItem?
     private var tickTimer: Timer?
     private var lastFocusCheck = Date.distantPast
     private var focusModeActive = false
+    private var suspendedAt: Date?
 
     override init() {
         let store = SettingsStore(fileURL: AppPaths.settingsURL)
@@ -43,12 +45,18 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             name: .shouldRestAutomation,
             object: nil
         )
+        let workspaceNotifications = NSWorkspace.shared.notificationCenter
+        workspaceNotifications.addObserver(self, selector: #selector(systemWillPause), name: NSWorkspace.willSleepNotification, object: nil)
+        workspaceNotifications.addObserver(self, selector: #selector(systemDidResume), name: NSWorkspace.didWakeNotification, object: nil)
+        workspaceNotifications.addObserver(self, selector: #selector(systemWillPause), name: NSWorkspace.sessionDidResignActiveNotification, object: nil)
+        workspaceNotifications.addObserver(self, selector: #selector(systemDidResume), name: NSWorkspace.sessionDidBecomeActiveNotification, object: nil)
         tickTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.tick()
             }
         }
         logger.log("Application launched")
+        applyOpenAtLoginSetting()
         tick()
     }
 
@@ -168,6 +176,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(actionItem("Preferences...", #selector(openPreferences)))
         menu.addItem(actionItem("Save Settings", #selector(saveSettings)))
         menu.addItem(actionItem("Copy Debug Info", #selector(copyDebugInfo)))
+        menu.addItem(actionItem("Debug Panel...", #selector(openDebugPanel)))
 
         if !settings.admin.hideSettingsFileLocation {
             let pathItem = disabledItem(settingsStore.fileURL.path)
@@ -347,25 +356,26 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func copyDebugInfo() {
-        let lines = [
-            "settingsPath=\(settingsStore.fileURL.path)",
-            "logPath=\(logger.fileURL.path)",
-            "scheduled=\(String(describing: engine.state.scheduled))",
-            "activeSession=\(String(describing: engine.state.activeSession))",
-            "pause=\(String(describing: engine.state.pause))",
-            "dangerScore=\(engine.state.dangerScore)",
-            "statistics=\(engine.state.statistics)",
-            "focusModeActive=\(focusModeActive)",
-            "idleSeconds=\(SystemIdleTime.seconds())"
-        ]
         NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(lines.joined(separator: "\n"), forType: .string)
+        NSPasteboard.general.setString(debugInfo(), forType: .string)
         logger.log("Debug info copied")
+    }
+
+    @objc private func openDebugPanel() {
+        if debugWindowController == nil {
+            debugWindowController = DebugWindowController()
+        }
+        debugWindowController?.update(text: debugInfo())
+        debugWindowController?.showWindow(nil)
+        debugWindowController?.window?.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        logger.log("Debug panel opened")
     }
 
     private func applySettings(_ nextSettings: RestSettings) {
         settings = nextSettings
         engine.updateSettings(nextSettings)
+        applyOpenAtLoginSetting()
         do {
             try settingsStore.save(nextSettings)
             logger.log("Preferences saved")
@@ -395,7 +405,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         case .preferences:
             openPreferences()
         case .debug:
-            copyDebugInfo()
+            openDebugPanel()
         }
         logger.log("Handled automation command \(command.rawValue)")
     }
@@ -408,6 +418,53 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             return duration.doubleValue
         }
         return nil
+    }
+
+    @objc private func systemWillPause() {
+        suspendedAt = Date()
+        if engine.state.activeSession == nil {
+            _ = engine.pause(for: nil, reason: .suspendOrLock)
+        }
+        overlayController.dismiss()
+        logger.log("System pause detected")
+        rebuildMenu()
+    }
+
+    @objc private func systemDidResume() {
+        let now = Date()
+        let idleDuration = suspendedAt.map { now.timeIntervalSince($0) } ?? 0
+        suspendedAt = nil
+        _ = engine.resume(now: now)
+        _ = engine.evaluate(now: now, context: RestContext(idleDuration: idleDuration))
+        logger.log("System resume detected idleDuration=\(idleDuration)")
+        rebuildMenu()
+    }
+
+    private func applyOpenAtLoginSetting() {
+        do {
+            try LoginItemManager.apply(enabled: settings.operations.openAtLogin)
+            logger.log("Open-at-login applied enabled=\(settings.operations.openAtLogin)")
+        } catch {
+            if settings.operations.openAtLogin {
+                logger.log("Open-at-login unavailable: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    private func debugInfo() -> String {
+        [
+            "settingsPath=\(settingsStore.fileURL.path)",
+            "logPath=\(logger.fileURL.path)",
+            "scheduled=\(String(describing: engine.state.scheduled))",
+            "activeSession=\(String(describing: engine.state.activeSession))",
+            "pause=\(String(describing: engine.state.pause))",
+            "dangerScore=\(engine.state.dangerScore)",
+            "statistics=\(engine.state.statistics)",
+            "focusModeActive=\(focusModeActive)",
+            "idleSeconds=\(SystemIdleTime.seconds())",
+            "openAtLogin=\(settings.operations.openAtLogin)",
+            "loginItemAvailable=\(LoginItemManager.isAvailable)"
+        ].joined(separator: "\n")
     }
 }
 

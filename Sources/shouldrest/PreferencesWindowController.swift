@@ -14,6 +14,7 @@ final class PreferencesWindowController: NSWindowController {
     private let bodyDuration = NSTextField()
     private let bodyAfterEyeGates = NSTextField()
     private let focusDefersBody = NSButton(checkboxWithTitle: "Focus mode defers Body Break", target: nil, action: nil)
+    private let openAtLogin = NSButton(checkboxWithTitle: "Open at login", target: nil, action: nil)
     private let trayStyle = NSPopUpButton()
 
     init(settings: RestSettings, onSave: @escaping (RestSettings) -> Void) {
@@ -75,6 +76,7 @@ final class PreferencesWindowController: NSWindowController {
         stack.addArrangedSubview(separator())
         stack.addArrangedSubview(sectionLabel("Context And Menu"))
         stack.addArrangedSubview(focusDefersBody)
+        stack.addArrangedSubview(openAtLogin)
         trayStyle.addItems(withTitles: ["default", "timeToBreak", "progress"])
         stack.addArrangedSubview(row("Menu bar style", trayStyle))
 
@@ -97,6 +99,7 @@ final class PreferencesWindowController: NSWindowController {
         bodyDuration.stringValue = String(Int(settings.bodyBreak.duration / 60))
         bodyAfterEyeGates.stringValue = String(settings.bodyBreakAfterEyeGates)
         focusDefersBody.state = settings.focusMode.deferBodyBreak ? .on : .off
+        openAtLogin.state = settings.operations.openAtLogin ? .on : .off
         trayStyle.selectItem(withTitle: settings.presentation.trayIconStyle.rawValue)
     }
 
@@ -138,6 +141,7 @@ final class PreferencesWindowController: NSWindowController {
         next.bodyBreak.duration = TimeInterval(max(1, intValue(bodyDuration)) * 60)
         next.bodyBreakAfterEyeGates = max(1, intValue(bodyAfterEyeGates))
         next.focusMode.deferBodyBreak = focusDefersBody.state == .on
+        next.operations.openAtLogin = openAtLogin.state == .on
         if let selected = trayStyle.selectedItem?.title,
            let style = TrayIconStyle(rawValue: selected) {
             next.presentation.trayIconStyle = style
@@ -156,4 +160,3 @@ final class PreferencesWindowController: NSWindowController {
         Int(field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0
     }
 }
-
