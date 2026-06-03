@@ -224,6 +224,24 @@ final class RestEngineTests: XCTestCase {
         XCTAssertNil(engine.state.activeDeferral)
     }
 
+    func testDisablingBreakHealthModeResetsDangerScore() {
+        var engine = RestEngine(settings: .defaults, now: start)
+        _ = engine.takeNow(.eyeGate, now: start)
+        _ = engine.completeActive(now: start.addingTimeInterval(20), reason: .completed)
+        _ = engine.takeNow(.eyeGate, now: start.addingTimeInterval(40))
+        _ = engine.completeActive(now: start.addingTimeInterval(60), reason: .completed)
+
+        let bodyDue = engine.state.scheduled!.dueAt
+        _ = engine.evaluate(now: bodyDue, context: RestContext(focusModeActive: true))
+        XCTAssertGreaterThan(engine.state.dangerScore, 0)
+
+        var settings = RestSettings.defaults
+        settings.presentation.breakHealthMode = false
+        engine.updateSettings(settings, now: bodyDue)
+
+        XCTAssertEqual(engine.state.dangerScore, 0)
+    }
+
     func testAppExclusionPauseCanTargetSpecificBreakKind() {
         let rule = AppExclusionRule(
             id: "presentation",

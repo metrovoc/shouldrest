@@ -183,6 +183,9 @@ public struct RestEngine: Equatable, Sendable {
 
     public mutating func updateSettings(_ settings: RestSettings, now: Date = Date()) {
         self.settings = settings
+        if !settings.presentation.breakHealthMode {
+            state.dangerScore = 0
+        }
         if state.activeSession == nil && state.pause == nil {
             scheduleNextRest(from: now)
         }

@@ -192,6 +192,7 @@ Implemented now:
 - Stretchly-style sunrise pause-until-morning mode with configurable latitude/longitude, shared by menu/global-shortcut and CLI/URL automation, with fixed-hour fallback when sunrise cannot be calculated.
 - Notification sound policy honors the silent-notifications setting for both pre-break and update notifications.
 - Break-health danger is visible in the menu status surface, not only in debug output.
+- Disabling break-health mode resets accumulated danger, matching Stretchly's runtime setting behavior.
 - Eye Gate emergency override is frictional in core and app surfaces: minimum hold duration and required confirmation steps are enforced before the override is counted as a missed Eye Gate, with a configurable global shortcut for screen-covering situations.
 
 Still to perform for public release:
