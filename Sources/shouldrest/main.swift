@@ -896,11 +896,14 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func handleEyeGateAutomation(_ userInfo: [AnyHashable: Any]?) {
         let noSkip = automationNoSkip(from: userInfo)
         let wait = automationDuration(from: userInfo)
+        if automationHasReadableContent(userInfo) {
+            logger.log("Ignored Eye Gate readable content customization")
+        }
 
         if let wait, wait > 0 {
             scheduleEyeGateAutomation(after: wait)
         } else if noSkip {
-            logger.log("Ignored Eye Gate content customization")
+            logger.log("Kept current Eye Gate schedule for noskip automation")
         } else {
             takeEyeGateNow()
         }
@@ -929,6 +932,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             return noSkip.boolValue
         }
         return false
+    }
+
+    private func automationHasReadableContent(_ userInfo: [AnyHashable: Any]?) -> Bool {
+        let title = (userInfo?["title"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let text = (userInfo?["text"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return !title.isEmpty || !text.isEmpty
     }
 
     private func automationBodyBreakIdea(from userInfo: [AnyHashable: Any]?) -> RestIdea? {

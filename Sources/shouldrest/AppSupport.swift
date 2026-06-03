@@ -70,7 +70,7 @@ enum AutomationCommand: String {
     case debug
 }
 
-struct AutomationRequest {
+struct AutomationRequest: Equatable {
     var command: AutomationCommand
     var duration: TimeInterval?
     var title: String?
@@ -107,6 +107,13 @@ struct AutomationRequest {
         }
         return userInfo
     }
+}
+
+struct EyeGateCommandPlan: Equatable {
+    var request: AutomationRequest?
+    var keepsCurrentSchedule: Bool
+    var invalidWait: String?
+    var ignoredReadableContent: Bool
 }
 
 @MainActor
@@ -191,20 +198,23 @@ enum CommandLineAutomation {
         case "reset":
             return dispatchOrQueue(AutomationRequest(command: .reset), message: "Requested reset.")
         case "eye", "mini":
-            let request = restRequest(args)
-            if let invalid = request.invalidWait {
+            let plan = eyeGateCommandPlan(args)
+            if let invalid = plan.invalidWait {
                 print("Invalid wait duration: \(invalid)")
                 return true
             }
-            if request.noSkip, request.wait == nil {
-                print("Eye Gate content customization is not supported; no Eye Gate was started.")
-            } else {
-                return dispatchOrQueue(
-                    AutomationRequest(command: .eye, duration: request.wait, noSkip: request.noSkip),
-                    message: "Requested Eye Gate\(request.wait.map { " after \(Int($0)) seconds" } ?? " now")."
-                )
+            if plan.ignoredReadableContent {
+                print("Eye Gate readable content customization is ignored.")
             }
-            return true
+            if plan.keepsCurrentSchedule {
+                print("Requested Eye Gate noskip without wait; current schedule kept.")
+                return true
+            }
+            guard let automationRequest = plan.request else { return true }
+            return dispatchOrQueue(
+                automationRequest,
+                message: "Requested Eye Gate\(automationRequest.duration.map { " after \(Int($0)) seconds" } ?? " now")."
+            )
         case "body", "long":
             let request = restRequest(args)
             if let invalid = request.invalidWait {
@@ -320,6 +330,39 @@ enum CommandLineAutomation {
             duration = parsed
         }
         return AutomationRequest(command: command, duration: duration, title: title, text: text, noSkip: noSkip)
+    }
+
+    static func eyeGateCommandPlan(_ args: [String]) -> EyeGateCommandPlan {
+        let request = restRequest(args)
+        if let invalidWait = request.invalidWait {
+            return EyeGateCommandPlan(
+                request: nil,
+                keepsCurrentSchedule: false,
+                invalidWait: invalidWait,
+                ignoredReadableContent: false
+            )
+        }
+
+        let ignoredReadableContent = hasReadableContent(request.title) || hasReadableContent(request.text)
+        if request.noSkip, request.wait == nil {
+            return EyeGateCommandPlan(
+                request: nil,
+                keepsCurrentSchedule: true,
+                invalidWait: nil,
+                ignoredReadableContent: ignoredReadableContent
+            )
+        }
+
+        return EyeGateCommandPlan(
+            request: AutomationRequest(command: .eye, duration: request.wait, noSkip: request.noSkip),
+            keepsCurrentSchedule: false,
+            invalidWait: nil,
+            ignoredReadableContent: ignoredReadableContent
+        )
+    }
+
+    private static func hasReadableContent(_ value: String?) -> Bool {
+        value?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
     }
 
     private static func durationArgument(_ args: [String]) -> (duration: TimeInterval?, invalid: String?) {

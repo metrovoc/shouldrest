@@ -47,6 +47,48 @@ final class CommandLineAutomationTests: XCTestCase {
         XCTAssertTrue(request.noSkip)
     }
 
+    func testPlansImmediateMiniAliasAsEyeGateRequest() throws {
+        let plan = CommandLineAutomation.eyeGateCommandPlan(["mini"])
+
+        let request = try XCTUnwrap(plan.request)
+        XCTAssertEqual(request.command, .eye)
+        XCTAssertNil(request.duration)
+        XCTAssertFalse(request.noSkip)
+        XCTAssertFalse(plan.keepsCurrentSchedule)
+        XCTAssertNil(plan.invalidWait)
+        XCTAssertFalse(plan.ignoredReadableContent)
+    }
+
+    func testMiniNoSkipWithoutWaitKeepsCurrentSchedule() throws {
+        let plan = CommandLineAutomation.eyeGateCommandPlan(["mini", "--noskip"])
+
+        XCTAssertNil(plan.request)
+        XCTAssertTrue(plan.keepsCurrentSchedule)
+        XCTAssertNil(plan.invalidWait)
+        XCTAssertFalse(plan.ignoredReadableContent)
+    }
+
+    func testMiniNoSkipWithWaitSchedulesDelayedEyeGate() throws {
+        let plan = CommandLineAutomation.eyeGateCommandPlan(["mini", "--noskip", "--wait", "20m"])
+
+        let request = try XCTUnwrap(plan.request)
+        XCTAssertEqual(request.command, .eye)
+        XCTAssertEqual(request.duration, 20 * 60)
+        XCTAssertTrue(request.noSkip)
+        XCTAssertFalse(plan.keepsCurrentSchedule)
+        XCTAssertNil(plan.invalidWait)
+    }
+
+    func testMiniTitleIsIgnoredInsteadOfInjectedIntoEyeGate() throws {
+        let plan = CommandLineAutomation.eyeGateCommandPlan(["mini", "--title", "Stretch up"])
+
+        let request = try XCTUnwrap(plan.request)
+        XCTAssertEqual(request.command, .eye)
+        XCTAssertNil(request.title)
+        XCTAssertNil(request.text)
+        XCTAssertTrue(plan.ignoredReadableContent)
+    }
+
     func testRejectsInvalidAutomationURLs() throws {
         XCTAssertNil(CommandLineAutomation.request(from: try XCTUnwrap(URL(string: "stretchly://pause?duration=1h"))))
         XCTAssertNil(CommandLineAutomation.request(from: try XCTUnwrap(URL(string: "shouldrest://pause?duration=bad"))))
