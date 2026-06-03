@@ -53,6 +53,7 @@ extension Notification.Name {
 enum AutomationCommand: String {
     case pause
     case resume
+    case toggle
     case reset
     case eye
     case body
@@ -61,6 +62,11 @@ enum AutomationCommand: String {
 }
 
 enum CommandLineAutomation {
+    private enum DurationParseResult {
+        case valid(TimeInterval?)
+        case invalid
+    }
+
     static func handle(arguments: [String]) -> Bool {
         let args = Array(arguments.dropFirst())
         guard let command = args.first else {
@@ -94,32 +100,62 @@ enum CommandLineAutomation {
             print("Requested debug info from running ShouldRest.")
             return true
         case "url":
-            guard args.indices.contains(1), post(urlString: args[1]) else {
+            guard args.indices.contains(1) else {
                 print("Usage: shouldrest url shouldrest://pause?duration=30m")
+                return true
+            }
+            guard post(urlString: args[1]) else {
+                print("Invalid ShouldRest URL: \(args[1])")
                 return true
             }
             print("Requested automation URL: \(args[1])")
             return true
         case "pause":
-            let duration = durationArgument(args)
-            post(.pause, duration: duration)
-            print("Requested pause\(duration.map { " for \(Int($0)) seconds" } ?? " indefinitely").")
+            let request = durationArgument(args)
+            if let invalid = request.invalid {
+                print("Invalid pause duration: \(invalid)")
+                return true
+            }
+            post(.pause, duration: request.duration)
+            print("Requested pause\(request.duration.map { " for \(Int($0)) seconds" } ?? " indefinitely").")
             return true
         case "resume":
             post(.resume)
             print("Requested resume.")
             return true
+        case "toggle":
+            post(.toggle)
+            print("Requested pause toggle.")
+            return true
         case "reset":
             post(.reset)
             print("Requested reset.")
             return true
-        case "eye":
-            post(.eye)
-            print("Requested Eye Gate now.")
+        case "eye", "mini":
+            let request = restRequest(args)
+            if let invalid = request.invalidWait {
+                print("Invalid wait duration: \(invalid)")
+                return true
+            }
+            if request.noSkip, request.wait == nil {
+                print("Eye Gate content customization is not supported; no Eye Gate was started.")
+            } else {
+                post(.eye, duration: request.wait, noSkip: request.noSkip)
+                print("Requested Eye Gate\(request.wait.map { " after \(Int($0)) seconds" } ?? " now").")
+            }
             return true
-        case "body":
-            post(.body)
-            print("Requested Body Break now.")
+        case "body", "long":
+            let request = restRequest(args)
+            if let invalid = request.invalidWait {
+                print("Invalid wait duration: \(invalid)")
+                return true
+            }
+            post(.body, duration: request.wait, title: request.title, text: request.text, noSkip: request.noSkip)
+            if request.noSkip, request.wait == nil {
+                print("Requested next Body Break content.")
+            } else {
+                print("Requested Body Break\(request.wait.map { " after \(Int($0)) seconds" } ?? " now").")
+            }
             return true
         case "preferences":
             post(.preferences)
@@ -131,10 +167,25 @@ enum CommandLineAutomation {
         }
     }
 
-    private static func post(_ command: AutomationCommand, duration: TimeInterval? = nil) {
+    private static func post(
+        _ command: AutomationCommand,
+        duration: TimeInterval? = nil,
+        title: String? = nil,
+        text: String? = nil,
+        noSkip: Bool = false
+    ) {
         var userInfo: [String: Any] = [:]
         if let duration {
             userInfo["duration"] = duration
+        }
+        if let title, !title.isEmpty {
+            userInfo["title"] = title
+        }
+        if let text, !text.isEmpty {
+            userInfo["text"] = text
+        }
+        if noSkip {
+            userInfo["noSkip"] = true
         }
         DistributedNotificationCenter.default().postNotificationName(
             .shouldRestAutomation,
@@ -151,11 +202,23 @@ enum CommandLineAutomation {
               let command = command(from: url) else {
             return false
         }
-        post(command.command, duration: command.duration)
+        post(
+            command.command,
+            duration: command.duration,
+            title: command.title,
+            text: command.text,
+            noSkip: command.noSkip
+        )
         return true
     }
 
-    static func command(from url: URL) -> (command: AutomationCommand, duration: TimeInterval?)? {
+    static func command(from url: URL) -> (
+        command: AutomationCommand,
+        duration: TimeInterval?,
+        title: String?,
+        text: String?,
+        noSkip: Bool
+    )? {
         let name = url.host ?? url.path.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
         let command: AutomationCommand
         switch name {
@@ -163,11 +226,13 @@ enum CommandLineAutomation {
             command = .pause
         case "resume":
             command = .resume
+        case "toggle":
+            command = .toggle
         case "reset":
             command = .reset
-        case "eye":
+        case "eye", "mini":
             command = .eye
-        case "body":
+        case "body", "long":
             command = .body
         case "preferences":
             command = .preferences
@@ -179,16 +244,84 @@ enum CommandLineAutomation {
 
         let components = URLComponents(url: url, resolvingAgainstBaseURL: false)
         let durationValue = components?.queryItems?.first(where: { $0.name == "duration" })?.value
-        let duration = durationValue.flatMap { parseDuration($0, operations: configuredOperations()) }
-        return (command, duration)
+        let waitValue = components?.queryItems?.first(where: { $0.name == "wait" })?.value
+        let title = components?.queryItems?.first(where: { $0.name == "title" })?.value
+        let text = components?.queryItems?.first(where: { $0.name == "text" })?.value
+        let noSkip = components?.queryItems?.contains(where: { $0.name == "noskip" || $0.name == "noSkip" }) ?? false
+        let duration: TimeInterval?
+        if command == .pause {
+            guard case .valid(let parsed) = automationDuration(from: durationValue, allowsIndefinitely: true) else {
+                return nil
+            }
+            duration = parsed
+        } else {
+            guard case .valid(let parsed) = automationDuration(from: waitValue ?? durationValue, allowsIndefinitely: false) else {
+                return nil
+            }
+            duration = parsed
+        }
+        return (command, duration, title, text, noSkip)
     }
 
-    private static func durationArgument(_ args: [String]) -> TimeInterval? {
-        guard let index = args.firstIndex(where: { $0 == "-d" || $0 == "--duration" }),
+    private static func durationArgument(_ args: [String]) -> (duration: TimeInterval?, invalid: String?) {
+        guard let value = optionValue(args, short: "-d", long: "--duration") else {
+            return (nil, nil)
+        }
+        if value == "indefinitely" {
+            return (nil, nil)
+        }
+        guard let duration = parseDuration(value, operations: configuredOperations()) else {
+            return (nil, value)
+        }
+        return (duration, nil)
+    }
+
+    private static func restRequest(
+        _ args: [String]
+    ) -> (title: String?, text: String?, wait: TimeInterval?, noSkip: Bool, invalidWait: String?) {
+        let waitValue = optionValue(args, short: "-w", long: "--wait")
+        if let waitValue,
+           let wait = parseDuration(waitValue, operations: configuredOperations()) {
+            return (
+                optionValue(args, short: "-T", long: "--title"),
+                optionValue(args, short: "-t", long: "--text"),
+                wait,
+                hasFlag(args, short: "-n", long: "--noskip"),
+                nil
+            )
+        }
+        return (
+            optionValue(args, short: "-T", long: "--title"),
+            optionValue(args, short: "-t", long: "--text"),
+            nil,
+            hasFlag(args, short: "-n", long: "--noskip"),
+            waitValue
+        )
+    }
+
+    private static func optionValue(_ args: [String], short: String, long: String) -> String? {
+        guard let index = args.firstIndex(where: { $0 == short || $0 == long }),
               args.indices.contains(index + 1) else {
             return nil
         }
-        return parseDuration(args[index + 1], operations: configuredOperations())
+        return args[index + 1]
+    }
+
+    private static func hasFlag(_ args: [String], short: String, long: String) -> Bool {
+        args.contains(short) || args.contains(long)
+    }
+
+    private static func automationDuration(from value: String?, allowsIndefinitely: Bool) -> DurationParseResult {
+        guard let value else {
+            return .valid(nil)
+        }
+        if allowsIndefinitely, value == "indefinitely" {
+            return .valid(nil)
+        }
+        guard let duration = parseDuration(value, operations: configuredOperations()) else {
+            return .invalid
+        }
+        return .valid(duration)
     }
 
     static func parseDuration(

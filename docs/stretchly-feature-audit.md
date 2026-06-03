@@ -46,6 +46,7 @@ These Stretchly behaviors are design divergences, not missing features.
 | Strict mode defaults off. | Eye Gate is strict by default. | The biologically important unit is compliance, not reminder delivery. |
 | Transparent and blurred break surfaces. | Eye Gate is opaque full-screen. Body Break may use styling, but enforced surfaces remain visually decisive. | Partial visibility invites continued screen work. |
 | Rich mini-break ideas on screen. | Eye Gate avoids rich readable content. Rich ideas belong to Body Break. | Reading instructions is still near-screen visual work. |
+| CLI/custom title injection for Mini breaks. | Eye Gate command starts the visual rest but does not accept custom readable title/body content. Body Break keeps custom title/body injection. | Eye Gate should not turn into an on-screen reading task. |
 | Regular/focusable break windows. | Enforced breaks use native overlay windows, not ordinary document-like windows. | Ordinary windows lose stacking authority and invite interaction. |
 | Percentage-sized active break windows (`breakWindowWidth` / `breakWindowHeight`). | Enforced rests cover the targeted display area; Body Break instead supports display targeting, content-display selection, and secondary blanking. | Partial active windows leave enough visual access to continue working. |
 | Tray/menu actions during strict mini breaks (`showTrayMenuInStrictMode`). | Eye Gate exposes only a frictional emergency override while active. | Ordinary menu actions collapse strict mode back into habitual dismissal. |
@@ -151,6 +152,7 @@ Implemented now:
 - Native preferences window for core cadence, enablement, Focus policy, and tray style.
 - Expanded preferences for notification lead times, overlay colors, sounds, Body Break postpone policy, natural break settings, working hours, primary app exclusion, custom Body Break idea, shortcuts, update settings, and admin controls.
 - CLI command surface for help, version, settings/log paths, pause/resume/reset, take-now, preferences, and debug requests.
+- Stretchly-compatible `toggle`, `mini`, and `long` command aliases, delayed take-now automation, and `body`/`long` one-shot Body Break title, text, wait, and noskip options.
 - Distributed notification bridge for CLI-to-running-app automation.
 - Local log file.
 - Custom rich-text sanitizer for Body Break content.

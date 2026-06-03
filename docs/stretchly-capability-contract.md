@@ -12,6 +12,7 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 - No ordinary postpone for Eye Gate.
 - No transparent or partial Eye Gate overlay.
 - No rich Eye Gate content that asks the user to read the screen.
+- No CLI/API injection of rich Eye Gate title/body content.
 - No regular/focusable break window mode for enforced breaks.
 - No percentage-sized partial active break windows for enforced rests; Body Break uses display targeting and optional secondary blanking instead.
 - No ordinary tray/menu actions during Eye Gate beyond the frictional emergency override.
@@ -60,7 +61,7 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 - Pause durations: 30 minutes, 1 hour, 2 hours, 5 hours, until morning, indefinitely.
 - Pause-until-morning supports both a fixed hour and sunrise from configured coordinates.
 - Global shortcuts for pause/resume, immediate break, next scheduled rest, Body Break end, and reset.
-- CLI or URL-style automation surface.
+- CLI or URL-style automation surface, including Stretchly-style `mini`/`long` aliases, pause toggle, delayed take-now, and one-shot Body Break title/body/wait/noskip customization.
 
 ### Presentation
 

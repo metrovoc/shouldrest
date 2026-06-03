@@ -27,6 +27,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private var pausedForSuspendOrLock = false
     private var manualAwaitingSessionID: UUID?
     private var latestReleaseURL: URL?
+    private var pendingBodyBreakIdea: RestIdea?
+    private var activeBodyBreakIdeas: [UUID: RestIdea] = [:]
+    private var automationTasks: [UUID: Task<Void, Never>] = [:]
 
     override init() {
         let store = SettingsStore(fileURL: AppPaths.settingsURL)
@@ -118,7 +121,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             let shouldAwaitManualFinish = elapsed >= active.duration && active.manualFinishEnabled
             overlayController.update(
                 session: active,
-                settings: settings,
+                settings: overlaySettings(for: active),
                 now: now,
                 manualAwaiting: shouldAwaitManualFinish
             )
@@ -136,6 +139,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 _ = engine.completeActive(now: now, reason: .completed)
                 overlayController.dismiss()
                 manualAwaitingSessionID = nil
+                clearActiveBodyBreakIdea(for: active)
                 logger.log("Completed \(active.kind.rawValue)")
                 rebuildMenu()
                 return
@@ -152,8 +156,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func handleEngineResult(_ result: RestEngineResult, now: Date) {
         switch result {
         case .started(let session):
+            bindPendingBodyBreakIdea(to: session)
             soundPlayer.play(settings.rule(for: session.kind).startSound)
-            overlayController.present(session: session, settings: settings, now: now)
+            overlayController.present(session: session, settings: overlaySettings(for: session), now: now)
             logger.log("Started \(session.kind.rawValue)")
         case .notificationDue(let kind):
             showNotification(for: kind)
@@ -335,9 +340,18 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func takeBodyBreakNow() {
+        startBodyBreakNow(idea: nil)
+    }
+
+    private func startBodyBreakNow(idea: RestIdea?) {
+        let effectiveIdea = idea ?? pendingBodyBreakIdea
+        pendingBodyBreakIdea = nil
         if case .started(let session) = engine.takeNow(.bodyBreak) {
+            if let idea = effectiveIdea {
+                activeBodyBreakIdeas[session.id] = idea
+            }
             soundPlayer.play(settings.rule(for: session.kind).startSound)
-            overlayController.present(session: session, settings: settings, now: Date())
+            overlayController.present(session: session, settings: overlaySettings(for: session), now: Date())
             logger.log("Manual Body Break started")
         }
         rebuildMenu()
@@ -354,8 +368,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func postponeBodyBreak() {
+        let active = engine.state.activeSession
         if case .postponed = engine.postponeActive() {
             overlayController.dismiss()
+            if let active {
+                clearActiveBodyBreakIdea(for: active)
+            }
             logger.log("Body Break postponed")
         }
         rebuildMenu()
@@ -365,6 +383,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         if let active = engine.state.activeSession {
             soundPlayer.play(settings.rule(for: active.kind).finishSound)
             logger.log("Manually finished \(active.kind.rawValue)")
+            clearActiveBodyBreakIdea(for: active)
         }
         _ = engine.completeActive(reason: .manual)
         overlayController.dismiss()
@@ -373,6 +392,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func skipBodyBreak() {
+        if let active = engine.state.activeSession {
+            clearActiveBodyBreakIdea(for: active)
+        }
         _ = engine.skipActive()
         overlayController.dismiss()
         manualAwaitingSessionID = nil
@@ -391,10 +413,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
         if case .postponed = engine.postponeActive(now: now) {
             overlayController.dismiss()
+            clearActiveBodyBreakIdea(for: active)
             logger.log("Body Break postponed by end shortcut")
         } else if case .completed = engine.skipActive(now: now) {
             overlayController.dismiss()
             manualAwaitingSessionID = nil
+            clearActiveBodyBreakIdea(for: active)
             logger.log("Body Break skipped by end shortcut")
         }
         rebuildMenu()
@@ -483,8 +507,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func pause(for duration: TimeInterval?, reason: PauseReason) {
+        let active = engine.state.activeSession
         if case .paused = engine.pause(for: duration, reason: reason) {
             overlayController.dismiss()
+            if let active {
+                clearActiveBodyBreakIdea(for: active)
+            }
             logger.log("Breaks paused reason=\(reason.rawValue) duration=\(String(describing: duration))")
         }
         rebuildMenu()
@@ -494,6 +522,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         _ = engine.reset()
         overlayController.dismiss()
         manualAwaitingSessionID = nil
+        pendingBodyBreakIdea = nil
+        activeBodyBreakIdeas.removeAll()
+        cancelAutomationTasks()
         logger.log("Breaks reset")
         rebuildMenu()
     }
@@ -605,12 +636,18 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             pause(for: automationDuration(from: notification.userInfo), reason: .user)
         case .resume:
             resumeBreaks()
+        case .toggle:
+            if engine.state.pause == nil {
+                pause(for: nil, reason: .user)
+            } else {
+                resumeBreaks()
+            }
         case .reset:
             resetBreaks()
         case .eye:
-            takeEyeGateNow()
+            handleEyeGateAutomation(notification.userInfo)
         case .body:
-            takeBodyBreakNow()
+            handleBodyBreakAutomation(notification.userInfo)
         case .preferences:
             openPreferences()
         case .debug:
@@ -636,6 +673,128 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             return duration.doubleValue
         }
         return nil
+    }
+
+    private func handleEyeGateAutomation(_ userInfo: [AnyHashable: Any]?) {
+        let noSkip = automationNoSkip(from: userInfo)
+        let wait = automationDuration(from: userInfo)
+
+        if let wait, wait > 0 {
+            scheduleEyeGateAutomation(after: wait)
+        } else if noSkip {
+            logger.log("Ignored Eye Gate content customization")
+        } else {
+            takeEyeGateNow()
+        }
+    }
+
+    private func handleBodyBreakAutomation(_ userInfo: [AnyHashable: Any]?) {
+        let idea = automationBodyBreakIdea(from: userInfo)
+        let noSkip = automationNoSkip(from: userInfo)
+        let wait = automationDuration(from: userInfo)
+
+        if let wait, wait > 0 {
+            scheduleBodyBreakAutomation(after: wait, idea: idea)
+        } else if noSkip {
+            pendingBodyBreakIdea = idea
+            logger.log("Stored one-shot Body Break content")
+        } else {
+            startBodyBreakNow(idea: idea)
+        }
+    }
+
+    private func automationNoSkip(from userInfo: [AnyHashable: Any]?) -> Bool {
+        if let noSkip = userInfo?["noSkip"] as? Bool {
+            return noSkip
+        }
+        if let noSkip = userInfo?["noSkip"] as? NSNumber {
+            return noSkip.boolValue
+        }
+        return false
+    }
+
+    private func automationBodyBreakIdea(from userInfo: [AnyHashable: Any]?) -> RestIdea? {
+        let title = (userInfo?["title"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let rawText = (userInfo?["text"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let body = ContentSanitizer.sanitizeRichText(rawText)
+        guard !title.isEmpty || !body.isEmpty else { return nil }
+        return RestIdea(
+            id: "automation-\(UUID().uuidString)",
+            kind: .bodyBreak,
+            title: title.isEmpty ? L10n.tr("overlay.bodyTitle") : title,
+            body: body,
+            isEnabled: true
+        )
+    }
+
+    private func scheduleEyeGateAutomation(after delay: TimeInterval) {
+        let id = UUID()
+        let nanoseconds = UInt64(max(1, delay) * 1_000_000_000)
+        let task = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: nanoseconds)
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                guard !Task.isCancelled else { return }
+                self?.runScheduledEyeGateAutomation(id: id)
+            }
+        }
+        automationTasks[id] = task
+        logger.log("Scheduled Eye Gate automation after \(delay) seconds")
+    }
+
+    private func runScheduledEyeGateAutomation(id: UUID) {
+        automationTasks.removeValue(forKey: id)
+        takeEyeGateNow()
+    }
+
+    private func scheduleBodyBreakAutomation(after delay: TimeInterval, idea: RestIdea?) {
+        let id = UUID()
+        let nanoseconds = UInt64(max(1, delay) * 1_000_000_000)
+        let task = Task { [weak self, idea] in
+            try? await Task.sleep(nanoseconds: nanoseconds)
+            guard !Task.isCancelled else { return }
+            await MainActor.run {
+                guard !Task.isCancelled else { return }
+                self?.runScheduledBodyBreakAutomation(id: id, idea: idea)
+            }
+        }
+        automationTasks[id] = task
+        logger.log("Scheduled Body Break automation after \(delay) seconds")
+    }
+
+    private func runScheduledBodyBreakAutomation(id: UUID, idea: RestIdea?) {
+        automationTasks.removeValue(forKey: id)
+        startBodyBreakNow(idea: idea)
+    }
+
+    private func cancelAutomationTasks() {
+        for task in automationTasks.values {
+            task.cancel()
+        }
+        automationTasks.removeAll()
+    }
+
+    private func bindPendingBodyBreakIdea(to session: RestSession) {
+        guard session.kind == .bodyBreak, let idea = pendingBodyBreakIdea else { return }
+        activeBodyBreakIdeas[session.id] = idea
+        pendingBodyBreakIdea = nil
+    }
+
+    private func clearActiveBodyBreakIdea(for session: RestSession) {
+        activeBodyBreakIdeas.removeValue(forKey: session.id)
+    }
+
+    private func overlaySettings(for session: RestSession) -> RestSettings {
+        guard session.kind == .bodyBreak,
+              let idea = activeBodyBreakIdeas[session.id] else {
+            return settings
+        }
+        var copy = settings
+        copy.contentLibrary.useBuiltInIdeas = false
+        copy.contentLibrary.customBodyBreakIdeas = [idea]
+        copy.contentLibrary.localImagePaths = []
+        copy.bodyBreak.content = .richRestIdea
+        return copy
     }
 
     @objc private func systemWillPause() {
