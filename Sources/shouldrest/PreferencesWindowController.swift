@@ -129,6 +129,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let eyeFinishSoundPreview = NSButton()
     private let bodyStartSoundPreview = NSButton()
     private let bodyFinishSoundPreview = NSButton()
+    private var eyeStartSoundRow: NSView?
+    private var eyeFinishSoundRow: NSView?
     private var bodyStartSoundRow: NSView?
     private var bodyFinishSoundRow: NSView?
     private let soundVolume = NSTextField()
@@ -482,8 +484,14 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         appearanceStack.addArrangedSubview(currentTimeInBodyBreak)
         appearanceStack.addArrangedSubview(breakHealth)
         appearanceStack.addArrangedSubview(silentNotifications)
-        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.eyeStartSound"), soundPickerRow(eyeStartSound, eyeStartSoundPreview)))
-        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.eyeFinishSound"), soundPickerRow(eyeFinishSound, eyeFinishSoundPreview)))
+        let eyeStartSoundRow = row(L10n.tr("prefs.eyeStartSound"), soundPickerRow(eyeStartSound, eyeStartSoundPreview))
+        eyeStartSoundRow.identifier = NSUserInterfaceItemIdentifier("prefs.eyeStartSoundRow")
+        self.eyeStartSoundRow = eyeStartSoundRow
+        appearanceStack.addArrangedSubview(eyeStartSoundRow)
+        let eyeFinishSoundRow = row(L10n.tr("prefs.eyeFinishSound"), soundPickerRow(eyeFinishSound, eyeFinishSoundPreview))
+        eyeFinishSoundRow.identifier = NSUserInterfaceItemIdentifier("prefs.eyeFinishSoundRow")
+        self.eyeFinishSoundRow = eyeFinishSoundRow
+        appearanceStack.addArrangedSubview(eyeFinishSoundRow)
         let bodyStartSoundRow = row(L10n.tr("prefs.bodyStartSound"), soundPickerRow(bodyStartSound, bodyStartSoundPreview))
         bodyStartSoundRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyStartSoundRow")
         self.bodyStartSoundRow = bodyStartSoundRow
@@ -1490,6 +1498,7 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         pauseUntilMorningLatitude.isEnabled = usesSunrise
         pauseUntilMorningLongitude.isEnabled = usesSunrise
 
+        updateAppearanceEyeGateVisibility(eyeGateEnabled: eyeGateEnabled)
         updateAppearanceBodyBreakVisibility(bodyBreakEnabled: bodyBreakEnabled)
         updateShortcutPreferenceVisibility(
             eyeGateEnabled: eyeGateEnabled,
@@ -1517,6 +1526,14 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         shortcutEmergencyEyeRow?.isHidden = !emergencyVisible
         shortcutEmergencyEye.isEnabled = emergencyVisible
         updateShortcutConflictWarning()
+    }
+
+    private func updateAppearanceEyeGateVisibility(eyeGateEnabled: Bool) {
+        eyeStartSoundRow?.isHidden = !eyeGateEnabled
+        eyeFinishSoundRow?.isHidden = !eyeGateEnabled
+        [eyeStartSound, eyeFinishSound, eyeStartSoundPreview, eyeFinishSoundPreview].forEach {
+            $0.isEnabled = eyeGateEnabled
+        }
     }
 
     private func updateAppearanceBodyBreakVisibility(bodyBreakEnabled: Bool) {

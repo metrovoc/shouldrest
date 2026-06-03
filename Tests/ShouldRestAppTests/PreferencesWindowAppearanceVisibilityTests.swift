@@ -18,6 +18,8 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         try selectAppearanceTab(in: contentView)
 
         XCTAssertFalse(try view(withIdentifier: "prefs.useBuiltInIdeas", in: contentView).isHidden)
+        XCTAssertFalse(try view(withIdentifier: "prefs.eyeStartSoundRow", in: contentView).isHidden)
+        XCTAssertFalse(try view(withIdentifier: "prefs.eyeFinishSoundRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.currentTimeBody", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyStartSoundRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyFinishSoundRow", in: contentView).isHidden)
@@ -32,6 +34,27 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.advancedIdeasJSON")))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.bodyStartSound")))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.bodyFinishSound")))
+    }
+
+    func testDisabledEyeGateHidesEyeOnlyAppearanceControls() throws {
+        var settings = RestSettings.defaults
+        settings.eyeGate.isEnabled = false
+        settings.bodyBreak.isEnabled = true
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+
+        XCTAssertTrue(try view(withIdentifier: "prefs.eyeStartSoundRow", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.eyeFinishSoundRow", in: contentView).isHidden)
+        XCTAssertFalse(try view(withIdentifier: "prefs.bodyStartSoundRow", in: contentView).isHidden)
+        XCTAssertFalse(try view(withIdentifier: "prefs.bodyFinishSoundRow", in: contentView).isHidden)
+
+        let visibleTexts = visibleTexts(in: contentView)
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.eyeStartSound")))
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.eyeFinishSound")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.bodyStartSound")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.bodyFinishSound")))
     }
 
     func testReenablingBodyBreakShowsBodyOnlyAppearanceControlsAndAutosaves() throws {
@@ -58,6 +81,29 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertFalse(try view(withIdentifier: "prefs.customBodyTextRow", in: contentView).isHidden)
         XCTAssertFalse(try view(withIdentifier: "customIdeas", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.customBodyIdeasJSONRow", in: contentView).isHidden)
+    }
+
+    func testReenablingEyeGateShowsEyeOnlyAppearanceControlsAndAutosaves() throws {
+        var settings = RestSettings.defaults
+        settings.eyeGate.isEnabled = false
+        settings.bodyBreak.isEnabled = true
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectScheduleTab(in: contentView)
+        let eyeEnabled = try XCTUnwrap(view(withIdentifier: "prefs.eyeEnabled", in: contentView) as? NSButton)
+        eyeEnabled.state = .on
+
+        XCTAssertTrue(sendAction(from: eyeEnabled))
+        waitUntilSavedSettingsArrive(savedSettings)
+        XCTAssertEqual(savedSettings.value?.eyeGate.isEnabled, true)
+
+        try selectAppearanceTab(in: contentView)
+        XCTAssertFalse(try view(withIdentifier: "prefs.eyeStartSoundRow", in: contentView).isHidden)
+        XCTAssertFalse(try view(withIdentifier: "prefs.eyeFinishSoundRow", in: contentView).isHidden)
+        XCTAssertFalse(try view(withIdentifier: "prefs.bodyStartSoundRow", in: contentView).isHidden)
+        XCTAssertFalse(try view(withIdentifier: "prefs.bodyFinishSoundRow", in: contentView).isHidden)
     }
 
     private func selectScheduleTab(in view: NSView) throws {
