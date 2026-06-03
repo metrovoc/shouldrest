@@ -179,8 +179,8 @@
 "prefs.sound.reverie" = "Reverie";
 "prefs.sound.custom" = "Custom (%@)";
 "prefs.volume" = "Sound volume";
-"prefs.sectionCustomIdea" = "Custom Body Break Idea";
-"prefs.useBuiltInIdeas" = "Use built-in rest ideas";
+"prefs.sectionCustomIdea" = "Rest Content";
+"prefs.useBuiltInIdeas" = "Include built-in rest ideas";
 "prefs.title" = "Title";
 "prefs.text" = "Body text";
 "prefs.advancedIdeasJSON" = "Advanced ideas JSON";

@@ -129,6 +129,8 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let eyeFinishSoundPreview = NSButton()
     private let bodyStartSoundPreview = NSButton()
     private let bodyFinishSoundPreview = NSButton()
+    private var bodyStartSoundRow: NSView?
+    private var bodyFinishSoundRow: NSView?
     private let soundVolume = NSTextField()
     private let soundVolumeSlider = NSSlider()
     private let soundVolumeValueLabel = NSTextField(labelWithString: "")
@@ -140,6 +142,9 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
     private let customBodyIdeasJSONEditor = NSTextView()
     private let customBodyIdeasJSONScrollView = NSScrollView()
     private let customBodyIdeasAdvancedButton = NSButton()
+    private var localImagePathRow: NSView?
+    private var customBodyTitleRow: NSView?
+    private var customBodyTextRow: NSView?
     private var customBodyIdeasJSONRow: NSView?
     private let localImagePath = NSTextField()
     private let localImageChooseButton = NSButton()
@@ -469,23 +474,41 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.theme"), themeSource))
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.menuBarStyle"), trayStyle))
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.language"), languageIdentifier))
+        currentTimeInBodyBreak.identifier = NSUserInterfaceItemIdentifier("prefs.currentTimeBody")
         appearanceStack.addArrangedSubview(currentTimeInBodyBreak)
         appearanceStack.addArrangedSubview(breakHealth)
         appearanceStack.addArrangedSubview(silentNotifications)
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.eyeStartSound"), soundPickerRow(eyeStartSound, eyeStartSoundPreview)))
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.eyeFinishSound"), soundPickerRow(eyeFinishSound, eyeFinishSoundPreview)))
-        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.bodyStartSound"), soundPickerRow(bodyStartSound, bodyStartSoundPreview)))
-        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.bodyFinishSound"), soundPickerRow(bodyFinishSound, bodyFinishSoundPreview)))
+        let bodyStartSoundRow = row(L10n.tr("prefs.bodyStartSound"), soundPickerRow(bodyStartSound, bodyStartSoundPreview))
+        bodyStartSoundRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyStartSoundRow")
+        self.bodyStartSoundRow = bodyStartSoundRow
+        appearanceStack.addArrangedSubview(bodyStartSoundRow)
+        let bodyFinishSoundRow = row(L10n.tr("prefs.bodyFinishSound"), soundPickerRow(bodyFinishSound, bodyFinishSoundPreview))
+        bodyFinishSoundRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyFinishSoundRow")
+        self.bodyFinishSoundRow = bodyFinishSoundRow
+        appearanceStack.addArrangedSubview(bodyFinishSoundRow)
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.volume"), soundVolumeRow()))
         appearanceStack.addArrangedSubview(soundPreviewStatusLabel)
         appearanceStack.addArrangedSubview(separator())
         appearanceStack.addArrangedSubview(section(L10n.tr("prefs.sectionCustomIdea"), symbolName: "text.bubble"))
+        useBuiltInIdeas.identifier = NSUserInterfaceItemIdentifier("prefs.useBuiltInIdeas")
         appearanceStack.addArrangedSubview(useBuiltInIdeas)
-        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.localImagePath"), localImagePickerRow()))
-        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.title"), customBodyTitle))
-        appearanceStack.addArrangedSubview(multilineRow(L10n.tr("prefs.text"), customBodyTextScrollView))
+        let localImagePathRow = row(L10n.tr("prefs.localImagePath"), localImagePickerRow())
+        localImagePathRow.identifier = NSUserInterfaceItemIdentifier("prefs.localImagePathRow")
+        self.localImagePathRow = localImagePathRow
+        appearanceStack.addArrangedSubview(localImagePathRow)
+        let customBodyTitleRow = row(L10n.tr("prefs.title"), customBodyTitle)
+        customBodyTitleRow.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyTitleRow")
+        self.customBodyTitleRow = customBodyTitleRow
+        appearanceStack.addArrangedSubview(customBodyTitleRow)
+        let customBodyTextRow = multilineRow(L10n.tr("prefs.text"), customBodyTextScrollView)
+        customBodyTextRow.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyTextRow")
+        self.customBodyTextRow = customBodyTextRow
+        appearanceStack.addArrangedSubview(customBodyTextRow)
         appearanceStack.addArrangedSubview(customBodyIdeasAdvancedButton)
         let customBodyIdeasJSONRow = multilineRow(L10n.tr("prefs.advancedIdeasJSON"), customBodyIdeasJSONScrollView)
+        customBodyIdeasJSONRow.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyIdeasJSONRow")
         self.customBodyIdeasJSONRow = customBodyIdeasJSONRow
         appearanceStack.addArrangedSubview(customBodyIdeasJSONRow)
         addTab(to: tabView, title: L10n.tr("prefs.tabAppearance"), stack: appearanceStack)
@@ -1447,7 +1470,32 @@ final class PreferencesWindowController: NSWindowController, NSTextFieldDelegate
         pauseUntilMorningLatitude.isEnabled = usesSunrise
         pauseUntilMorningLongitude.isEnabled = usesSunrise
 
-        localImageClearButton.isEnabled = !localImagePath.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        updateAppearanceBodyBreakVisibility(bodyBreakEnabled: bodyBreakEnabled)
+    }
+
+    private func updateAppearanceBodyBreakVisibility(bodyBreakEnabled: Bool) {
+        currentTimeInBodyBreak.isHidden = !bodyBreakEnabled
+        currentTimeInBodyBreak.isEnabled = bodyBreakEnabled
+        bodyStartSoundRow?.isHidden = !bodyBreakEnabled
+        bodyFinishSoundRow?.isHidden = !bodyBreakEnabled
+        [bodyStartSound, bodyFinishSound, bodyStartSoundPreview, bodyFinishSoundPreview].forEach {
+            $0.isEnabled = bodyBreakEnabled
+        }
+        [localImagePathRow, customBodyTitleRow, customBodyTextRow].forEach {
+            $0?.isHidden = !bodyBreakEnabled
+        }
+        customBodyIdeasAdvancedButton.isHidden = !bodyBreakEnabled
+        if !bodyBreakEnabled {
+            setAdvancedDisclosure(row: customBodyIdeasJSONRow, button: customBodyIdeasAdvancedButton, expanded: false)
+        }
+        customBodyTitle.isEnabled = bodyBreakEnabled
+        customBodyTextEditor.isEditable = bodyBreakEnabled
+        customBodyTextScrollView.alphaValue = bodyBreakEnabled ? 1 : 0.55
+        customBodyIdeasJSONEditor.isEditable = bodyBreakEnabled
+        customBodyIdeasJSONScrollView.alphaValue = bodyBreakEnabled ? 1 : 0.55
+        localImageChooseButton.isEnabled = bodyBreakEnabled
+        localImageClearButton.isEnabled = bodyBreakEnabled &&
+            !localImagePath.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private func setNumberInputEnabled(_ field: NSTextField, _ enabled: Bool) {

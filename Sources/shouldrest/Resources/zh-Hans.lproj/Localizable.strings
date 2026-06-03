@@ -179,8 +179,8 @@
 "prefs.sound.reverie" = "白日梦";
 "prefs.sound.custom" = "自定义（%@）";
 "prefs.volume" = "声音音量";
-"prefs.sectionCustomIdea" = "自定义活动休息内容";
-"prefs.useBuiltInIdeas" = "使用内置休息提示";
+"prefs.sectionCustomIdea" = "休息内容";
+"prefs.useBuiltInIdeas" = "包含内置休息提示";
 "prefs.title" = "标题";
 "prefs.text" = "正文";
 "prefs.advancedIdeasJSON" = "高级提示 JSON";
