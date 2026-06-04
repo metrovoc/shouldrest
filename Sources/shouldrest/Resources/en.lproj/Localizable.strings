@@ -611,8 +611,8 @@
 "onboarding.learnMoreHelp" = "Open product details and project links.";
 "onboarding.useSelected" = "Start With This Rhythm";
 "onboarding.useSelectedHelp" = "Apply the selected rhythm and start ShouldRest.";
-"onboarding.preferences" = "Open Preferences";
-"onboarding.preferencesHelp" = "Apply the selected rhythm and open Preferences to customize it before continuing.";
+"onboarding.preferences" = "Customize in Preferences";
+"onboarding.preferencesHelp" = "Apply the selected rhythm, then open Preferences so you can adjust the details before starting.";
 "onboarding.useSelectedWithPreset" = "Start With %@";
 "about.title" = "About ShouldRest";
 "about.body" = "ShouldRest %@\n\nShouldRest is built around a simple rule: short eye rests need strong protection, while longer movement breaks need humane flexibility.\n\nIt keeps schedules, updates, support tools, and preferences available without turning them into easy skip paths for 20-second Eye Gates.";

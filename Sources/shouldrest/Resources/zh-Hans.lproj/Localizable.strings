@@ -611,8 +611,8 @@
 "onboarding.learnMoreHelp" = "打开产品信息和项目链接。";
 "onboarding.useSelected" = "使用这个节奏开始";
 "onboarding.useSelectedHelp" = "应用当前选择的节奏并开始使用 ShouldRest。";
-"onboarding.preferences" = "打开偏好设置";
-"onboarding.preferencesHelp" = "应用当前选择的节奏，并打开偏好设置继续自定义。";
+"onboarding.preferences" = "在偏好设置中自定义";
+"onboarding.preferencesHelp" = "先应用当前选择的节奏，再打开偏好设置，让你开始前调整细节。";
 "onboarding.useSelectedWithPreset" = "使用%@开始";
 "about.title" = "关于 ShouldRest";
 "about.body" = "ShouldRest %@\n\nShouldRest 围绕一个简单原则构建：短暂护眼休息需要强约束，较长活动休息需要有弹性的控制。\n\n它保留调度、更新、支持工具和偏好设置，但不把这些控制变成 20 秒护眼休息的绕过入口。";
