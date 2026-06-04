@@ -300,7 +300,10 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
         XCTAssertEqual(button.attributedTitle.string, title, file: file, line: line)
         XCTAssertEqual(button.imagePosition, .imageLeading, file: file, line: line)
         XCTAssertNotNil(button.image, file: file, line: line)
+        XCTAssertEqual(button.image?.accessibilityDescription, title, file: file, line: line)
         XCTAssertEqual(button.toolTip, toolTip, file: file, line: line)
+        XCTAssertEqual(button.accessibilityLabel(), title, file: file, line: line)
+        XCTAssertEqual(button.accessibilityHelp(), toolTip, file: file, line: line)
         XCTAssertTrue(
             button.hasConstraint(attribute: .width, relation: .greaterThanOrEqual, constant: 112),
             file: file,

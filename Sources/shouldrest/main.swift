@@ -2439,7 +2439,10 @@ final class RestOverlayView: NSView {
         emergencyButton.translatesAutoresizingMaskIntoConstraints = false
         emergencyButton.bezelStyle = .inline
         emergencyButton.isBordered = false
-        emergencyButton.image = NSImage(systemSymbolName: "exclamationmark.triangle", accessibilityDescription: nil)
+        emergencyButton.image = NSImage(
+            systemSymbolName: "exclamationmark.triangle",
+            accessibilityDescription: L10n.tr("overlay.emergencyOverride")
+        )
         emergencyButton.imagePosition = .imageLeading
         emergencyButton.target = self
         emergencyButton.action = #selector(emergencyOverridePressed)
@@ -2796,6 +2799,9 @@ final class RestOverlayView: NSView {
     }
 
     private func setEmergencyButtonTitle(_ title: String, style: EmergencyOverlayVisualStyle) {
+        emergencyButton.setAccessibilityLabel(title)
+        emergencyButton.setAccessibilityHelp(L10n.tr("overlay.emergencyOverrideHelp"))
+        emergencyButton.image?.accessibilityDescription = title
         let attributes: [NSAttributedString.Key: Any] = [
             .foregroundColor: NSColor.systemRed.withAlphaComponent(style.titleAlpha),
             .font: NSFont.systemFont(ofSize: 13, weight: .medium)
@@ -2815,10 +2821,12 @@ final class RestOverlayView: NSView {
         button.translatesAutoresizingMaskIntoConstraints = false
         button.bezelStyle = .inline
         button.isBordered = false
-        button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
+        button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: title)
         button.imagePosition = .imageLeading
         button.contentTintColor = NSColor.white.withAlphaComponent(0.72)
         button.toolTip = toolTip
+        button.setAccessibilityLabel(title)
+        button.setAccessibilityHelp(toolTip)
         button.target = self
         button.action = action
         button.alphaValue = 0.78
