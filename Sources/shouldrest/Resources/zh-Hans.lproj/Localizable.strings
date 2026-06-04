@@ -304,8 +304,8 @@
 "prefs.enablePrimaryExclusionHelp" = "应用规则可在匹配应用运行时暂停休息，或限定休息生效范围。";
 "prefs.appExclusionNameHelp" = "这条应用规则在偏好设置中的名称。";
 "prefs.matchTerms" = "匹配应用";
-"prefs.matchTermsPlaceholder" = "应用名称或 Bundle ID";
-"prefs.appExclusionTermsHelp" = "按应用名称或 Bundle ID 匹配，例如 Zoom 或 com.apple.Keynote。";
+"prefs.matchTermsPlaceholder" = "Zoom、Keynote 或应用标识";
+"prefs.appExclusionTermsHelp" = "优先使用“添加运行中应用”，也可输入 Zoom、Keynote 等应用名称；高级用法可输入 com.apple.Keynote 这类应用标识。";
 "prefs.addRunningApp" = "添加运行中应用";
 "prefs.addRunningAppHelp" = "选择当前正在运行的应用，并把它添加为应用规则。";
 "prefs.noRunningApps" = "没有可添加的运行中应用";
@@ -328,7 +328,7 @@
 "prefs.appExclusionAppliesBody" = "活动休息";
 "prefs.appExclusionAppliesNone" = "未选择休息类型";
 "prefs.appExclusionNoTerms" = "未选择匹配应用";
-"prefs.appExclusionPreviewEmpty" = "添加应用名称或 Bundle ID 后即可预览这条规则。";
+"prefs.appExclusionPreviewEmpty" = "选择添加运行中应用，或输入应用名称后预览这条规则。";
 "prefs.appExclusionPreviewPause" = "匹配 %@。匹配时暂停%@。";
 "prefs.appExclusionPreviewResumeOnly" = "匹配 %@。仅在匹配时运行%@。";
 "prefs.advancedRulesJSON" = "应用规则批量编辑";

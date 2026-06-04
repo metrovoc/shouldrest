@@ -346,6 +346,13 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertFalse(visibleTexts.contains("Mode"))
         XCTAssertFalse(visibleTexts.contains("Current rules"))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.advancedRulesJSON")))
+
+        let terms = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionTermsField", in: contentView) as? NSTokenField)
+        XCTAssertEqual(terms.placeholderString, L10n.tr("prefs.matchTermsPlaceholder"))
+        XCTAssertEqual(terms.toolTip, L10n.tr("prefs.appExclusionTermsHelp"))
+        XCTAssertFalse(terms.placeholderString?.localizedCaseInsensitiveContains("bundle id") ?? true)
+        XCTAssertFalse(terms.toolTip?.localizedCaseInsensitiveContains("bundle id") ?? true)
+        XCTAssertTrue(terms.toolTip?.contains(L10n.tr("prefs.addRunningApp")) ?? false)
     }
 
     func testAppExclusionPreviewShowsEmptyDraftGuidance() throws {
@@ -370,7 +377,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         let preview = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionPreviewLabel", in: contentView) as? NSTextField)
 
         XCTAssertFalse(preview.isHidden)
-        XCTAssertEqual(preview.stringValue, "Add an app name or bundle ID to preview this rule.")
+        XCTAssertEqual(preview.stringValue, "Choose Add Running App or type an app name to preview this rule.")
         XCTAssertEqual(preview.toolTip, preview.stringValue)
         XCTAssertEqual(preview.accessibilityHelp(), preview.stringValue)
     }

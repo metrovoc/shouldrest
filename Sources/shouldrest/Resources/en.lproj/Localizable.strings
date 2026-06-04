@@ -304,8 +304,8 @@
 "prefs.enablePrimaryExclusionHelp" = "Use app rules to pause or scope rests while matching apps are active.";
 "prefs.appExclusionNameHelp" = "A label for this app rule in Preferences.";
 "prefs.matchTerms" = "Apps to match";
-"prefs.matchTermsPlaceholder" = "App names or bundle IDs";
-"prefs.appExclusionTermsHelp" = "Match by app name or bundle ID, such as Zoom or com.apple.Keynote.";
+"prefs.matchTermsPlaceholder" = "Zoom, Keynote, or app identifier";
+"prefs.appExclusionTermsHelp" = "Choose Add Running App, or type app names such as Zoom or Keynote. Advanced users can use app identifiers like com.apple.Keynote.";
 "prefs.addRunningApp" = "Add Running App";
 "prefs.addRunningAppHelp" = "Choose a currently running app and add it as an app rule.";
 "prefs.noRunningApps" = "No running apps to add";
@@ -328,7 +328,7 @@
 "prefs.appExclusionAppliesBody" = "Body Break";
 "prefs.appExclusionAppliesNone" = "No rest type";
 "prefs.appExclusionNoTerms" = "No matched apps";
-"prefs.appExclusionPreviewEmpty" = "Add an app name or bundle ID to preview this rule.";
+"prefs.appExclusionPreviewEmpty" = "Choose Add Running App or type an app name to preview this rule.";
 "prefs.appExclusionPreviewPause" = "Matches %@. Pauses %@ while matched.";
 "prefs.appExclusionPreviewResumeOnly" = "Matches %@. Runs %@ only while matched.";
 "prefs.advancedRulesJSON" = "App rules bulk edit";
