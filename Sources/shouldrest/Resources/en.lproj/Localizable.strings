@@ -547,8 +547,8 @@
 "cli.requestedResume" = "Requested resume.";
 "cli.requestedToggle" = "Requested pause or resume.";
 "cli.requestedReset" = "Requested reset.";
-"cli.eyeReadableContentIgnored" = "Eye Gate readable content customization is ignored.";
-"cli.eyeNoSkipWithoutWait" = "Requested Eye Gate noskip without wait; current schedule kept.";
+"cli.eyeReadableContentIgnored" = "Eye Gate does not show custom text, so title/text was ignored.";
+"cli.eyeNoSkipWithoutWait" = "No wait was provided, so the current Eye Gate schedule was kept.";
 "cli.requestedEyeNow" = "Requested Eye Gate now.";
 "cli.requestedEyeAfter" = "Requested Eye Gate after %d seconds.";
 "cli.requestedNextBodyContent" = "Requested next Body Break content.";

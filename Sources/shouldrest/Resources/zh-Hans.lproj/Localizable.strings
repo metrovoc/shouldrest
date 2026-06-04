@@ -547,8 +547,8 @@
 "cli.requestedResume" = "已请求恢复休息。";
 "cli.requestedToggle" = "已请求暂停或恢复休息。";
 "cli.requestedReset" = "已请求重置计划。";
-"cli.eyeReadableContentIgnored" = "护眼休息不支持可阅读内容自定义，已忽略。";
-"cli.eyeNoSkipWithoutWait" = "已请求不跳过护眼休息但未设置等待时长；当前计划保持不变。";
+"cli.eyeReadableContentIgnored" = "护眼休息不显示自定义文字，标题或正文已忽略。";
+"cli.eyeNoSkipWithoutWait" = "没有设置等待时长，当前护眼计划保持不变。";
 "cli.requestedEyeNow" = "已请求立即开始护眼休息。";
 "cli.requestedEyeAfter" = "已请求 %d 秒后开始护眼休息。";
 "cli.requestedNextBodyContent" = "已请求更新下一次活动休息内容。";

@@ -51,10 +51,10 @@ final class CommandLineAutomationTests: XCTestCase {
     }
 
     func testEyeGateCommandLineWarningsUseLocalizedCopy() {
-        L10n.languageOverride = "zh-Hans"
         defer { L10n.languageOverride = nil }
 
-        let output = captureStandardOutput {
+        L10n.languageOverride = "en"
+        let englishOutput = captureStandardOutput {
             XCTAssertTrue(CommandLineAutomation.handle(arguments: [
                 "shouldrest",
                 "mini",
@@ -64,10 +64,30 @@ final class CommandLineAutomationTests: XCTestCase {
             ]))
         }
 
-        XCTAssertTrue(output.contains("护眼休息不支持可阅读内容自定义，已忽略。"))
-        XCTAssertTrue(output.contains("当前计划保持不变"))
-        XCTAssertFalse(output.contains("Eye Gate readable content customization is ignored."))
-        XCTAssertFalse(output.contains("current schedule kept"))
+        XCTAssertTrue(englishOutput.contains("Eye Gate does not show custom text, so title/text was ignored."))
+        XCTAssertTrue(englishOutput.contains("No wait was provided, so the current Eye Gate schedule was kept."))
+        XCTAssertFalse(englishOutput.localizedCaseInsensitiveContains("readable content customization"))
+        XCTAssertFalse(englishOutput.localizedCaseInsensitiveContains("noskip"))
+        XCTAssertFalse(englishOutput.contains("current schedule kept"))
+
+        L10n.languageOverride = "zh-Hans"
+        let simplifiedChineseOutput = captureStandardOutput {
+            XCTAssertTrue(CommandLineAutomation.handle(arguments: [
+                "shouldrest",
+                "mini",
+                "--title",
+                "Read this",
+                "--noskip"
+            ]))
+        }
+
+        XCTAssertTrue(simplifiedChineseOutput.contains("护眼休息不显示自定义文字，标题或正文已忽略。"))
+        XCTAssertTrue(simplifiedChineseOutput.contains("没有设置等待时长，当前护眼计划保持不变。"))
+        XCTAssertFalse(simplifiedChineseOutput.contains("可阅读内容自定义"))
+        XCTAssertFalse(simplifiedChineseOutput.contains("不跳过"))
+        XCTAssertFalse(simplifiedChineseOutput.contains("未设置等待时长；当前计划保持不变"))
+        XCTAssertFalse(simplifiedChineseOutput.contains("Eye Gate readable content customization is ignored."))
+        XCTAssertFalse(simplifiedChineseOutput.contains("current schedule kept"))
     }
 
     func testEmergencyAutomationSignalWritesAndConsumesMarker() throws {
