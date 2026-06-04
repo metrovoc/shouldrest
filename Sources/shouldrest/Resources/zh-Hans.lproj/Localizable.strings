@@ -25,6 +25,7 @@
 "menu.pause1h" = "1 小时";
 "menu.pause2h" = "2 小时";
 "menu.pause5h" = "5 小时";
+"menu.pauseDurationWithTime" = "%@（至 %@）";
 "menu.pauseDurationHelp" = "按此时长暂停休息。";
 "menu.pauseUntilMorning" = "暂停到早晨";
 "menu.pauseUntilMorningWithTime" = "暂停到早晨（%@）";

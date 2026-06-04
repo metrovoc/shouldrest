@@ -200,6 +200,26 @@ final class TerminationPolicyTests: XCTestCase {
         )
     }
 
+    func testTimedPauseMenuTitlesShowResumeTime() {
+        let now = start
+        let target = now.addingTimeInterval(30 * 60)
+
+        L10n.languageOverride = "en"
+        defer { L10n.languageOverride = nil }
+        XCTAssertEqual(
+            PauseMenuCopy.durationTitle(L10n.tr("menu.pause30"), duration: 30 * 60, now: now),
+            L10n.format("menu.pauseDurationWithTime", L10n.tr("menu.pause30"), target.formatted(date: .omitted, time: .shortened))
+        )
+        XCTAssertNotEqual(PauseMenuCopy.durationTitle(L10n.tr("menu.pause30"), duration: 30 * 60, now: now), "30 Minutes")
+
+        L10n.languageOverride = "zh-Hans"
+        XCTAssertEqual(
+            PauseMenuCopy.durationTitle(L10n.tr("menu.pause30"), duration: 30 * 60, now: now),
+            L10n.format("menu.pauseDurationWithTime", L10n.tr("menu.pause30"), target.formatted(date: .omitted, time: .shortened))
+        )
+        XCTAssertTrue(PauseMenuCopy.durationTitle(L10n.tr("menu.pause30"), duration: 30 * 60, now: now).contains("至"))
+    }
+
     func testPauseUntilMorningMenuTitleShowsResumeTime() {
         var settings = RestSettings.defaults
         settings.operations.pauseUntilMorningMode = .hour

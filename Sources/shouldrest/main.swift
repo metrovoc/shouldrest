@@ -173,6 +173,11 @@ enum PauseIndefinitelyConfirmation {
 }
 
 enum PauseMenuCopy {
+    static func durationTitle(_ title: String, duration: TimeInterval, now: Date = Date()) -> String {
+        let target = now.addingTimeInterval(duration)
+        return L10n.format("menu.pauseDurationWithTime", title, target.formatted(date: .omitted, time: .shortened))
+    }
+
     static func untilMorningTitle(settings: RestSettings, now: Date = Date()) -> String {
         let target = now.addingTimeInterval(settings.operations.secondsUntilMorning(from: now))
         return L10n.format("menu.pauseUntilMorningWithTime", target.formatted(date: .omitted, time: .shortened))
@@ -713,10 +718,10 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             menu.addItem(actionItem(L10n.tr("menu.resume"), #selector(resumeBreaks)))
         } else if engine.state.activeSession == nil {
             let pauseMenu = NSMenu()
-            pauseMenu.addItem(actionItem(L10n.tr("menu.pause30"), #selector(pauseFor30Minutes)))
-            pauseMenu.addItem(actionItem(L10n.tr("menu.pause1h"), #selector(pauseFor1Hour)))
-            pauseMenu.addItem(actionItem(L10n.tr("menu.pause2h"), #selector(pauseFor2Hours)))
-            pauseMenu.addItem(actionItem(L10n.tr("menu.pause5h"), #selector(pauseFor5Hours)))
+            pauseMenu.addItem(actionItem(PauseMenuCopy.durationTitle(L10n.tr("menu.pause30"), duration: 30 * 60, now: now), #selector(pauseFor30Minutes)))
+            pauseMenu.addItem(actionItem(PauseMenuCopy.durationTitle(L10n.tr("menu.pause1h"), duration: 60 * 60, now: now), #selector(pauseFor1Hour)))
+            pauseMenu.addItem(actionItem(PauseMenuCopy.durationTitle(L10n.tr("menu.pause2h"), duration: 2 * 60 * 60, now: now), #selector(pauseFor2Hours)))
+            pauseMenu.addItem(actionItem(PauseMenuCopy.durationTitle(L10n.tr("menu.pause5h"), duration: 5 * 60 * 60, now: now), #selector(pauseFor5Hours)))
             pauseMenu.addItem(actionItem(PauseMenuCopy.untilMorningTitle(settings: settings, now: now), #selector(pauseUntilMorning)))
             pauseMenu.addItem(.separator())
             pauseMenu.addItem(actionItem(

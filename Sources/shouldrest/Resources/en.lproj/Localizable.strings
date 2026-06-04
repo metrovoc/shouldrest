@@ -25,6 +25,7 @@
 "menu.pause1h" = "1 Hour";
 "menu.pause2h" = "2 Hours";
 "menu.pause5h" = "5 Hours";
+"menu.pauseDurationWithTime" = "%@ (until %@)";
 "menu.pauseDurationHelp" = "Pause rests for this duration.";
 "menu.pauseUntilMorning" = "Until Morning";
 "menu.pauseUntilMorningWithTime" = "Until Morning (%@)";
