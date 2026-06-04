@@ -186,6 +186,53 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertNotNil(button.image)
     }
 
+    func testLastAppExclusionTargetCannotBeClearedFromUI() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "primary",
+                name: "Calls",
+                matchTerms: ["zoom"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+        let appliesEye = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionAppliesEye", in: contentView) as? NSButton)
+        let appliesBody = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionAppliesBody", in: contentView) as? NSButton)
+
+        XCTAssertEqual(appliesEye.state, .off)
+        XCTAssertEqual(appliesBody.state, .on)
+        XCTAssertTrue(appliesEye.isEnabled)
+        XCTAssertFalse(appliesBody.isEnabled)
+        XCTAssertNil(appliesEye.toolTip)
+        XCTAssertEqual(appliesBody.toolTip, L10n.tr("prefs.appExclusionNeedsTarget"))
+        XCTAssertEqual(appliesBody.accessibilityHelp(), L10n.tr("prefs.appExclusionNeedsTarget"))
+
+        appliesEye.state = .on
+        XCTAssertTrue(sendAction(from: appliesEye))
+
+        XCTAssertTrue(appliesEye.isEnabled)
+        XCTAssertTrue(appliesBody.isEnabled)
+        XCTAssertNil(appliesEye.toolTip)
+        XCTAssertNil(appliesBody.toolTip)
+
+        appliesBody.state = .off
+        XCTAssertTrue(sendAction(from: appliesBody))
+
+        XCTAssertEqual(appliesEye.state, .on)
+        XCTAssertEqual(appliesBody.state, .off)
+        XCTAssertFalse(appliesEye.isEnabled)
+        XCTAssertTrue(appliesBody.isEnabled)
+        XCTAssertEqual(appliesEye.toolTip, L10n.tr("prefs.appExclusionNeedsTarget"))
+        XCTAssertEqual(appliesEye.accessibilityHelp(), L10n.tr("prefs.appExclusionNeedsTarget"))
+        XCTAssertNil(appliesBody.toolTip)
+    }
+
     func testRunningAppPickerAddsCandidateTermsAndAutosaves() throws {
         var settings = RestSettings.defaults
         settings.appExclusions = [

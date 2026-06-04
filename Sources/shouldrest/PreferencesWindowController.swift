@@ -2216,6 +2216,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                 appExclusionAppliesEye.state = .on
             }
         }
+        updateAppExclusionTargetGuards(
+            eyeVisible: appExclusionAppliesEyeVisible,
+            bodyVisible: appExclusionAppliesBodyVisible
+        )
         if !exclusionEnabled {
             setAdvancedDisclosure(row: appExclusionsJSONRow, button: appExclusionsAdvancedButton, expanded: false)
         }
@@ -2223,8 +2227,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             appExclusionName, appExclusionTerms, appExclusionMode
         ].forEach { $0.isEnabled = exclusionEnabled }
         appExclusionAddRunningApp.isEnabled = exclusionEnabled
-        appExclusionAppliesEye.isEnabled = appExclusionAppliesEyeVisible
-        appExclusionAppliesBody.isEnabled = appExclusionAppliesBodyVisible
         refreshAppExclusionRuleList()
         updateAppExclusionAddRuleButtonState()
 
@@ -2999,6 +3001,19 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             }
         }
         return appliesTo
+    }
+
+    private func updateAppExclusionTargetGuards(eyeVisible: Bool, bodyVisible: Bool) {
+        let eyeSelected = eyeVisible && isOn(appExclusionAppliesEye)
+        let bodySelected = bodyVisible && isOn(appExclusionAppliesBody)
+        let canToggleEye = eyeVisible && (!eyeSelected || bodySelected)
+        let canToggleBody = bodyVisible && (!bodySelected || eyeSelected)
+        let help = L10n.tr("prefs.appExclusionNeedsTarget")
+
+        appExclusionAppliesEye.isEnabled = canToggleEye
+        appExclusionAppliesBody.isEnabled = canToggleBody
+        setOptionalHelp(canToggleEye ? nil : help, on: appExclusionAppliesEye)
+        setOptionalHelp(canToggleBody ? nil : help, on: appExclusionAppliesBody)
     }
 
     private func setDefaultAppExclusionTargets() {

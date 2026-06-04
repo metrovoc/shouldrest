@@ -151,6 +151,7 @@
 "prefs.enablePrimaryExclusion" = "Enable app exclusions";
 "prefs.appliesEye" = "Applies to Eye Gate";
 "prefs.appliesBody" = "Applies to Body Break";
+"prefs.appExclusionNeedsTarget" = "Each app rule must apply to at least one enabled rest type.";
 "prefs.currentTimeBody" = "Show current time during Body Break";
 "prefs.breakHealth" = "Show rest pressure indicator";
 "prefs.silentNotifications" = "Silent notifications";

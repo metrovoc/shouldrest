@@ -151,6 +151,7 @@
 "prefs.enablePrimaryExclusion" = "启用应用排除规则";
 "prefs.appliesEye" = "适用于护眼休息";
 "prefs.appliesBody" = "适用于活动休息";
+"prefs.appExclusionNeedsTarget" = "每条应用规则至少需要适用于一种已启用的休息类型。";
 "prefs.currentTimeBody" = "活动休息中显示当前时间";
 "prefs.breakHealth" = "显示休息压力指示器";
 "prefs.silentNotifications" = "静默通知";
