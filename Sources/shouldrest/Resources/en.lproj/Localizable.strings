@@ -117,8 +117,8 @@
 "kind.bodyBreak" = "Body Break";
 "kind.bodyBreakShort" = "B";
 "deferral.outsideWorkingHours" = "outside working hours";
-"deferral.focusMode" = "Focus / Do Not Disturb";
-"deferral.appExclusion" = "app rule: %@";
+"deferral.focusMode" = "Focus or Do Not Disturb";
+"deferral.appExclusion" = "App rule: %@";
 "overlay.eyeTitle" = "Look far away";
 "overlay.eyeBody" = "Relax your focus. Blink slowly and keep your eyes off the screen until the timer ends.";
 "overlay.bodyTitle" = "Body Break";
@@ -190,7 +190,7 @@
 "prefs.manualFinish" = "Wait for me after Body Break ends";
 "prefs.bodyManualFinishHelp" = "When the Body Break timer ends, keep the overlay up until you finish it instead of closing immediately.";
 "prefs.naturalBreaks" = "Count time away as rest";
-"prefs.monitorFocus" = "Detect Focus / Do Not Disturb";
+"prefs.monitorFocus" = "Detect Focus or Do Not Disturb";
 "prefs.focusDefersBody" = "Delay Body Break during Focus";
 "prefs.workingHours" = "Use active working hours";
 "prefs.enablePrimaryExclusion" = "Enable app rules";
@@ -293,8 +293,8 @@
 "prefs.naturalBreaksHelp" = "Count time away from the Mac as completed rest so ShouldRest does not immediately interrupt you when you return.";
 "prefs.naturalIdleMinutesHelp" = "Time away must reach this length before it counts as completed rest.";
 "prefs.workingStart" = "Working day starts";
-"prefs.focusMonitorHelp" = "Detect macOS Focus / Do Not Disturb for context and optional Body Break delays.";
-"prefs.focusDefersBodyHelp" = "Delay Body Break while Focus / Do Not Disturb is active; Eye Gate timing stays strict.";
+"prefs.focusMonitorHelp" = "Detect macOS Focus or Do Not Disturb for context and optional Body Break delays.";
+"prefs.focusDefersBodyHelp" = "Delay Body Break while Focus or Do Not Disturb is active; Eye Gate timing stays strict.";
 "prefs.workingHoursHelp" = "Only schedule rests inside the working-hour window.";
 "prefs.workingStartHelp" = "The earliest time ShouldRest schedules rests when working hours are enabled.";
 "prefs.workingEnd" = "Working day ends";

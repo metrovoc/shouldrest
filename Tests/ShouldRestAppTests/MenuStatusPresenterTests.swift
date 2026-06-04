@@ -242,11 +242,11 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         XCTAssertEqual(
             MenuStatusPresenter.lines(state: appRuleState, settings: .defaults, now: start)[0],
-            "Body Break delayed: app rule: Presentation"
+            "Body Break delayed: App rule: Presentation"
         )
         XCTAssertEqual(
             MenuStatusPresenter.lines(state: focusState, settings: .defaults, now: start)[0],
-            "Body Break delayed: Focus / Do Not Disturb"
+            "Body Break delayed: Focus or Do Not Disturb"
         )
         XCTAssertFalse(
             MenuStatusPresenter.lines(state: appRuleState, settings: .defaults, now: start)[0]
