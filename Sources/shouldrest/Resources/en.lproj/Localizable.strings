@@ -334,6 +334,9 @@
 "prefs.displayPicker.unavailable" = "Display %d (not connected)";
 "prefs.morningMode.hour" = "Fixed hour";
 "prefs.morningMode.sunrise" = "Local sunrise";
+"prefs.morningSummary.hour" = "Pause Until Morning resumes at %@.";
+"prefs.morningSummary.sunrisePreset" = "Pause Until Morning resumes at local sunrise for %@.";
+"prefs.morningSummary.sunriseCustom" = "Pause Until Morning resumes at sunrise for custom coordinates (%@, %@).";
 "prefs.sunriseLocation.tokyo" = "Tokyo";
 "prefs.sunriseLocation.sanFrancisco" = "San Francisco";
 "prefs.sunriseLocation.newYork" = "New York";

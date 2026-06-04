@@ -552,6 +552,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let pauseUntilMorningHour = NSTextField()
     private let pauseUntilMorningLatitude = NSTextField()
     private let pauseUntilMorningLongitude = NSTextField()
+    private let pauseUntilMorningSummaryLabel = NSTextField(labelWithString: "")
     private var pauseUntilMorningLocationRow: NSView?
     private var pauseUntilMorningHourRow: NSView?
     private var pauseUntilMorningLatitudeRow: NSView?
@@ -609,6 +610,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         configureImagePickerControls()
         configureAdvancedDisclosureButtons()
         configureTimePickers()
+        configureMorningPauseSummary()
         configureSoundVolumeControls()
         configureCustomBodyTextEditor()
         configureAppExclusionTokenField()
@@ -1013,6 +1015,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         pauseUntilMorningLongitudeRow.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningLongitudeRow")
         self.pauseUntilMorningLongitudeRow = pauseUntilMorningLongitudeRow
         advancedStack.addArrangedSubview(pauseUntilMorningLongitudeRow)
+        advancedStack.addArrangedSubview(indentedControlRow(pauseUntilMorningSummaryLabel))
         advancedStack.addArrangedSubview(pauseForSuspendOrLock)
         let updateFeedURLRow = row(L10n.tr("prefs.updateFeedURL"), updateFeedURL)
         updateFeedURL.identifier = NSUserInterfaceItemIdentifier("prefs.updateFeedURLField")
@@ -1306,6 +1309,15 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             picker.datePickerStyle = .textFieldAndStepper
             picker.widthAnchor.constraint(equalToConstant: 130).isActive = true
         }
+    }
+
+    private func configureMorningPauseSummary() {
+        pauseUntilMorningSummaryLabel.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningSummaryLabel")
+        pauseUntilMorningSummaryLabel.font = .systemFont(ofSize: 12)
+        pauseUntilMorningSummaryLabel.textColor = .secondaryLabelColor
+        pauseUntilMorningSummaryLabel.lineBreakMode = .byWordWrapping
+        pauseUntilMorningSummaryLabel.maximumNumberOfLines = 2
+        pauseUntilMorningSummaryLabel.widthAnchor.constraint(equalToConstant: 360).isActive = true
     }
 
     private func configureSoundVolumeControls() {
@@ -2244,6 +2256,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         pauseUntilMorningLocation.isEnabled = usesSunrise
         pauseUntilMorningLatitude.isEnabled = usesCustomSunriseLocation
         pauseUntilMorningLongitude.isEnabled = usesCustomSunriseLocation
+        updateMorningPauseSummary()
 
         updateAppearanceEyeGateVisibility(eyeGateEnabled: eyeGateEnabled)
         updateAppearanceBodyBreakVisibility(bodyBreakEnabled: bodyBreakEnabled)
@@ -2715,6 +2728,9 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         if let field = obj.object as? NSTextField,
            numberInputs.contains(where: { $0.field === field }) {
             updateScheduleSummary()
+        }
+        if let field = obj.object as? NSTextField, isMorningPauseSummaryField(field) {
+            updateMorningPauseSummary()
         }
         hasPendingTextEditing = true
         setSaveStatus(.editing)
@@ -4069,6 +4085,38 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private func applySunriseLocationPreset(_ preset: SunriseLocationPreset) {
         pauseUntilMorningLatitude.stringValue = formattedCoordinate(preset.latitude)
         pauseUntilMorningLongitude.stringValue = formattedCoordinate(preset.longitude)
+    }
+
+    private func updateMorningPauseSummary() {
+        let summary: String
+        switch selected(MorningPauseMode.self, from: pauseUntilMorningMode, fallback: .hour) {
+        case .hour:
+            let hour = min(23, max(0, intValue(pauseUntilMorningHour)))
+            summary = L10n.format("prefs.morningSummary.hour", formattedMorningHour(hour))
+        case .sunrise:
+            if let preset = selectedSunriseLocationPreset() {
+                summary = L10n.format("prefs.morningSummary.sunrisePreset", preset.title)
+            } else {
+                summary = L10n.format(
+                    "prefs.morningSummary.sunriseCustom",
+                    formattedCoordinate(min(89.8, max(-89.8, doubleValue(pauseUntilMorningLatitude, fallback: 0)))),
+                    formattedCoordinate(normalizedLongitude(doubleValue(pauseUntilMorningLongitude, fallback: 0)))
+                )
+            }
+        }
+        pauseUntilMorningSummaryLabel.stringValue = summary
+        pauseUntilMorningSummaryLabel.toolTip = summary
+        pauseUntilMorningSummaryLabel.setAccessibilityHelp(summary)
+    }
+
+    private func isMorningPauseSummaryField(_ field: NSTextField) -> Bool {
+        field === pauseUntilMorningHour ||
+            field === pauseUntilMorningLatitude ||
+            field === pauseUntilMorningLongitude
+    }
+
+    private func formattedMorningHour(_ hour: Int) -> String {
+        String(format: "%02d:00", min(23, max(0, hour)))
     }
 
     private func areSunriseCoordinatesUnset(latitude: Double?, longitude: Double?) -> Bool {

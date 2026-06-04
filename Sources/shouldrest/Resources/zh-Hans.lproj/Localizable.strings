@@ -334,6 +334,9 @@
 "prefs.displayPicker.unavailable" = "显示器 %d（未连接）";
 "prefs.morningMode.hour" = "固定时间";
 "prefs.morningMode.sunrise" = "本地日出";
+"prefs.morningSummary.hour" = "暂停到早晨会在 %@ 恢复。";
+"prefs.morningSummary.sunrisePreset" = "暂停到早晨会按%@的本地日出恢复。";
+"prefs.morningSummary.sunriseCustom" = "暂停到早晨会按自定义坐标（%@，%@）的日出恢复。";
 "prefs.sunriseLocation.tokyo" = "东京";
 "prefs.sunriseLocation.sanFrancisco" = "旧金山";
 "prefs.sunriseLocation.newYork" = "纽约";

@@ -5,6 +5,23 @@ import XCTest
 
 @MainActor
 final class PreferencesWindowMorningPauseTests: XCTestCase {
+    func testMorningPauseSummaryExplainsFixedResumeHour() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        var settings = RestSettings.defaults
+        settings.operations.pauseUntilMorningMode = .hour
+        settings.operations.pauseUntilMorningHour = 9
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAdvancedTab(in: contentView)
+        let summary = try XCTUnwrap(view(withIdentifier: "prefs.pauseUntilMorningSummaryLabel", in: contentView) as? NSTextField)
+
+        XCTAssertEqual(summary.stringValue, L10n.format("prefs.morningSummary.hour", "09:00"))
+        XCTAssertTrue(visibleTexts(in: contentView).contains(summary.stringValue))
+    }
+
     func testFixedHourMorningModeHidesSunriseLocationFields() throws {
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
@@ -53,6 +70,30 @@ final class PreferencesWindowMorningPauseTests: XCTestCase {
         XCTAssertNotEqual(savedSettings.value?.operations.pauseUntilMorningLongitude, 0)
     }
 
+    func testMorningPauseSummaryTracksSunrisePresetSelection() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        var settings = RestSettings.defaults
+        settings.operations.pauseUntilMorningMode = .sunrise
+        settings.operations.pauseUntilMorningLatitude = 12.34
+        settings.operations.pauseUntilMorningLongitude = 56.78
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAdvancedTab(in: contentView)
+        let popup = try XCTUnwrap(view(withIdentifier: "prefs.pauseUntilMorningLocation", in: contentView) as? NSPopUpButton)
+        selectPopup(popup, representedObject: "tokyo")
+
+        XCTAssertTrue(sendAction(from: popup))
+
+        let summary = try XCTUnwrap(view(withIdentifier: "prefs.pauseUntilMorningSummaryLabel", in: contentView) as? NSTextField)
+        XCTAssertEqual(
+            summary.stringValue,
+            L10n.format("prefs.morningSummary.sunrisePreset", L10n.tr("prefs.sunriseLocation.tokyo"))
+        )
+    }
+
     func testSunriseCustomCoordinatesShowLatitudeAndLongitudeRows() throws {
         var settings = RestSettings.defaults
         settings.operations.pauseUntilMorningMode = .sunrise
@@ -70,6 +111,38 @@ final class PreferencesWindowMorningPauseTests: XCTestCase {
 
         let locationPopup = try XCTUnwrap(view(withIdentifier: "prefs.pauseUntilMorningLocation", in: contentView) as? NSPopUpButton)
         XCTAssertEqual(locationPopup.selectedItem?.representedObject as? String, "custom")
+    }
+
+    func testMorningPauseSummaryTracksCustomSunriseCoordinatesWhileEditing() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        var settings = RestSettings.defaults
+        settings.operations.pauseUntilMorningMode = .sunrise
+        settings.operations.pauseUntilMorningLatitude = 12.34
+        settings.operations.pauseUntilMorningLongitude = 56.78
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAdvancedTab(in: contentView)
+        let latitudeField = try XCTUnwrap(view(withIdentifier: "prefs.pauseUntilMorningLatitudeField", in: contentView) as? NSTextField)
+        let longitudeField = try XCTUnwrap(view(withIdentifier: "prefs.pauseUntilMorningLongitudeField", in: contentView) as? NSTextField)
+        let summary = try XCTUnwrap(view(withIdentifier: "prefs.pauseUntilMorningSummaryLabel", in: contentView) as? NSTextField)
+
+        XCTAssertEqual(
+            summary.stringValue,
+            L10n.format("prefs.morningSummary.sunriseCustom", "12.3400", "56.7800")
+        )
+
+        latitudeField.stringValue = "-33.8688"
+        longitudeField.stringValue = "151.2093"
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: latitudeField))
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: longitudeField))
+
+        XCTAssertEqual(
+            summary.stringValue,
+            L10n.format("prefs.morningSummary.sunriseCustom", "-33.8688", "151.2093")
+        )
     }
 
     func testSelectingSunrisePresetHidesCoordinatesAndAutosavesPresetCoordinates() throws {
