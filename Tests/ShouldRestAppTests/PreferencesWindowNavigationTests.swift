@@ -40,6 +40,8 @@ final class PreferencesWindowNavigationTests: XCTestCase {
 
         XCTAssertEqual(searchField.placeholderString, L10n.tr("prefs.searchPlaceholder"))
         XCTAssertEqual(searchField.toolTip, L10n.tr("prefs.searchHelp"))
+        XCTAssertEqual(searchField.accessibilityLabel(), L10n.tr("prefs.searchPlaceholder"))
+        XCTAssertEqual(searchField.accessibilityHelp(), L10n.tr("prefs.searchHelp"))
         XCTAssertTrue(searchField.sendsSearchStringImmediately)
         XCTAssertFalse(searchField.sendsWholeSearchString)
         searchField.stringValue = L10n.tr("prefs.pause5hShortcut")

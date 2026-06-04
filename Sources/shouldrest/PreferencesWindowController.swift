@@ -1592,6 +1592,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         searchField.identifier = NSUserInterfaceItemIdentifier("prefs.searchField")
         searchField.placeholderString = L10n.tr("prefs.searchPlaceholder")
         searchField.toolTip = L10n.tr("prefs.searchHelp")
+        searchField.setAccessibilityLabel(L10n.tr("prefs.searchPlaceholder"))
+        searchField.setAccessibilityHelp(L10n.tr("prefs.searchHelp"))
         searchField.sendsSearchStringImmediately = true
         searchField.sendsWholeSearchString = false
         searchField.delegate = self
