@@ -31,6 +31,7 @@ final class PreferencesWindowEmergencyPolicyTests: XCTestCase {
         XCTAssertTrue(button.toolTip?.contains("inside the overlay") ?? false)
         XCTAssertTrue(button.toolTip?.localizedCaseInsensitiveContains("second click") ?? false)
         XCTAssertTrue(button.toolTip?.localizedCaseInsensitiveContains("Esc") ?? false)
+        XCTAssertFalse(button.toolTip?.localizedCaseInsensitiveContains("arm") ?? true)
         XCTAssertFalse(button.toolTip?.localizedCaseInsensitiveContains("hold") ?? true)
     }
 

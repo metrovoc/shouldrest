@@ -182,7 +182,7 @@
 "prefs.eyeManualFinish" = "Wait for me after Eye Gate ends";
 "prefs.eyeManualFinishHelp" = "When the Eye Gate timer ends, keep the overlay up until you finish it. Early dismissal stays disabled.";
 "prefs.eyeEmergencyOverride" = "Enable Emergency Exit";
-"prefs.eyeEmergencyOverrideHelp" = "First click or Esc arms Emergency Exit inside the overlay; the second click or Esc exits and records a missed Eye Gate.";
+"prefs.eyeEmergencyOverrideHelp" = "First click or Esc shows confirmation inside the overlay; the second click or Esc exits and records a missed Eye Gate.";
 "prefs.enableBodyBreak" = "Enable Body Break";
 "prefs.enableBodyBreakHelp" = "Keep longer movement breaks active for posture and movement.";
 "prefs.notifyBodyBreak" = "Notify before Body Break";
