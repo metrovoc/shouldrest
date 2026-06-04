@@ -12,6 +12,7 @@ final class OnboardingWindowController: NSWindowController {
     private let onOpenPreferences: (RestRhythmPreset) -> Void
     private let onLearnMore: () -> Void
     private let rhythmPresetControl = NSSegmentedControl()
+    private let rhythmPresetIcon = NSImageView()
     private let rhythmPresetDescription = NSTextField(labelWithString: "")
     private let rhythmMetricEyeInterval = NSTextField(labelWithString: "")
     private let rhythmMetricEyeDuration = NSTextField(labelWithString: "")
@@ -231,13 +232,17 @@ final class OnboardingWindowController: NSWindowController {
         titleRow.alignment = .centerY
         titleRow.spacing = 8
 
-        let icon = NSImageView(image: symbolImage("timer", accessibilityDescription: nil))
-        icon.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmPresetIcon")
-        icon.symbolConfiguration = .init(pointSize: 14, weight: .semibold)
-        icon.contentTintColor = .secondaryLabelColor
-        icon.widthAnchor.constraint(equalToConstant: 18).isActive = true
-        icon.heightAnchor.constraint(equalToConstant: 18).isActive = true
-        titleRow.addArrangedSubview(icon)
+        rhythmPresetIcon.image = symbolImage(
+            "timer",
+            accessibilityDescription: rhythmPresetAccessibilityTitle()
+        )
+        rhythmPresetIcon.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmPresetIcon")
+        rhythmPresetIcon.symbolConfiguration = .init(pointSize: 14, weight: .semibold)
+        rhythmPresetIcon.contentTintColor = .secondaryLabelColor
+        rhythmPresetIcon.setAccessibilityLabel(L10n.tr("onboarding.rhythmTitle"))
+        rhythmPresetIcon.widthAnchor.constraint(equalToConstant: 18).isActive = true
+        rhythmPresetIcon.heightAnchor.constraint(equalToConstant: 18).isActive = true
+        titleRow.addArrangedSubview(rhythmPresetIcon)
 
         let title = NSTextField(labelWithString: L10n.tr("onboarding.rhythmTitle"))
         title.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmTitle")
@@ -354,6 +359,7 @@ final class OnboardingWindowController: NSWindowController {
         rhythmPresetControl.selectedSegment = selectedRhythmPreset.rawValue
         rhythmPresetControl.target = self
         rhythmPresetControl.action = #selector(rhythmPresetChanged(_:))
+        rhythmPresetControl.setAccessibilityLabel(L10n.tr("onboarding.rhythmTitle"))
         rhythmPresetControl.setContentHuggingPriority(.required, for: .horizontal)
         rhythmPresetControl.setContentCompressionResistancePriority(.required, for: .horizontal)
 
@@ -440,7 +446,7 @@ final class OnboardingWindowController: NSWindowController {
 
     private func symbolImage(_ symbolName: String, accessibilityDescription: String?) -> NSImage {
         NSImage(systemSymbolName: symbolName, accessibilityDescription: accessibilityDescription)
-            ?? NSImage(systemSymbolName: "circle", accessibilityDescription: nil)
+            ?? NSImage(systemSymbolName: "circle", accessibilityDescription: accessibilityDescription)
             ?? NSImage(size: NSSize(width: 16, height: 16))
     }
 
@@ -455,8 +461,12 @@ final class OnboardingWindowController: NSWindowController {
 
     private func updateRhythmPresetSelectionUI() {
         rhythmPresetDescription.stringValue = selectedRhythmPreset.help
+        rhythmPresetDescription.toolTip = selectedRhythmPreset.help
+        rhythmPresetDescription.setAccessibilityHelp(selectedRhythmPreset.help)
         rhythmPresetControl.toolTip = selectedRhythmPreset.help
         rhythmPresetControl.setAccessibilityHelp(selectedRhythmPreset.help)
+        rhythmPresetIcon.image?.accessibilityDescription = rhythmPresetAccessibilityTitle()
+        rhythmPresetIcon.setAccessibilityHelp(selectedRhythmPreset.help)
         rhythmMetricEyeInterval.stringValue = L10n.format(
             "onboarding.metric.eyeIntervalValue",
             selectedRhythmPreset.eyeIntervalMinutes
@@ -480,6 +490,11 @@ final class OnboardingWindowController: NSWindowController {
         useSelectedButton.title = title
         useSelectedButton.setAccessibilityLabel(title)
         useSelectedButton.setAccessibilityHelp(useSelectedButton.toolTip)
+        useSelectedButton.image?.accessibilityDescription = title
+    }
+
+    private func rhythmPresetAccessibilityTitle() -> String {
+        "\(L10n.tr("onboarding.rhythmTitle")): \(selectedRhythmPreset.title)"
     }
 
     private func updateRhythmMetricAccessibility() {

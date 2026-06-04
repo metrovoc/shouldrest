@@ -73,6 +73,7 @@ final class OnboardingWindowTests: XCTestCase {
 
         for button in [learnMore, preferences, useSelected] {
             XCTAssertNotNil(button.image)
+            XCTAssertEqual(button.image?.accessibilityDescription, button.title)
             XCTAssertEqual(button.imagePosition, .imageLeading)
             XCTAssertEqual(button.accessibilityLabel(), button.title)
             XCTAssertEqual(button.accessibilityHelp(), button.toolTip)
@@ -104,6 +105,9 @@ final class OnboardingWindowTests: XCTestCase {
         let description = try XCTUnwrap(
             contentView.descendant(withIdentifier: "onboarding.rhythmPresetDescription") as? NSTextField
         )
+        let icon = try XCTUnwrap(
+            contentView.descendant(withIdentifier: "onboarding.rhythmPresetIcon") as? NSImageView
+        )
         let eyeInterval = try XCTUnwrap(
             contentView.descendant(withIdentifier: "onboarding.metric.eyeInterval.value") as? NSTextField
         )
@@ -124,7 +128,15 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertEqual(control.label(forSegment: RestRhythmPreset.frequentEye.rawValue), "More Eye Rests")
         XCTAssertEqual(control.label(forSegment: RestRhythmPreset.movement.rawValue), "More Movement")
         XCTAssertEqual(description.stringValue, RestRhythmPreset.firstRunDefault.help)
+        XCTAssertEqual(description.toolTip, RestRhythmPreset.firstRunDefault.help)
+        XCTAssertEqual(description.accessibilityHelp(), RestRhythmPreset.firstRunDefault.help)
+        XCTAssertEqual(control.accessibilityLabel(), L10n.tr("onboarding.rhythmTitle"))
         XCTAssertEqual(control.accessibilityHelp(), RestRhythmPreset.firstRunDefault.help)
+        XCTAssertEqual(
+            icon.image?.accessibilityDescription,
+            "\(L10n.tr("onboarding.rhythmTitle")): \(RestRhythmPreset.firstRunDefault.title)"
+        )
+        XCTAssertEqual(icon.accessibilityHelp(), RestRhythmPreset.firstRunDefault.help)
         XCTAssertEqual(eyeInterval.stringValue, L10n.format("onboarding.metric.eyeIntervalValue", 10))
         XCTAssertEqual(eyeDuration.stringValue, L10n.format("onboarding.metric.eyeDurationValue", 20))
         XCTAssertEqual(bodyAfter.stringValue, L10n.format("onboarding.metric.bodyAfterValue", 4))
@@ -142,7 +154,14 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertTrue(control.sendAction(control.action, to: control.target))
 
         XCTAssertEqual(description.stringValue, RestRhythmPreset.movement.help)
+        XCTAssertEqual(description.toolTip, RestRhythmPreset.movement.help)
+        XCTAssertEqual(description.accessibilityHelp(), RestRhythmPreset.movement.help)
         XCTAssertEqual(control.accessibilityHelp(), RestRhythmPreset.movement.help)
+        XCTAssertEqual(
+            icon.image?.accessibilityDescription,
+            "\(L10n.tr("onboarding.rhythmTitle")): \(RestRhythmPreset.movement.title)"
+        )
+        XCTAssertEqual(icon.accessibilityHelp(), RestRhythmPreset.movement.help)
         XCTAssertEqual(eyeInterval.stringValue, L10n.format("onboarding.metric.eyeIntervalValue", 20))
         XCTAssertEqual(eyeDuration.stringValue, L10n.format("onboarding.metric.eyeDurationValue", 20))
         XCTAssertEqual(bodyAfter.stringValue, L10n.format("onboarding.metric.bodyAfterValue", 2))
@@ -156,6 +175,7 @@ final class OnboardingWindowTests: XCTestCase {
             L10n.format("onboarding.useSelectedWithPreset", RestRhythmPreset.movement.title)
         )
         XCTAssertEqual(useSelected.accessibilityLabel(), useSelected.title)
+        XCTAssertEqual(useSelected.image?.accessibilityDescription, useSelected.title)
 
         useSelected.performClick(nil)
 
