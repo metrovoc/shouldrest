@@ -252,6 +252,16 @@ enum StatusMenuActionIcon {
     }
 }
 
+enum DisabledStatusMenuItemFactory {
+    static func make(title: String, toolTip: String? = nil) -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+        item.isEnabled = false
+        item.toolTip = toolTip
+        item.setAccessibilityHelp(toolTip)
+        return item
+    }
+}
+
 @MainActor
 final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private let settingsStore: SettingsStore
@@ -563,7 +573,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 if StatusMenuPolicy.routesEmergencyExitThroughOverlay(state: engine.state) {
                     menu.addItem(disabledItem(
                         L10n.tr("menu.emergencyOverlayOnly"),
-                        symbolName: "exclamationmark.triangle"
+                        symbolName: "exclamationmark.triangle",
+                        toolTip: L10n.tr("menu.emergencyOverlayOnlyHelp")
                     ))
                 } else {
                     menu.addItem(actionItem(L10n.tr("menu.emergencyOverride"), #selector(emergencyOverrideEyeGate)))
@@ -694,9 +705,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         return image
     }
 
-    private func disabledItem(_ title: String, symbolName: String? = nil) -> NSMenuItem {
-        let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
-        item.isEnabled = false
+    private func disabledItem(_ title: String, symbolName: String? = nil, toolTip: String? = nil) -> NSMenuItem {
+        let item = DisabledStatusMenuItemFactory.make(title: title, toolTip: toolTip)
         if let symbolName {
             item.image = menuItemImage(symbolName)
         }

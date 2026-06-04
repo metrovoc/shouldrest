@@ -28,4 +28,16 @@ final class StatusMenuActionIconTests: XCTestCase {
     func testUnknownMenuActionsDoNotClaimAnIcon() {
         XCTAssertNil(StatusMenuActionIcon.symbolName(forActionName: "notARealMenuAction"))
     }
+
+    func testDisabledStatusMenuItemsCarryTooltipAndAccessibilityHelp() {
+        let item = DisabledStatusMenuItemFactory.make(
+            title: L10n.tr("menu.emergencyOverlayOnly"),
+            toolTip: L10n.tr("menu.emergencyOverlayOnlyHelp")
+        )
+
+        XCTAssertFalse(item.isEnabled)
+        XCTAssertEqual(item.title, L10n.tr("menu.emergencyOverlayOnly"))
+        XCTAssertEqual(item.toolTip, L10n.tr("menu.emergencyOverlayOnlyHelp"))
+        XCTAssertEqual(item.accessibilityHelp(), L10n.tr("menu.emergencyOverlayOnlyHelp"))
+    }
 }

@@ -9,6 +9,7 @@
 "menu.skipBodyBreak" = "跳过活动休息";
 "menu.emergencyOverride" = "紧急退出";
 "menu.emergencyOverlayOnly" = "紧急退出：覆盖层内点击或按 Esc 两次";
+"menu.emergencyOverlayOnlyHelp" = "护眼休息期间，状态菜单不能确认紧急退出。请使用覆盖层内的紧急退出，或在覆盖层内按两次 Esc。";
 "menu.resume" = "恢复";
 "menu.pause" = "暂停";
 "menu.pause30" = "30 分钟";

@@ -9,6 +9,7 @@
 "menu.skipBodyBreak" = "Skip Body Break";
 "menu.emergencyOverride" = "Emergency Exit";
 "menu.emergencyOverlayOnly" = "Emergency Exit: use overlay or Esc twice";
+"menu.emergencyOverlayOnlyHelp" = "Status menu actions cannot confirm Emergency Exit during an Eye Gate. Use the overlay control or press Esc twice from the overlay.";
 "menu.resume" = "Resume";
 "menu.pause" = "Pause";
 "menu.pause30" = "30 Minutes";
