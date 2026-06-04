@@ -189,7 +189,7 @@
 "prefs.notifyBodyBreakHelp" = "Send a notification before the Body Break overlay starts.";
 "prefs.manualFinish" = "Wait for me after Body Break ends";
 "prefs.bodyManualFinishHelp" = "When the Body Break timer ends, keep the overlay up until you finish it instead of closing immediately.";
-"prefs.naturalBreaks" = "Credit natural rests from idle time";
+"prefs.naturalBreaks" = "Count time away as rest";
 "prefs.monitorFocus" = "Monitor Focus / Do Not Disturb";
 "prefs.focusDefersBody" = "Focus mode defers Body Break";
 "prefs.workingHours" = "Use active working hours";
@@ -277,8 +277,8 @@
 "prefs.configuredDisplayIndex" = "Specific display";
 "prefs.configuredDisplayIndexHelp" = "Pick the exact connected display used by the selected display rule.";
 "prefs.sectionContext" = "Context";
-"prefs.contextSummary.idleOn" = "Idle periods over %d min count as completed rest.";
-"prefs.contextSummary.idleOff" = "Idle time does not count as rest.";
+"prefs.contextSummary.idleOn" = "Time away over %d min counts as completed rest.";
+"prefs.contextSummary.idleOff" = "Time away does not count as rest.";
 "prefs.contextSummary.focusOff" = "Focus mode does not change rest timing.";
 "prefs.contextSummary.focusObserved" = "Focus mode is monitored without delaying Body Break.";
 "prefs.contextSummary.focusDefersBody" = "Focus mode delays Body Break.";
@@ -289,9 +289,9 @@
 "prefs.contextSummary.appRulesEmpty" = "App rules are enabled; add an app to activate them.";
 "prefs.contextSummary.appRulesOne" = "1 app rule can pause rests or run them only for matched apps.";
 "prefs.contextSummary.appRulesMany" = "%d app rules can pause rests or run them only for matched apps.";
-"prefs.naturalIdleMinutes" = "Credit idle after";
+"prefs.naturalIdleMinutes" = "Time away counts after";
 "prefs.naturalBreaksHelp" = "Count time away from the Mac as completed rest so ShouldRest does not immediately interrupt you when you return.";
-"prefs.naturalIdleMinutesHelp" = "Idle time must reach this length before it counts as a natural rest.";
+"prefs.naturalIdleMinutesHelp" = "Time away must reach this length before it counts as completed rest.";
 "prefs.workingStart" = "Working day starts";
 "prefs.focusMonitorHelp" = "Watch macOS Focus / Do Not Disturb so ShouldRest can show accurate context and optional Body Break delays.";
 "prefs.focusDefersBodyHelp" = "Delay Body Break while Focus / Do Not Disturb is active; Eye Gate timing stays strict.";

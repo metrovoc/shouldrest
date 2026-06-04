@@ -189,7 +189,7 @@
 "prefs.notifyBodyBreakHelp" = "在活动休息覆盖层开始前发送通知。";
 "prefs.manualFinish" = "活动休息计时结束后等我完成";
 "prefs.bodyManualFinishHelp" = "计时结束后，覆盖层会继续显示，直到你完成休息，而不是立即关闭。";
-"prefs.naturalBreaks" = "用空闲时间抵扣自然休息";
+"prefs.naturalBreaks" = "离开 Mac 可计为休息";
 "prefs.monitorFocus" = "监测专注 / 勿扰模式";
 "prefs.focusDefersBody" = "专注模式延后活动休息";
 "prefs.workingHours" = "使用工作时间窗口";
@@ -277,8 +277,8 @@
 "prefs.configuredDisplayIndex" = "指定显示器";
 "prefs.configuredDisplayIndexHelp" = "为当前显示器规则选择具体连接的显示器。";
 "prefs.sectionContext" = "上下文";
-"prefs.contextSummary.idleOn" = "闲置超过 %d 分钟会计为已完成休息。";
-"prefs.contextSummary.idleOff" = "闲置时间不会计为休息。";
+"prefs.contextSummary.idleOn" = "离开超过 %d 分钟，会算作已完成休息。";
+"prefs.contextSummary.idleOff" = "离开 Mac 的时间不会算作休息。";
 "prefs.contextSummary.focusOff" = "专注模式不会改变休息时机。";
 "prefs.contextSummary.focusObserved" = "会监测专注模式，但不会延后活动休息。";
 "prefs.contextSummary.focusDefersBody" = "专注模式会延后活动休息。";
@@ -289,9 +289,9 @@
 "prefs.contextSummary.appRulesEmpty" = "应用规则已启用；添加应用后才会生效。";
 "prefs.contextSummary.appRulesOne" = "1 条应用规则可暂停休息，或只在匹配应用运行时安排休息。";
 "prefs.contextSummary.appRulesMany" = "%d 条应用规则可暂停休息，或只在匹配应用运行时安排休息。";
-"prefs.naturalIdleMinutes" = "空闲达到";
+"prefs.naturalIdleMinutes" = "离开多久后计入";
 "prefs.naturalBreaksHelp" = "把离开 Mac 的时间计为已完成休息，避免你回来后立刻被打断。";
-"prefs.naturalIdleMinutesHelp" = "空闲时间达到这个长度后，才会计为自然休息。";
+"prefs.naturalIdleMinutesHelp" = "离开 Mac 达到这个时长后，才会算作已完成休息。";
 "prefs.workingStart" = "工作日开始";
 "prefs.focusMonitorHelp" = "监测 macOS 专注 / 勿扰模式，用于显示上下文，并可选择延后活动休息。";
 "prefs.focusDefersBodyHelp" = "专注 / 勿扰模式开启时延后活动休息；护眼休息仍保持严格。";
