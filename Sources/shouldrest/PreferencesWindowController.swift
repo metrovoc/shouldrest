@@ -611,6 +611,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         configureSearchField()
         configureShortcutConflictWarning()
         configureShortcutRecorders()
+        configurePreferenceHelp()
         configureEnablementGuards()
         configureSaveStatusControls()
         configureAutosave()
@@ -1589,6 +1590,18 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         eyeEnabled.action = #selector(restEnablementChanged(_:))
         bodyEnabled.target = self
         bodyEnabled.action = #selector(restEnablementChanged(_:))
+    }
+
+    private func configurePreferenceHelp() {
+        setHelp(L10n.tr("prefs.eyeEmergencyOverrideHelp"), on: eyeEmergencyOverride)
+        setHelp(L10n.tr("prefs.eyeManualFinishHelp"), on: eyeManualFinish)
+        setHelp(L10n.tr("prefs.bodyAllowSkipHelp"), on: bodyAllowSkip)
+        setHelp(L10n.tr("prefs.bodyManualFinishHelp"), on: bodyManualFinish)
+    }
+
+    private func setHelp(_ help: String, on control: NSControl) {
+        control.toolTip = help
+        control.setAccessibilityHelp(help)
     }
 
     private func configureAutosave() {

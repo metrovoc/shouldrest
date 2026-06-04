@@ -128,10 +128,13 @@
 "prefs.cannotDisableBothRests" = "至少需要保留一种休息类型。";
 "prefs.notifyEyeGate" = "护眼休息前通知";
 "prefs.eyeManualFinish" = "护眼休息到时后手动完成";
+"prefs.eyeManualFinishHelp" = "达到护眼休息时长后，覆盖层继续等待你明确完成；这不会允许提前结束。";
 "prefs.eyeEmergencyOverride" = "启用紧急退出";
+"prefs.eyeEmergencyOverrideHelp" = "第一次点击或按 Esc 会在覆盖层内进入待确认；第二次点击或按 Esc 才退出，并记录为一次未完成护眼休息。";
 "prefs.enableBodyBreak" = "启用活动休息";
 "prefs.notifyBodyBreak" = "活动休息前通知";
 "prefs.manualFinish" = "活动休息到时后手动完成";
+"prefs.bodyManualFinishHelp" = "达到活动休息时长后，等待你明确完成，而不是立即关闭。";
 "prefs.naturalBreaks" = "用空闲时间抵扣自然休息";
 "prefs.monitorFocus" = "监测专注 / 勿扰模式";
 "prefs.focusDefersBody" = "专注模式延后活动休息";
@@ -178,6 +181,7 @@
 "prefs.maxPostpones" = "允许推迟";
 "prefs.postponeWindowPercent" = "仅前段窗口";
 "prefs.bodyAllowSkip" = "允许跳过活动休息";
+"prefs.bodyAllowSkipHelp" = "只有活动休息可以普通跳过；护眼休息仍不可跳过。";
 "prefs.bodyAllDisplays" = "活动休息覆盖所有显示器";
 "prefs.bodyCoveredDisplay" = "覆盖层显示器";
 "prefs.bodyContentDisplay" = "休息内容位置";
