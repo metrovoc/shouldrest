@@ -278,7 +278,7 @@ enum StatusMenuActionIcon {
         case "copyDebugInfo":
             return "doc.on.doc"
         case "openDebugPanel":
-            return "stethoscope"
+            return "doc.text.magnifyingglass"
         case "showAboutPanel":
             return "info.circle"
         case "showSettingsFile":

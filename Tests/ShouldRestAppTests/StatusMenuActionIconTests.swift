@@ -17,7 +17,7 @@ final class StatusMenuActionIconTests: XCTestCase {
             "openPreferences": "gearshape",
             "checkForUpdatesNow": "arrow.triangle.2.circlepath",
             "copyDebugInfo": "doc.on.doc",
-            "openDebugPanel": "stethoscope",
+            "openDebugPanel": "doc.text.magnifyingglass",
             "showAboutPanel": "info.circle",
             "showSettingsFile": "folder",
             "copySettingsPath": "doc.on.doc"

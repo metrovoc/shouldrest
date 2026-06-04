@@ -151,7 +151,7 @@ final class DebugWindowController: NSWindowController {
     }
 
     private func headerView() -> NSView {
-        let icon = NSImageView(image: symbolImage("stethoscope", accessibilityDescription: L10n.tr("debug.heading")))
+        let icon = NSImageView(image: symbolImage("doc.text.magnifyingglass", accessibilityDescription: L10n.tr("debug.heading")))
         icon.identifier = NSUserInterfaceItemIdentifier("debug.headerIcon")
         icon.contentTintColor = .controlAccentColor
         icon.imageScaling = .scaleProportionallyUpOrDown

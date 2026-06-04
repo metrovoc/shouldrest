@@ -202,7 +202,7 @@ final class AboutWindowController: NSWindowController {
             debugButton,
             identifier: "about.debugButton",
             title: L10n.tr("about.debug"),
-            symbolName: "stethoscope",
+            symbolName: "doc.text.magnifyingglass",
             action: #selector(openDebugPressed),
             toolTip: L10n.tr("about.debugHelp")
         )
