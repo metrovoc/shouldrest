@@ -69,6 +69,38 @@ final class TerminationPolicyTests: XCTestCase {
         }
     }
 
+    func testPauseIndefinitelyConfirmationDefaultsToCancel() {
+        let alert = PauseIndefinitelyConfirmation.makeAlert()
+
+        XCTAssertEqual(alert.messageText, L10n.tr("pause.indefiniteConfirmTitle"))
+        XCTAssertEqual(alert.informativeText, L10n.tr("pause.indefiniteConfirmBody"))
+        XCTAssertEqual(alert.alertStyle, .warning)
+        XCTAssertEqual(alert.buttons.map(\.title), [
+            L10n.tr("pause.indefiniteConfirmCancel"),
+            L10n.tr("pause.indefiniteConfirmAction")
+        ])
+        XCTAssertEqual(alert.buttons[0].keyEquivalent, "\r")
+        XCTAssertEqual(alert.buttons[1].keyEquivalent, "")
+        if #available(macOS 11.0, *) {
+            XCTAssertFalse(alert.buttons[0].hasDestructiveAction)
+            XCTAssertTrue(alert.buttons[1].hasDestructiveAction)
+        }
+    }
+
+    func testPauseIndefinitelyMenuTitleSignalsConfirmationOnlyWhenUsed() {
+        L10n.languageOverride = "en"
+        defer { L10n.languageOverride = nil }
+
+        XCTAssertEqual(
+            PauseMenuCopy.indefiniteTitle(confirmsBeforePausing: true),
+            "Indefinitely..."
+        )
+        XCTAssertEqual(
+            PauseMenuCopy.indefiniteTitle(confirmsBeforePausing: false),
+            "Indefinitely"
+        )
+    }
+
     private func session(kind: RestKind) -> RestSession {
         RestSession(
             kind: kind,

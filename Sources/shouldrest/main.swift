@@ -88,6 +88,36 @@ enum ResetScheduleConfirmation {
     }
 }
 
+enum PauseIndefinitelyConfirmation {
+    @MainActor
+    static func makeAlert() -> NSAlert {
+        let alert = NSAlert()
+        alert.messageText = L10n.tr("pause.indefiniteConfirmTitle")
+        alert.informativeText = L10n.tr("pause.indefiniteConfirmBody")
+        alert.alertStyle = .warning
+        let cancelButton = alert.addButton(withTitle: L10n.tr("pause.indefiniteConfirmCancel"))
+        let pauseButton = alert.addButton(withTitle: L10n.tr("pause.indefiniteConfirmAction"))
+        cancelButton.keyEquivalent = "\r"
+        pauseButton.keyEquivalent = ""
+        if #available(macOS 11.0, *) {
+            cancelButton.hasDestructiveAction = false
+            pauseButton.hasDestructiveAction = true
+        }
+        return alert
+    }
+
+    @MainActor
+    static func confirmed() -> Bool {
+        makeAlert().runModal() == .alertSecondButtonReturn
+    }
+}
+
+enum PauseMenuCopy {
+    static func indefiniteTitle(confirmsBeforePausing: Bool) -> String {
+        L10n.tr(confirmsBeforePausing ? "menu.pauseIndefinitelyConfirming" : "menu.pauseIndefinitely")
+    }
+}
+
 enum StatusMenuPolicy {
     static func showsOrdinaryControls(state: RestEngineState) -> Bool {
         state.activeSession?.kind != .eyeGate
@@ -497,7 +527,10 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             pauseMenu.addItem(actionItem(L10n.tr("menu.pause5h"), #selector(pauseFor5Hours)))
             pauseMenu.addItem(actionItem(L10n.tr("menu.pauseUntilMorning"), #selector(pauseUntilMorning)))
             pauseMenu.addItem(.separator())
-            pauseMenu.addItem(actionItem(L10n.tr("menu.pauseIndefinitely"), #selector(pauseIndefinitely)))
+            pauseMenu.addItem(actionItem(
+                PauseMenuCopy.indefiniteTitle(confirmsBeforePausing: shouldConfirmIndefinitePause()),
+                #selector(pauseIndefinitely)
+            ))
             let pauseItem = NSMenuItem(title: L10n.tr("menu.pause"), action: nil, keyEquivalent: "")
             pauseItem.image = menuItemImage("pause.circle")
             pauseItem.submenu = pauseMenu
@@ -1066,7 +1099,15 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func pauseIndefinitely() {
+        if shouldConfirmIndefinitePause(), !PauseIndefinitelyConfirmation.confirmed() {
+            logger.log("Indefinite pause canceled")
+            return
+        }
         pause(for: nil, reason: .user)
+    }
+
+    private func shouldConfirmIndefinitePause() -> Bool {
+        engine.state.activeSession == nil
     }
 
     private func pause(for duration: TimeInterval?, reason: PauseReason) {

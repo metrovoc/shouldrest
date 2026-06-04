@@ -15,7 +15,12 @@
 "menu.pause5h" = "5 Hours";
 "menu.pauseUntilMorning" = "Until Morning";
 "menu.pauseIndefinitely" = "Indefinitely";
+"menu.pauseIndefinitelyConfirming" = "Indefinitely...";
 "menu.reset" = "Reset Schedule";
+"pause.indefiniteConfirmTitle" = "Pause Indefinitely?";
+"pause.indefiniteConfirmBody" = "ShouldRest will stop scheduling rests until you resume it from the menu. Use a timed pause when you only need a short interruption.";
+"pause.indefiniteConfirmAction" = "Pause Indefinitely";
+"pause.indefiniteConfirmCancel" = "Cancel";
 "reset.confirmTitle" = "Reset Schedule?";
 "reset.confirmBody" = "This clears the current timers, pause state, deferred rest, danger score, and one-shot automation tasks. Preferences are not changed.";
 "reset.confirmAction" = "Reset Schedule";
