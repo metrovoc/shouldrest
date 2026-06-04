@@ -1,7 +1,7 @@
 "app.name" = "ShouldRest";
-"menu.takeEyeGateNow" = "Take Eye Gate Now";
-"menu.takeBodyBreakNow" = "Take Body Break Now";
-"menu.takeNextScheduledRestNow" = "Take Next Scheduled Rest Now";
+"menu.takeEyeGateNow" = "Start Eye Gate Now";
+"menu.takeBodyBreakNow" = "Start Body Break Now";
+"menu.takeNextScheduledRestNow" = "Start Next Rest Now";
 "menu.takeNextScheduledRestNowWithKind" = "Start Next %@ Now";
 "menu.postponeBodyBreak" = "Postpone Body Break";
 "menu.finishBodyBreak" = "Finish Body Break";
@@ -279,8 +279,8 @@
 "prefs.pause5hShortcut" = "Pause 5 hours";
 "prefs.pauseUntilMorningShortcut" = "Pause until morning";
 "prefs.nextScheduledRest" = "Next scheduled rest now";
-"prefs.eyeGateNow" = "Eye Gate now";
-"prefs.bodyBreakNow" = "Body Break now";
+"prefs.eyeGateNow" = "Start Eye Gate";
+"prefs.bodyBreakNow" = "Start Body Break";
 "prefs.skipToBodyBreak" = "Skip to Body Break";
 "prefs.endBodyBreak" = "End active rest";
 "prefs.emergencyEyeGate" = "Emergency Exit shortcut";

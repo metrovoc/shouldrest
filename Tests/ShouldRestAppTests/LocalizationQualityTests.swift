@@ -31,6 +31,8 @@ final class LocalizationQualityTests: XCTestCase {
     }
 
     func testVisiblePreferenceCopyAvoidsImplementationTerms() throws {
+        defer { L10n.languageOverride = nil }
+
         let simplifiedChineseValues = try localizedValues(language: "zh-Hans").joined(separator: "\n")
         let englishValues = try localizedValues(language: "en").joined(separator: "\n")
 
@@ -41,6 +43,8 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(simplifiedChineseValues.contains("加入轮换"))
         XCTAssertFalse(simplifiedChineseValues.contains("更新轮换"))
         XCTAssertFalse(simplifiedChineseValues.contains("当前轮换"))
+        XCTAssertFalse(simplifiedChineseValues.contains("立即护眼休息"))
+        XCTAssertFalse(simplifiedChineseValues.contains("立即活动休息"))
         XCTAssertFalse(englishValues.contains("Language override"))
         XCTAssertFalse(englishValues.contains("available after"))
         XCTAssertFalse(englishValues.contains("Body start sound"))
@@ -49,6 +53,9 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(englishValues.contains("Add to Rotation"))
         XCTAssertFalse(englishValues.contains("Update Rotation"))
         XCTAssertFalse(englishValues.contains("Current rotation"))
+        XCTAssertFalse(englishValues.contains("Take Eye Gate Now"))
+        XCTAssertFalse(englishValues.contains("Take Body Break Now"))
+        XCTAssertFalse(englishValues.contains("Take Next Scheduled Rest Now"))
         XCTAssertFalse(englishValues.contains("Pause-until-morning mode"))
         XCTAssertFalse(englishValues.contains("Resume at hour"))
         XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("danger indicator"))
@@ -77,6 +84,11 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(englishValues.contains("Add Idea"))
         XCTAssertTrue(englishValues.contains("Update Idea"))
         XCTAssertTrue(englishValues.contains("Custom ideas"))
+        XCTAssertTrue(englishValues.contains("Start Eye Gate Now"))
+        XCTAssertTrue(englishValues.contains("Start Body Break Now"))
+        XCTAssertTrue(englishValues.contains("Start Next Rest Now"))
+        XCTAssertTrue(englishValues.contains("Start Eye Gate"))
+        XCTAssertTrue(englishValues.contains("Start Body Break"))
         XCTAssertTrue(simplifiedChineseValues.contains("暂停到早晨方式"))
         XCTAssertTrue(simplifiedChineseValues.contains("暂停或恢复"))
         XCTAssertTrue(simplifiedChineseValues.contains("恢复时间"))
@@ -89,6 +101,19 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(simplifiedChineseValues.contains("添加提示"))
         XCTAssertTrue(simplifiedChineseValues.contains("更新提示"))
         XCTAssertTrue(simplifiedChineseValues.contains("自定义提示"))
+        XCTAssertTrue(simplifiedChineseValues.contains("立即开始护眼休息"))
+        XCTAssertTrue(simplifiedChineseValues.contains("立即开始活动休息"))
+
+        L10n.languageOverride = "en"
+        XCTAssertEqual(L10n.tr("prefs.eyeGateNow"), "Start Eye Gate")
+        XCTAssertEqual(L10n.tr("prefs.bodyBreakNow"), "Start Body Break")
+        XCTAssertNotEqual(L10n.tr("prefs.eyeGateNow"), "Eye Gate now")
+        XCTAssertNotEqual(L10n.tr("prefs.bodyBreakNow"), "Body Break now")
+
+        L10n.languageOverride = "zh-Hans"
+        XCTAssertEqual(L10n.tr("prefs.eyeGateNow"), "立即开始护眼休息")
+        XCTAssertEqual(L10n.tr("prefs.bodyBreakNow"), "立即开始活动休息")
+        L10n.languageOverride = nil
     }
 
     func testEmergencyCopyUsesInternalConfirmationWithoutCountdownOrExternalWindow() {

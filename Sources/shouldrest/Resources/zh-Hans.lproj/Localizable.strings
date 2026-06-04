@@ -1,6 +1,6 @@
 "app.name" = "ShouldRest";
-"menu.takeEyeGateNow" = "立即护眼休息";
-"menu.takeBodyBreakNow" = "立即活动休息";
+"menu.takeEyeGateNow" = "立即开始护眼休息";
+"menu.takeBodyBreakNow" = "立即开始活动休息";
 "menu.takeNextScheduledRestNow" = "立即开始下一项休息";
 "menu.takeNextScheduledRestNowWithKind" = "立即开始下一项%@";
 "menu.postponeBodyBreak" = "推迟活动休息";
@@ -279,8 +279,8 @@
 "prefs.pause5hShortcut" = "暂停 5 小时";
 "prefs.pauseUntilMorningShortcut" = "暂停到早晨";
 "prefs.nextScheduledRest" = "立即执行下一项计划休息";
-"prefs.eyeGateNow" = "立即护眼休息";
-"prefs.bodyBreakNow" = "立即活动休息";
+"prefs.eyeGateNow" = "立即开始护眼休息";
+"prefs.bodyBreakNow" = "立即开始活动休息";
 "prefs.skipToBodyBreak" = "跳到活动休息";
 "prefs.endBodyBreak" = "结束当前休息";
 "prefs.emergencyEyeGate" = "紧急退出快捷键";
