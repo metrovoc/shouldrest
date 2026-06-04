@@ -1576,6 +1576,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         appExclusionCancelEditButton.target = self
         appExclusionCancelEditButton.action = #selector(cancelAppExclusionRuleEditPressed(_:))
         appExclusionCancelEditButton.toolTip = L10n.tr("prefs.cancelAppExclusionRuleEditHelp")
+        setTextButtonHelp(
+            title: appExclusionCancelEditButton.title,
+            help: L10n.tr("prefs.cancelAppExclusionRuleEditHelp"),
+            on: appExclusionCancelEditButton
+        )
         appExclusionCancelEditButton.widthAnchor.constraint(equalToConstant: 104).isActive = true
         appExclusionCancelEditButton.isHidden = true
         updateAppExclusionActionButtonPresentation()
@@ -1613,6 +1618,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         customBodyCancelEditButton.target = self
         customBodyCancelEditButton.action = #selector(cancelCustomBodyIdeaEditPressed(_:))
         customBodyCancelEditButton.toolTip = L10n.tr("prefs.cancelCustomIdeaEditHelp")
+        setTextButtonHelp(
+            title: customBodyCancelEditButton.title,
+            help: L10n.tr("prefs.cancelCustomIdeaEditHelp"),
+            on: customBodyCancelEditButton
+        )
         customBodyCancelEditButton.widthAnchor.constraint(equalToConstant: 104).isActive = true
         customBodyCancelEditButton.isHidden = true
         updateCustomBodyActionButtonPresentation()
@@ -1741,6 +1751,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         setHelp(help, on: button)
         button.setAccessibilityLabel(help)
         button.image?.accessibilityDescription = help
+    }
+
+    private func setTextButtonHelp(title: String, help: String, on button: NSButton) {
+        setHelp(help, on: button)
+        button.setAccessibilityLabel(title)
+        button.image?.accessibilityDescription = title
     }
 
     private func configureAutosave() {
@@ -3308,14 +3324,16 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func updateAppExclusionActionButtonPresentation() {
         let isEditing = editingAppExclusionRuleID != nil
-        appExclusionAddRuleButton.title = isEditing ? L10n.tr("prefs.updateAppExclusionRule") : L10n.tr("prefs.addAppExclusionRule")
-        appExclusionAddRuleButton.image = NSImage(
-            systemSymbolName: isEditing ? "checkmark.circle" : "plus.circle",
-            accessibilityDescription: nil
-        )
-        appExclusionAddRuleButton.toolTip = isEditing ?
+        let title = isEditing ? L10n.tr("prefs.updateAppExclusionRule") : L10n.tr("prefs.addAppExclusionRule")
+        let help = isEditing ?
             L10n.tr("prefs.updateAppExclusionRuleHelp") :
             L10n.tr("prefs.addAppExclusionRuleHelp")
+        appExclusionAddRuleButton.title = title
+        appExclusionAddRuleButton.image = NSImage(
+            systemSymbolName: isEditing ? "checkmark.circle" : "plus.circle",
+            accessibilityDescription: title
+        )
+        setTextButtonHelp(title: title, help: help, on: appExclusionAddRuleButton)
         appExclusionCancelEditButton.isHidden = !isEditing
     }
 
@@ -3609,12 +3627,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func updateCustomBodyActionButtonPresentation() {
         let isEditing = editingCustomBodyIdeaID != nil
-        customBodyAddIdeaButton.title = isEditing ? L10n.tr("prefs.updateCustomIdea") : L10n.tr("prefs.addCustomIdea")
+        let title = isEditing ? L10n.tr("prefs.updateCustomIdea") : L10n.tr("prefs.addCustomIdea")
+        let help = isEditing ? L10n.tr("prefs.updateCustomIdeaHelp") : L10n.tr("prefs.addCustomIdeaHelp")
+        customBodyAddIdeaButton.title = title
         customBodyAddIdeaButton.image = NSImage(
             systemSymbolName: isEditing ? "checkmark.circle" : "plus.bubble",
-            accessibilityDescription: nil
-        ) ?? NSImage(systemSymbolName: isEditing ? "checkmark" : "plus.circle", accessibilityDescription: nil)
-        customBodyAddIdeaButton.toolTip = isEditing ? L10n.tr("prefs.updateCustomIdeaHelp") : L10n.tr("prefs.addCustomIdeaHelp")
+            accessibilityDescription: title
+        ) ?? NSImage(systemSymbolName: isEditing ? "checkmark" : "plus.circle", accessibilityDescription: title)
+        setTextButtonHelp(title: title, help: help, on: customBodyAddIdeaButton)
         customBodyCancelEditButton.isHidden = !isEditing
     }
 

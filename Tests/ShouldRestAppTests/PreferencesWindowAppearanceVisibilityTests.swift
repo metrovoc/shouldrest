@@ -211,6 +211,9 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertTrue(listRow.isHidden)
         XCTAssertEqual(button.title, L10n.tr("prefs.addCustomIdea"))
         XCTAssertEqual(button.toolTip, L10n.tr("prefs.addCustomIdeaHelp"))
+        XCTAssertEqual(button.accessibilityLabel(), L10n.tr("prefs.addCustomIdea"))
+        XCTAssertEqual(button.accessibilityHelp(), L10n.tr("prefs.addCustomIdeaHelp"))
+        XCTAssertEqual(button.image?.accessibilityDescription, L10n.tr("prefs.addCustomIdea"))
         XCTAssertNotNil(button.image)
 
         title.stringValue = "Loosen neck"
@@ -340,6 +343,13 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
 
         XCTAssertTrue(cancelButton.isHidden)
         XCTAssertEqual(actionButton.title, L10n.tr("prefs.addCustomIdea"))
+        XCTAssertEqual(actionButton.toolTip, L10n.tr("prefs.addCustomIdeaHelp"))
+        XCTAssertEqual(actionButton.accessibilityLabel(), L10n.tr("prefs.addCustomIdea"))
+        XCTAssertEqual(actionButton.accessibilityHelp(), L10n.tr("prefs.addCustomIdeaHelp"))
+        XCTAssertEqual(actionButton.image?.accessibilityDescription, L10n.tr("prefs.addCustomIdea"))
+        XCTAssertEqual(cancelButton.accessibilityLabel(), L10n.tr("prefs.cancelCustomIdeaEdit"))
+        XCTAssertEqual(cancelButton.accessibilityHelp(), L10n.tr("prefs.cancelCustomIdeaEditHelp"))
+        XCTAssertEqual(cancelButton.image?.accessibilityDescription, L10n.tr("prefs.cancelCustomIdeaEdit"))
         XCTAssertEqual(editWalk.toolTip, L10n.tr("prefs.editCustomIdeaHelp"))
         XCTAssertEqual(editWalk.accessibilityLabel(), L10n.tr("prefs.editCustomIdeaHelp"))
         XCTAssertEqual(editWalk.accessibilityHelp(), L10n.tr("prefs.editCustomIdeaHelp"))
@@ -351,6 +361,9 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertFalse(cancelButton.isHidden)
         XCTAssertEqual(actionButton.title, L10n.tr("prefs.updateCustomIdea"))
         XCTAssertEqual(actionButton.toolTip, L10n.tr("prefs.updateCustomIdeaHelp"))
+        XCTAssertEqual(actionButton.accessibilityLabel(), L10n.tr("prefs.updateCustomIdea"))
+        XCTAssertEqual(actionButton.accessibilityHelp(), L10n.tr("prefs.updateCustomIdeaHelp"))
+        XCTAssertEqual(actionButton.image?.accessibilityDescription, L10n.tr("prefs.updateCustomIdea"))
 
         title.stringValue = "Look outside"
         controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: title))
@@ -371,6 +384,9 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertEqual(body.string, "")
         XCTAssertTrue(cancelButton.isHidden)
         XCTAssertEqual(actionButton.title, L10n.tr("prefs.addCustomIdea"))
+        XCTAssertEqual(actionButton.accessibilityLabel(), L10n.tr("prefs.addCustomIdea"))
+        XCTAssertEqual(actionButton.accessibilityHelp(), L10n.tr("prefs.addCustomIdeaHelp"))
+        XCTAssertEqual(actionButton.image?.accessibilityDescription, L10n.tr("prefs.addCustomIdea"))
         XCTAssertEqual(
             (try view(withIdentifier: "prefs.customBodyIdeaTitle.1", in: contentView) as? NSTextField)?.stringValue,
             "Look outside"

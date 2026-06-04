@@ -587,6 +587,13 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
 
         XCTAssertTrue(cancelButton.isHidden)
         XCTAssertEqual(actionButton.title, L10n.tr("prefs.addAppExclusionRule"))
+        XCTAssertEqual(actionButton.toolTip, L10n.tr("prefs.addAppExclusionRuleHelp"))
+        XCTAssertEqual(actionButton.accessibilityLabel(), L10n.tr("prefs.addAppExclusionRule"))
+        XCTAssertEqual(actionButton.accessibilityHelp(), L10n.tr("prefs.addAppExclusionRuleHelp"))
+        XCTAssertEqual(actionButton.image?.accessibilityDescription, L10n.tr("prefs.addAppExclusionRule"))
+        XCTAssertEqual(cancelButton.accessibilityLabel(), L10n.tr("prefs.cancelAppExclusionRuleEdit"))
+        XCTAssertEqual(cancelButton.accessibilityHelp(), L10n.tr("prefs.cancelAppExclusionRuleEditHelp"))
+        XCTAssertEqual(cancelButton.image?.accessibilityDescription, L10n.tr("prefs.cancelAppExclusionRuleEdit"))
         XCTAssertGreaterThanOrEqual(
             actionButton.constraints.first { $0.firstAttribute == .width }?.constant ?? 0,
             156
@@ -605,6 +612,9 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertFalse(cancelButton.isHidden)
         XCTAssertEqual(actionButton.title, L10n.tr("prefs.updateAppExclusionRule"))
         XCTAssertEqual(actionButton.toolTip, L10n.tr("prefs.updateAppExclusionRuleHelp"))
+        XCTAssertEqual(actionButton.accessibilityLabel(), L10n.tr("prefs.updateAppExclusionRule"))
+        XCTAssertEqual(actionButton.accessibilityHelp(), L10n.tr("prefs.updateAppExclusionRuleHelp"))
+        XCTAssertEqual(actionButton.image?.accessibilityDescription, L10n.tr("prefs.updateAppExclusionRule"))
 
         name.stringValue = "Meetings"
         controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: name))
@@ -632,6 +642,9 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertEqual(terms.objectValue as? [String] ?? [], [])
         XCTAssertTrue(cancelButton.isHidden)
         XCTAssertEqual(actionButton.title, L10n.tr("prefs.addAppExclusionRule"))
+        XCTAssertEqual(actionButton.accessibilityLabel(), L10n.tr("prefs.addAppExclusionRule"))
+        XCTAssertEqual(actionButton.accessibilityHelp(), L10n.tr("prefs.addAppExclusionRuleHelp"))
+        XCTAssertEqual(actionButton.image?.accessibilityDescription, L10n.tr("prefs.addAppExclusionRule"))
         XCTAssertEqual(
             (try view(withIdentifier: "prefs.appExclusionRuleTitle.1", in: contentView) as? NSTextField)?.stringValue,
             "Meetings"
