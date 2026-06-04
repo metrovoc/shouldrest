@@ -21,6 +21,48 @@ enum AppPaths {
     }
 }
 
+enum AppIdentity {
+    static let defaultBundleIdentifier = "dev.shouldrest.app"
+    static let defaultAutomationNotificationName = Notification.Name("dev.shouldrest.automation")
+
+    static var bundleIdentifier: String {
+        bundleIdentifier(bundle: Bundle.main, environment: ProcessInfo.processInfo.environment)
+    }
+
+    static var automationNotificationName: Notification.Name {
+        automationNotificationName(
+            bundleIdentifier: bundleIdentifier,
+            environment: ProcessInfo.processInfo.environment
+        )
+    }
+
+    static func bundleIdentifier(bundle: Bundle?, environment: [String: String]) -> String {
+        if let override = environment["SHOULDREST_BUNDLE_IDENTIFIER"]?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !override.isEmpty {
+            return override
+        }
+        if let identifier = bundle?.bundleIdentifier?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !identifier.isEmpty {
+            return identifier
+        }
+        return defaultBundleIdentifier
+    }
+
+    static func automationNotificationName(
+        bundleIdentifier: String,
+        environment: [String: String]
+    ) -> Notification.Name {
+        if let override = environment["SHOULDREST_AUTOMATION_NOTIFICATION"]?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !override.isEmpty {
+            return Notification.Name(override)
+        }
+        guard bundleIdentifier != defaultBundleIdentifier else {
+            return defaultAutomationNotificationName
+        }
+        return Notification.Name("\(bundleIdentifier).automation")
+    }
+}
+
 enum EmergencyAutomationSignal {
     static let defaultMaxAge: TimeInterval = 10
 
@@ -107,7 +149,9 @@ final class AppLogger {
 }
 
 extension Notification.Name {
-    static let shouldRestAutomation = Notification.Name("dev.shouldrest.automation")
+    static var shouldRestAutomation: Notification.Name {
+        AppIdentity.automationNotificationName
+    }
 }
 
 enum AutomationCommand: String {
@@ -177,7 +221,6 @@ enum CommandLineAutomation {
         case invalid
     }
 
-    private static let appBundleIdentifier = "dev.shouldrest.app"
     private static var pendingLaunchRequest: AutomationRequest?
 
     static func consumeLaunchRequest() -> AutomationRequest? {
@@ -571,7 +614,7 @@ enum CommandLineAutomation {
     private static func hasOtherRunningAppInstance() -> Bool {
         let currentProcessID = ProcessInfo.processInfo.processIdentifier
         return NSRunningApplication
-            .runningApplications(withBundleIdentifier: appBundleIdentifier)
+            .runningApplications(withBundleIdentifier: AppIdentity.bundleIdentifier)
             .contains { app in
                 app.processIdentifier != currentProcessID && !app.isTerminated
             }

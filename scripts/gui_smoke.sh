@@ -15,14 +15,16 @@ if [[ ! -x "$executable" ]]; then
   exit 2
 fi
 
-existing_pids="$(pgrep -x shouldrest || true)"
-if [[ -n "$existing_pids" && "${ALLOW_EXISTING_SHOULDREST:-0}" != "1" ]]; then
-  echo "Existing shouldrest process detected; quit it first or set ALLOW_EXISTING_SHOULDREST=1." >&2
-  echo "$existing_pids" >&2
-  exit 2
-fi
-
 support_dir="$(mktemp -d "${TMPDIR:-/tmp}/shouldrest-smoke.XXXXXX")"
+smoke_app_path="$support_dir/ShouldRestSmoke.app"
+smoke_bundle_id="dev.shouldrest.smoke.$(date +%s).$$"
+smoke_info_plist="$smoke_app_path/Contents/Info.plist"
+ditto "$app_path" "$smoke_app_path"
+/usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $smoke_bundle_id" "$smoke_info_plist"
+codesign --force --sign - --deep "$smoke_app_path" >/dev/null
+codesign --verify --deep --strict "$smoke_app_path"
+executable="$smoke_app_path/Contents/MacOS/shouldrest"
+
 pid=""
 automation_pid=""
 
@@ -62,7 +64,7 @@ for ((attempt = 1; attempt <= attempts; attempt++)); do
   fi
 
   windows="$(swift scripts/list_windows.swift || true)"
-  if grep -Eq 'name=(Welcome to ShouldRest|欢迎使用 ShouldRest)' <<< "$windows"; then
+  if grep -Eq "pid=$pid name=(Welcome to ShouldRest|欢迎使用 ShouldRest)" <<< "$windows"; then
     if ! grep -q "Onboarding shown" "$support_dir/logs/shouldrest.log" 2>/dev/null; then
       echo "Welcome window appeared, but smoke log did not confirm onboarding in the temporary support directory." >&2
       cat "$support_dir/logs/shouldrest.log" >&2 || true
@@ -99,7 +101,7 @@ for ((attempt = 1; attempt <= attempts; attempt++)); do
   fi
 
   windows="$(swift scripts/list_windows.swift || true)"
-  if grep -Eq 'name=(ShouldRest Preferences|ShouldRest 偏好设置)' <<< "$windows"; then
+  if grep -Eq "pid=$pid name=(ShouldRest Preferences|ShouldRest 偏好设置)" <<< "$windows"; then
     if ! grep -Eq "Handled (automation|launch automation) command preferences" "$support_dir/logs/shouldrest.log" 2>/dev/null; then
       echo "Preferences window appeared, but smoke log did not confirm preferences automation." >&2
       cat "$support_dir/logs/shouldrest.log" >&2 || true
@@ -126,31 +128,31 @@ fi
 SHOULDREST_SUPPORT_DIR="$support_dir" "$executable" debug-panel >> "$support_dir/stdout.log" 2>> "$support_dir/stderr.log" &
 automation_pid="$!"
 
-diagnostics_seen=0
+support_report_seen=0
 for ((attempt = 1; attempt <= attempts; attempt++)); do
   if ! kill -0 "$pid" 2>/dev/null; then
-    echo "ShouldRest exited before the diagnostics window appeared." >&2
+    echo "ShouldRest exited before the support report window appeared." >&2
     cat "$support_dir/stdout.log" >&2 || true
     cat "$support_dir/stderr.log" >&2 || true
     exit 1
   fi
 
   windows="$(swift scripts/list_windows.swift || true)"
-  if grep -Eq 'name=(ShouldRest Diagnostics|ShouldRest 诊断)' <<< "$windows"; then
+  if grep -Eq "pid=$pid name=(ShouldRest Support Report|ShouldRest 支持报告|ShouldRest Diagnostics|ShouldRest 诊断)" <<< "$windows"; then
     if ! grep -Eq "Handled (automation|launch automation) command debugPanel" "$support_dir/logs/shouldrest.log" 2>/dev/null; then
-      echo "Diagnostics window appeared, but smoke log did not confirm diagnostics automation." >&2
+      echo "Support report window appeared, but smoke log did not confirm support report automation." >&2
       cat "$support_dir/logs/shouldrest.log" >&2 || true
       exit 1
     fi
-    diagnostics_seen=1
+    support_report_seen=1
     break
   fi
 
   sleep 0.5
 done
 
-if [[ "$diagnostics_seen" != "1" ]]; then
-  echo "Timed out waiting for diagnostics window." >&2
+if [[ "$support_report_seen" != "1" ]]; then
+  echo "Timed out waiting for support report window." >&2
   echo "Observed ShouldRest windows:" >&2
   swift scripts/list_windows.swift >&2 || true
   echo "stdout:" >&2
@@ -173,7 +175,7 @@ for ((attempt = 1; attempt <= attempts; attempt++)); do
   fi
 
   windows="$(swift scripts/list_windows.swift || true)"
-  if grep -Eq 'name=(About ShouldRest|关于 ShouldRest)' <<< "$windows"; then
+  if grep -Eq "pid=$pid name=(About ShouldRest|关于 ShouldRest)" <<< "$windows"; then
     if ! grep -Eq "Handled (automation|launch automation) command about" "$support_dir/logs/shouldrest.log" 2>/dev/null; then
       echo "About window appeared, but smoke log did not confirm about automation." >&2
       cat "$support_dir/logs/shouldrest.log" >&2 || true
@@ -197,4 +199,4 @@ if [[ "$about_seen" != "1" ]]; then
   exit 1
 fi
 
-echo "GUI smoke OK: first-run welcome, preferences, diagnostics, and about windows appeared with temporary support directory."
+echo "GUI smoke OK: first-run welcome, preferences, support report, and about windows appeared with temporary support directory."
