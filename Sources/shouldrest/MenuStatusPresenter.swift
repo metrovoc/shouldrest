@@ -153,9 +153,11 @@ enum MenuStatusPresenter {
             )
         }
         if let scheduled = state.scheduled {
+            let seconds = max(0, Int(ceil(scheduled.dueAt.timeIntervalSince(now))))
             return L10n.format(
-                "status.next",
+                "status.nextWithCountdown",
                 restKindName(scheduled.kind),
+                compactDurationText(seconds: seconds),
                 scheduled.dueAt.formatted(date: .omitted, time: .shortened)
             )
         }

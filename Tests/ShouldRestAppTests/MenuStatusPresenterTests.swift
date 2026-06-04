@@ -22,8 +22,29 @@ final class MenuStatusPresenterTests: XCTestCase {
         let lines = MenuStatusPresenter.lines(state: engine.state, settings: engine.settings, now: start)
 
         XCTAssertTrue(lines[0].contains("Eye Gate"))
+        XCTAssertTrue(lines[0].contains(" in "))
+        XCTAssertTrue(lines[0].contains("("))
         XCTAssertFalse(lines[0].contains("eyeGate"))
         XCTAssertEqual(lines[1], "Next Body Break after 4 Eye Gates")
+    }
+
+    func testScheduledStatusShowsRelativeAndClockTimeInLocalizedCopy() {
+        let dueAt = start.addingTimeInterval(10 * 60)
+        let state = RestEngineState(
+            scheduled: ScheduledRest(kind: .eyeGate, dueAt: dueAt, notificationAt: nil)
+        )
+
+        XCTAssertEqual(
+            MenuStatusPresenter.lines(state: state, settings: .defaults, now: start)[0],
+            "Next: Eye Gate in 10m (\(dueAt.formatted(date: .omitted, time: .shortened)))"
+        )
+
+        L10n.languageOverride = "zh-Hans"
+        XCTAssertEqual(
+            MenuStatusPresenter.lines(state: state, settings: .defaults, now: start)[0],
+            "下一次：护眼休息，10 分钟后（\(dueAt.formatted(date: .omitted, time: .shortened))）"
+        )
+        L10n.languageOverride = "en"
     }
 
     func testTooltipIncludesHeaderAndStatusLines() {
@@ -73,7 +94,10 @@ final class MenuStatusPresenterTests: XCTestCase {
         let content = MenuStatusPresenter.headerContent(state: state, settings: settings, now: start)
 
         XCTAssertEqual(content.title, "ShouldRest")
-        XCTAssertTrue(content.primary.hasPrefix("Next: Eye Gate at "))
+        XCTAssertEqual(
+            content.primary,
+            "Next: Eye Gate in 10m (\(start.addingTimeInterval(10 * 60).formatted(date: .omitted, time: .shortened)))"
+        )
         XCTAssertEqual(content.secondary, "Next Body Break after 4 Eye Gates")
         XCTAssertEqual(content.healthBadge, "Pressure 3/10")
         XCTAssertEqual(content.icon, .restGate)
@@ -118,7 +142,8 @@ final class MenuStatusPresenterTests: XCTestCase {
             now: start
         )
 
-        XCTAssertTrue(description.hasPrefix("ShouldRest: Next: Eye Gate at "))
+        XCTAssertTrue(description.hasPrefix("ShouldRest: Next: Eye Gate in "))
+        XCTAssertTrue(description.contains("("))
         XCTAssertTrue(description.contains("Next Body Break after 4 Eye Gates"))
         XCTAssertFalse(description.contains("The rest reminder app"))
         XCTAssertFalse(description.contains("\n"))
@@ -138,7 +163,7 @@ final class MenuStatusPresenterTests: XCTestCase {
             now: start
         )
 
-        XCTAssertTrue(description.hasPrefix("ShouldRest: Next: Body Break at "))
+        XCTAssertTrue(description.hasPrefix("ShouldRest: Next: Body Break in 10m ("))
         XCTAssertTrue(description.contains("Pressure 4/10"))
         XCTAssertFalse(description.contains("Rest pressure:"))
     }

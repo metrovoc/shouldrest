@@ -96,7 +96,7 @@
 "status.durationMinutes" = "%dm";
 "status.durationHours" = "%dh";
 "status.durationHoursMinutes" = "%dh %dm";
-"status.next" = "Next: %@ at %@";
+"status.nextWithCountdown" = "Next: %@ in %@ (%@)";
 "status.nextBodyAfterOneEyeGate" = "Next Body Break after 1 Eye Gate";
 "status.nextBodyAfterEyeGates" = "Next Body Break after %d Eye Gates";
 "status.active" = "%@ active, %@ remaining";

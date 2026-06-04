@@ -96,7 +96,7 @@
 "status.durationMinutes" = "%d 分钟";
 "status.durationHours" = "%d 小时";
 "status.durationHoursMinutes" = "%d 小时 %d 分钟";
-"status.next" = "下一次：%@，时间 %@";
+"status.nextWithCountdown" = "下一次：%@，%@后（%@）";
 "status.nextBodyAfterOneEyeGate" = "距离下一次活动休息还有 1 次护眼休息";
 "status.nextBodyAfterEyeGates" = "距离下一次活动休息还有 %d 次护眼休息";
 "status.active" = "%@ 进行中，剩余 %@";
