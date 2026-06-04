@@ -6,6 +6,14 @@ import XCTest
 final class EmergencyOverrideCoordinatorTests: XCTestCase {
     private let start = Date(timeIntervalSinceReferenceDate: 1_000)
 
+    func testCurrentPolicyDesignIsTwoInOverlayRequests() {
+        XCTAssertEqual(EmergencyOverridePolicy.inOverlayRequestCount, 2)
+        XCTAssertEqual(EmergencyOverridePolicy.currentDesignConfirmationSteps, 1)
+        XCTAssertEqual(EmergencyOverridePolicy.defaults.confirmationSteps, 1)
+        XCTAssertEqual(EmergencyOverridePolicy.confirmationStepsForCurrentDesign(isEnabled: true), 1)
+        XCTAssertEqual(EmergencyOverridePolicy.confirmationStepsForCurrentDesign(isEnabled: false), 0)
+    }
+
     func testMinimumHoldDurationIsCompatibilityOnly() {
         var policy = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 1, minimumHoldDuration: 30)
 

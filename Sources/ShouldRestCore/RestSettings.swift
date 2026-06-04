@@ -86,12 +86,10 @@ public struct RestSettings: Codable, Equatable, Sendable {
 
     public func normalizedForCurrentDesign() -> RestSettings {
         var copy = enforcingAtLeastOneEnabledRest()
-        if copy.eyeGate.emergencyOverride.isEnabled,
-           copy.eyeGate.emergencyOverride.confirmationSteps <= 0 {
-            copy.eyeGate.emergencyOverride.confirmationSteps = EmergencyOverridePolicy.defaults.confirmationSteps
-        }
-        copy.eyeGate.emergencyOverride.confirmationSteps = min(1, copy.eyeGate.emergencyOverride.confirmationSteps)
-        copy.bodyBreak.emergencyOverride.confirmationSteps = 0
+        copy.eyeGate.emergencyOverride.confirmationSteps = EmergencyOverridePolicy.confirmationStepsForCurrentDesign(
+            isEnabled: copy.eyeGate.emergencyOverride.isEnabled
+        )
+        copy.bodyBreak.emergencyOverride = .disabled
         if let emergencyShortcut = copy.shortcuts.emergencyEyeGateOverride,
            emergencyShortcut.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             copy.shortcuts.emergencyEyeGateOverride = ShortcutSettings.defaultEmergencyEyeGateOverride
@@ -200,6 +198,9 @@ public struct PostponePolicy: Codable, Equatable, Sendable {
 }
 
 public struct EmergencyOverridePolicy: Codable, Equatable, Sendable {
+    public static let inOverlayRequestCount = 2
+    public static let currentDesignConfirmationSteps = inOverlayRequestCount - 1
+
     public var isEnabled: Bool
     public var confirmationSteps: Int
     // Compatibility only. Long-press confirmation is not part of the current design.
@@ -213,9 +214,13 @@ public struct EmergencyOverridePolicy: Codable, Equatable, Sendable {
         self.confirmationSteps = max(0, confirmationSteps)
     }
 
+    public static func confirmationStepsForCurrentDesign(isEnabled: Bool) -> Int {
+        isEnabled ? currentDesignConfirmationSteps : 0
+    }
+
     public static let defaults = EmergencyOverridePolicy(
         isEnabled: true,
-        confirmationSteps: 1,
+        confirmationSteps: currentDesignConfirmationSteps,
         minimumHoldDuration: 0
     )
 
