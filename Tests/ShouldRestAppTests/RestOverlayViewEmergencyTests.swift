@@ -6,6 +6,36 @@ import XCTest
 
 @MainActor
 final class RestOverlayViewEmergencyTests: XCTestCase {
+    func testEmergencyCoordinatorRequiresTwoRequestsWithoutLegacyHoldWait() {
+        let start = Date(timeIntervalSinceReferenceDate: 6_000)
+        let session = RestSession(
+            kind: .eyeGate,
+            startedAt: start,
+            scheduledAt: start,
+            duration: 60,
+            manualFinishEnabled: false
+        )
+        let policy = EmergencyOverridePolicy(
+            isEnabled: true,
+            confirmationSteps: 99,
+            minimumHoldDuration: 30
+        )
+        var coordinator = EmergencyOverrideCoordinator()
+        let requestTime = start.addingTimeInterval(1)
+
+        XCTAssertEqual(
+            coordinator.request(session: session, policy: policy, now: requestTime),
+            .armed
+        )
+        XCTAssertTrue(coordinator.isArmed(for: session))
+
+        XCTAssertEqual(
+            coordinator.request(session: session, policy: policy, now: requestTime),
+            .complete
+        )
+        XCTAssertFalse(coordinator.isArmed(for: session))
+    }
+
     func testOverlayEmergencyActivationIsAvailableWhenAffordanceVisible() {
         let view = configuredEyeGateOverlay()
 
