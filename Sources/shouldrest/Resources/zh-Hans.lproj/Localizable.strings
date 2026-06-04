@@ -519,7 +519,7 @@
 "prefs.restoreDefaultsCancel" = "取消";
 "prefs.invalidJSONTitle" = "批量编辑内容格式无效";
 "prefs.invalidJSONBody" = "%@：%@";
-"shortcut.notSet" = "未设置";
+"shortcut.add" = "添加";
 "shortcut.record" = "录制快捷键";
 "shortcut.recording" = "录制中…";
 "shortcut.recordHelp" = "点击后按快捷键。";

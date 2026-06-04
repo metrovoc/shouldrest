@@ -5582,7 +5582,7 @@ final class ShortcutRecorderButton: NSButton {
     private func applyDisplayState(_ state: DisplayState) {
         switch state {
         case .unset:
-            title = L10n.tr("shortcut.notSet")
+            title = L10n.tr("shortcut.add")
             toolTip = combinedHelp(with: L10n.tr("shortcut.recordHelp"))
             contentTintColor = .secondaryLabelColor
             setSymbol("keyboard.badge.ellipsis", fallback: "keyboard")

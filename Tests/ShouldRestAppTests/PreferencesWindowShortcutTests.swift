@@ -9,13 +9,13 @@ final class PreferencesWindowShortcutTests: XCTestCase {
     func testShortcutRecorderUsesCompactStatefulDisplay() {
         let button = ShortcutRecorderButton()
 
-        XCTAssertEqual(button.title, L10n.tr("shortcut.notSet"))
+        XCTAssertEqual(button.title, L10n.tr("shortcut.add"))
         XCTAssertEqual(button.toolTip, L10n.tr("shortcut.recordHelp"))
         XCTAssertNotNil(button.image)
         XCTAssertEqual(button.imagePosition, .imageLeading)
-        XCTAssertEqual(button.accessibilityLabel(), L10n.tr("shortcut.notSet"))
+        XCTAssertEqual(button.accessibilityLabel(), L10n.tr("shortcut.add"))
         XCTAssertEqual(button.accessibilityHelp(), L10n.tr("shortcut.recordHelp"))
-        XCTAssertEqual(button.image?.accessibilityDescription, L10n.tr("shortcut.notSet"))
+        XCTAssertEqual(button.image?.accessibilityDescription, L10n.tr("shortcut.add"))
         XCTAssertNotEqual(button.image?.accessibilityDescription, "keyboard.badge.ellipsis")
 
         button.shortcutValue = "CmdOrCtrl+Option+E"
@@ -51,7 +51,7 @@ final class PreferencesWindowShortcutTests: XCTestCase {
 
         XCTAssertTrue(window.makeFirstResponder(searchField))
 
-        XCTAssertEqual(recorder.title, L10n.tr("shortcut.notSet"))
+        XCTAssertEqual(recorder.title, L10n.tr("shortcut.add"))
         XCTAssertEqual(recorder.toolTip, shortcutHelp("prefs.pause30ShortcutHelp", "shortcut.recordHelp"))
         XCTAssertTrue(isFirstResponder(searchField, in: window))
         XCTAssertNil(savedSettings.value)
@@ -83,7 +83,7 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(button.toolTip, L10n.tr("shortcut.requiredHelp"))
     }
 
-    func testUnsetShortcutsDoNotRepeatRecordInstructionAsButtonText() throws {
+    func testUnsetShortcutsExposeAddActionWithoutLongRecordInstruction() throws {
         let settings = RestSettings.defaults
         let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
@@ -91,7 +91,9 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         try selectShortcutsTab(in: contentView)
         let visibleTexts = visibleTexts(in: contentView)
 
-        XCTAssertTrue(visibleTexts.contains(L10n.tr("shortcut.notSet")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("shortcut.add")))
+        XCTAssertFalse(visibleTexts.contains("Not set"))
+        XCTAssertFalse(visibleTexts.contains("未设置"))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("shortcut.record")))
         XCTAssertTrue(visibleTexts.contains("⌘⌥E"))
     }
@@ -466,7 +468,7 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         waitUntilSavedSettingsArrive(savedSettings)
 
         XCTAssertEqual(recorder.shortcutValue, "")
-        XCTAssertEqual(recorder.title, L10n.tr("shortcut.notSet"))
+        XCTAssertEqual(recorder.title, L10n.tr("shortcut.add"))
         XCTAssertEqual(savedSettings.value?.shortcuts.pauseFor30Minutes, "")
         XCTAssertFalse(clearButton.isEnabled)
     }

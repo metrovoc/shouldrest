@@ -519,7 +519,7 @@
 "prefs.restoreDefaultsCancel" = "Cancel";
 "prefs.invalidJSONTitle" = "Bulk edit content has an invalid format";
 "prefs.invalidJSONBody" = "%@: %@";
-"shortcut.notSet" = "Not set";
+"shortcut.add" = "Add";
 "shortcut.record" = "Record Shortcut";
 "shortcut.recording" = "Recording…";
 "shortcut.recordHelp" = "Click, then press a shortcut.";
