@@ -110,7 +110,7 @@ enum MenuStatusPresenter {
                 return L10n.format("status.readyToFinish", restKindName(active.kind))
             }
             let remaining = max(0, Int(active.duration - now.timeIntervalSince(active.startedAt)))
-            return L10n.format("status.active", restKindName(active.kind), remaining)
+            return L10n.format("status.active", restKindName(active.kind), activeRemainingText(seconds: remaining))
         }
         if let pause = state.pause {
             if let until = pause.until {
@@ -147,6 +147,13 @@ enum MenuStatusPresenter {
         return L10n.format("status.pauseResumesIn", compactDurationText(seconds: seconds))
     }
 
+    private static func activeRemainingText(seconds: Int) -> String {
+        guard seconds >= 60 else {
+            return L10n.format("status.durationSeconds", max(0, seconds))
+        }
+        return compactDurationText(seconds: seconds)
+    }
+
     private static func compactDurationText(seconds: Int) -> String {
         guard seconds >= 60 else {
             return L10n.tr("status.durationUnderMinute")
@@ -175,6 +182,9 @@ enum MenuStatusPresenter {
             return nil
         }
         let remainingEyeGates = max(1, settings.bodyBreakAfterEyeGates - state.eyeGatesSinceBodyBreak)
+        if remainingEyeGates == 1 {
+            return L10n.tr("status.nextBodyAfterOneEyeGate")
+        }
         return L10n.format("status.nextBodyAfterEyeGates", remainingEyeGates)
     }
 }

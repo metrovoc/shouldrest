@@ -9,7 +9,7 @@ final class StatusMenuHeaderViewTests: XCTestCase {
             content: MenuStatusPresenter.HeaderContent(
                 title: "ShouldRest",
                 primary: "Next: Eye Gate at 8:00 PM",
-                secondary: "Next Body Break after 2 Eye Gate(s)",
+                secondary: "Next Body Break after 2 Eye Gates",
                 healthBadge: "Pressure 3/10",
                 icon: .restGate
             )
@@ -19,7 +19,7 @@ final class StatusMenuHeaderViewTests: XCTestCase {
         XCTAssertNotNil(view.descendant(withIdentifier: "statusMenu.headerIcon") as? NSImageView)
         XCTAssertEqual(try textField("statusMenu.headerTitle", in: view).stringValue, "ShouldRest")
         XCTAssertEqual(try textField("statusMenu.headerPrimary", in: view).stringValue, "Next: Eye Gate at 8:00 PM")
-        XCTAssertEqual(try textField("statusMenu.headerSecondary", in: view).stringValue, "Next Body Break after 2 Eye Gate(s)")
+        XCTAssertEqual(try textField("statusMenu.headerSecondary", in: view).stringValue, "Next Body Break after 2 Eye Gates")
         XCTAssertFalse(try textField("statusMenu.headerSecondary", in: view).isHidden)
         XCTAssertEqual(try textField("statusMenu.headerBadge", in: view).stringValue, "Pressure 3/10")
         XCTAssertFalse(try textField("statusMenu.headerBadge", in: view).isHidden)

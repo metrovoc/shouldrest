@@ -52,13 +52,15 @@
 "status.pausedUntil" = "Paused until %@";
 "status.pauseResumesIn" = "Resumes in %@";
 "status.pauseResumeManual" = "Resume from this menu when ready";
+"status.durationSeconds" = "%ds";
 "status.durationUnderMinute" = "under 1m";
 "status.durationMinutes" = "%dm";
 "status.durationHours" = "%dh";
 "status.durationHoursMinutes" = "%dh %dm";
 "status.next" = "Next: %@ at %@";
-"status.nextBodyAfterEyeGates" = "Next Body Break after %d Eye Gate(s)";
-"status.active" = "%@ active, %ds remaining";
+"status.nextBodyAfterOneEyeGate" = "Next Body Break after 1 Eye Gate";
+"status.nextBodyAfterEyeGates" = "Next Body Break after %d Eye Gates";
+"status.active" = "%@ active, %@ remaining";
 "status.readyToFinish" = "%@ ready to finish";
 "status.readyCompact" = "done";
 "status.deferredShort" = "Deferred";

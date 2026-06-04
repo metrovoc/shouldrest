@@ -23,7 +23,7 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         XCTAssertTrue(lines[0].contains("Eye Gate"))
         XCTAssertFalse(lines[0].contains("eyeGate"))
-        XCTAssertEqual(lines[1], "Next Body Break after 2 Eye Gate(s)")
+        XCTAssertEqual(lines[1], "Next Body Break after 2 Eye Gates")
     }
 
     func testTooltipIncludesHeaderAndStatusLines() {
@@ -33,7 +33,7 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         XCTAssertTrue(tooltip.hasPrefix("ShouldRest - The rest reminder app\n\n"))
         XCTAssertTrue(tooltip.contains("Next: Eye Gate"))
-        XCTAssertTrue(tooltip.contains("Next Body Break after 2 Eye Gate(s)"))
+        XCTAssertTrue(tooltip.contains("Next Body Break after 2 Eye Gates"))
     }
 
     func testHeaderContentPromotesStatusLinesAndHealthBadge() {
@@ -47,7 +47,7 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         XCTAssertEqual(content.title, "ShouldRest")
         XCTAssertTrue(content.primary.hasPrefix("Next: Eye Gate at "))
-        XCTAssertEqual(content.secondary, "Next Body Break after 2 Eye Gate(s)")
+        XCTAssertEqual(content.secondary, "Next Body Break after 2 Eye Gates")
         XCTAssertEqual(content.healthBadge, "Pressure 3/10")
         XCTAssertEqual(content.icon, .restGate)
     }
@@ -200,7 +200,7 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         let lines = MenuStatusPresenter.lines(state: engine.state, settings: engine.settings, now: start)
 
-        XCTAssertEqual(lines[1], "Next Body Break after 1 Eye Gate(s)")
+        XCTAssertEqual(lines[1], "Next Body Break after 1 Eye Gate")
     }
 
     func testActiveStatusUsesLocalizedBodyBreakName() {
@@ -210,7 +210,23 @@ final class MenuStatusPresenterTests: XCTestCase {
         let lines = MenuStatusPresenter.lines(state: engine.state, settings: engine.settings, now: start.addingTimeInterval(5))
 
         XCTAssertTrue(lines[0].contains("Body Break active"))
+        XCTAssertTrue(lines[0].contains("5m remaining"))
+        XCTAssertFalse(lines[0].contains("295s"))
         XCTAssertFalse(lines[0].contains("bodyBreak"))
         XCTAssertEqual(lines.count, 1)
+    }
+
+    func testActiveEyeGateStatusKeepsExactShortSeconds() {
+        let state = RestEngineState(activeSession: RestSession(
+            kind: .eyeGate,
+            startedAt: start,
+            scheduledAt: start,
+            duration: 20,
+            manualFinishEnabled: false
+        ))
+
+        let lines = MenuStatusPresenter.lines(state: state, settings: .defaults, now: start.addingTimeInterval(5))
+
+        XCTAssertEqual(lines.first, "Eye Gate active, 15s remaining")
     }
 }

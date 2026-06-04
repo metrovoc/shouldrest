@@ -45,6 +45,8 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(englishValues.contains("Resume at hour"))
         XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("danger indicator"))
         XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("danger score"))
+        XCTAssertFalse(englishValues.contains("Eye Gate(s)"))
+        XCTAssertFalse(englishValues.contains("%ds remaining"))
         XCTAssertFalse(simplifiedChineseValues.contains("恢复小时"))
         XCTAssertFalse(simplifiedChineseValues.contains("危险值"))
 
@@ -54,6 +56,8 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(englishValues.contains("Resume hour"))
         XCTAssertTrue(englishValues.contains("Show rest pressure indicator"))
         XCTAssertTrue(englishValues.contains("Pressure %d/10"))
+        XCTAssertTrue(englishValues.contains("Next Body Break after %d Eye Gates"))
+        XCTAssertTrue(englishValues.contains("%@ active, %@ remaining"))
         XCTAssertTrue(simplifiedChineseValues.contains("暂停到早晨方式"))
         XCTAssertTrue(simplifiedChineseValues.contains("恢复时间"))
         XCTAssertTrue(simplifiedChineseValues.contains("显示休息压力指示器"))
