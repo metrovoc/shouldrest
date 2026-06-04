@@ -3136,15 +3136,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
               let decoded = try? JSONDecoder().decode([AppExclusionRule].self, from: data) else {
             return []
         }
-        return decoded.map {
-            AppExclusionRule(
-                id: $0.id.isEmpty ? UUID().uuidString : $0.id,
-                name: $0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "App Exclusion" : $0.name,
-                matchTerms: AppExclusionApplicationCandidate.uniqueNonemptyTerms($0.matchTerms.map { Optional($0) }),
-                mode: $0.mode,
-                appliesTo: $0.appliesTo,
-                isEnabled: $0.isEnabled
-            )
+        return decoded.map { rule in
+            normalizedAppExclusionRuleForPreferences(rule)
         }.filter { $0.isEnabled && !$0.matchTerms.isEmpty }
     }
 
@@ -3255,20 +3248,45 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let raw = appExclusionsJSONEditor.string.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !raw.isEmpty, let data = raw.data(using: .utf8) else { return nil }
         do {
-            return try JSONDecoder().decode([AppExclusionRule].self, from: data)
+            return try JSONDecoder()
+                .decode([AppExclusionRule].self, from: data)
+                .map(normalizedAppExclusionRuleForPreferences)
         } catch {
             throw InvalidAdvancedJSON(fieldName: L10n.tr("prefs.advancedRulesJSON"), underlying: error)
         }
     }
 
     private func encodedAppExclusionsForEditor(_ rules: [AppExclusionRule]) -> String {
-        let visibleRules = rules.filter { $0.isEnabled && !$0.matchTerms.isEmpty }
+        let visibleRules = rules
+            .map(normalizedAppExclusionRuleForPreferences)
+            .filter { $0.isEnabled && !$0.matchTerms.isEmpty }
         guard !visibleRules.isEmpty,
               let data = try? prettyJSONEncoder().encode(visibleRules),
               let string = String(data: data, encoding: .utf8) else {
             return ""
         }
         return string
+    }
+
+    private func normalizedAppExclusionRuleForPreferences(_ rule: AppExclusionRule) -> AppExclusionRule {
+        AppExclusionRule(
+            id: rule.id.isEmpty ? UUID().uuidString : rule.id,
+            name: rule.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "App Exclusion" : rule.name,
+            matchTerms: AppExclusionApplicationCandidate.uniqueNonemptyTerms(rule.matchTerms.map { Optional($0) }),
+            mode: rule.mode,
+            appliesTo: rule.appliesTo.isEmpty ? defaultAppExclusionTargetsForPreferences() : rule.appliesTo,
+            isEnabled: rule.isEnabled
+        )
+    }
+
+    private func defaultAppExclusionTargetsForPreferences() -> Set<RestKind> {
+        if isOn(bodyEnabled) {
+            return [.bodyBreak]
+        }
+        if isOn(eyeEnabled) {
+            return [.eyeGate]
+        }
+        return [.eyeGate]
     }
 
     private func savedCustomIdeas() -> [RestIdea] {

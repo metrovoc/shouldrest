@@ -186,6 +186,41 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertNotNil(button.image)
     }
 
+    func testLegacyTargetlessAppExclusionGetsVisibleDefaultTarget() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "legacy",
+                name: "Calls",
+                matchTerms: ["zoom"],
+                mode: .pauseWhenMatched,
+                appliesTo: [],
+                isEnabled: true
+            )
+        ]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+        let body = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionRuleBody.0", in: contentView) as? NSTextField)
+        let editor = try XCTUnwrap(view(withIdentifier: "appExclusionsJSONEditor", in: contentView) as? NSTextView)
+        let editButton = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionRuleEdit.0", in: contentView) as? NSButton)
+        let appliesEye = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionAppliesEye", in: contentView) as? NSButton)
+        let appliesBody = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionAppliesBody", in: contentView) as? NSButton)
+
+        XCTAssertTrue(body.stringValue.contains(L10n.tr("prefs.appExclusionAppliesBody")))
+        XCTAssertFalse(body.stringValue.contains(L10n.tr("prefs.appExclusionAppliesNone")))
+        XCTAssertTrue(editor.string.contains(RestKind.bodyBreak.rawValue))
+        XCTAssertFalse(editor.string.contains(#""appliesTo" : []"#))
+
+        XCTAssertTrue(sendAction(from: editButton))
+
+        XCTAssertEqual(appliesEye.state, .off)
+        XCTAssertEqual(appliesBody.state, .on)
+        XCTAssertTrue(appliesEye.isEnabled)
+        XCTAssertFalse(appliesBody.isEnabled)
+    }
+
     func testLastAppExclusionTargetCannotBeClearedFromUI() throws {
         var settings = RestSettings.defaults
         settings.appExclusions = [
