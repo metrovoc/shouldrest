@@ -229,7 +229,7 @@ enum StatusMenuActionIcon {
         case "takeBodyBreakNow":
             return "figure.walk"
         case "takeNextScheduledRestNow":
-            return "forward.end"
+            return "play.circle"
         case "finishActiveBreak":
             return "checkmark.circle"
         case "emergencyOverrideEyeGate":

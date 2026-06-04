@@ -6,6 +6,8 @@ final class StatusMenuActionIconTests: XCTestCase {
         let expectedSymbols = [
             "takeEyeGateNow": "timer",
             "takeBodyBreakNow": "figure.walk",
+            "takeNextScheduledRestNow": "play.circle",
+            "finishActiveBreak": "checkmark.circle",
             "emergencyOverrideEyeGate": "exclamationmark.triangle",
             "postponeBodyBreak": "clock.arrow.circlepath",
             "skipBodyBreak": "forward.end",
@@ -23,6 +25,10 @@ final class StatusMenuActionIconTests: XCTestCase {
         for (actionName, symbolName) in expectedSymbols {
             XCTAssertEqual(StatusMenuActionIcon.symbolName(forActionName: actionName), symbolName)
         }
+        XCTAssertNotEqual(
+            StatusMenuActionIcon.symbolName(forActionName: "takeNextScheduledRestNow"),
+            StatusMenuActionIcon.symbolName(forActionName: "skipBodyBreak")
+        )
     }
 
     func testUnknownMenuActionsDoNotClaimAnIcon() {
