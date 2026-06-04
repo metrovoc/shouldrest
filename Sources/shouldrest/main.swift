@@ -597,12 +597,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func menuBarImageKey(for icon: MenuStatusPresenter.MenuBarIcon) -> String {
-        switch icon {
-        case .restGate:
-            return "restGate:viewfinder"
-        case .systemSymbol(let symbolName):
-            return "symbol:\(symbolName)"
-        }
+        StatusMenuImageFactory.cacheKey(for: icon)
     }
 
     private func menuBarImage(for icon: MenuStatusPresenter.MenuBarIcon, key: String) -> NSImage? {
@@ -610,23 +605,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             return cached
         }
 
-        let image: NSImage?
-        switch icon {
-        case .restGate:
-            image = symbolMenuBarImage("viewfinder")
-        case .systemSymbol(let symbolName):
-            image = symbolMenuBarImage(symbolName)
-        }
+        let image = StatusMenuImageFactory.image(for: icon, accessibilityDescription: L10n.tr("app.name"))
         menuBarImageCache[key] = image
-        return image
-    }
-
-    private func symbolMenuBarImage(_ symbolName: String) -> NSImage? {
-        let configuration = NSImage.SymbolConfiguration(pointSize: 15, weight: .medium)
-        let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: L10n.tr("app.name"))?
-            .withSymbolConfiguration(configuration)
-            ?? NSImage(systemSymbolName: "circle", accessibilityDescription: L10n.tr("app.name"))
-        image?.isTemplate = true
         return image
     }
 

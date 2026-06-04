@@ -9,7 +9,7 @@ enum MenuStatusPresenter {
         var fallbackSystemSymbolName: String {
             switch self {
             case .restGate:
-                return "viewfinder"
+                return "pause.rectangle"
             case .systemSymbol(let symbolName):
                 return symbolName
             }
