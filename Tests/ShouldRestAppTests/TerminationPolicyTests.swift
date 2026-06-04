@@ -33,6 +33,59 @@ final class TerminationPolicyTests: XCTestCase {
         XCTAssertTrue(TerminationPolicy.canTerminate(state: state, settings: .defaults))
     }
 
+    func testActiveEyeGateQuitAttemptRoutesToOverlayEmergencyArming() {
+        let state = RestEngineState(activeSession: session(kind: .eyeGate))
+
+        XCTAssertEqual(
+            TerminationPolicy.requestAction(
+                state: state,
+                settings: .defaults,
+                now: start.addingTimeInterval(1)
+            ),
+            .armEyeGateEmergencyInOverlay
+        )
+    }
+
+    func testEyeGateQuitAttemptFallsBackToBlockedNoticeWhenEmergencyIsUnavailable() {
+        var settings = RestSettings.defaults
+        let state = RestEngineState(activeSession: session(kind: .eyeGate))
+
+        settings.eyeGate.emergencyOverride.isEnabled = false
+        XCTAssertEqual(
+            TerminationPolicy.requestAction(
+                state: state,
+                settings: settings,
+                now: start.addingTimeInterval(1)
+            ),
+            .notifyBlocked(.eyeGate)
+        )
+
+        settings.eyeGate.emergencyOverride.isEnabled = true
+        XCTAssertEqual(
+            TerminationPolicy.requestAction(
+                state: state,
+                settings: settings,
+                now: start.addingTimeInterval(20)
+            ),
+            .notifyBlocked(.eyeGate)
+        )
+    }
+
+    func testStrictBodyBreakQuitAttemptStillUsesBlockedNotice() {
+        var settings = RestSettings.defaults
+        settings.bodyBreak.ordinarySkipEnabled = false
+        let state = RestEngineState(activeSession: session(kind: .bodyBreak))
+
+        XCTAssertEqual(
+            TerminationPolicy.requestAction(
+                state: state,
+                settings: settings,
+                now: start.addingTimeInterval(1)
+            ),
+            .notifyBlocked(.bodyBreak)
+        )
+    }
+
     func testBlockedActionCopyExplainsDisabledMenuActions() {
         L10n.languageOverride = "en"
         defer { L10n.languageOverride = nil }

@@ -25,6 +25,12 @@ enum AppNotificationUserInfo {
 }
 
 enum TerminationPolicy {
+    enum RequestAction: Equatable {
+        case terminateNow
+        case armEyeGateEmergencyInOverlay
+        case notifyBlocked(RestKind)
+    }
+
     static func strictActiveRestKind(state: RestEngineState, settings: RestSettings) -> RestKind? {
         guard let active = state.activeSession else { return nil }
         switch active.kind {
@@ -37,6 +43,28 @@ enum TerminationPolicy {
 
     static func canTerminate(state: RestEngineState, settings: RestSettings) -> Bool {
         strictActiveRestKind(state: state, settings: settings) == nil
+    }
+
+    static func requestAction(
+        state: RestEngineState,
+        settings: RestSettings,
+        now: Date = Date()
+    ) -> RequestAction {
+        guard let kind = strictActiveRestKind(state: state, settings: settings) else {
+            return .terminateNow
+        }
+
+        if let active = state.activeSession,
+           active.kind == .eyeGate,
+           EmergencyOverrideCoordinator.isAvailable(
+               session: active,
+               policy: settings.eyeGate.emergencyOverride,
+               now: now
+           ) {
+            return .armEyeGateEmergencyInOverlay
+        }
+
+        return .notifyBlocked(kind)
     }
 }
 
@@ -296,11 +324,16 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard let kind = TerminationPolicy.strictActiveRestKind(state: engine.state, settings: settings) else {
+        switch TerminationPolicy.requestAction(state: engine.state, settings: settings) {
+        case .terminateNow:
             return .terminateNow
+        case .armEyeGateEmergencyInOverlay:
+            armEyeGateEmergencyForBlockedTermination()
+            logger.log("Termination blocked during active Eye Gate; Emergency Exit armed inside overlay")
+        case .notifyBlocked(let kind):
+            showAppNotification(title: L10n.tr("app.name"), body: BlockedActionCopy.quitMessage(for: kind))
+            logger.log("Termination blocked during strict \(kind.rawValue)")
         }
-        showAppNotification(title: L10n.tr("app.name"), body: BlockedActionCopy.quitMessage(for: kind))
-        logger.log("Termination blocked during strict \(kind.rawValue)")
         rebuildMenu()
         return .terminateCancel
     }
@@ -921,6 +954,41 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             now: now
         )
         handleEmergencyOverrideDecision(decision, session: active, now: now)
+    }
+
+    private func armEyeGateEmergencyForBlockedTermination() {
+        guard let active = engine.state.activeSession, active.kind == .eyeGate else { return }
+        let now = Date()
+
+        if emergencyOverrideCoordinator.isArmed(for: active) {
+            overlayController.update(
+                session: active,
+                settings: overlaySettings(for: active),
+                now: now,
+                manualAwaiting: false,
+                emergencyOverrideAction: overlayEmergencyOverrideAction(for: active, now: now),
+                emergencyOverrideArmed: true,
+                bodyActions: nil
+            )
+            _ = overlayController.activateEmergencyOverrideIfAvailable()
+            logger.log("Emergency Exit already armed inside overlay after blocked termination request")
+            return
+        }
+
+        let decision = emergencyOverrideCoordinator.request(
+            session: active,
+            policy: settings.eyeGate.emergencyOverride,
+            now: now
+        )
+        switch decision {
+        case .armed:
+            handleEmergencyOverrideDecision(decision, session: active, now: now)
+            _ = overlayController.activateEmergencyOverrideIfAvailable()
+        case .complete:
+            logger.log("Ignored blocked termination request as Emergency Exit confirmation")
+        case .unavailable:
+            logger.log("Blocked termination could not arm Emergency Exit")
+        }
     }
 
     private func handleEmergencyOverrideDecision(
