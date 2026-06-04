@@ -1449,7 +1449,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         appExclusionAddRuleButton.bezelStyle = .rounded
         appExclusionAddRuleButton.target = self
         appExclusionAddRuleButton.action = #selector(addAppExclusionRulePressed(_:))
-        appExclusionAddRuleButton.widthAnchor.constraint(equalToConstant: 128).isActive = true
+        appExclusionAddRuleButton.widthAnchor.constraint(equalToConstant: 156).isActive = true
 
         appExclusionCancelEditButton.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionCancelEditButton")
         appExclusionCancelEditButton.title = L10n.tr("prefs.cancelAppExclusionRuleEdit")

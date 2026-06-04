@@ -154,6 +154,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertTrue(visibleTexts.contains("Deep work"))
         XCTAssertTrue(visibleTexts.contains("Calls"))
         XCTAssertFalse(visibleTexts.contains("Mode"))
+        XCTAssertFalse(visibleTexts.contains("Current rules"))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.advancedRulesJSON")))
     }
 
@@ -330,6 +331,10 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
 
         XCTAssertTrue(cancelButton.isHidden)
         XCTAssertEqual(actionButton.title, L10n.tr("prefs.addAppExclusionRule"))
+        XCTAssertGreaterThanOrEqual(
+            actionButton.constraints.first { $0.firstAttribute == .width }?.constant ?? 0,
+            156
+        )
         XCTAssertEqual(editCalls.toolTip, L10n.tr("prefs.editAppExclusionRuleHelp"))
         XCTAssertEqual(editCalls.accessibilityLabel(), L10n.tr("prefs.editAppExclusionRuleHelp"))
         XCTAssertEqual(editCalls.accessibilityHelp(), L10n.tr("prefs.editAppExclusionRuleHelp"))
