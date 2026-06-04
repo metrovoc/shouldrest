@@ -193,7 +193,12 @@
 "prefs.text" = "正文";
 "prefs.addCustomIdea" = "加入轮换";
 "prefs.addCustomIdeaHelp" = "将当前标题和正文加入活动休息提示轮换。";
+"prefs.updateCustomIdea" = "更新轮换";
+"prefs.updateCustomIdeaHelp" = "更新当前选中的活动休息提示。";
+"prefs.cancelCustomIdeaEdit" = "取消";
+"prefs.cancelCustomIdeaEditHelp" = "停止编辑当前选中的活动休息提示。";
 "prefs.customIdeaRotation" = "当前轮换";
+"prefs.editCustomIdeaHelp" = "编辑这条活动休息提示。";
 "prefs.removeCustomIdeaHelp" = "从轮换中移除此条活动休息提示。";
 "prefs.customIdeaEmptyBody" = "无正文";
 "prefs.advancedIdeasJSON" = "高级提示 JSON";

@@ -481,6 +481,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let customBodyIdeasJSONScrollView = NSScrollView()
     private let customBodyIdeasAdvancedButton = NSButton()
     private let customBodyAddIdeaButton = NSButton()
+    private let customBodyCancelEditButton = NSButton()
     private let customBodyIdeasListStack = NSStackView()
     private var localImagePathRow: NSView?
     private var customBodyTitleRow: NSView?
@@ -489,6 +490,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private var customBodyIdeasListRow: NSView?
     private var customBodyIdeasJSONRow: NSView?
     private var customBodyIdeaRemoveControls: [(id: String, button: NSButton)] = []
+    private var customBodyIdeaEditControls: [(id: String, button: NSButton)] = []
+    private var editingCustomBodyIdeaID: String?
     private let localImagePath = NSTextField()
     private let localImageChooseButton = NSButton()
     private let localImageClearButton = NSButton()
@@ -895,7 +898,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         customBodyTextRow.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyTextRow")
         self.customBodyTextRow = customBodyTextRow
         appearanceStack.addArrangedSubview(customBodyTextRow)
-        let customBodyAddIdeaButtonRow = indentedControlRow(customBodyAddIdeaButton)
+        let customBodyAddIdeaButtonRow = indentedControlRow(customBodyIdeaActionRow())
         customBodyAddIdeaButtonRow.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyAddIdeaButtonRow")
         self.customBodyAddIdeaButtonRow = customBodyAddIdeaButtonRow
         appearanceStack.addArrangedSubview(customBodyAddIdeaButtonRow)
@@ -1379,15 +1382,23 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func configureCustomBodyAddIdeaButton() {
         customBodyAddIdeaButton.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyAddIdeaButton")
-        customBodyAddIdeaButton.title = L10n.tr("prefs.addCustomIdea")
-        customBodyAddIdeaButton.image = NSImage(systemSymbolName: "plus.bubble", accessibilityDescription: nil)
-            ?? NSImage(systemSymbolName: "plus.circle", accessibilityDescription: nil)
         customBodyAddIdeaButton.imagePosition = .imageLeading
         customBodyAddIdeaButton.bezelStyle = .rounded
         customBodyAddIdeaButton.target = self
         customBodyAddIdeaButton.action = #selector(addCustomBodyIdeaPressed(_:))
-        customBodyAddIdeaButton.toolTip = L10n.tr("prefs.addCustomIdeaHelp")
-        customBodyAddIdeaButton.widthAnchor.constraint(equalToConstant: 158).isActive = true
+        customBodyAddIdeaButton.widthAnchor.constraint(equalToConstant: 164).isActive = true
+
+        customBodyCancelEditButton.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyCancelEditButton")
+        customBodyCancelEditButton.title = L10n.tr("prefs.cancelCustomIdeaEdit")
+        customBodyCancelEditButton.image = NSImage(systemSymbolName: "xmark.circle", accessibilityDescription: nil)
+        customBodyCancelEditButton.imagePosition = .imageLeading
+        customBodyCancelEditButton.bezelStyle = .rounded
+        customBodyCancelEditButton.target = self
+        customBodyCancelEditButton.action = #selector(cancelCustomBodyIdeaEditPressed(_:))
+        customBodyCancelEditButton.toolTip = L10n.tr("prefs.cancelCustomIdeaEditHelp")
+        customBodyCancelEditButton.widthAnchor.constraint(equalToConstant: 104).isActive = true
+        customBodyCancelEditButton.isHidden = true
+        updateCustomBodyActionButtonPresentation()
     }
 
     private func configureCustomBodyIdeasList() {
@@ -1396,6 +1407,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         customBodyIdeasListStack.spacing = 6
         customBodyIdeasListStack.alignment = .leading
         customBodyIdeasListStack.widthAnchor.constraint(equalToConstant: 360).isActive = true
+    }
+
+    private func customBodyIdeaActionRow() -> NSStackView {
+        let stack = NSStackView(views: [customBodyAddIdeaButton, customBodyCancelEditButton])
+        stack.orientation = .horizontal
+        stack.spacing = 8
+        stack.alignment = .centerY
+        return stack
     }
 
     private func configureDisclosureButton(_ button: NSButton, identifier: String, expanded: Bool) {
@@ -1644,6 +1663,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         let customIdeas = settings.contentLibrary.customBodyBreakIdeas
         useBuiltInIdeas.state = state(settings.contentLibrary.useBuiltInIdeas)
+        clearCustomBodyIdeaEditState()
         customBodyTitle.stringValue = ""
         customBodyTextEditor.string = ""
         customBodyIdeasJSONEditor.string = customIdeas.isEmpty ? "" : encodedCustomIdeasForEditor(customIdeas)
@@ -2264,14 +2284,21 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     @objc private func addCustomBodyIdeaPressed(_ sender: NSButton) {
-        guard let idea = currentCustomBodyIdea(id: UUID().uuidString) else { return }
+        let id = editingCustomBodyIdeaID ?? UUID().uuidString
+        guard let idea = currentCustomBodyIdea(id: id) else { return }
         do {
             var ideas = try decodedAdvancedCustomIdeas() ?? []
-            ideas.append(idea)
+            if let editingCustomBodyIdeaID,
+               let index = ideas.firstIndex(where: { $0.id == editingCustomBodyIdeaID }) {
+                ideas[index] = idea
+            } else {
+                ideas.append(idea)
+            }
             customBodyIdeasJSONEditor.string = encodedCustomIdeasForEditor(ideas)
             setAdvancedDisclosure(row: customBodyIdeasJSONRow, button: customBodyIdeasAdvancedButton, expanded: false)
             customBodyTitle.stringValue = ""
             customBodyTextEditor.string = ""
+            clearCustomBodyIdeaEditState()
             refreshCustomBodyIdeaList()
             updateCustomBodyAddIdeaButtonState()
             scheduleAutosave()
@@ -2281,11 +2308,30 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
     }
 
+    @objc private func editCustomBodyIdeaPressed(_ sender: NSButton) {
+        guard let match = customBodyIdeaEditControls.first(where: { $0.button === sender }),
+              let idea = displayedCustomBodyIdeas().first(where: { $0.id == match.id }) else {
+            return
+        }
+        editingCustomBodyIdeaID = idea.id
+        customBodyTitle.stringValue = idea.title
+        customBodyTextEditor.string = idea.body
+        updateCustomBodyAddIdeaButtonState()
+    }
+
+    @objc private func cancelCustomBodyIdeaEditPressed(_ sender: NSButton) {
+        customBodyTitle.stringValue = ""
+        customBodyTextEditor.string = ""
+        clearCustomBodyIdeaEditState()
+        updateCustomBodyAddIdeaButtonState()
+    }
+
     @objc private func removeCustomBodyIdeaPressed(_ sender: NSButton) {
         guard let match = customBodyIdeaRemoveControls.first(where: { $0.button === sender }) else { return }
         do {
             var ideas = try decodedAdvancedCustomIdeas() ?? []
             ideas.removeAll { $0.id == match.id }
+            clearCustomBodyIdeaEditState()
             if let first = ideas.first {
                 customBodyTitle.stringValue = first.title
                 customBodyTextEditor.string = first.body
@@ -2866,6 +2912,24 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let bodyBreakEnabled = isOn(bodyEnabled)
         customBodyAddIdeaButton.isEnabled = bodyBreakEnabled &&
             currentCustomBodyIdea(id: "preview") != nil
+        customBodyCancelEditButton.isEnabled = bodyBreakEnabled
+        updateCustomBodyActionButtonPresentation()
+    }
+
+    private func updateCustomBodyActionButtonPresentation() {
+        let isEditing = editingCustomBodyIdeaID != nil
+        customBodyAddIdeaButton.title = isEditing ? L10n.tr("prefs.updateCustomIdea") : L10n.tr("prefs.addCustomIdea")
+        customBodyAddIdeaButton.image = NSImage(
+            systemSymbolName: isEditing ? "checkmark.circle" : "plus.bubble",
+            accessibilityDescription: nil
+        ) ?? NSImage(systemSymbolName: isEditing ? "checkmark" : "plus.circle", accessibilityDescription: nil)
+        customBodyAddIdeaButton.toolTip = isEditing ? L10n.tr("prefs.updateCustomIdeaHelp") : L10n.tr("prefs.addCustomIdeaHelp")
+        customBodyCancelEditButton.isHidden = !isEditing
+    }
+
+    private func clearCustomBodyIdeaEditState() {
+        editingCustomBodyIdeaID = nil
+        updateCustomBodyActionButtonPresentation()
     }
 
     private var hasCustomBodyIdeaRotation: Bool {
@@ -2875,6 +2939,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private func refreshCustomBodyIdeaList() {
         let ideas = displayedCustomBodyIdeas()
         customBodyIdeaRemoveControls.removeAll()
+        customBodyIdeaEditControls.removeAll()
         removeArrangedSubviews(from: customBodyIdeasListStack)
 
         for (index, idea) in ideas.enumerated() {
@@ -2923,6 +2988,21 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         textStack.spacing = 2
         textStack.alignment = .leading
 
+        let editButton = NSButton()
+        editButton.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyIdeaEdit.\(index)")
+        editButton.title = ""
+        editButton.bezelStyle = .inline
+        editButton.isBordered = false
+        editButton.image = NSImage(systemSymbolName: "pencil", accessibilityDescription: nil)
+        editButton.imagePosition = .imageOnly
+        editButton.contentTintColor = .secondaryLabelColor
+        editButton.toolTip = L10n.tr("prefs.editCustomIdeaHelp")
+        editButton.target = self
+        editButton.action = #selector(editCustomBodyIdeaPressed(_:))
+        editButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
+        editButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
+        customBodyIdeaEditControls.append((id: idea.id, button: editButton))
+
         let removeButton = NSButton()
         removeButton.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyIdeaRemove.\(index)")
         removeButton.title = ""
@@ -2938,7 +3018,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         removeButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
         customBodyIdeaRemoveControls.append((id: idea.id, button: removeButton))
 
-        let row = NSStackView(views: [textStack, removeButton])
+        let actionStack = NSStackView(views: [editButton, removeButton])
+        actionStack.orientation = .horizontal
+        actionStack.spacing = 2
+        actionStack.alignment = .centerY
+
+        let row = NSStackView(views: [textStack, actionStack])
         row.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyIdeaRow.\(index)")
         row.orientation = .horizontal
         row.spacing = 8

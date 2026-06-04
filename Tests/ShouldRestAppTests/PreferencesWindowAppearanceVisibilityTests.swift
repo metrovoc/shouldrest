@@ -248,6 +248,100 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertTrue(jsonRow.isHidden)
     }
 
+    func testCustomBodyIdeaRotationListEditsExistingIdeaAndAutosavesOnUpdateOnly() throws {
+        var settings = RestSettings.defaults
+        settings.contentLibrary.customBodyBreakIdeas = [
+            RestIdea(id: "stretch", kind: .bodyBreak, title: "Stretch", body: "Open shoulders"),
+            RestIdea(id: "walk", kind: .bodyBreak, title: "Walk", body: "Walk around")
+        ]
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+        let title = try XCTUnwrap(view(withIdentifier: "prefs.customBodyTitleField", in: contentView) as? NSTextField)
+        let body = try XCTUnwrap(view(withIdentifier: "customBodyTextEditor", in: contentView) as? NSTextView)
+        let actionButton = try XCTUnwrap(view(withIdentifier: "prefs.customBodyAddIdeaButton", in: contentView) as? NSButton)
+        let cancelButton = try XCTUnwrap(view(withIdentifier: "prefs.customBodyCancelEditButton", in: contentView) as? NSButton)
+        let editWalk = try XCTUnwrap(view(withIdentifier: "prefs.customBodyIdeaEdit.1", in: contentView) as? NSButton)
+        let jsonRow = try view(withIdentifier: "prefs.customBodyIdeasJSONRow", in: contentView)
+
+        XCTAssertTrue(cancelButton.isHidden)
+        XCTAssertEqual(actionButton.title, L10n.tr("prefs.addCustomIdea"))
+        XCTAssertEqual(editWalk.toolTip, L10n.tr("prefs.editCustomIdeaHelp"))
+
+        XCTAssertTrue(sendAction(from: editWalk))
+
+        XCTAssertEqual(title.stringValue, "Walk")
+        XCTAssertEqual(body.string, "Walk around")
+        XCTAssertFalse(cancelButton.isHidden)
+        XCTAssertEqual(actionButton.title, L10n.tr("prefs.updateCustomIdea"))
+        XCTAssertEqual(actionButton.toolTip, L10n.tr("prefs.updateCustomIdeaHelp"))
+
+        title.stringValue = "Look outside"
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: title))
+        body.string = "Focus on a far object."
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: body))
+
+        RunLoop.current.run(until: Date().addingTimeInterval(0.4))
+        XCTAssertNil(savedSettings.value)
+
+        XCTAssertTrue(sendAction(from: actionButton))
+
+        waitUntilSavedSettingsArrive(savedSettings)
+        let ideas = try XCTUnwrap(savedSettings.value?.contentLibrary.customBodyBreakIdeas)
+        XCTAssertEqual(ideas.map(\.id), ["stretch", "walk"])
+        XCTAssertEqual(ideas.map(\.title), ["Stretch", "Look outside"])
+        XCTAssertEqual(ideas[1].body, "Focus on a far object.")
+        XCTAssertEqual(title.stringValue, "")
+        XCTAssertEqual(body.string, "")
+        XCTAssertTrue(cancelButton.isHidden)
+        XCTAssertEqual(actionButton.title, L10n.tr("prefs.addCustomIdea"))
+        XCTAssertEqual(
+            (try view(withIdentifier: "prefs.customBodyIdeaTitle.1", in: contentView) as? NSTextField)?.stringValue,
+            "Look outside"
+        )
+        XCTAssertTrue(jsonRow.isHidden)
+    }
+
+    func testCustomBodyIdeaEditCancelClearsDraftWithoutAutosaving() throws {
+        var settings = RestSettings.defaults
+        settings.contentLibrary.customBodyBreakIdeas = [
+            RestIdea(id: "stretch", kind: .bodyBreak, title: "Stretch", body: "Open shoulders"),
+            RestIdea(id: "walk", kind: .bodyBreak, title: "Walk", body: "Walk around")
+        ]
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+        let title = try XCTUnwrap(view(withIdentifier: "prefs.customBodyTitleField", in: contentView) as? NSTextField)
+        let body = try XCTUnwrap(view(withIdentifier: "customBodyTextEditor", in: contentView) as? NSTextView)
+        let actionButton = try XCTUnwrap(view(withIdentifier: "prefs.customBodyAddIdeaButton", in: contentView) as? NSButton)
+        let cancelButton = try XCTUnwrap(view(withIdentifier: "prefs.customBodyCancelEditButton", in: contentView) as? NSButton)
+        let editStretch = try XCTUnwrap(view(withIdentifier: "prefs.customBodyIdeaEdit.0", in: contentView) as? NSButton)
+
+        XCTAssertTrue(sendAction(from: editStretch))
+
+        title.stringValue = "Changed"
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: title))
+        body.string = "Changed body"
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: body))
+
+        XCTAssertTrue(sendAction(from: cancelButton))
+
+        RunLoop.current.run(until: Date().addingTimeInterval(0.4))
+        XCTAssertNil(savedSettings.value)
+        XCTAssertEqual(title.stringValue, "")
+        XCTAssertEqual(body.string, "")
+        XCTAssertTrue(cancelButton.isHidden)
+        XCTAssertEqual(actionButton.title, L10n.tr("prefs.addCustomIdea"))
+        XCTAssertEqual(
+            (try view(withIdentifier: "prefs.customBodyIdeaTitle.0", in: contentView) as? NSTextField)?.stringValue,
+            "Stretch"
+        )
+    }
+
     func testExistingCustomBodyIdeasLoadAsNativeRotationListWithAdvancedCollapsed() throws {
         var settings = RestSettings.defaults
         settings.contentLibrary.customBodyBreakIdeas = [

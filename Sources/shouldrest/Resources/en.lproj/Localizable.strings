@@ -193,7 +193,12 @@
 "prefs.text" = "Body text";
 "prefs.addCustomIdea" = "Add to Rotation";
 "prefs.addCustomIdeaHelp" = "Add the current title and body text to the Body Break idea rotation.";
+"prefs.updateCustomIdea" = "Update Rotation";
+"prefs.updateCustomIdeaHelp" = "Update the selected Body Break idea.";
+"prefs.cancelCustomIdeaEdit" = "Cancel";
+"prefs.cancelCustomIdeaEditHelp" = "Stop editing the selected Body Break idea.";
 "prefs.customIdeaRotation" = "Current rotation";
+"prefs.editCustomIdeaHelp" = "Edit this Body Break idea.";
 "prefs.removeCustomIdeaHelp" = "Remove this Body Break idea from the rotation.";
 "prefs.customIdeaEmptyBody" = "No body text";
 "prefs.advancedIdeasJSON" = "Advanced ideas JSON";
