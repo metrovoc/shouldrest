@@ -67,8 +67,8 @@
 "menu.copySettingsPathDone" = "设置位置已复制到剪贴板。";
 "menu.quit" = "退出 ShouldRest";
 "menu.quitHelp" = "没有严格休息进行中时退出 ShouldRest。";
-"notification.eyeGateSoon" = "护眼休息即将开始";
-"notification.bodyBreakSoon" = "活动休息即将开始";
+"notification.eyeGateSoon" = "即将开始。覆盖层出现时请看向屏幕外。";
+"notification.bodyBreakSoon" = "即将开始。准备起身活动。";
 "notification.updateTitle" = "ShouldRest 更新";
 "notification.updateAvailable" = "版本 %@ 已可用。";
 "notification.updateCurrent" = "ShouldRest 已是最新。";

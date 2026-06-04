@@ -24,6 +24,21 @@ enum AppNotificationUserInfo {
     }
 }
 
+enum RestNotificationCopy {
+    static func title(for kind: RestKind) -> String {
+        MenuStatusPresenter.restKindName(kind)
+    }
+
+    static func body(for kind: RestKind) -> String {
+        switch kind {
+        case .eyeGate:
+            return L10n.tr("notification.eyeGateSoon")
+        case .bodyBreak:
+            return L10n.tr("notification.bodyBreakSoon")
+        }
+    }
+}
+
 enum TerminationPolicy {
     enum RequestAction: Equatable {
         case terminateNow
@@ -697,8 +712,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     private func showNotification(for kind: RestKind) {
         showAppNotification(
-            title: L10n.tr("app.name"),
-            body: kind == .eyeGate ? L10n.tr("notification.eyeGateSoon") : L10n.tr("notification.bodyBreakSoon")
+            title: RestNotificationCopy.title(for: kind),
+            body: RestNotificationCopy.body(for: kind)
         )
     }
 

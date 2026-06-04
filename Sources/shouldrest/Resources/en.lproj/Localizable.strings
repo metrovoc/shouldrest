@@ -67,8 +67,8 @@
 "menu.copySettingsPathDone" = "Settings location copied to the clipboard.";
 "menu.quit" = "Quit ShouldRest";
 "menu.quitHelp" = "Quit ShouldRest when no strict rest is active.";
-"notification.eyeGateSoon" = "Eye Gate soon";
-"notification.bodyBreakSoon" = "Body Break soon";
+"notification.eyeGateSoon" = "Starts soon. Look away when the overlay appears.";
+"notification.bodyBreakSoon" = "Starts soon. Prepare to stand up and move.";
 "notification.updateTitle" = "ShouldRest Update";
 "notification.updateAvailable" = "Version %@ is available.";
 "notification.updateCurrent" = "ShouldRest is up to date.";
