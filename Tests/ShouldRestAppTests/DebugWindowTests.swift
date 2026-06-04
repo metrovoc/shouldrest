@@ -22,6 +22,13 @@ final class DebugWindowTests: XCTestCase {
         XCTAssertNotNil(contentView.descendant(withIdentifier: "debug.headerIcon"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "debug.heading"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "debug.subtitle"))
+        let searchField = try XCTUnwrap(contentView.descendant(withIdentifier: "debug.searchField") as? NSSearchField)
+        XCTAssertEqual(searchField.placeholderString, L10n.tr("debug.searchPlaceholder"))
+        XCTAssertEqual(searchField.toolTip, L10n.tr("debug.searchHelp"))
+        XCTAssertEqual(searchField.accessibilityLabel(), L10n.tr("debug.searchPlaceholder"))
+        XCTAssertEqual(searchField.accessibilityHelp(), L10n.tr("debug.searchHelp"))
+        XCTAssertTrue(searchField.sendsSearchStringImmediately)
+        XCTAssertFalse(searchField.sendsWholeSearchString)
         XCTAssertNotNil(contentView.descendant(withIdentifier: "debug.safetyPanel"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "debug.textScroll"))
         XCTAssertEqual(contentView.label(withIdentifier: "debug.subtitle")?.stringValue, L10n.tr("debug.subtitle"))
@@ -102,6 +109,63 @@ final class DebugWindowTests: XCTestCase {
         XCTAssertEqual(status.accessibilityHelp(), L10n.tr("debug.updated"))
     }
 
+    func testDebugSearchFindsCyclesAndClearsDiagnosticsText() throws {
+        let controller = DebugWindowController()
+        controller.update(text: "state=initial\nactiveSession=none\nstate=refreshed")
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let searchField = try XCTUnwrap(contentView.descendant(withIdentifier: "debug.searchField") as? NSSearchField)
+        let textView = try XCTUnwrap(contentView.debugTextView())
+        let status = try XCTUnwrap(contentView.label(withIdentifier: "debug.status"))
+
+        searchField.stringValue = "state"
+        XCTAssertTrue(searchField.sendAction(searchField.action, to: searchField.target))
+
+        XCTAssertEqual(textView.selectedRange(), NSRange(location: 0, length: 5))
+        XCTAssertEqual(status.stringValue, L10n.format("debug.searchMatched", 1, 2, "state"))
+        XCTAssertEqual(status.toolTip, status.stringValue)
+        XCTAssertEqual(status.accessibilityHelp(), status.stringValue)
+
+        XCTAssertTrue(controller.control(
+            searchField,
+            textView: NSTextView(),
+            doCommandBy: #selector(NSResponder.insertNewline(_:))
+        ))
+
+        XCTAssertEqual(textView.selectedRange(), NSRange(location: 33, length: 5))
+        XCTAssertEqual(status.stringValue, L10n.format("debug.searchMatched", 2, 2, "state"))
+
+        searchField.stringValue = "missing"
+        XCTAssertTrue(searchField.sendAction(searchField.action, to: searchField.target))
+
+        XCTAssertEqual(textView.selectedRange(), NSRange(location: 0, length: 0))
+        XCTAssertEqual(status.stringValue, L10n.format("debug.searchNoResults", "missing"))
+        XCTAssertEqual(status.textColor, .systemOrange)
+
+        XCTAssertTrue(controller.control(
+            searchField,
+            textView: NSTextView(),
+            doCommandBy: #selector(NSResponder.cancelOperation(_:))
+        ))
+
+        XCTAssertEqual(searchField.stringValue, "")
+        XCTAssertEqual(status.stringValue, L10n.tr("debug.ready"))
+    }
+
+    func testCommandFFocusesDebugSearch() throws {
+        let controller = DebugWindowController()
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
+        let searchField = try XCTUnwrap(contentView.descendant(withIdentifier: "debug.searchField") as? NSSearchField)
+
+        XCTAssertTrue(window.performKeyEquivalent(with: try keyEvent(
+            characters: "f",
+            modifierFlags: .command,
+            window: window
+        )))
+
+        XCTAssertTrue(isFirstResponder(searchField, in: window))
+    }
+
     func testDebugPathButtonsDisableWhenPathsAreHidden() throws {
         let controller = DebugWindowController()
         controller.update(text: "paths hidden", logURL: nil, settingsURL: nil)
@@ -125,6 +189,39 @@ final class DebugWindowTests: XCTestCase {
             openSettings: try XCTUnwrap(view.descendant(withIdentifier: "debug.openSettingsButton") as? NSButton)
         )
     }
+}
+
+@MainActor
+private func keyEvent(
+    characters: String,
+    modifierFlags: NSEvent.ModifierFlags,
+    window: NSWindow
+) throws -> NSEvent {
+    try XCTUnwrap(NSEvent.keyEvent(
+        with: .keyDown,
+        location: .zero,
+        modifierFlags: modifierFlags,
+        timestamp: 0,
+        windowNumber: window.windowNumber,
+        context: nil,
+        characters: characters,
+        charactersIgnoringModifiers: characters,
+        isARepeat: false,
+        keyCode: 0
+    ))
+}
+
+@MainActor
+private func isFirstResponder(_ view: NSView, in window: NSWindow) -> Bool {
+    if window.firstResponder === view {
+        return true
+    }
+    if let editor = window.firstResponder as? NSTextView,
+       let fieldEditorTarget = editor.delegate as? NSObject,
+       fieldEditorTarget === view {
+        return true
+    }
+    return false
 }
 
 private struct DebugActionButtons {

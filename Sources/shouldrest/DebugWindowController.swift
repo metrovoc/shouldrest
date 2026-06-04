@@ -24,10 +24,28 @@ struct DebugSafetySummary {
 }
 
 @MainActor
+final class DebugWindow: NSWindow {
+    var onFind: (() -> Void)?
+
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        if flags.contains(.command),
+           !flags.contains(.control),
+           !flags.contains(.option),
+           event.charactersIgnoringModifiers?.lowercased() == "f" {
+            onFind?()
+            return true
+        }
+        return super.performKeyEquivalent(with: event)
+    }
+}
+
+@MainActor
 final class DebugWindowController: NSWindowController {
     private let debugInfoProvider: () -> String
     private let safetySummaryProvider: () -> DebugSafetySummary
     private let textView = NSTextView()
+    private let searchField = NSSearchField()
     private let safetyPanel = NSView()
     private let safetyIcon = NSImageView()
     private let safetyTitleLabel = NSTextField(labelWithString: "")
@@ -39,6 +57,8 @@ final class DebugWindowController: NSWindowController {
     private let openSettingsButton = NSButton()
     private var logURL: URL?
     private var settingsURL: URL?
+    private var searchMatches: [NSRange] = []
+    private var currentSearchMatchIndex: Int?
 
     init(
         debugInfoProvider: @escaping () -> String = { "" },
@@ -47,7 +67,7 @@ final class DebugWindowController: NSWindowController {
         self.debugInfoProvider = debugInfoProvider
         self.safetySummaryProvider = safetySummaryProvider
 
-        let window = NSWindow(
+        let window = DebugWindow(
             contentRect: NSRect(x: 0, y: 0, width: 760, height: 560),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered,
@@ -60,6 +80,9 @@ final class DebugWindowController: NSWindowController {
         window.minSize = NSSize(width: 640, height: 420)
         super.init(window: window)
 
+        window.onFind = { [weak self] in
+            self?.focusSearchField()
+        }
         window.contentView = buildContent()
         window.center()
     }
@@ -74,10 +97,12 @@ final class DebugWindowController: NSWindowController {
         self.settingsURL = settingsURL
         updateSafetySummary()
         updatePathButtons()
+        updateSearchSelectionAfterTextChange()
     }
 
     private func buildContent() -> NSView {
         configureTextView()
+        configureSearchField()
         configureSafetySummary()
         configureButtons()
         configureStatusLabel()
@@ -152,7 +177,10 @@ final class DebugWindowController: NSWindowController {
         copyStack.alignment = .leading
         copyStack.spacing = 4
 
-        let header = NSStackView(views: [icon, copyStack])
+        let spacer = NSView()
+        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+        let header = NSStackView(views: [icon, copyStack, spacer, searchField])
         header.orientation = .horizontal
         header.alignment = .centerY
         header.spacing = 12
@@ -224,6 +252,23 @@ final class DebugWindowController: NSWindowController {
         )
         textView.toolTip = L10n.tr("debug.textHelp")
         textView.setAccessibilityHelp(L10n.tr("debug.textHelp"))
+    }
+
+    private func configureSearchField() {
+        searchField.identifier = NSUserInterfaceItemIdentifier("debug.searchField")
+        searchField.placeholderString = L10n.tr("debug.searchPlaceholder")
+        searchField.toolTip = L10n.tr("debug.searchHelp")
+        searchField.setAccessibilityLabel(L10n.tr("debug.searchPlaceholder"))
+        searchField.setAccessibilityHelp(L10n.tr("debug.searchHelp"))
+        searchField.target = self
+        searchField.action = #selector(searchChanged)
+        searchField.delegate = self
+        searchField.sendsSearchStringImmediately = true
+        searchField.sendsWholeSearchString = false
+        searchField.translatesAutoresizingMaskIntoConstraints = false
+        searchField.widthAnchor.constraint(equalToConstant: 220).isActive = true
+        searchField.setContentHuggingPriority(.required, for: .horizontal)
+        searchField.setContentCompressionResistancePriority(.required, for: .horizontal)
     }
 
     private func configureButtons() {
@@ -332,10 +377,83 @@ final class DebugWindowController: NSWindowController {
         button.setAccessibilityHelp(help)
     }
 
-    private func setStatus(_ status: String) {
+    private func setStatus(_ status: String, color: NSColor = .secondaryLabelColor) {
         statusLabel.stringValue = status
+        statusLabel.textColor = color
         statusLabel.toolTip = status
         statusLabel.setAccessibilityHelp(status)
+    }
+
+    private func focusSearchField() {
+        window?.makeFirstResponder(searchField)
+        searchField.selectText(nil)
+    }
+
+    @objc private func searchChanged() {
+        performSearch(searchField.stringValue, advances: false)
+    }
+
+    private func updateSearchSelectionAfterTextChange() {
+        guard !searchField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            searchMatches = []
+            currentSearchMatchIndex = nil
+            return
+        }
+        performSearch(searchField.stringValue, advances: false)
+    }
+
+    private func performSearch(_ query: String, advances: Bool) {
+        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedQuery.isEmpty else {
+            searchMatches = []
+            currentSearchMatchIndex = nil
+            textView.setSelectedRange(NSRange(location: 0, length: 0))
+            setStatus(L10n.tr("debug.ready"))
+            return
+        }
+
+        searchMatches = ranges(matching: trimmedQuery, in: textView.string)
+        guard !searchMatches.isEmpty else {
+            currentSearchMatchIndex = nil
+            textView.setSelectedRange(NSRange(location: 0, length: 0))
+            setStatus(L10n.format("debug.searchNoResults", trimmedQuery), color: .systemOrange)
+            return
+        }
+
+        let nextIndex: Int
+        if advances, let currentSearchMatchIndex {
+            nextIndex = (currentSearchMatchIndex + 1) % searchMatches.count
+        } else {
+            nextIndex = 0
+        }
+        currentSearchMatchIndex = nextIndex
+
+        let selectedRange = searchMatches[nextIndex]
+        textView.setSelectedRange(selectedRange)
+        textView.scrollRangeToVisible(selectedRange)
+        setStatus(L10n.format("debug.searchMatched", nextIndex + 1, searchMatches.count, trimmedQuery))
+    }
+
+    private func ranges(matching query: String, in text: String) -> [NSRange] {
+        let source = text as NSString
+        var results: [NSRange] = []
+        var searchRange = NSRange(location: 0, length: source.length)
+        while searchRange.location < source.length {
+            let found = source.range(
+                of: query,
+                options: [.caseInsensitive, .diacriticInsensitive],
+                range: searchRange
+            )
+            guard found.location != NSNotFound else { break }
+            results.append(found)
+
+            let nextLocation = found.location + max(found.length, 1)
+            searchRange = NSRange(
+                location: nextLocation,
+                length: max(0, source.length - nextLocation)
+            )
+        }
+        return results
     }
 
     private func updateSafetySummary() {
@@ -393,5 +511,22 @@ final class DebugWindowController: NSWindowController {
 
     private func symbolImage(_ name: String, accessibilityDescription: String? = nil) -> NSImage {
         NSImage(systemSymbolName: name, accessibilityDescription: accessibilityDescription) ?? NSImage()
+    }
+}
+
+extension DebugWindowController: NSSearchFieldDelegate {
+    func control(_ control: NSControl, textView: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        guard control === searchField else { return false }
+        switch commandSelector {
+        case #selector(NSResponder.insertNewline(_:)):
+            performSearch(searchField.stringValue, advances: true)
+            return true
+        case #selector(NSResponder.cancelOperation(_:)):
+            searchField.stringValue = ""
+            performSearch("", advances: false)
+            return true
+        default:
+            return false
+        }
     }
 }

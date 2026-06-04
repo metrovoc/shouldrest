@@ -142,6 +142,10 @@
 "debug.heading" = "Diagnostics";
 "debug.subtitle" = "Current rest state, app paths, and settings for troubleshooting.";
 "debug.textHelp" = "Selectable diagnostics text. Use Copy to place it on the clipboard.";
+"debug.searchPlaceholder" = "Find diagnostics";
+"debug.searchHelp" = "Find text in diagnostics. Press Return for the next match, or Esc to clear.";
+"debug.searchMatched" = "%d/%d matches: %@";
+"debug.searchNoResults" = "No diagnostics match \"%@\"";
 "debug.copy" = "Copy";
 "debug.copyHelp" = "Copy the visible diagnostics";
 "debug.refresh" = "Refresh";
