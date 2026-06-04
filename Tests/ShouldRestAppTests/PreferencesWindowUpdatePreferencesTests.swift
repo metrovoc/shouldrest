@@ -57,6 +57,49 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         XCTAssertFalse(visibleTexts.contains { $0.contains("Admin:") })
     }
 
+    func testAdvancedOperationControlsExposeUserFacingHelp() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        var settings = RestSettings.defaults
+        settings.admin.disableAppUpdateFeatures = true
+        settings.admin.hideSettingsFileLocation = true
+        settings.admin.hideStrictPreferences = true
+        settings.admin.customPreferencesMessage = "Managed by your team"
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAdvancedTab(in: contentView)
+
+        let expectedHelp: [(identifier: String, helpKey: String)] = [
+            ("prefs.openAtLogin", "prefs.openAtLoginHelp"),
+            ("prefs.checkUpdates", "prefs.checkUpdatesHelp"),
+            ("prefs.notifyNewVersion", "prefs.notifyNewVersionHelp"),
+            ("prefs.showOnboardingNextLaunch", "prefs.showOnboardingNextLaunchHelp"),
+            ("prefs.pauseUntilMorningMode", "prefs.pauseUntilMorningModeHelp"),
+            ("prefs.pauseUntilMorningLocation", "prefs.pauseUntilMorningLocationHelp"),
+            ("prefs.pauseForSuspendOrLock", "prefs.pauseForSuspendOrLockHelp"),
+            ("prefs.updateFeedURLField", "prefs.updateFeedURLHelp"),
+            ("prefs.adminHideUpdates", "prefs.adminHideUpdatesHelp"),
+            ("prefs.adminHideSettingsPath", "prefs.adminHideSettingsPathHelp"),
+            ("prefs.adminHideStrict", "prefs.adminHideStrictHelp"),
+            ("prefs.preferencesMessageField", "prefs.preferencesMessageHelp")
+        ]
+
+        for expectation in expectedHelp {
+            let control = try XCTUnwrap(
+                view(withIdentifier: expectation.identifier, in: contentView) as? NSControl,
+                expectation.identifier
+            )
+            XCTAssertEqual(control.toolTip, L10n.tr(expectation.helpKey), expectation.identifier)
+            XCTAssertEqual(control.accessibilityHelp(), L10n.tr(expectation.helpKey), expectation.identifier)
+        }
+
+        let visibleTexts = visibleTexts(in: contentView)
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.pauseForSuspendOrLock")))
+        XCTAssertFalse(visibleTexts.contains("Pause scheduler on sleep or lock"))
+    }
+
     func testTurningOffUpdateCheckingHidesDependentPreferencesAndAutosaves() throws {
         let savedSettings = SavedSettingsBox()
         let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }

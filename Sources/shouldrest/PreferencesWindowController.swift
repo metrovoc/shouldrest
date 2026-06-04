@@ -1009,13 +1009,16 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         let advancedStack = contentStack()
         advancedStack.addArrangedSubview(section(L10n.tr("prefs.sectionOperations"), symbolName: "gearshape"))
+        openAtLogin.identifier = NSUserInterfaceItemIdentifier("prefs.openAtLogin")
         advancedStack.addArrangedSubview(openAtLogin)
         checkUpdates.identifier = NSUserInterfaceItemIdentifier("prefs.checkUpdates")
         advancedStack.addArrangedSubview(checkUpdates)
         notifyNewVersion.identifier = NSUserInterfaceItemIdentifier("prefs.notifyNewVersion")
         advancedStack.addArrangedSubview(notifyNewVersion)
+        showOnboardingNextLaunch.identifier = NSUserInterfaceItemIdentifier("prefs.showOnboardingNextLaunch")
         advancedStack.addArrangedSubview(showOnboardingNextLaunch)
         let pauseUntilMorningModeRow = row(L10n.tr("prefs.pauseUntilMorningMode"), pauseUntilMorningMode)
+        pauseUntilMorningMode.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningMode")
         advancedStack.addArrangedSubview(pauseUntilMorningModeRow)
         let pauseUntilMorningLocationRow = row(L10n.tr("prefs.pauseUntilMorningLocation"), pauseUntilMorningLocation)
         pauseUntilMorningLocation.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningLocation")
@@ -1044,6 +1047,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         self.pauseUntilMorningLongitudeRow = pauseUntilMorningLongitudeRow
         advancedStack.addArrangedSubview(pauseUntilMorningLongitudeRow)
         advancedStack.addArrangedSubview(indentedControlRow(pauseUntilMorningSummaryLabel))
+        pauseForSuspendOrLock.identifier = NSUserInterfaceItemIdentifier("prefs.pauseForSuspendOrLock")
         advancedStack.addArrangedSubview(pauseForSuspendOrLock)
         let updateFeedURLRow = row(L10n.tr("prefs.updateFeedURL"), updateFeedURL)
         updateFeedURL.identifier = NSUserInterfaceItemIdentifier("prefs.updateFeedURLField")
@@ -1055,9 +1059,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         adminControlsStack.alignment = .leading
         adminControlsStack.spacing = 14
         adminControlsStack.edgeInsets = NSEdgeInsets(top: 0, left: 22, bottom: 0, right: 0)
+        disableUpdateFeatures.identifier = NSUserInterfaceItemIdentifier("prefs.adminHideUpdates")
         adminControlsStack.addArrangedSubview(disableUpdateFeatures)
+        hideSettingsPath.identifier = NSUserInterfaceItemIdentifier("prefs.adminHideSettingsPath")
         adminControlsStack.addArrangedSubview(hideSettingsPath)
+        hideStrictPreferences.identifier = NSUserInterfaceItemIdentifier("prefs.adminHideStrict")
         adminControlsStack.addArrangedSubview(hideStrictPreferences)
+        customPreferencesMessage.identifier = NSUserInterfaceItemIdentifier("prefs.preferencesMessageField")
         adminControlsStack.addArrangedSubview(row(L10n.tr("prefs.preferencesMessage"), customPreferencesMessage))
         advancedStack.addArrangedSubview(adminControlsAdvancedButton)
         advancedStack.addArrangedSubview(adminControlsStack)
@@ -1735,6 +1743,18 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         setHelp(L10n.tr("prefs.eyeManualFinishHelp"), on: eyeManualFinish)
         setHelp(L10n.tr("prefs.bodyAllowSkipHelp"), on: bodyAllowSkip)
         setHelp(L10n.tr("prefs.bodyManualFinishHelp"), on: bodyManualFinish)
+        setHelp(L10n.tr("prefs.openAtLoginHelp"), on: openAtLogin)
+        setHelp(L10n.tr("prefs.checkUpdatesHelp"), on: checkUpdates)
+        setHelp(L10n.tr("prefs.notifyNewVersionHelp"), on: notifyNewVersion)
+        setHelp(L10n.tr("prefs.showOnboardingNextLaunchHelp"), on: showOnboardingNextLaunch)
+        setHelp(L10n.tr("prefs.pauseUntilMorningModeHelp"), on: pauseUntilMorningMode)
+        setHelp(L10n.tr("prefs.pauseUntilMorningLocationHelp"), on: pauseUntilMorningLocation)
+        setHelp(L10n.tr("prefs.pauseForSuspendOrLockHelp"), on: pauseForSuspendOrLock)
+        setHelp(L10n.tr("prefs.updateFeedURLHelp"), on: updateFeedURL)
+        setHelp(L10n.tr("prefs.adminHideUpdatesHelp"), on: disableUpdateFeatures)
+        setHelp(L10n.tr("prefs.adminHideSettingsPathHelp"), on: hideSettingsPath)
+        setHelp(L10n.tr("prefs.adminHideStrictHelp"), on: hideStrictPreferences)
+        setHelp(L10n.tr("prefs.preferencesMessageHelp"), on: customPreferencesMessage)
     }
 
     private func setHelp(_ help: String, on control: NSControl) {
