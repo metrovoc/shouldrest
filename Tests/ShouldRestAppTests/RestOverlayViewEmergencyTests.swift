@@ -387,6 +387,29 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(requestCount, 1)
     }
 
+    func testMouseDoubleClickGestureCannotConsumeBothEmergencyConfirmationSteps() throws {
+        let view = configuredEyeGateOverlay()
+        view.layoutSubtreeIfNeeded()
+        var requestCount = 0
+        view.onEmergencyOverrideRequested = {
+            requestCount += 1
+        }
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+
+        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+
+        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 2))
+
+        XCTAssertEqual(requestCount, 1)
+
+        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+
+        XCTAssertEqual(requestCount, 2)
+    }
+
     func testEmergencyConfirmationStaysInEmergencyAffordance() throws {
         let view = configuredEyeGateOverlay()
         let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.panel"))
@@ -502,6 +525,20 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             duration: 60,
             manualFinishEnabled: false
         )
+    }
+
+    private func mouseEvent(at point: NSPoint, clickCount: Int) throws -> NSEvent {
+        try XCTUnwrap(NSEvent.mouseEvent(
+            with: .leftMouseDown,
+            location: point,
+            modifierFlags: [],
+            timestamp: 0,
+            windowNumber: 0,
+            context: nil,
+            eventNumber: 0,
+            clickCount: clickCount,
+            pressure: 1
+        ))
     }
 }
 

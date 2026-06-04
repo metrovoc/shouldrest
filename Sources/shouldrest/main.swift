@@ -2216,7 +2216,7 @@ final class RestOverlayView: NSView {
         let point = convert(event.locationInWindow, from: nil)
         switch emergencyHitTarget(at: point) {
         case .emergency:
-            emergencyOverridePressed()
+            requestEmergencyOverride(fromMouseEvent: event)
         case nil:
             super.mouseDown(with: event)
         }
@@ -2316,9 +2316,30 @@ final class RestOverlayView: NSView {
     }
 
     @objc private func emergencyOverridePressed() {
+        let event = NSApp.currentEvent
+        requestEmergencyOverride(fromMouseEvent: event)
+    }
+
+    private func requestEmergencyOverride(fromMouseEvent event: NSEvent?) {
+        guard !isDuplicateMouseConfirmation(event) else { return }
         if case .activated = activateEmergencyOverrideIfAvailable() {
             armEmergencyOverrideLocallyIfNeeded()
             onEmergencyOverrideRequested?()
+        }
+    }
+
+    private func isDuplicateMouseConfirmation(_ event: NSEvent?) -> Bool {
+        guard emergencyOverrideArmed,
+              let event,
+              event.clickCount > 1 else {
+            return false
+        }
+
+        switch event.type {
+        case .leftMouseDown, .rightMouseDown, .otherMouseDown:
+            return true
+        default:
+            return false
         }
     }
 
@@ -2338,7 +2359,7 @@ final class RestOverlayView: NSView {
     }
 
     func performEmergencyOverrideKeyCommand() {
-        emergencyOverridePressed()
+        requestEmergencyOverride(fromMouseEvent: nil)
     }
 
     func performBodyPostponeAction() {
