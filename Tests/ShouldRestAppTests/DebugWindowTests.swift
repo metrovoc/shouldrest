@@ -24,9 +24,12 @@ final class DebugWindowTests: XCTestCase {
         XCTAssertNotNil(contentView.descendant(withIdentifier: "debug.subtitle"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "debug.safetyPanel"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "debug.textScroll"))
+        XCTAssertEqual(contentView.label(withIdentifier: "debug.subtitle")?.stringValue, L10n.tr("debug.subtitle"))
 
         XCTAssertEqual(contentView.label(withIdentifier: "debug.safetyTitle")?.stringValue, L10n.tr("debug.summaryReadyTitle"))
         XCTAssertEqual(contentView.label(withIdentifier: "debug.safetyBody")?.stringValue, L10n.tr("debug.summaryReadyBody"))
+        XCTAssertFalse(try XCTUnwrap(contentView.label(withIdentifier: "debug.subtitle")?.stringValue).contains("runtime flags"))
+        XCTAssertFalse(try XCTUnwrap(contentView.label(withIdentifier: "debug.safetyTitle")?.stringValue).contains("blocking"))
 
         let textView = try XCTUnwrap(contentView.debugTextView())
         XCTAssertEqual(textView.string, "state=initial")
