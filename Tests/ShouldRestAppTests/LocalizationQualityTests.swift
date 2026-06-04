@@ -118,6 +118,26 @@ final class LocalizationQualityTests: XCTestCase {
         }
     }
 
+    func testShortcutRecorderCopyNamesRequiredModifierBeforeRecording() {
+        defer { L10n.languageOverride = nil }
+
+        L10n.languageOverride = "en"
+        XCTAssertEqual(
+            L10n.tr("shortcut.recordHelp"),
+            "Click, then press Command, Control, or Option with a key."
+        )
+        XCTAssertTrue(L10n.tr("shortcut.recordHelp").contains("Command, Control, or Option"))
+        XCTAssertNotEqual(L10n.tr("shortcut.recordHelp"), "Click, then press a shortcut.")
+
+        L10n.languageOverride = "zh-Hans"
+        XCTAssertEqual(
+            L10n.tr("shortcut.recordHelp"),
+            "点击后按 Command、Control 或 Option 加一个按键。"
+        )
+        XCTAssertTrue(L10n.tr("shortcut.recordHelp").contains("Command、Control 或 Option"))
+        XCTAssertNotEqual(L10n.tr("shortcut.recordHelp"), "点击后按快捷键。")
+    }
+
     func testVisiblePreferenceCopyAvoidsImplementationTerms() throws {
         defer { L10n.languageOverride = nil }
 

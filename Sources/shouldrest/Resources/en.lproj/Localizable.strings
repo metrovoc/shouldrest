@@ -552,7 +552,7 @@
 "shortcut.add" = "Set Shortcut";
 "shortcut.record" = "Record Shortcut";
 "shortcut.recording" = "Recording…";
-"shortcut.recordHelp" = "Click, then press a shortcut.";
+"shortcut.recordHelp" = "Click, then press Command, Control, or Option with a key.";
 "shortcut.recordingHelp" = "Press Command, Control, or Option with a key. Esc cancels; Delete clears.";
 "shortcut.clearHelp" = "Click to replace this shortcut. Use the clear button to remove it.";
 "shortcut.requiredHelp" = "Click to replace this shortcut. Use the reset button to restore the default.";
