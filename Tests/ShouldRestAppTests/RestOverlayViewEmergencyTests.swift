@@ -396,9 +396,12 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             isArmed: true
         )
 
+        view.layoutSubtreeIfNeeded()
+        let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.panel"))
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
 
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+        XCTAssertLessThanOrEqual(button.attributedTitle.size().width + 24, panel.frame.width)
         XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
     }
 

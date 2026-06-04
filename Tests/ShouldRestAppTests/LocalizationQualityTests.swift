@@ -160,8 +160,9 @@ final class LocalizationQualityTests: XCTestCase {
 
         L10n.languageOverride = "en"
         XCTAssertEqual(L10n.tr("overlay.emergencyOverride"), "Emergency Exit · Esc")
-        XCTAssertEqual(L10n.tr("overlay.emergencyOverrideConfirm"), "Click again to exit")
-        XCTAssertEqual(L10n.tr("overlay.emergencyOverrideArmed"), "Click again to exit")
+        XCTAssertEqual(L10n.tr("overlay.emergencyOverrideConfirm"), "Click or Esc again to exit")
+        XCTAssertEqual(L10n.tr("overlay.emergencyOverrideArmed"), "Click or Esc again to exit")
+        XCTAssertTrue(L10n.tr("overlay.emergencyOverrideConfirm").contains("Esc"))
         XCTAssertTrue(L10n.tr("overlay.emergencyOverrideHelp").contains("inside the overlay"))
         XCTAssertTrue(L10n.tr("prefs.eyeEmergencyOverrideHelp").contains("inside the overlay"))
         XCTAssertTrue(L10n.tr("prefs.eyeEmergencyOverrideHelp").localizedCaseInsensitiveContains("second click"))
@@ -174,8 +175,9 @@ final class LocalizationQualityTests: XCTestCase {
 
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(L10n.tr("overlay.emergencyOverride"), "紧急退出 · Esc")
-        XCTAssertEqual(L10n.tr("overlay.emergencyOverrideConfirm"), "再次点击退出")
-        XCTAssertEqual(L10n.tr("overlay.emergencyOverrideArmed"), "再次点击退出")
+        XCTAssertEqual(L10n.tr("overlay.emergencyOverrideConfirm"), "再次点击或按 Esc 退出")
+        XCTAssertEqual(L10n.tr("overlay.emergencyOverrideArmed"), "再次点击或按 Esc 退出")
+        XCTAssertTrue(L10n.tr("overlay.emergencyOverrideConfirm").contains("Esc"))
         XCTAssertTrue(L10n.tr("overlay.emergencyOverrideHelp").contains("覆盖层内"))
         XCTAssertTrue(L10n.tr("prefs.eyeEmergencyOverrideHelp").contains("覆盖层内"))
         XCTAssertTrue(L10n.tr("prefs.eyeEmergencyOverrideHelp").contains("第二次点击"))

@@ -86,8 +86,8 @@
 "overlay.completeBody" = "Finish when ready";
 "overlay.ready" = "ready";
 "overlay.emergencyOverride" = "Emergency Exit · Esc";
-"overlay.emergencyOverrideConfirm" = "Click again to exit";
-"overlay.emergencyOverrideArmed" = "Click again to exit";
+"overlay.emergencyOverrideConfirm" = "Click or Esc again to exit";
+"overlay.emergencyOverrideArmed" = "Click or Esc again to exit";
 "overlay.emergencyOverrideHelp" = "Use only for a genuine interruption. Confirm with a second click or Esc inside the overlay; it counts as a missed Eye Gate.";
 "overlay.bodyPostpone" = "Postpone";
 "overlay.bodySkip" = "Skip";

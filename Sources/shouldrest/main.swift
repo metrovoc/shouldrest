@@ -2584,7 +2584,7 @@ final class RestOverlayView: NSView {
         guard let remainingSeconds = emergencyRemainingSeconds else { return }
 
         emergencyPanel.isHidden = false
-        emergencyPanelWidthConstraint?.constant = 164
+        emergencyPanelWidthConstraint?.constant = 188
         emergencyPanelHeightConstraint?.constant = 44
         let style = EmergencyOverlayVisualStyle.style(
             remainingSeconds: emergencyOverrideArmed ? 0 : remainingSeconds,
