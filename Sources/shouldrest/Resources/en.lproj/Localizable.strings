@@ -184,6 +184,9 @@
 "prefs.text" = "Body text";
 "prefs.addCustomIdea" = "Add to Rotation";
 "prefs.addCustomIdeaHelp" = "Add the current title and body text to the Body Break idea rotation.";
+"prefs.customIdeaRotation" = "Current rotation";
+"prefs.removeCustomIdeaHelp" = "Remove this Body Break idea from the rotation.";
+"prefs.customIdeaEmptyBody" = "No body text";
 "prefs.advancedIdeasJSON" = "Advanced ideas JSON";
 "prefs.showAdvancedIdeas" = "Advanced ideas";
 "prefs.hideAdvancedIdeas" = "Hide advanced ideas";

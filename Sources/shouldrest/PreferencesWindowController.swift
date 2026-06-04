@@ -374,11 +374,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let customBodyIdeasJSONScrollView = NSScrollView()
     private let customBodyIdeasAdvancedButton = NSButton()
     private let customBodyAddIdeaButton = NSButton()
+    private let customBodyIdeasListStack = NSStackView()
     private var localImagePathRow: NSView?
     private var customBodyTitleRow: NSView?
     private var customBodyTextRow: NSView?
     private var customBodyAddIdeaButtonRow: NSView?
+    private var customBodyIdeasListRow: NSView?
     private var customBodyIdeasJSONRow: NSView?
+    private var customBodyIdeaRemoveControls: [(id: String, button: NSButton)] = []
     private let localImagePath = NSTextField()
     private let localImageChooseButton = NSButton()
     private let localImageClearButton = NSButton()
@@ -480,6 +483,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         configureAppExclusionTokenField()
         configureAppExclusionRunningAppButton()
         configureCustomBodyAddIdeaButton()
+        configureCustomBodyIdeasList()
         configureSoundPreviewButtons()
         configureSearchField()
         configureShortcutConflictWarning()
@@ -776,6 +780,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         customBodyAddIdeaButtonRow.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyAddIdeaButtonRow")
         self.customBodyAddIdeaButtonRow = customBodyAddIdeaButtonRow
         appearanceStack.addArrangedSubview(customBodyAddIdeaButtonRow)
+        let customBodyIdeasListRow = multilineRow(L10n.tr("prefs.customIdeaRotation"), customBodyIdeasListStack)
+        customBodyIdeasListRow.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyIdeasListRow")
+        self.customBodyIdeasListRow = customBodyIdeasListRow
+        appearanceStack.addArrangedSubview(customBodyIdeasListRow)
         appearanceStack.addArrangedSubview(customBodyIdeasAdvancedButton)
         let customBodyIdeasJSONRow = multilineRow(L10n.tr("prefs.advancedIdeasJSON"), customBodyIdeasJSONScrollView)
         customBodyIdeasJSONRow.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyIdeasJSONRow")
@@ -1237,6 +1245,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         customBodyAddIdeaButton.widthAnchor.constraint(equalToConstant: 158).isActive = true
     }
 
+    private func configureCustomBodyIdeasList() {
+        customBodyIdeasListStack.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyIdeasList")
+        customBodyIdeasListStack.orientation = .vertical
+        customBodyIdeasListStack.spacing = 6
+        customBodyIdeasListStack.alignment = .leading
+        customBodyIdeasListStack.widthAnchor.constraint(equalToConstant: 360).isActive = true
+    }
+
     private func configureDisclosureButton(_ button: NSButton, identifier: String, expanded: Bool) {
         button.identifier = NSUserInterfaceItemIdentifier(identifier)
         button.target = self
@@ -1481,19 +1497,20 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         soundVolumeSlider.doubleValue = volume
         updateSoundVolumeLabel()
 
-        let custom = settings.contentLibrary.customBodyBreakIdeas.first
+        let customIdeas = settings.contentLibrary.customBodyBreakIdeas
         useBuiltInIdeas.state = state(settings.contentLibrary.useBuiltInIdeas)
-        customBodyTitle.stringValue = custom?.title ?? ""
-        customBodyTextEditor.string = custom?.body ?? ""
-        customBodyIdeasJSONEditor.string = encodedCustomIdeas(settings.contentLibrary.customBodyBreakIdeas)
+        customBodyTitle.stringValue = ""
+        customBodyTextEditor.string = ""
+        customBodyIdeasJSONEditor.string = customIdeas.isEmpty ? "" : encodedCustomIdeasForEditor(customIdeas)
         setAdvancedDisclosure(
             row: customBodyIdeasJSONRow,
             button: customBodyIdeasAdvancedButton,
-            expanded: !customBodyIdeasJSONEditor.string.isEmpty
+            expanded: false
         )
         localImagePath.stringValue = settings.contentLibrary.localImagePaths.first ?? ""
         updateLocalImagePreview()
         updateCustomBodyAddIdeaButtonState()
+        refreshCustomBodyIdeaList()
 
         shortcutPauseToggle.shortcutValue = settings.shortcuts.pauseToggle
         shortcutPause30.shortcutValue = settings.shortcuts.pauseFor30Minutes
@@ -1540,7 +1557,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let advancedCustomIdeas: [RestIdea]?
         do {
             advancedAppExclusions = appExclusionsEnabled ? try decodedAdvancedAppExclusions() : nil
-            syncPrimaryCustomIdeaIntoAdvancedJSONIfNeeded()
             advancedCustomIdeas = try decodedAdvancedCustomIdeas()
         } catch {
             if showAlerts {
@@ -1948,6 +1964,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         [localImagePathRow, customBodyTitleRow, customBodyTextRow, customBodyAddIdeaButtonRow].forEach {
             $0?.isHidden = !bodyBreakEnabled
         }
+        refreshCustomBodyIdeaList()
         customBodyIdeasAdvancedButton.isHidden = !bodyBreakEnabled
         if !bodyBreakEnabled {
             setAdvancedDisclosure(row: customBodyIdeasJSONRow, button: customBodyIdeasAdvancedButton, expanded: false)
@@ -2078,9 +2095,33 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             var ideas = try decodedAdvancedCustomIdeas() ?? []
             ideas.append(idea)
             customBodyIdeasJSONEditor.string = encodedCustomIdeasForEditor(ideas)
-            setAdvancedDisclosure(row: customBodyIdeasJSONRow, button: customBodyIdeasAdvancedButton, expanded: true)
+            setAdvancedDisclosure(row: customBodyIdeasJSONRow, button: customBodyIdeasAdvancedButton, expanded: false)
             customBodyTitle.stringValue = ""
             customBodyTextEditor.string = ""
+            refreshCustomBodyIdeaList()
+            updateCustomBodyAddIdeaButtonState()
+            scheduleAutosave()
+        } catch {
+            showInvalidJSONAlert(error)
+            setSaveStatus(.invalid)
+        }
+    }
+
+    @objc private func removeCustomBodyIdeaPressed(_ sender: NSButton) {
+        guard let match = customBodyIdeaRemoveControls.first(where: { $0.button === sender }) else { return }
+        do {
+            var ideas = try decodedAdvancedCustomIdeas() ?? []
+            ideas.removeAll { $0.id == match.id }
+            if let first = ideas.first {
+                customBodyTitle.stringValue = first.title
+                customBodyTextEditor.string = first.body
+            } else {
+                customBodyTitle.stringValue = ""
+                customBodyTextEditor.string = ""
+            }
+            customBodyIdeasJSONEditor.string = ideas.count > 1 ? encodedCustomIdeasForEditor(ideas) : ""
+            setAdvancedDisclosure(row: customBodyIdeasJSONRow, button: customBodyIdeasAdvancedButton, expanded: false)
+            refreshCustomBodyIdeaList()
             updateCustomBodyAddIdeaButtonState()
             scheduleAutosave()
         } catch {
@@ -2138,6 +2179,9 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         guard !isLoadingSettings else { return }
         if let field = obj.object as? NSTextField, field === customBodyTitle {
             updateCustomBodyAddIdeaButtonState()
+            if hasCustomBodyIdeaRotation {
+                return
+            }
         }
         hasPendingTextEditing = true
         setSaveStatus(.editing)
@@ -2150,6 +2194,9 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
         if let field = obj.object as? NSTextField {
             syncNumberControls(for: field)
+            if field === customBodyTitle, hasCustomBodyIdeaRotation {
+                return
+            }
         }
         hasPendingTextEditing = false
         updateDependentControlEnablement()
@@ -2160,12 +2207,23 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         guard !isLoadingSettings else { return }
         if let editor = notification.object as? NSTextView, editor === customBodyTextEditor {
             updateCustomBodyAddIdeaButtonState()
+            if hasCustomBodyIdeaRotation {
+                return
+            }
+        }
+        if let editor = notification.object as? NSTextView, editor === customBodyIdeasJSONEditor {
+            refreshCustomBodyIdeaList()
         }
         setSaveStatus(.editing)
         scheduleAutosave()
     }
 
     func textDidEndEditing(_ notification: Notification) {
+        if let editor = notification.object as? NSTextView,
+           editor === customBodyTextEditor,
+           hasCustomBodyIdeaRotation {
+            return
+        }
         scheduleAutosave()
     }
 
@@ -2464,24 +2522,99 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             currentCustomBodyIdea(id: "preview") != nil
     }
 
-    private func syncPrimaryCustomIdeaIntoAdvancedJSONIfNeeded() {
+    private var hasCustomBodyIdeaRotation: Bool {
+        !customBodyIdeasJSONEditor.string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+
+    private func refreshCustomBodyIdeaList() {
+        let ideas = displayedCustomBodyIdeas()
+        customBodyIdeaRemoveControls.removeAll()
+        removeArrangedSubviews(from: customBodyIdeasListStack)
+
+        for (index, idea) in ideas.enumerated() {
+            customBodyIdeasListStack.addArrangedSubview(customBodyIdeaListItem(idea: idea, index: index))
+        }
+
+        customBodyIdeasListRow?.isHidden = !isOn(bodyEnabled) || ideas.isEmpty
+    }
+
+    private func displayedCustomBodyIdeas() -> [RestIdea] {
         let raw = customBodyIdeasJSONEditor.string.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !raw.isEmpty,
               let data = raw.data(using: .utf8),
-              var ideas = try? JSONDecoder().decode([RestIdea].self, from: data),
-              !ideas.isEmpty,
-              let primary = currentCustomBodyIdea(id: ideas[0].id) else {
-            return
+              let decoded = try? JSONDecoder().decode([RestIdea].self, from: data) else {
+            return []
         }
+        return decoded
+            .filter { $0.kind == .bodyBreak }
+            .map {
+                RestIdea(
+                    id: $0.id.isEmpty ? UUID().uuidString : $0.id,
+                    kind: .bodyBreak,
+                    title: $0.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Custom Body Break" : $0.title,
+                    body: ContentSanitizer.sanitizeRichText($0.body),
+                    isEnabled: $0.isEnabled
+                )
+            }
+    }
 
-        ideas[0] = RestIdea(
-            id: primary.id,
-            kind: .bodyBreak,
-            title: primary.title,
-            body: primary.body,
-            isEnabled: ideas[0].isEnabled
-        )
-        customBodyIdeasJSONEditor.string = encodedCustomIdeasForEditor(ideas)
+    private func customBodyIdeaListItem(idea: RestIdea, index: Int) -> NSView {
+        let title = NSTextField(labelWithString: idea.title)
+        title.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyIdeaTitle.\(index)")
+        title.font = .systemFont(ofSize: 12, weight: .medium)
+        title.lineBreakMode = .byTruncatingTail
+        title.widthAnchor.constraint(equalToConstant: 300).isActive = true
+
+        let body = NSTextField(labelWithString: customBodyIdeaBodySummary(idea.body))
+        body.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyIdeaBody.\(index)")
+        body.font = .systemFont(ofSize: 11)
+        body.textColor = .secondaryLabelColor
+        body.lineBreakMode = .byTruncatingTail
+        body.widthAnchor.constraint(equalToConstant: 300).isActive = true
+
+        let textStack = NSStackView(views: [title, body])
+        textStack.orientation = .vertical
+        textStack.spacing = 2
+        textStack.alignment = .leading
+
+        let removeButton = NSButton()
+        removeButton.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyIdeaRemove.\(index)")
+        removeButton.title = ""
+        removeButton.bezelStyle = .inline
+        removeButton.isBordered = false
+        removeButton.image = NSImage(systemSymbolName: "trash", accessibilityDescription: nil)
+        removeButton.imagePosition = .imageOnly
+        removeButton.contentTintColor = .secondaryLabelColor
+        removeButton.toolTip = L10n.tr("prefs.removeCustomIdeaHelp")
+        removeButton.target = self
+        removeButton.action = #selector(removeCustomBodyIdeaPressed(_:))
+        removeButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
+        removeButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
+        customBodyIdeaRemoveControls.append((id: idea.id, button: removeButton))
+
+        let row = NSStackView(views: [textStack, removeButton])
+        row.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyIdeaRow.\(index)")
+        row.orientation = .horizontal
+        row.spacing = 8
+        row.alignment = .centerY
+        return row
+    }
+
+    private func customBodyIdeaBodySummary(_ body: String) -> String {
+        let collapsed = body
+            .components(separatedBy: .whitespacesAndNewlines)
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+        let summary = collapsed.isEmpty ? L10n.tr("prefs.customIdeaEmptyBody") : collapsed
+        guard summary.count > 80 else { return summary }
+        return "\(summary.prefix(77))..."
+    }
+
+    private func removeArrangedSubviews(from stack: NSStackView) {
+        for subview in stack.arrangedSubviews {
+            stack.removeArrangedSubview(subview)
+            subview.removeFromSuperview()
+        }
     }
 
     private func decodedAdvancedCustomIdeas() throws -> [RestIdea]? {
@@ -2503,15 +2636,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         } catch {
             throw InvalidAdvancedJSON(fieldName: L10n.tr("prefs.advancedIdeasJSON"), underlying: error)
         }
-    }
-
-    private func encodedCustomIdeas(_ ideas: [RestIdea]) -> String {
-        let bodyIdeas = ideas.filter { $0.kind == .bodyBreak }
-        let encoded = encodedCustomIdeasForEditor(bodyIdeas)
-        guard bodyIdeas.count > 1, !encoded.isEmpty else {
-            return ""
-        }
-        return encoded
     }
 
     private func encodedCustomIdeasForEditor(_ ideas: [RestIdea]) -> String {
