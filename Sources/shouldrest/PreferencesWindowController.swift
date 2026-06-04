@@ -567,6 +567,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let shortcutConflictRow = NSStackView()
     private let shortcutConflictIcon = NSImageView()
     private let shortcutConflictLabel = NSTextField(labelWithString: "")
+    private let shortcutConflictReviewButton = NSButton()
+    private var shortcutConflictRecorders: [ShortcutRecorderButton] = []
 
     private let openAtLogin = NSButton(checkboxWithTitle: L10n.tr("prefs.openAtLogin"), target: nil, action: nil)
     private let checkUpdates = NSButton(checkboxWithTitle: L10n.tr("prefs.checkUpdates"), target: nil, action: nil)
@@ -2040,7 +2042,23 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         shortcutConflictLabel.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutConflictLabel")
         shortcutConflictLabel.textColor = .systemOrange
         shortcutConflictLabel.lineBreakMode = .byWordWrapping
-        shortcutConflictLabel.widthAnchor.constraint(equalToConstant: 590).isActive = true
+        shortcutConflictLabel.widthAnchor.constraint(equalToConstant: 510).isActive = true
+
+        shortcutConflictReviewButton.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutConflictReviewButton")
+        shortcutConflictReviewButton.title = L10n.tr("prefs.shortcutConflictReview")
+        shortcutConflictReviewButton.image = NSImage(
+            systemSymbolName: "arrow.turn.down.right",
+            accessibilityDescription: shortcutConflictReviewButton.title
+        )
+        shortcutConflictReviewButton.imagePosition = .imageLeading
+        shortcutConflictReviewButton.bezelStyle = .rounded
+        shortcutConflictReviewButton.target = self
+        shortcutConflictReviewButton.action = #selector(reviewShortcutConflictPressed(_:))
+        setTextButtonHelp(
+            title: shortcutConflictReviewButton.title,
+            help: L10n.tr("prefs.shortcutConflictReviewHelp"),
+            on: shortcutConflictReviewButton
+        )
 
         shortcutConflictRow.orientation = .horizontal
         shortcutConflictRow.alignment = .top
@@ -2048,6 +2066,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         shortcutConflictRow.edgeInsets = NSEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
         shortcutConflictRow.addArrangedSubview(shortcutConflictIcon)
         shortcutConflictRow.addArrangedSubview(shortcutConflictLabel)
+        shortcutConflictRow.addArrangedSubview(shortcutConflictReviewButton)
         shortcutConflictRow.isHidden = true
     }
 
@@ -2366,22 +2385,35 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         entries.forEach { $0.recorder.validationWarning = nil }
 
         guard let warning = shortcutValidationWarning(for: entries) else {
+            shortcutConflictRecorders = []
             shortcutConflictLabel.stringValue = ""
             shortcutConflictLabel.toolTip = nil
             shortcutConflictLabel.setAccessibilityHelp(nil)
             shortcutConflictIcon.image?.accessibilityDescription = L10n.tr("prefs.shortcutConflictTitle")
             shortcutConflictIcon.setAccessibilityHelp(nil)
+            shortcutConflictReviewButton.isEnabled = false
             shortcutConflictRow.isHidden = true
             return
         }
 
+        shortcutConflictRecorders = warning.recorders
         shortcutConflictLabel.stringValue = warning.message
         shortcutConflictLabel.toolTip = warning.message
         shortcutConflictLabel.setAccessibilityHelp(warning.message)
         shortcutConflictIcon.image?.accessibilityDescription = warning.message
         shortcutConflictIcon.setAccessibilityHelp(warning.message)
+        shortcutConflictReviewButton.isEnabled = true
         shortcutConflictRow.isHidden = false
         warning.recorders.forEach { $0.validationWarning = warning.message }
+    }
+
+    @objc private func reviewShortcutConflictPressed(_ sender: NSButton) {
+        guard let recorder = shortcutConflictRecorders.first(where: { !$0.isHidden }) ??
+                shortcutConflictRecorders.first else {
+            return
+        }
+        recorder.scrollToVisible(recorder.bounds)
+        window?.makeFirstResponder(recorder)
     }
 
     private func updateShortcutClearButtons() {

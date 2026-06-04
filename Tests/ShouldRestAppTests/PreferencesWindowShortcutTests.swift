@@ -158,7 +158,8 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         settings.shortcuts.takeEyeGateNow = "Cmd+1"
         settings.shortcuts.takeBodyBreakNow = "Command+1"
         let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
-        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
 
         try selectShortcutsTab(in: contentView)
         let visibleTexts = visibleTexts(in: contentView)
@@ -183,6 +184,16 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(warningLabel.accessibilityHelp(), warning)
         XCTAssertEqual(warningIcon.image?.accessibilityDescription, warning)
         XCTAssertEqual(warningIcon.accessibilityHelp(), warning)
+        let reviewButton = try XCTUnwrap(control(withIdentifier: "prefs.shortcutConflictReviewButton", in: contentView) as? NSButton)
+        XCTAssertFalse(reviewButton.isHidden)
+        XCTAssertTrue(reviewButton.isEnabled)
+        XCTAssertEqual(reviewButton.title, L10n.tr("prefs.shortcutConflictReview"))
+        XCTAssertEqual(reviewButton.toolTip, L10n.tr("prefs.shortcutConflictReviewHelp"))
+        XCTAssertEqual(reviewButton.accessibilityLabel(), L10n.tr("prefs.shortcutConflictReview"))
+        XCTAssertEqual(reviewButton.accessibilityHelp(), L10n.tr("prefs.shortcutConflictReviewHelp"))
+        XCTAssertEqual(reviewButton.image?.accessibilityDescription, L10n.tr("prefs.shortcutConflictReview"))
+        XCTAssertTrue(sendAction(from: reviewButton))
+        XCTAssertTrue(isFirstResponder(eyeNow, in: window))
         XCTAssertWarningTint(eyeNow)
         XCTAssertWarningTint(bodyNow)
     }
@@ -220,6 +231,8 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertNil(bodyNow.validationWarning)
         XCTAssertEqual(eyeNow.toolTip, shortcutHelp("prefs.eyeGateNowHelp", "shortcut.clearHelp"))
         XCTAssertEqual(bodyNow.toolTip, shortcutHelp("prefs.bodyBreakNowHelp", "shortcut.clearHelp"))
+        let reviewButton = try XCTUnwrap(control(withIdentifier: "prefs.shortcutConflictReviewButton", in: contentView) as? NSButton)
+        XCTAssertFalse(reviewButton.isEnabled)
     }
 
     func testUnsupportedShortcutMarksOnlyInvalidRecorder() throws {
@@ -509,6 +522,10 @@ final class PreferencesWindowShortcutTests: XCTestCase {
     private func sendAction(from control: NSControl) -> Bool {
         guard let action = control.action else { return false }
         return NSApplication.shared.sendAction(action, to: control.target, from: control)
+    }
+
+    private func isFirstResponder(_ control: NSControl, in window: NSWindow) -> Bool {
+        window.firstResponder === control || control.currentEditor() === window.firstResponder
     }
 
     private func XCTAssertWarningTint(

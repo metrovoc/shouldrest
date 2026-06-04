@@ -459,6 +459,8 @@
 "prefs.searchNoResults" = "没有匹配的设置";
 "prefs.shortcutConflictTitle" = "快捷键冲突";
 "prefs.shortcutConflict" = "快捷键冲突：%@ 同时分配给 %@。";
+"prefs.shortcutConflictReview" = "查看";
+"prefs.shortcutConflictReviewHelp" = "聚焦到第一个带有此警告的快捷键。";
 "prefs.shortcutUnsupported" = "不支持的快捷键：%@（%@）。";
 "prefs.display.all" = "所有显示器";
 "prefs.display.primary" = "主显示器";

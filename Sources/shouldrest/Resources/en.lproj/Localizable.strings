@@ -459,6 +459,8 @@
 "prefs.searchNoResults" = "No matching setting";
 "prefs.shortcutConflictTitle" = "Shortcut conflict";
 "prefs.shortcutConflict" = "Shortcut conflict: %@ is assigned to %@.";
+"prefs.shortcutConflictReview" = "Review";
+"prefs.shortcutConflictReviewHelp" = "Focus the first shortcut with this warning.";
 "prefs.shortcutUnsupported" = "Unsupported shortcut: %@ for %@.";
 "prefs.display.all" = "All displays";
 "prefs.display.primary" = "Primary display";
