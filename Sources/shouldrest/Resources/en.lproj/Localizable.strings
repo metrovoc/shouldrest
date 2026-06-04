@@ -142,14 +142,14 @@
 "debug.title" = "ShouldRest Support Report";
 "debug.heading" = "Support Report";
 "debug.subtitle" = "Current rest state, settings summary, and support details for troubleshooting.";
-"debug.textHelp" = "Selectable support report text. Use Copy to place it on the clipboard.";
+"debug.textHelp" = "Selectable support report text. Use Copy Report to place it on the clipboard.";
 "debug.searchPlaceholder" = "Find in support report";
 "debug.searchHelp" = "Find text in the support report. Press Return for the next match, or Esc to clear.";
 "debug.searchMatched" = "%d/%d matches: %@";
 "debug.searchNoResults" = "No support report match for \"%@\"";
-"debug.copy" = "Copy";
+"debug.copy" = "Copy Report";
 "debug.copyHelp" = "Copy the visible support report";
-"debug.refresh" = "Refresh";
+"debug.refresh" = "Refresh Report";
 "debug.refreshHelp" = "Refresh the visible support report";
 "debug.openLog" = "Show Log in Finder";
 "debug.openLogHelp" = "Show the ShouldRest log in Finder.";

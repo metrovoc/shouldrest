@@ -79,6 +79,8 @@ final class DebugWindowTests: XCTestCase {
             XCTAssertEqual(button.accessibilityLabel(), button.title)
             XCTAssertEqual(button.accessibilityHelp(), button.toolTip)
         }
+        XCTAssertEqual(buttons.copy.title, "Copy Report")
+        XCTAssertEqual(buttons.refresh.title, "Refresh Report")
         XCTAssertEqual(buttons.openLog.title, L10n.tr("debug.openLog"))
         XCTAssertEqual(buttons.openSettings.title, L10n.tr("debug.openSettings"))
         XCTAssertEqual(buttons.openLog.title, "Show Log in Finder")

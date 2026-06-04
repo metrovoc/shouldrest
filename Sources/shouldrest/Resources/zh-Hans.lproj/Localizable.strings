@@ -142,14 +142,14 @@
 "debug.title" = "ShouldRest 支持报告";
 "debug.heading" = "支持报告";
 "debug.subtitle" = "当前休息状态、设置摘要和支持信息，用于排查问题。";
-"debug.textHelp" = "可选择的支持报告文本。使用复制按钮可放入剪贴板。";
+"debug.textHelp" = "可选择的支持报告文本。使用“复制报告”可放入剪贴板。";
 "debug.searchPlaceholder" = "查找支持报告";
 "debug.searchHelp" = "在支持报告中查找。按 Return 跳到下一个结果，按 Esc 清空。";
 "debug.searchMatched" = "%d/%d 个匹配：%@";
 "debug.searchNoResults" = "支持报告中没有匹配“%@”";
-"debug.copy" = "复制";
+"debug.copy" = "复制报告";
 "debug.copyHelp" = "复制当前可见的支持报告";
-"debug.refresh" = "刷新";
+"debug.refresh" = "刷新报告";
 "debug.refreshHelp" = "刷新当前可见的支持报告";
 "debug.openLog" = "在 Finder 中显示日志";
 "debug.openLogHelp" = "在 Finder 中显示 ShouldRest 日志。";

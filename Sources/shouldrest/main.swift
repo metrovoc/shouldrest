@@ -2596,6 +2596,7 @@ final class RestOverlayView: NSView {
     private var emergencyRemainingSeconds: Int?
     private var emergencyOverrideArmed = false
     private var emergencyOverrideCompletionPending = false
+    private var emergencyMouseSequenceActive = false
     private var emergencySessionID: UUID?
     private var emergencyPanelWidthConstraint: NSLayoutConstraint?
     private var emergencyPanelHeightConstraint: NSLayoutConstraint?
@@ -2772,10 +2773,24 @@ final class RestOverlayView: NSView {
         let point = convert(event.locationInWindow, from: nil)
         switch emergencyHitTarget(at: point) {
         case .emergency:
+            emergencyMouseSequenceActive = true
             requestEmergencyOverride()
         case nil:
             super.mouseDown(with: event)
         }
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        guard !emergencyMouseSequenceActive else { return }
+        super.mouseDragged(with: event)
+    }
+
+    override func mouseUp(with event: NSEvent) {
+        guard !emergencyMouseSequenceActive else {
+            emergencyMouseSequenceActive = false
+            return
+        }
+        super.mouseUp(with: event)
     }
 
     override func keyDown(with event: NSEvent) {
@@ -3003,12 +3018,14 @@ final class RestOverlayView: NSView {
             emergencySessionID = sessionID
             emergencyOverrideCompletionPending = false
             emergencyOverrideArmed = false
+            emergencyMouseSequenceActive = false
         }
 
         guard remainingSeconds != nil else {
             emergencyRemainingSeconds = nil
             emergencyOverrideArmed = false
             emergencyOverrideCompletionPending = false
+            emergencyMouseSequenceActive = false
             emergencyPanel.isHidden = true
             emergencyButton.isHidden = true
             return

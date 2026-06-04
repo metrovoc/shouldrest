@@ -912,6 +912,31 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertTrue(button.isEnabled)
     }
 
+    func testDragAndReleaseAfterFirstEmergencyClickDoesNotConfirmAsHold() throws {
+        let view = configuredEyeGateOverlay()
+        view.layoutSubtreeIfNeeded()
+        var requestCount = 0
+        view.onEmergencyOverrideRequested = {
+            requestCount += 1
+            return requestCount == 1 ? .armed : .complete
+        }
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+
+        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        view.mouseDragged(with: try mouseDraggedEvent(at: NSPoint(x: 760, y: 36), clickCount: 1))
+        view.mouseUp(with: try mouseUpEvent(at: NSPoint(x: 760, y: 36), clickCount: 1))
+        drainMainQueue()
+
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+        XCTAssertTrue(button.isEnabled)
+
+        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        drainMainQueue()
+
+        XCTAssertEqual(requestCount, 2)
+    }
+
     func testSingleEmergencyMouseDownWithLegacyHoldOnlyArmsAndNeverCompletes() throws {
         let start = Date(timeIntervalSinceReferenceDate: 7_000)
         var settings = RestSettings.defaults
@@ -1192,6 +1217,20 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             eventNumber: 0,
             clickCount: clickCount,
             pressure: 0
+        ))
+    }
+
+    private func mouseDraggedEvent(at point: NSPoint, clickCount: Int) throws -> NSEvent {
+        try XCTUnwrap(NSEvent.mouseEvent(
+            with: .leftMouseDragged,
+            location: point,
+            modifierFlags: [],
+            timestamp: 0,
+            windowNumber: 0,
+            context: nil,
+            eventNumber: 0,
+            clickCount: clickCount,
+            pressure: 1
         ))
     }
 
