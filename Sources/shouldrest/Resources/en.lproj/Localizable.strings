@@ -345,11 +345,9 @@
 "prefs.copyAppRulesBulkEditorHelp" = "Copy the current app-rule import text for export or backup.";
 "prefs.copyAppRulesBulkEditorDisabledOffHelp" = "Turn on App Rules before copying app-rule text.";
 "prefs.copyAppRulesBulkEditorDisabledEmptyHelp" = "Add app-rule import text before copying it.";
-"prefs.copyBulkEditorDisabledEmptyHelp" = "Add import text before copying it.";
 "prefs.restoreAppRulesBulkEditorHelp" = "Replace the app-rule import text with the last saved app rules.";
 "prefs.restoreAppRulesBulkEditorDisabledOffHelp" = "Turn on App Rules before restoring saved app-rule text.";
 "prefs.restoreAppRulesBulkEditorDisabledNoChangesHelp" = "Change the app-rule import text before restoring saved app rules.";
-"prefs.restoreBulkEditorDisabledNoChangesHelp" = "Change the import text before restoring saved text.";
 "prefs.exclusionMode.pauseWhenMatched" = "Pause rests during these apps";
 "prefs.exclusionMode.resumeOnlyWhenMatched" = "Run rests only during these apps";
 "prefs.sectionPresentation" = "Presentation and Sound";
@@ -546,7 +544,7 @@
 "prefs.restoreDefaultsContinue" = "Restore Defaults";
 "prefs.restoreDefaultsCancel" = "Cancel";
 "prefs.invalidJSONTitle" = "Import text has an invalid format";
-"prefs.invalidJSONBody" = "%@: %@";
+"prefs.invalidJSONBody" = "Fix %@ before settings can save. Details: %@";
 "shortcut.add" = "Set Shortcut";
 "shortcut.record" = "Record Shortcut";
 "shortcut.recording" = "Recording…";

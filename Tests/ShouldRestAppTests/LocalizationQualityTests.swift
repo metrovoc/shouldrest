@@ -163,6 +163,8 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("json editor"))
         XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("json array"))
         XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("valid json"))
+        XCTAssertFalse(englishValues.contains("Add import text before copying it."))
+        XCTAssertFalse(englishValues.contains("Change the import text before restoring saved text."))
         XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("raw rule json"))
         XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("raw idea json"))
         XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("bulk edit"))
@@ -250,6 +252,8 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(simplifiedChineseValues.contains("限定休息生效范围"))
         XCTAssertFalse(simplifiedChineseValues.contains("JSON 编辑器"))
         XCTAssertFalse(simplifiedChineseValues.contains("有效 JSON"))
+        XCTAssertFalse(simplifiedChineseValues.contains("先添加导入文本，才能复制。"))
+        XCTAssertFalse(simplifiedChineseValues.contains("修改导入文本后才能还原已保存文本。"))
         XCTAssertFalse(simplifiedChineseValues.contains("一次性自动化任务"))
         XCTAssertFalse(simplifiedChineseValues.contains("再次点击确认无限期暂停"))
         XCTAssertFalse(simplifiedChineseValues.contains("立即执行下一项计划休息"))
@@ -423,6 +427,10 @@ final class LocalizationQualityTests: XCTestCase {
             "Change the idea import text before restoring saved custom ideas."
         )
         XCTAssertEqual(L10n.tr("prefs.invalidJSONTitle"), "Import text has an invalid format")
+        XCTAssertEqual(
+            L10n.format("prefs.invalidJSONBody", "App rules import text", "Missing bracket"),
+            "Fix App rules import text before settings can save. Details: Missing bracket"
+        )
         XCTAssertEqual(L10n.tr("prefs.previewSound"), "Play Preview")
         XCTAssertEqual(L10n.tr("prefs.cancelCustomIdeaEdit"), "Cancel Edit")
         XCTAssertEqual(L10n.tr("prefs.sectionOperations"), "App behavior")
@@ -541,6 +549,10 @@ final class LocalizationQualityTests: XCTestCase {
             "修改提示导入文本后，才能还原已保存自定义提示。"
         )
         XCTAssertEqual(L10n.tr("prefs.invalidJSONTitle"), "导入文本格式无效")
+        XCTAssertEqual(
+            L10n.format("prefs.invalidJSONBody", "应用规则导入文本", "缺少括号"),
+            "请先修正应用规则导入文本，才能继续保存。详情：缺少括号"
+        )
         XCTAssertEqual(L10n.tr("prefs.cancelCustomIdeaEdit"), "取消编辑")
         XCTAssertEqual(L10n.tr("prefs.sectionOperations"), "应用行为")
         XCTAssertEqual(L10n.tr("prefs.pauseUntilMorningMode"), "早晨恢复")
