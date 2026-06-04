@@ -307,12 +307,12 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(englishValues.contains("Balanced"))
         XCTAssertTrue(englishValues.contains("More Eye Rests"))
         XCTAssertTrue(englishValues.contains("About ShouldRest"))
-        XCTAssertTrue(englishValues.contains("Full-featured controls"))
+        XCTAssertTrue(englishValues.contains("Useful controls, not loopholes"))
         XCTAssertTrue(englishValues.contains("Emergency stays in the overlay"))
         XCTAssertTrue(englishValues.contains("Start With This Rhythm"))
         XCTAssertTrue(englishValues.contains("screen-covering 20-second Eye Gates"))
         XCTAssertTrue(englishValues.contains("Brief screen-covering rests"))
-        XCTAssertTrue(englishValues.contains("Full-screen coverage keeps 20-second eye rests hard to ignore"))
+        XCTAssertTrue(englishValues.contains("Full-screen coverage protects brief 20-second rests from skip muscle memory"))
         XCTAssertTrue(englishValues.contains("Add Idea"))
         XCTAssertTrue(englishValues.contains("Update Idea"))
         XCTAssertTrue(englishValues.contains("Custom ideas"))
@@ -363,12 +363,12 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(simplifiedChineseValues.contains("均衡"))
         XCTAssertTrue(simplifiedChineseValues.contains("更多护眼"))
         XCTAssertTrue(simplifiedChineseValues.contains("关于 ShouldRest"))
-        XCTAssertTrue(simplifiedChineseValues.contains("完整控制能力"))
+        XCTAssertTrue(simplifiedChineseValues.contains("有用控制，不留绕过入口"))
         XCTAssertTrue(simplifiedChineseValues.contains("覆盖层内紧急退出"))
         XCTAssertTrue(simplifiedChineseValues.contains("使用这个节奏开始"))
         XCTAssertTrue(simplifiedChineseValues.contains("覆盖屏幕的 20 秒护眼休息"))
         XCTAssertTrue(simplifiedChineseValues.contains("短暂覆盖屏幕的护眼休息"))
-        XCTAssertTrue(simplifiedChineseValues.contains("覆盖屏幕让 20 秒护眼休息更难被忽视"))
+        XCTAssertTrue(simplifiedChineseValues.contains("全屏覆盖让短短 20 秒护眼休息不被习惯性跳过"))
         XCTAssertTrue(simplifiedChineseValues.contains("添加提示"))
         XCTAssertTrue(simplifiedChineseValues.contains("更新提示"))
         XCTAssertTrue(simplifiedChineseValues.contains("自定义提示"))
@@ -510,7 +510,21 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(L10n.tr("debug.summaryEyeActiveBody").localizedCaseInsensitiveContains("Esc twice"))
         XCTAssertFalse(L10n.tr("debug.summaryEyeActiveBody").localizedCaseInsensitiveContains("Esc once"))
         XCTAssertEqual(L10n.tr("about.debug"), "Support Report")
-        XCTAssertEqual(L10n.tr("about.compatibilityTitle"), "Full-featured controls")
+        XCTAssertEqual(
+            L10n.tr("about.body"),
+            "ShouldRest %@\n\nShouldRest is built around a simple rule: short eye rests need strong protection, while longer movement breaks need humane flexibility.\n\nIt keeps schedules, updates, support tools, and preferences available without turning them into easy skip paths for 20-second Eye Gates."
+        )
+        XCTAssertEqual(L10n.tr("about.tagline"), "Strict eye rests, flexible movement breaks, and controls that stay out of the way.")
+        XCTAssertEqual(L10n.tr("about.eyeGateBody"), "Full-screen coverage protects brief 20-second rests from skip muscle memory.")
+        XCTAssertEqual(L10n.tr("about.bodyBreakBody"), "Longer breaks can be postponed, use images, target displays, and wait until you finish.")
+        XCTAssertEqual(L10n.tr("about.compatibilityTitle"), "Useful controls, not loopholes")
+        XCTAssertEqual(
+            L10n.tr("about.compatibilityBody"),
+            "Schedules, updates, support tools, and Preferences stay available without weakening Eye Gate."
+        )
+        XCTAssertFalse(L10n.tr("about.body").localizedCaseInsensitiveContains("automation"))
+        XCTAssertFalse(L10n.tr("about.compatibilityBody").localizedCaseInsensitiveContains("automation"))
+        XCTAssertFalse(L10n.tr("about.compatibilityBody").localizedCaseInsensitiveContains("full-featured"))
         XCTAssertTrue(L10n.tr("menu.resetHelp").contains("queued actions"))
         XCTAssertTrue(L10n.tr("prefs.resetShortcutHelp").contains("queued actions"))
         XCTAssertTrue(L10n.tr("reset.confirmBody").contains("delayed rests"))
@@ -640,7 +654,21 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(L10n.tr("debug.summaryEyeActiveBody").contains("两次 Esc"))
         XCTAssertFalse(L10n.tr("debug.summaryEyeActiveBody").contains("按一次 Esc"))
         XCTAssertEqual(L10n.tr("about.debug"), "支持报告")
-        XCTAssertEqual(L10n.tr("about.compatibilityTitle"), "完整控制能力")
+        XCTAssertEqual(
+            L10n.tr("about.body"),
+            "ShouldRest %@\n\nShouldRest 围绕一个简单原则构建：短暂护眼休息需要强约束，较长活动休息需要有弹性的控制。\n\n它保留调度、更新、支持工具和偏好设置，但不把这些控制变成 20 秒护眼休息的绕过入口。"
+        )
+        XCTAssertEqual(L10n.tr("about.tagline"), "严格护眼休息、灵活活动休息，以及不添乱的控制。")
+        XCTAssertEqual(L10n.tr("about.eyeGateBody"), "全屏覆盖让短短 20 秒护眼休息不被习惯性跳过。")
+        XCTAssertEqual(L10n.tr("about.bodyBreakBody"), "较长休息可推迟、配图、指定显示器，并可等你完成后再关闭。")
+        XCTAssertEqual(L10n.tr("about.compatibilityTitle"), "有用控制，不留绕过入口")
+        XCTAssertEqual(
+            L10n.tr("about.compatibilityBody"),
+            "调度、更新、支持工具和偏好设置保持可用，但不削弱护眼覆盖层。"
+        )
+        XCTAssertFalse(L10n.tr("about.body").contains("自动化"))
+        XCTAssertFalse(L10n.tr("about.compatibilityBody").contains("自动化"))
+        XCTAssertFalse(L10n.tr("about.compatibilityBody").contains("完整控制能力"))
         XCTAssertTrue(L10n.tr("menu.resetHelp").contains("排队等待的操作"))
         XCTAssertTrue(L10n.tr("prefs.resetShortcutHelp").contains("排队等待的操作"))
         XCTAssertTrue(L10n.tr("reset.confirmBody").contains("排队等待的操作"))
