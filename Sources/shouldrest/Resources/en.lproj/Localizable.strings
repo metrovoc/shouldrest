@@ -34,13 +34,13 @@
 "menu.pauseIndefinitelyConfirming" = "Indefinitely…";
 "menu.pauseIndefinitelyHelp" = "Pause rests until you resume them manually.";
 "menu.reset" = "Reset Schedule";
-"menu.resetHelp" = "Reset timers, pause state, delayed rests, rest pressure, and pending automation after confirmation.";
+"menu.resetHelp" = "Reset timers, pauses, delayed rests, rest pressure, and queued commands after confirmation.";
 "pause.indefiniteConfirmTitle" = "Pause Indefinitely?";
 "pause.indefiniteConfirmBody" = "ShouldRest will stop scheduling rests until you resume it from the menu. Use a timed pause when you only need a short interruption.";
 "pause.indefiniteConfirmAction" = "Pause Indefinitely";
 "pause.indefiniteConfirmCancel" = "Cancel";
 "reset.confirmTitle" = "Reset Schedule?";
-"reset.confirmBody" = "This clears the current timers, pause state, delayed rest, rest pressure, and pending automation requests. Preferences are not changed.";
+"reset.confirmBody" = "This clears current timers, pauses, delayed rests, rest pressure, and queued commands. Preferences are not changed.";
 "reset.confirmAction" = "Reset Schedule";
 "reset.confirmCancel" = "Cancel";
 "menu.preferences" = "Preferences…";
@@ -446,7 +446,7 @@
 "prefs.emergencyEyeGate" = "Emergency Exit shortcut";
 "prefs.emergencyEyeGateShortcutHelp" = "During an active Eye Gate, bring the overlay forward. Confirm only from the overlay with two clicks or two Esc presses.";
 "prefs.reset" = "Reset Schedule";
-"prefs.resetShortcutHelp" = "Reset timers, pause state, delayed rests, rest pressure, and pending automation after confirmation.";
+"prefs.resetShortcutHelp" = "Reset timers, pauses, delayed rests, rest pressure, and queued commands after confirmation.";
 "prefs.sectionOperations" = "App behavior";
 "prefs.pauseUntilMorningMode" = "Morning resume";
 "prefs.pauseUntilMorningModeHelp" = "Choose the resume time used by Pause Until Morning: a fixed time or sunrise.";

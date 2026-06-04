@@ -34,13 +34,13 @@
 "menu.pauseIndefinitelyConfirming" = "无限期暂停…";
 "menu.pauseIndefinitelyHelp" = "暂停休息，直到你手动恢复。";
 "menu.reset" = "重置计划";
-"menu.resetHelp" = "确认后重置计时、暂停状态、已延后的休息、休息压力和待处理的自动化请求。";
+"menu.resetHelp" = "确认后重置计时、暂停、已延后的休息、休息压力和排队等待的命令。";
 "pause.indefiniteConfirmTitle" = "无限期暂停？";
 "pause.indefiniteConfirmBody" = "ShouldRest 会停止安排休息，直到你从菜单手动恢复。只需要短暂中断时，请优先使用定时暂停。";
 "pause.indefiniteConfirmAction" = "无限期暂停";
 "pause.indefiniteConfirmCancel" = "取消";
 "reset.confirmTitle" = "重置计划？";
-"reset.confirmBody" = "这会清除当前计时、暂停状态、已延后的休息、休息压力和待处理的自动化请求。偏好设置不会改变。";
+"reset.confirmBody" = "这会清除当前计时、暂停、已延后的休息、休息压力和排队等待的命令。偏好设置不会改变。";
 "reset.confirmAction" = "重置计划";
 "reset.confirmCancel" = "取消";
 "menu.preferences" = "偏好设置…";
@@ -446,7 +446,7 @@
 "prefs.emergencyEyeGate" = "紧急退出快捷键";
 "prefs.emergencyEyeGateShortcutHelp" = "护眼休息进行中时，把覆盖层带到前台。只在覆盖层内点两次或按两次 Esc 确认退出。";
 "prefs.reset" = "重置计划";
-"prefs.resetShortcutHelp" = "确认后重置计时、暂停状态、已延后的休息、休息压力和待处理的自动化请求。";
+"prefs.resetShortcutHelp" = "确认后重置计时、暂停、已延后的休息、休息压力和排队等待的命令。";
 "prefs.sectionOperations" = "应用行为";
 "prefs.pauseUntilMorningMode" = "早晨恢复";
 "prefs.pauseUntilMorningModeHelp" = "选择“暂停到早晨”使用固定时间恢复，还是按日出恢复。";
