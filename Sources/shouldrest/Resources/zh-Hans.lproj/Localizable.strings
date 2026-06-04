@@ -190,8 +190,8 @@
 "prefs.manualFinish" = "活动休息计时结束后等我完成";
 "prefs.bodyManualFinishHelp" = "计时结束后，覆盖层会继续显示，直到你完成休息，而不是立即关闭。";
 "prefs.naturalBreaks" = "离开 Mac 可计为休息";
-"prefs.monitorFocus" = "监测专注 / 勿扰模式";
-"prefs.focusDefersBody" = "专注模式延后活动休息";
+"prefs.monitorFocus" = "识别专注 / 勿扰模式";
+"prefs.focusDefersBody" = "专注时延后活动休息";
 "prefs.workingHours" = "使用工作时间窗口";
 "prefs.enablePrimaryExclusion" = "启用应用规则";
 "prefs.appliesEye" = "适用于护眼休息";
@@ -279,10 +279,10 @@
 "prefs.sectionContext" = "上下文";
 "prefs.contextSummary.idleOn" = "离开超过 %d 分钟，会算作已完成休息。";
 "prefs.contextSummary.idleOff" = "离开 Mac 的时间不会算作休息。";
-"prefs.contextSummary.focusOff" = "专注模式不会改变休息时机。";
-"prefs.contextSummary.focusObserved" = "会监测专注模式，但不会延后活动休息。";
-"prefs.contextSummary.focusDefersBody" = "专注模式会延后活动休息。";
-"prefs.contextSummary.focusUnavailable" = "活动休息已关闭，因此专注模式规则不生效。";
+"prefs.contextSummary.focusOff" = "专注不会改变休息时机。";
+"prefs.contextSummary.focusObserved" = "会识别专注状态，但不会延后活动休息。";
+"prefs.contextSummary.focusDefersBody" = "专注时会延后活动休息。";
+"prefs.contextSummary.focusUnavailable" = "活动休息已关闭，因此专注规则不生效。";
 "prefs.contextSummary.workingHoursOn" = "调度仅在 %@-%@ 生效。";
 "prefs.contextSummary.workingHoursOff" = "不限制工作时间。";
 "prefs.contextSummary.appRulesOff" = "没有应用专属规则。";
@@ -293,7 +293,7 @@
 "prefs.naturalBreaksHelp" = "把离开 Mac 的时间计为已完成休息，避免你回来后立刻被打断。";
 "prefs.naturalIdleMinutesHelp" = "离开 Mac 达到这个时长后，才会算作已完成休息。";
 "prefs.workingStart" = "工作日开始";
-"prefs.focusMonitorHelp" = "监测 macOS 专注 / 勿扰模式，用于显示上下文，并可选择延后活动休息。";
+"prefs.focusMonitorHelp" = "识别 macOS 专注 / 勿扰模式，用于显示上下文，并可选择延后活动休息。";
 "prefs.focusDefersBodyHelp" = "专注 / 勿扰模式开启时延后活动休息；护眼休息仍保持严格。";
 "prefs.workingHoursHelp" = "只在工作时间窗口内安排休息。";
 "prefs.workingStartHelp" = "启用工作时间后，ShouldRest 最早从这个时间开始安排休息。";

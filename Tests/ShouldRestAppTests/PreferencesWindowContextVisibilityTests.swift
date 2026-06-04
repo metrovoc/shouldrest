@@ -28,7 +28,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertEqual(
             summary.stringValue,
             "Time away over 6 min counts as completed rest. " +
-                "Focus mode does not change rest timing. " +
+                "Focus does not change rest timing. " +
                 "No working-hour limit. " +
                 "No app-specific rules."
         )
@@ -73,7 +73,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertEqual(
             summary.stringValue,
             "Time away does not count as rest. " +
-                "Focus mode delays Body Break. " +
+                "Focus delays Body Break. " +
                 "Scheduling is limited to 09:00-18:00. " +
                 "2 app rules can pause rests or run them only for matched apps."
         )
