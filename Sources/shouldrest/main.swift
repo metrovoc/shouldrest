@@ -2191,6 +2191,28 @@ private struct EmergencyOverlayVisualStyle {
     }
 }
 
+enum OverlayCountdownFormatter {
+    static func remainingText(seconds: Int) -> String {
+        let clampedSeconds = max(0, seconds)
+        guard clampedSeconds >= 60 else {
+            return "\(clampedSeconds)s"
+        }
+
+        let hours = clampedSeconds / 3_600
+        let minutes = (clampedSeconds % 3_600) / 60
+        let secondsPart = clampedSeconds % 60
+
+        if hours > 0 {
+            return "\(hours):\(twoDigit(minutes)):\(twoDigit(secondsPart))"
+        }
+        return "\(minutes):\(twoDigit(secondsPart))"
+    }
+
+    private static func twoDigit(_ value: Int) -> String {
+        value < 10 ? "0\(value)" : "\(value)"
+    }
+}
+
 @MainActor
 final class RestOverlayView: NSView {
     private enum EmergencyHitTarget {
@@ -2240,6 +2262,7 @@ final class RestOverlayView: NSView {
 
         titleLabel.font = .systemFont(ofSize: 34, weight: .semibold)
         detailLabel.font = .systemFont(ofSize: 18, weight: .regular)
+        countdownLabel.identifier = NSUserInterfaceItemIdentifier("overlay.countdown.label")
         countdownLabel.font = .monospacedDigitSystemFont(ofSize: 28, weight: .medium)
 
         emergencyPanel.identifier = NSUserInterfaceItemIdentifier("overlay.emergency.panel")
@@ -2456,10 +2479,11 @@ final class RestOverlayView: NSView {
                 imageView.isHidden = false
             }
         }
+        let remainingText = OverlayCountdownFormatter.remainingText(seconds: remainingSeconds)
         if session.kind == .bodyBreak, settings.presentation.showCurrentTimeDuringBodyBreak {
-            countdownLabel.stringValue = "\(remainingSeconds)s · \(Date().formatted(date: .omitted, time: .shortened))"
+            countdownLabel.stringValue = "\(remainingText) · \(Date().formatted(date: .omitted, time: .shortened))"
         } else {
-            countdownLabel.stringValue = "\(remainingSeconds)s"
+            countdownLabel.stringValue = remainingText
         }
     }
 
