@@ -305,7 +305,7 @@
 "prefs.appExclusionNameHelp" = "A label for this app rule in Preferences.";
 "prefs.matchTerms" = "Apps";
 "prefs.matchTermsPlaceholder" = "Zoom or Keynote";
-"prefs.appExclusionTermsHelp" = "Choose Add Running App, or type app names such as Zoom or Keynote. Advanced users can use app identifiers like com.apple.Keynote.";
+"prefs.appExclusionTermsHelp" = "Choose Add Running App first. If the app is not running, type an app name such as Zoom or Keynote.";
 "prefs.addRunningApp" = "Add Running App";
 "prefs.addRunningAppHelp" = "Choose a currently running app and add it as an app rule.";
 "prefs.noRunningApps" = "No running apps to add";

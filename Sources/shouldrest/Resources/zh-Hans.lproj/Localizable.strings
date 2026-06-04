@@ -305,7 +305,7 @@
 "prefs.appExclusionNameHelp" = "这条应用规则在偏好设置中的名称。";
 "prefs.matchTerms" = "应用";
 "prefs.matchTermsPlaceholder" = "Zoom 或 Keynote";
-"prefs.appExclusionTermsHelp" = "优先使用“添加运行中应用”，也可输入 Zoom、Keynote 等应用名称；高级用法可输入 com.apple.Keynote 这类应用标识。";
+"prefs.appExclusionTermsHelp" = "优先使用“添加运行中应用”；如果应用没有运行，也可输入 Zoom、Keynote 等应用名称。";
 "prefs.addRunningApp" = "添加运行中应用";
 "prefs.addRunningAppHelp" = "选择当前正在运行的应用，并把它添加为应用规则。";
 "prefs.noRunningApps" = "没有可添加的运行中应用";

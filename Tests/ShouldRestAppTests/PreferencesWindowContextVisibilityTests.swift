@@ -357,6 +357,8 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertFalse(terms.placeholderString?.localizedCaseInsensitiveContains("bundle id") ?? true)
         XCTAssertFalse(terms.placeholderString?.localizedCaseInsensitiveContains("app identifier") ?? true)
         XCTAssertFalse(terms.toolTip?.localizedCaseInsensitiveContains("bundle id") ?? true)
+        XCTAssertFalse(terms.toolTip?.localizedCaseInsensitiveContains("app identifier") ?? true)
+        XCTAssertFalse(terms.toolTip?.localizedCaseInsensitiveContains("com.apple") ?? true)
         XCTAssertTrue(terms.toolTip?.contains(L10n.tr("prefs.addRunningApp")) ?? false)
     }
 
