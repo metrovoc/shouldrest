@@ -79,6 +79,12 @@ final class DebugWindowTests: XCTestCase {
             XCTAssertEqual(button.accessibilityLabel(), button.title)
             XCTAssertEqual(button.accessibilityHelp(), button.toolTip)
         }
+        XCTAssertEqual(buttons.openLog.title, L10n.tr("debug.openLog"))
+        XCTAssertEqual(buttons.openSettings.title, L10n.tr("debug.openSettings"))
+        XCTAssertEqual(buttons.openLog.title, "Reveal Log")
+        XCTAssertEqual(buttons.openSettings.title, "Reveal Settings")
+        XCTAssertEqual(buttons.openLog.toolTip, L10n.tr("debug.openLogHelp"))
+        XCTAssertEqual(buttons.openSettings.toolTip, L10n.tr("debug.openSettingsHelp"))
         let status = try XCTUnwrap(contentView.label(withIdentifier: "debug.status"))
         XCTAssertEqual(status.accessibilityLabel(), L10n.tr("debug.statusLabel"))
         XCTAssertEqual(status.toolTip, L10n.tr("debug.ready"))

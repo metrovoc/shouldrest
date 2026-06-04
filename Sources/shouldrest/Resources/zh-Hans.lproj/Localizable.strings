@@ -151,11 +151,11 @@
 "debug.copyHelp" = "复制当前可见的诊断信息";
 "debug.refresh" = "刷新";
 "debug.refreshHelp" = "刷新当前可见的诊断信息";
-"debug.openLog" = "日志";
+"debug.openLog" = "显示日志";
 "debug.openLogHelp" = "在 Finder 中显示应用日志文件";
-"debug.openSettings" = "设置";
+"debug.openSettings" = "显示设置文件";
 "debug.openSettingsHelp" = "在 Finder 中显示设置文件";
-"debug.pathHidden" = "路径访问已在设置中隐藏";
+"debug.pathHidden" = "路径访问已在偏好设置中隐藏";
 "debug.statusLabel" = "诊断状态";
 "debug.ready" = "就绪";
 "debug.copied" = "已复制";
@@ -163,7 +163,7 @@
 "debug.summaryReadyTitle" = "ShouldRest 已就绪";
 "debug.summaryReadyBody" = "菜单操作和偏好设置可正常使用。";
 "debug.summaryEyeActiveTitle" = "护眼休息正在覆盖屏幕";
-"debug.summaryEyeActiveBody" = "请使用覆盖层：点击紧急退出或按一次 Esc，再次点击或按 Esc 即可确认。覆盖层存在时菜单操作会保持受限。";
+"debug.summaryEyeActiveBody" = "请使用覆盖层：点击紧急退出两次，或按两次 Esc。覆盖层存在时菜单操作会保持受限。";
 "debug.summaryEyeReadyTitle" = "护眼休息时长已完成";
 "debug.summaryEyeReadyBody" = "准备好后从覆盖层完成休息。紧急退出仅用于真正中断，并会记录一次未完成休息。";
 "debug.summaryBodyActiveTitle" = "活动休息正在进行";
