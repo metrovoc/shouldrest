@@ -35,17 +35,21 @@ final class LocalizationQualityTests: XCTestCase {
 
         let simplifiedChineseValues = try localizedValues(language: "zh-Hans").joined(separator: "\n")
         let englishValues = try localizedValues(language: "en").joined(separator: "\n")
+        let simplifiedChineseLines = simplifiedChineseValues.components(separatedBy: "\n")
+        let englishLines = englishValues.components(separatedBy: "\n")
 
         XCTAssertFalse(simplifiedChineseValues.contains("语言覆盖"))
         XCTAssertFalse(simplifiedChineseValues.contains("结束当前活动休息"))
         XCTAssertFalse(simplifiedChineseValues.contains("可用等待"))
         XCTAssertFalse(simplifiedChineseValues.contains("暂停切换"))
+        XCTAssertFalse(simplifiedChineseLines.contains("模式"))
         XCTAssertFalse(simplifiedChineseValues.contains("加入轮换"))
         XCTAssertFalse(simplifiedChineseValues.contains("更新轮换"))
         XCTAssertFalse(simplifiedChineseValues.contains("当前轮换"))
         XCTAssertFalse(simplifiedChineseValues.contains("立即护眼休息"))
         XCTAssertFalse(simplifiedChineseValues.contains("立即活动休息"))
         XCTAssertFalse(englishValues.contains("Language override"))
+        XCTAssertFalse(englishLines.contains("Mode"))
         XCTAssertFalse(englishValues.contains("available after"))
         XCTAssertFalse(englishValues.contains("Body start sound"))
         XCTAssertFalse(englishValues.contains("Body finish sound"))
@@ -84,6 +88,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(englishValues.contains("Add Idea"))
         XCTAssertTrue(englishValues.contains("Update Idea"))
         XCTAssertTrue(englishValues.contains("Custom ideas"))
+        XCTAssertTrue(englishValues.contains("Matched app behavior"))
         XCTAssertTrue(englishValues.contains("Start Eye Gate Now"))
         XCTAssertTrue(englishValues.contains("Start Body Break Now"))
         XCTAssertTrue(englishValues.contains("Start Next Rest Now"))
@@ -101,18 +106,21 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(simplifiedChineseValues.contains("添加提示"))
         XCTAssertTrue(simplifiedChineseValues.contains("更新提示"))
         XCTAssertTrue(simplifiedChineseValues.contains("自定义提示"))
+        XCTAssertTrue(simplifiedChineseValues.contains("匹配时行为"))
         XCTAssertTrue(simplifiedChineseValues.contains("立即开始护眼休息"))
         XCTAssertTrue(simplifiedChineseValues.contains("立即开始活动休息"))
 
         L10n.languageOverride = "en"
         XCTAssertEqual(L10n.tr("prefs.eyeGateNow"), "Start Eye Gate")
         XCTAssertEqual(L10n.tr("prefs.bodyBreakNow"), "Start Body Break")
+        XCTAssertEqual(L10n.tr("prefs.mode"), "Matched app behavior")
         XCTAssertNotEqual(L10n.tr("prefs.eyeGateNow"), "Eye Gate now")
         XCTAssertNotEqual(L10n.tr("prefs.bodyBreakNow"), "Body Break now")
 
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(L10n.tr("prefs.eyeGateNow"), "立即开始护眼休息")
         XCTAssertEqual(L10n.tr("prefs.bodyBreakNow"), "立即开始活动休息")
+        XCTAssertEqual(L10n.tr("prefs.mode"), "匹配时行为")
         L10n.languageOverride = nil
     }
 

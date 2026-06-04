@@ -198,7 +198,7 @@
 "prefs.addRunningApp" = "Add Running App";
 "prefs.addRunningAppHelp" = "Choose a currently running app and add it as a rule.";
 "prefs.noRunningApps" = "No running apps available";
-"prefs.mode" = "Mode";
+"prefs.mode" = "Matched app behavior";
 "prefs.addAppExclusionRule" = "Add Rule";
 "prefs.addAppExclusionRuleHelp" = "Add the current match terms as a rule.";
 "prefs.updateAppExclusionRule" = "Update Rule";

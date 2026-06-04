@@ -110,6 +110,9 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
     }
 
     func testEnabledAppExclusionShowsDetailRowsAndNativeRuleList() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
         var settings = RestSettings.defaults
         settings.appExclusions = [
             AppExclusionRule(
@@ -146,9 +149,11 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
 
         let visibleTexts = visibleTexts(in: contentView)
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.matchTerms")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.mode")))
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.appExclusionRules")))
         XCTAssertTrue(visibleTexts.contains("Deep work"))
         XCTAssertTrue(visibleTexts.contains("Calls"))
+        XCTAssertFalse(visibleTexts.contains("Mode"))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.advancedRulesJSON")))
     }
 

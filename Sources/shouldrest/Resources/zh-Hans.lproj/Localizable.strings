@@ -198,7 +198,7 @@
 "prefs.addRunningApp" = "添加运行中应用";
 "prefs.addRunningAppHelp" = "选择当前正在运行的应用，并把它添加为规则。";
 "prefs.noRunningApps" = "没有可添加的运行中应用";
-"prefs.mode" = "模式";
+"prefs.mode" = "匹配时行为";
 "prefs.addAppExclusionRule" = "添加规则";
 "prefs.addAppExclusionRuleHelp" = "把当前匹配词添加为规则。";
 "prefs.updateAppExclusionRule" = "更新规则";
