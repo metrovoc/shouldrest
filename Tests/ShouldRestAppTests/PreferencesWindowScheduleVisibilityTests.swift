@@ -316,6 +316,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyContentDisplayRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyBlankSecondaryDisplays", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyConfiguredDisplayRow", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.bodyDisplaySummaryLabel", in: contentView).isHidden)
 
         let visibleTexts = visibleTexts(in: contentView)
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.bodyIntervalMinutes")))

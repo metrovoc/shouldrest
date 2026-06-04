@@ -434,6 +434,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let bodyBlankSecondaryDisplays = NSButton(checkboxWithTitle: L10n.tr("prefs.bodyBlankSecondary"), target: nil, action: nil)
     private let bodyConfiguredDisplay = NSPopUpButton()
     private var bodyConfiguredDisplayRow: NSView?
+    private let bodyDisplaySummaryLabel = NSTextField(labelWithString: "")
 
     private let naturalBreaks = NSButton(checkboxWithTitle: L10n.tr("prefs.naturalBreaks"), target: nil, action: nil)
     private let naturalIdleMinutes = NSTextField()
@@ -611,6 +612,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         configureAdvancedDisclosureButtons()
         configureTimePickers()
         configureMorningPauseSummary()
+        configureBodyDisplaySummary()
         configureSoundVolumeControls()
         configureCustomBodyTextEditor()
         configureAppExclusionTokenField()
@@ -798,10 +800,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         bodyCoversAllDisplays.identifier = NSUserInterfaceItemIdentifier("prefs.bodyCoversAllDisplays")
         scheduleStack.addArrangedSubview(bodyCoversAllDisplays)
         let bodyCoveredDisplayRow = row(L10n.tr("prefs.bodyCoveredDisplay"), bodyCoveredDisplay)
+        bodyCoveredDisplay.identifier = NSUserInterfaceItemIdentifier("prefs.bodyCoveredDisplay")
         bodyCoveredDisplayRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyCoveredDisplayRow")
         self.bodyCoveredDisplayRow = bodyCoveredDisplayRow
         scheduleStack.addArrangedSubview(bodyCoveredDisplayRow)
         let bodyContentDisplayRow = row(L10n.tr("prefs.bodyContentDisplay"), bodyContentDisplay)
+        bodyContentDisplay.identifier = NSUserInterfaceItemIdentifier("prefs.bodyContentDisplay")
         bodyContentDisplayRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyContentDisplayRow")
         self.bodyContentDisplayRow = bodyContentDisplayRow
         scheduleStack.addArrangedSubview(bodyContentDisplayRow)
@@ -811,6 +815,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         bodyConfiguredDisplayRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyConfiguredDisplayRow")
         self.bodyConfiguredDisplayRow = bodyConfiguredDisplayRow
         scheduleStack.addArrangedSubview(bodyConfiguredDisplayRow)
+        scheduleStack.addArrangedSubview(indentedControlRow(bodyDisplaySummaryLabel))
         addTab(to: tabView, title: L10n.tr("prefs.tabSchedule"), icon: .systemSymbol("clock"), stack: scheduleStack)
 
         let contextStack = contentStack()
@@ -1318,6 +1323,15 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         pauseUntilMorningSummaryLabel.lineBreakMode = .byWordWrapping
         pauseUntilMorningSummaryLabel.maximumNumberOfLines = 2
         pauseUntilMorningSummaryLabel.widthAnchor.constraint(equalToConstant: 360).isActive = true
+    }
+
+    private func configureBodyDisplaySummary() {
+        bodyDisplaySummaryLabel.identifier = NSUserInterfaceItemIdentifier("prefs.bodyDisplaySummaryLabel")
+        bodyDisplaySummaryLabel.font = .systemFont(ofSize: 12)
+        bodyDisplaySummaryLabel.textColor = .secondaryLabelColor
+        bodyDisplaySummaryLabel.lineBreakMode = .byWordWrapping
+        bodyDisplaySummaryLabel.maximumNumberOfLines = 3
+        bodyDisplaySummaryLabel.widthAnchor.constraint(equalToConstant: 360).isActive = true
     }
 
     private func configureSoundVolumeControls() {
@@ -2190,6 +2204,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             contentDisplaySelection == .configured
         bodyConfiguredDisplayRow?.isHidden = !bodyBreakEnabled || !usesConfiguredDisplay
         bodyConfiguredDisplay.isEnabled = bodyBreakEnabled && usesConfiguredDisplay
+        bodyDisplaySummaryLabel.isHidden = !bodyBreakEnabled
+        updateBodyDisplaySummary(
+            coversAllDisplays: coversAllDisplays,
+            coveredDisplay: coveredDisplaySelection,
+            contentDisplay: contentDisplaySelection,
+            blanksDisplaysWithoutContent: isOn(bodyBlankSecondaryDisplays)
+        )
 
         let naturalBreaksEnabled = isOn(naturalBreaks)
         naturalIdleMinutesRow?.isHidden = !naturalBreaksEnabled
@@ -4107,6 +4128,55 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         pauseUntilMorningSummaryLabel.stringValue = summary
         pauseUntilMorningSummaryLabel.toolTip = summary
         pauseUntilMorningSummaryLabel.setAccessibilityHelp(summary)
+    }
+
+    private func updateBodyDisplaySummary(
+        coversAllDisplays: Bool,
+        coveredDisplay: DisplaySelection,
+        contentDisplay: DisplaySelection,
+        blanksDisplaysWithoutContent: Bool
+    ) {
+        let coverage = coversAllDisplays
+            ? L10n.tr("prefs.bodyDisplaySummary.coverAll")
+            : L10n.format("prefs.bodyDisplaySummary.coverOne", displaySelectionTitle(coveredDisplay))
+        let content: String
+        switch contentDisplay {
+        case .all:
+            content = L10n.tr("prefs.bodyDisplaySummary.contentAll")
+        case .none:
+            content = L10n.tr("prefs.bodyDisplaySummary.contentNone")
+        case .primary, .cursor, .configured:
+            let display = displaySelectionTitle(contentDisplay)
+            content = blanksDisplaysWithoutContent
+                ? L10n.format("prefs.bodyDisplaySummary.contentTargetBlank", display)
+                : L10n.format("prefs.bodyDisplaySummary.contentTargetMirrored", display)
+        }
+        let summary = "\(coverage) \(content)"
+        bodyDisplaySummaryLabel.stringValue = summary
+        bodyDisplaySummaryLabel.toolTip = summary
+        bodyDisplaySummaryLabel.setAccessibilityHelp(summary)
+    }
+
+    private func displaySelectionTitle(_ selection: DisplaySelection) -> String {
+        switch selection {
+        case .none:
+            return L10n.tr("prefs.display.none")
+        case .all:
+            return L10n.tr("prefs.display.all")
+        case .primary:
+            return L10n.tr("prefs.display.primary")
+        case .cursor:
+            return L10n.tr("prefs.display.cursor")
+        case .configured:
+            return selectedConfiguredDisplaySummaryTitle()
+        }
+    }
+
+    private func selectedConfiguredDisplaySummaryTitle() -> String {
+        guard let index = selectedConfiguredDisplayIndex() else {
+            return L10n.tr("prefs.display.configured")
+        }
+        return L10n.format("prefs.bodyDisplaySummary.configuredDisplay", index + 1)
     }
 
     private func isMorningPauseSummaryField(_ field: NSTextField) -> Bool {

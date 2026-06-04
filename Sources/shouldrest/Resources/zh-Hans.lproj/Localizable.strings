@@ -198,6 +198,13 @@
 "prefs.bodyCoveredDisplay" = "覆盖层显示器";
 "prefs.bodyContentDisplay" = "休息内容位置";
 "prefs.bodyBlankSecondary" = "空白无内容显示器";
+"prefs.bodyDisplaySummary.coverAll" = "活动休息会覆盖所有显示器。";
+"prefs.bodyDisplaySummary.coverOne" = "活动休息会覆盖%@。";
+"prefs.bodyDisplaySummary.contentAll" = "休息内容会显示在每个被覆盖的显示器上。";
+"prefs.bodyDisplaySummary.contentNone" = "不显示休息内容。";
+"prefs.bodyDisplaySummary.contentTargetBlank" = "休息内容分配到%@；没有内容的被覆盖显示器保持空白。";
+"prefs.bodyDisplaySummary.contentTargetMirrored" = "休息内容分配到%@；被覆盖的显示器也会显示这份内容。";
+"prefs.bodyDisplaySummary.configuredDisplay" = "显示器 %d";
 "prefs.configuredDisplayIndex" = "指定显示器";
 "prefs.sectionContext" = "上下文";
 "prefs.naturalIdleMinutes" = "空闲达到";

@@ -5,6 +5,21 @@ import XCTest
 
 @MainActor
 final class PreferencesWindowDisplaySelectionTests: XCTestCase {
+    func testBodyDisplaySummaryExplainsDefaultAllDisplayCoverage() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let summary = try XCTUnwrap(view(withIdentifier: "prefs.bodyDisplaySummaryLabel", in: contentView) as? NSTextField)
+
+        XCTAssertEqual(
+            summary.stringValue,
+            "\(L10n.tr("prefs.bodyDisplaySummary.coverAll")) \(L10n.tr("prefs.bodyDisplaySummary.contentAll"))"
+        )
+        XCTAssertTrue(visibleTexts(in: contentView).contains(summary.stringValue))
+    }
+
     func testSpecificDisplayPickerIsHiddenUntilSpecificDisplayIsSelected() throws {
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
@@ -24,6 +39,44 @@ final class PreferencesWindowDisplaySelectionTests: XCTestCase {
 
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.bodyCoveredDisplay")))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.configuredDisplayIndex")))
+    }
+
+    func testBodyDisplaySummaryExplainsSingleDisplayCoverageAndBlankContentTargets() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        var settings = RestSettings.defaults
+        settings.bodyBreak.enforcement.coversAllDisplays = false
+        settings.bodyBreak.enforcement.coveredDisplay = .cursor
+        settings.bodyBreak.enforcement.contentDisplay = .primary
+        settings.bodyBreak.enforcement.blankSecondaryDisplays = true
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let summary = try XCTUnwrap(view(withIdentifier: "prefs.bodyDisplaySummaryLabel", in: contentView) as? NSTextField)
+
+        XCTAssertEqual(
+            summary.stringValue,
+            "\(L10n.format("prefs.bodyDisplaySummary.coverOne", L10n.tr("prefs.display.cursor"))) " +
+                L10n.format("prefs.bodyDisplaySummary.contentTargetBlank", L10n.tr("prefs.display.primary"))
+        )
+    }
+
+    func testBodyDisplaySummaryUpdatesWhenContentDisplayChanges() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let popup = try XCTUnwrap(view(withIdentifier: "prefs.bodyContentDisplay", in: contentView) as? NSPopUpButton)
+        let summary = try XCTUnwrap(view(withIdentifier: "prefs.bodyDisplaySummaryLabel", in: contentView) as? NSTextField)
+
+        selectPopup(popup, representedObject: DisplaySelection.none.rawValue)
+
+        XCTAssertTrue(sendAction(from: popup))
+        XCTAssertEqual(
+            summary.stringValue,
+            "\(L10n.tr("prefs.bodyDisplaySummary.coverAll")) \(L10n.tr("prefs.bodyDisplaySummary.contentNone"))"
+        )
     }
 
     func testCoveredDisplaySpecificChoiceStaysHiddenWhileCoveringAllDisplays() throws {
@@ -90,6 +143,30 @@ final class PreferencesWindowDisplaySelectionTests: XCTestCase {
             }
         }
         return nil
+    }
+
+    private func view(withIdentifier identifier: String, in view: NSView) -> NSView? {
+        if view.identifier?.rawValue == identifier {
+            return view
+        }
+        for subview in view.subviews {
+            if let found = self.view(withIdentifier: identifier, in: subview) {
+                return found
+            }
+        }
+        return nil
+    }
+
+    private func selectPopup(_ popup: NSPopUpButton, representedObject: String) {
+        for index in 0..<popup.numberOfItems where popup.item(at: index)?.representedObject as? String == representedObject {
+            popup.selectItem(at: index)
+            return
+        }
+    }
+
+    private func sendAction(from control: NSControl) -> Bool {
+        guard let action = control.action else { return false }
+        return NSApplication.shared.sendAction(action, to: control.target, from: control)
     }
 
     private func waitUntilSavedSettingsArrive(_ settings: SavedSettingsBox) {
