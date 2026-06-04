@@ -20,7 +20,11 @@ final class DebugWindowTests: XCTestCase {
         XCTAssertNotNil(contentView.descendant(withIdentifier: "debug.headerIcon"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "debug.heading"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "debug.subtitle"))
+        XCTAssertNotNil(contentView.descendant(withIdentifier: "debug.safetyPanel"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "debug.textScroll"))
+
+        XCTAssertEqual(contentView.label(withIdentifier: "debug.safetyTitle")?.stringValue, L10n.tr("debug.summaryReadyTitle"))
+        XCTAssertEqual(contentView.label(withIdentifier: "debug.safetyBody")?.stringValue, L10n.tr("debug.summaryReadyBody"))
 
         let textView = try XCTUnwrap(contentView.debugTextView())
         XCTAssertEqual(textView.string, "state=initial")
@@ -30,7 +34,16 @@ final class DebugWindowTests: XCTestCase {
     }
 
     func testDebugActionsUseIconsAndLocalWindowState() throws {
-        let controller = DebugWindowController(debugInfoProvider: { "state=refreshed" })
+        var summary = DebugSafetySummary(
+            title: "Initial safety state",
+            body: "Initial recovery guidance",
+            symbolName: "checkmark.shield",
+            severity: .ready
+        )
+        let controller = DebugWindowController(
+            debugInfoProvider: { "state=refreshed" },
+            safetySummaryProvider: { summary }
+        )
         controller.update(
             text: "state=initial",
             logURL: URL(fileURLWithPath: "/tmp/shouldrest.log"),
@@ -50,8 +63,16 @@ final class DebugWindowTests: XCTestCase {
         XCTAssertEqual(NSPasteboard.general.string(forType: .string), "state=initial")
         XCTAssertEqual(contentView.label(withIdentifier: "debug.status")?.stringValue, L10n.tr("debug.copied"))
 
+        summary = DebugSafetySummary(
+            title: "Updated safety state",
+            body: "Updated recovery guidance",
+            symbolName: "exclamationmark.shield",
+            severity: .active
+        )
         buttons.refresh.sendAction(buttons.refresh.action, to: buttons.refresh.target)
         XCTAssertEqual(contentView.debugTextView()?.string, "state=refreshed")
+        XCTAssertEqual(contentView.label(withIdentifier: "debug.safetyTitle")?.stringValue, "Updated safety state")
+        XCTAssertEqual(contentView.label(withIdentifier: "debug.safetyBody")?.stringValue, "Updated recovery guidance")
         XCTAssertEqual(contentView.label(withIdentifier: "debug.status")?.stringValue, L10n.tr("debug.updated"))
     }
 

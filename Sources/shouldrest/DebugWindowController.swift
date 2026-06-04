@@ -1,10 +1,37 @@
 import AppKit
 import Foundation
 
+enum DebugSafetySeverity {
+    case ready
+    case active
+    case warning
+}
+
+struct DebugSafetySummary {
+    var title: String
+    var body: String
+    var symbolName: String
+    var severity: DebugSafetySeverity
+
+    static var ready: DebugSafetySummary {
+        DebugSafetySummary(
+            title: L10n.tr("debug.summaryReadyTitle"),
+            body: L10n.tr("debug.summaryReadyBody"),
+            symbolName: "checkmark.shield",
+            severity: .ready
+        )
+    }
+}
+
 @MainActor
 final class DebugWindowController: NSWindowController {
     private let debugInfoProvider: () -> String
+    private let safetySummaryProvider: () -> DebugSafetySummary
     private let textView = NSTextView()
+    private let safetyPanel = NSView()
+    private let safetyIcon = NSImageView()
+    private let safetyTitleLabel = NSTextField(labelWithString: "")
+    private let safetyBodyLabel = NSTextField(labelWithString: "")
     private let statusLabel = NSTextField(labelWithString: "")
     private let copyButton = NSButton()
     private let refreshButton = NSButton()
@@ -13,8 +40,12 @@ final class DebugWindowController: NSWindowController {
     private var logURL: URL?
     private var settingsURL: URL?
 
-    init(debugInfoProvider: @escaping () -> String = { "" }) {
+    init(
+        debugInfoProvider: @escaping () -> String = { "" },
+        safetySummaryProvider: @escaping () -> DebugSafetySummary = { .ready }
+    ) {
         self.debugInfoProvider = debugInfoProvider
+        self.safetySummaryProvider = safetySummaryProvider
 
         let window = NSWindow(
             contentRect: NSRect(x: 0, y: 0, width: 760, height: 560),
@@ -41,11 +72,13 @@ final class DebugWindowController: NSWindowController {
         textView.string = text
         self.logURL = logURL
         self.settingsURL = settingsURL
+        updateSafetySummary()
         updatePathButtons()
     }
 
     private func buildContent() -> NSView {
         configureTextView()
+        configureSafetySummary()
         configureButtons()
         configureStatusLabel()
 
@@ -69,9 +102,11 @@ final class DebugWindowController: NSWindowController {
         textScrollView.documentView = textView
 
         let header = headerView()
+        let safetySummary = safetySummaryView()
         let footer = footerView()
 
         root.addArrangedSubview(header)
+        root.addArrangedSubview(safetySummary)
         root.addArrangedSubview(textScrollView)
         root.addArrangedSubview(footer)
 
@@ -83,6 +118,7 @@ final class DebugWindowController: NSWindowController {
             textScrollView.widthAnchor.constraint(equalTo: root.widthAnchor, constant: -48),
             textScrollView.heightAnchor.constraint(greaterThanOrEqualToConstant: 280),
             header.widthAnchor.constraint(equalTo: textScrollView.widthAnchor),
+            safetySummary.widthAnchor.constraint(equalTo: textScrollView.widthAnchor),
             footer.widthAnchor.constraint(equalTo: textScrollView.widthAnchor)
         ])
 
@@ -119,6 +155,30 @@ final class DebugWindowController: NSWindowController {
         header.alignment = .centerY
         header.spacing = 12
         return header
+    }
+
+    private func safetySummaryView() -> NSView {
+        let copyStack = NSStackView(views: [safetyTitleLabel, safetyBodyLabel])
+        copyStack.orientation = .vertical
+        copyStack.alignment = .leading
+        copyStack.spacing = 3
+        copyStack.translatesAutoresizingMaskIntoConstraints = false
+
+        let row = NSStackView(views: [safetyIcon, copyStack])
+        row.orientation = .horizontal
+        row.alignment = .centerY
+        row.spacing = 10
+        row.translatesAutoresizingMaskIntoConstraints = false
+        safetyPanel.addSubview(row)
+
+        NSLayoutConstraint.activate([
+            row.leadingAnchor.constraint(equalTo: safetyPanel.leadingAnchor, constant: 12),
+            row.trailingAnchor.constraint(equalTo: safetyPanel.trailingAnchor, constant: -12),
+            row.topAnchor.constraint(equalTo: safetyPanel.topAnchor, constant: 10),
+            row.bottomAnchor.constraint(equalTo: safetyPanel.bottomAnchor, constant: -10)
+        ])
+
+        return safetyPanel
     }
 
     private func footerView() -> NSView {
@@ -197,6 +257,32 @@ final class DebugWindowController: NSWindowController {
         )
     }
 
+    private func configureSafetySummary() {
+        safetyPanel.identifier = NSUserInterfaceItemIdentifier("debug.safetyPanel")
+        safetyPanel.wantsLayer = true
+        safetyPanel.layer?.cornerRadius = 8
+        safetyPanel.layer?.borderWidth = 1
+        safetyPanel.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.8).cgColor
+
+        safetyIcon.identifier = NSUserInterfaceItemIdentifier("debug.safetyIcon")
+        safetyIcon.symbolConfiguration = .init(pointSize: 17, weight: .semibold)
+        safetyIcon.imageScaling = .scaleProportionallyUpOrDown
+        safetyIcon.widthAnchor.constraint(equalToConstant: 24).isActive = true
+        safetyIcon.heightAnchor.constraint(equalToConstant: 24).isActive = true
+
+        safetyTitleLabel.identifier = NSUserInterfaceItemIdentifier("debug.safetyTitle")
+        safetyTitleLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+
+        safetyBodyLabel.identifier = NSUserInterfaceItemIdentifier("debug.safetyBody")
+        safetyBodyLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        safetyBodyLabel.textColor = .secondaryLabelColor
+        safetyBodyLabel.lineBreakMode = .byWordWrapping
+        safetyBodyLabel.maximumNumberOfLines = 2
+        safetyBodyLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+
+        updateSafetySummary()
+    }
+
     private func configureButton(
         _ button: NSButton,
         identifier: String,
@@ -229,6 +315,26 @@ final class DebugWindowController: NSWindowController {
         openSettingsButton.isEnabled = settingsURL != nil
         openLogButton.toolTip = logURL == nil ? L10n.tr("debug.pathHidden") : L10n.tr("debug.openLogHelp")
         openSettingsButton.toolTip = settingsURL == nil ? L10n.tr("debug.pathHidden") : L10n.tr("debug.openSettingsHelp")
+    }
+
+    private func updateSafetySummary() {
+        let summary = safetySummaryProvider()
+        safetyTitleLabel.stringValue = summary.title
+        safetyBodyLabel.stringValue = summary.body
+        safetyIcon.image = symbolImage(summary.symbolName)
+
+        let tint: NSColor
+        switch summary.severity {
+        case .ready:
+            tint = .controlAccentColor
+        case .active:
+            tint = .systemRed
+        case .warning:
+            tint = .systemOrange
+        }
+        safetyIcon.contentTintColor = tint
+        safetyPanel.layer?.backgroundColor = tint.withAlphaComponent(0.08).cgColor
+        safetyPanel.layer?.borderColor = tint.withAlphaComponent(0.26).cgColor
     }
 
     @objc private func copyPressed() {
