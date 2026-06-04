@@ -103,12 +103,29 @@ final class RestOverlayViewCountdownTests: XCTestCase {
         let title = try XCTUnwrap(view.descendant(withIdentifier: "overlay.title.label") as? NSTextField)
         let detail = try XCTUnwrap(view.descendant(withIdentifier: "overlay.detail.label") as? NSTextField)
         let countdown = try XCTUnwrap(view.descendant(withIdentifier: "overlay.countdown.label") as? NSTextField)
-        XCTAssertEqual(title.stringValue, "Eye Gate complete")
+        XCTAssertEqual(title.stringValue, "Eye Gate Complete")
         XCTAssertEqual(detail.stringValue, "Finish when you are ready to look back at the screen.")
         XCTAssertEqual(countdown.stringValue, "Ready")
         assertOverlayLabelHelp(title)
         assertOverlayLabelHelp(detail)
         assertOverlayLabelHelp(countdown)
+    }
+
+    func testBodyBreakOverlayFallbackCopyReadsAsCompleteSentences() throws {
+        L10n.languageOverride = "en"
+        defer { L10n.languageOverride = nil }
+
+        var settings = RestSettings.defaults
+        settings.contentLibrary.useBuiltInIdeas = false
+        settings.contentLibrary.customBodyBreakIdeas = []
+        let view = configuredBodyOverlay(remainingSeconds: 300, settings: settings)
+
+        let title = try XCTUnwrap(view.descendant(withIdentifier: "overlay.title.label") as? NSTextField)
+        let detail = try XCTUnwrap(view.descendant(withIdentifier: "overlay.detail.label") as? NSTextField)
+        XCTAssertEqual(title.stringValue, "Body Break")
+        XCTAssertEqual(detail.stringValue, "Stand up, breathe, and move.")
+        assertOverlayLabelHelp(title)
+        assertOverlayLabelHelp(detail)
     }
 
     func testManualAwaitingBodyBreakOverlayUsesKindSpecificCompletionCopy() throws {

@@ -122,10 +122,10 @@
 "overlay.eyeTitle" = "Look far away";
 "overlay.eyeBody" = "Relax your focus. Blink slowly and keep your eyes off the screen until the timer ends.";
 "overlay.bodyTitle" = "Body Break";
-"overlay.bodyBody" = "Stand up, breathe, and move";
-"overlay.eyeCompleteTitle" = "Eye Gate complete";
+"overlay.bodyBody" = "Stand up, breathe, and move.";
+"overlay.eyeCompleteTitle" = "Eye Gate Complete";
 "overlay.eyeCompleteBody" = "Finish when you are ready to look back at the screen.";
-"overlay.bodyCompleteTitle" = "Body Break complete";
+"overlay.bodyCompleteTitle" = "Body Break Complete";
 "overlay.bodyCompleteBody" = "Finish when you are ready to return to work.";
 "overlay.ready" = "Ready";
 "overlay.emergencyOverride" = "Emergency Exit · Esc";

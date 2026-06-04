@@ -122,7 +122,7 @@
 "overlay.eyeTitle" = "看向远处";
 "overlay.eyeBody" = "放松对焦，慢慢眨眼，计时结束前不要看屏幕。";
 "overlay.bodyTitle" = "活动休息";
-"overlay.bodyBody" = "站起来，呼吸，活动一下";
+"overlay.bodyBody" = "站起来，呼吸，活动一下。";
 "overlay.eyeCompleteTitle" = "护眼休息已完成";
 "overlay.eyeCompleteBody" = "准备好重新看屏幕后再完成。";
 "overlay.bodyCompleteTitle" = "活动休息已完成";

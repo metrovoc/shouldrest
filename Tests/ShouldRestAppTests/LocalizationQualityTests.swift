@@ -21,6 +21,9 @@ final class LocalizationQualityTests: XCTestCase {
         defer { L10n.languageOverride = nil }
 
         XCTAssertEqual(L10n.tr("overlay.ready"), "Ready")
+        XCTAssertEqual(L10n.tr("overlay.eyeCompleteTitle"), "Eye Gate Complete")
+        XCTAssertEqual(L10n.tr("overlay.bodyCompleteTitle"), "Body Break Complete")
+        XCTAssertEqual(L10n.tr("overlay.bodyBody"), "Stand up, breathe, and move.")
     }
 
     func testSimplifiedChineseVisibleValuesAvoidUntranslatedCoreTerms() throws {
