@@ -451,14 +451,14 @@
 "onboarding.preferencesHelp" = "Apply the selected rhythm and open Preferences to customize it before continuing.";
 "onboarding.useSelectedWithPreset" = "Start With %@";
 "about.title" = "About ShouldRest";
-"about.body" = "ShouldRest %@\n\nShouldRest is a Mac-first rest reminder built around short, frequent, hard-to-ignore Eye Gates and configurable Body Breaks.\n\nIt keeps Stretchly-compatible scheduling, automation, update, diagnostics, and preference capabilities where they support the product goal, while intentionally replacing weak 20-second skip/postpone behavior with stricter eye-rest enforcement.";
+"about.body" = "ShouldRest %@\n\nShouldRest is a Mac-first rest reminder built around short, frequent, hard-to-ignore Eye Gates and configurable Body Breaks.\n\nIt keeps scheduling, automation, updates, diagnostics, and preferences available where they support the product goal, while replacing easy-to-dismiss 20-second rests with stricter eye-rest enforcement.";
 "about.version" = "Version %@";
 "about.tagline" = "Mac-first rest reminders built around strict eye rests and configurable movement breaks.";
 "about.eyeGateTitle" = "Short, frequent Eye Gates";
 "about.eyeGateBody" = "Opaque screen coverage keeps 20-second eye rests hard to ignore.";
 "about.bodyBreakTitle" = "Configurable Body Breaks";
 "about.bodyBreakBody" = "Longer breaks keep postpones, display rules, images, and wait until you finish.";
-"about.compatibilityTitle" = "Stretchly-compatible where it helps";
+"about.compatibilityTitle" = "Full-featured controls";
 "about.compatibilityBody" = "Scheduling, automation, updates, diagnostics, and preferences stay available.";
 "about.ok" = "OK";
 "about.debug" = "Diagnostics";

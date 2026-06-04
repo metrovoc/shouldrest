@@ -42,6 +42,7 @@ final class AboutWindowTests: XCTestCase {
         XCTAssertTrue(texts.contains(L10n.tr("about.bodyBreakTitle")))
         XCTAssertTrue(texts.contains(L10n.tr("about.compatibilityTitle")))
         XCTAssertFalse(texts.joined(separator: "\n").contains("debug, and preference"))
+        XCTAssertFalse(texts.joined(separator: "\n").contains("Stretchly"))
     }
 
     func testAboutButtonsUseIconsAndInvokeActions() throws {
