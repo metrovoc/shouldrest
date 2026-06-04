@@ -368,6 +368,9 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let saveStatusLabel = NSTextField(labelWithString: "")
     private let scheduleSummaryIcon = NSImageView()
     private let scheduleSummaryLabel = NSTextField(labelWithString: "")
+    private let rhythmPresetRecommendedButton = NSButton()
+    private let rhythmPresetFrequentEyeButton = NSButton()
+    private let rhythmPresetMovementButton = NSButton()
     private let soundPlayer = SoundPlayer()
     private var isLoadingSettings = false
     private var hasPendingTextEditing = false
@@ -601,6 +604,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         configureAppExclusionRunningAppButton()
         configureAppExclusionAddRuleButton()
         configureAppExclusionRulesList()
+        configureRhythmPresetButtons()
         configureCustomBodyAddIdeaButton()
         configureCustomBodyIdeasList()
         configureSoundPreviewButtons()
@@ -639,6 +643,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             identifier: "prefs.section.eyeGate"
         ))
         scheduleStack.addArrangedSubview(scheduleSummaryView())
+        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.rhythmPresets"), rhythmPresetRow()))
         eyeEnabled.identifier = NSUserInterfaceItemIdentifier("prefs.eyeEnabled")
         scheduleStack.addArrangedSubview(eyeEnabled)
         let eyeIntervalRow = numberRow(
@@ -1144,6 +1149,19 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         return stack
     }
 
+    private func rhythmPresetRow() -> NSStackView {
+        let stack = NSStackView(views: [
+            rhythmPresetRecommendedButton,
+            rhythmPresetFrequentEyeButton,
+            rhythmPresetMovementButton
+        ])
+        stack.identifier = NSUserInterfaceItemIdentifier("prefs.rhythmPresetRow")
+        stack.orientation = .horizontal
+        stack.spacing = 8
+        stack.alignment = .centerY
+        return stack
+    }
+
     private func addTab(to tabView: NSTabView, title: String, icon: PreferencesTabIcon, stack: NSStackView) {
         let item = NSTabViewItem(identifier: title)
         item.label = title
@@ -1291,6 +1309,47 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         soundPreviewStatusLabel.font = .systemFont(ofSize: 12)
         soundPreviewStatusLabel.isHidden = true
         soundPreviewStatusLabel.widthAnchor.constraint(equalToConstant: 620).isActive = true
+    }
+
+    private func configureRhythmPresetButtons() {
+        configureRhythmPresetButton(
+            rhythmPresetRecommendedButton,
+            identifier: "recommended",
+            title: L10n.tr("prefs.rhythmPreset.recommended"),
+            symbolName: "timer",
+            toolTip: L10n.tr("prefs.rhythmPreset.recommendedHelp")
+        )
+        configureRhythmPresetButton(
+            rhythmPresetFrequentEyeButton,
+            identifier: "frequentEye",
+            title: L10n.tr("prefs.rhythmPreset.frequentEye"),
+            symbolName: "eye",
+            toolTip: L10n.tr("prefs.rhythmPreset.frequentEyeHelp")
+        )
+        configureRhythmPresetButton(
+            rhythmPresetMovementButton,
+            identifier: "movement",
+            title: L10n.tr("prefs.rhythmPreset.movement"),
+            symbolName: "figure.walk",
+            toolTip: L10n.tr("prefs.rhythmPreset.movementHelp")
+        )
+    }
+
+    private func configureRhythmPresetButton(
+        _ button: NSButton,
+        identifier: String,
+        title: String,
+        symbolName: String,
+        toolTip: String
+    ) {
+        button.identifier = NSUserInterfaceItemIdentifier("prefs.rhythmPreset.\(identifier)")
+        button.title = title
+        button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
+        button.imagePosition = .imageLeading
+        button.bezelStyle = .rounded
+        button.toolTip = toolTip
+        button.target = self
+        button.action = #selector(rhythmPresetPressed(_:))
     }
 
     private func configureSaveStatusControls() {
@@ -2312,6 +2371,53 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             updateAppExclusionAddRuleButtonState()
             return
         }
+        scheduleAutosave()
+    }
+
+    @objc private func rhythmPresetPressed(_ sender: NSButton) {
+        if sender === rhythmPresetFrequentEyeButton {
+            applyRhythmPreset(
+                eyeIntervalMinutes: 10,
+                eyeDurationSeconds: 20,
+                bodyIntervalMinutes: 20,
+                bodyAfterEyeGateCount: 4,
+                bodyDurationMinutes: 5
+            )
+        } else if sender === rhythmPresetMovementButton {
+            applyRhythmPreset(
+                eyeIntervalMinutes: 20,
+                eyeDurationSeconds: 20,
+                bodyIntervalMinutes: 20,
+                bodyAfterEyeGateCount: 2,
+                bodyDurationMinutes: 8
+            )
+        } else {
+            applyRhythmPreset(
+                eyeIntervalMinutes: 20,
+                eyeDurationSeconds: 20,
+                bodyIntervalMinutes: 20,
+                bodyAfterEyeGateCount: 2,
+                bodyDurationMinutes: 5
+            )
+        }
+    }
+
+    private func applyRhythmPreset(
+        eyeIntervalMinutes: Int,
+        eyeDurationSeconds: Int,
+        bodyIntervalMinutes: Int,
+        bodyAfterEyeGateCount: Int,
+        bodyDurationMinutes: Int
+    ) {
+        eyeEnabled.state = .on
+        bodyEnabled.state = .on
+        eyeInterval.stringValue = String(eyeIntervalMinutes)
+        eyeDuration.stringValue = String(eyeDurationSeconds)
+        bodyInterval.stringValue = String(bodyIntervalMinutes)
+        bodyAfterEyeGates.stringValue = String(bodyAfterEyeGateCount)
+        bodyDuration.stringValue = String(bodyDurationMinutes)
+        syncNumberControlsFromFields()
+        updateDependentControlEnablement()
         scheduleAutosave()
     }
 

@@ -23,6 +23,58 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         )
     }
 
+    func testScheduleRhythmPresetsExposeIconButtonsWithHelp() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectScheduleTab(in: contentView)
+
+        let row = try XCTUnwrap(view(withIdentifier: "prefs.rhythmPresetRow", in: contentView) as? NSStackView)
+        let recommended = try XCTUnwrap(view(withIdentifier: "prefs.rhythmPreset.recommended", in: contentView) as? NSButton)
+        let frequentEye = try XCTUnwrap(view(withIdentifier: "prefs.rhythmPreset.frequentEye", in: contentView) as? NSButton)
+        let movement = try XCTUnwrap(view(withIdentifier: "prefs.rhythmPreset.movement", in: contentView) as? NSButton)
+
+        XCTAssertFalse(row.isHidden)
+        XCTAssertEqual(recommended.title, L10n.tr("prefs.rhythmPreset.recommended"))
+        XCTAssertEqual(frequentEye.title, L10n.tr("prefs.rhythmPreset.frequentEye"))
+        XCTAssertEqual(movement.title, L10n.tr("prefs.rhythmPreset.movement"))
+        [recommended, frequentEye, movement].forEach { button in
+            XCTAssertNotNil(button.image)
+            XCTAssertEqual(button.imagePosition, .imageLeading)
+            XCTAssertFalse(button.toolTip?.isEmpty ?? true)
+        }
+    }
+
+    func testFrequentEyeRhythmPresetUpdatesFieldsSlidersSummaryAndAutosaves() throws {
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectScheduleTab(in: contentView)
+        let preset = try XCTUnwrap(view(withIdentifier: "prefs.rhythmPreset.frequentEye", in: contentView) as? NSButton)
+        let eyeInterval = try XCTUnwrap(view(withIdentifier: "eyeIntervalField", in: contentView) as? NSTextField)
+        let eyeIntervalSlider = try XCTUnwrap(view(withIdentifier: "eyeIntervalSlider", in: contentView) as? NSSlider)
+        let bodyAfterEyeGates = try XCTUnwrap(view(withIdentifier: "bodyAfterEyeGatesField", in: contentView) as? NSTextField)
+        let summary = try XCTUnwrap(view(withIdentifier: "prefs.scheduleSummaryLabel", in: contentView) as? NSTextField)
+
+        XCTAssertTrue(sendAction(from: preset))
+
+        XCTAssertEqual(eyeInterval.stringValue, "10")
+        XCTAssertEqual(eyeIntervalSlider.doubleValue, 10)
+        XCTAssertEqual(bodyAfterEyeGates.stringValue, "4")
+        XCTAssertEqual(
+            summary.stringValue,
+            L10n.format("prefs.scheduleSummary.eyeAndBody", 10, 20, 4, 5)
+        )
+        waitUntilSavedSettingsArrive(savedSettings)
+        XCTAssertEqual(savedSettings.value?.eyeGate.isEnabled, true)
+        XCTAssertEqual(savedSettings.value?.bodyBreak.isEnabled, true)
+        XCTAssertEqual(savedSettings.value?.eyeGate.interval, 10 * 60)
+        XCTAssertEqual(savedSettings.value?.eyeGate.duration, 20)
+        XCTAssertEqual(savedSettings.value?.bodyBreakAfterEyeGates, 4)
+        XCTAssertEqual(savedSettings.value?.bodyBreak.duration, 5 * 60)
+    }
+
     func testScheduleSummaryUpdatesWhenCoreSliderChangesAndAutosaves() throws {
         let savedSettings = SavedSettingsBox()
         let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }

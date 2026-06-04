@@ -123,6 +123,13 @@
 "prefs.scheduleSummary.eyeOnly" = "护眼休息每 %d 分钟覆盖 %d 秒；活动休息已关闭。";
 "prefs.scheduleSummary.bodyOnly" = "护眼休息已关闭；活动休息每 %d 分钟覆盖 %d 分钟。";
 "prefs.scheduleSummary.none" = "至少需要保留一种休息类型。";
+"prefs.rhythmPresets" = "节奏预设";
+"prefs.rhythmPreset.recommended" = "推荐";
+"prefs.rhythmPreset.recommendedHelp" = "护眼休息每 20 分钟覆盖 20 秒，活动休息每 2 次护眼后覆盖 5 分钟。";
+"prefs.rhythmPreset.frequentEye" = "高频护眼";
+"prefs.rhythmPreset.frequentEyeHelp" = "护眼休息每 10 分钟覆盖 20 秒，活动休息每 4 次护眼后覆盖 5 分钟。";
+"prefs.rhythmPreset.movement" = "更多活动";
+"prefs.rhythmPreset.movementHelp" = "护眼休息每 20 分钟覆盖 20 秒，活动休息每 2 次护眼后覆盖更长的 8 分钟。";
 "prefs.everyMinutes" = "每隔";
 "prefs.durationSeconds" = "覆盖屏幕";
 "prefs.overlayColor" = "覆盖层颜色";
