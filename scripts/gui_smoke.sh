@@ -126,10 +126,10 @@ fi
 SHOULDREST_SUPPORT_DIR="$support_dir" "$executable" debug-panel >> "$support_dir/stdout.log" 2>> "$support_dir/stderr.log" &
 automation_pid="$!"
 
-debug_seen=0
+diagnostics_seen=0
 for ((attempt = 1; attempt <= attempts; attempt++)); do
   if ! kill -0 "$pid" 2>/dev/null; then
-    echo "ShouldRest exited before the debug panel appeared." >&2
+    echo "ShouldRest exited before the diagnostics window appeared." >&2
     cat "$support_dir/stdout.log" >&2 || true
     cat "$support_dir/stderr.log" >&2 || true
     exit 1
@@ -138,18 +138,18 @@ for ((attempt = 1; attempt <= attempts; attempt++)); do
   windows="$(swift scripts/list_windows.swift || true)"
   if grep -Eq 'name=(ShouldRest Diagnostics|ShouldRest 诊断)' <<< "$windows"; then
     if ! grep -Eq "Handled (automation|launch automation) command debugPanel" "$support_dir/logs/shouldrest.log" 2>/dev/null; then
-      echo "Diagnostics window appeared, but smoke log did not confirm debug-panel automation." >&2
+      echo "Diagnostics window appeared, but smoke log did not confirm diagnostics automation." >&2
       cat "$support_dir/logs/shouldrest.log" >&2 || true
       exit 1
     fi
-    debug_seen=1
+    diagnostics_seen=1
     break
   fi
 
   sleep 0.5
 done
 
-if [[ "$debug_seen" != "1" ]]; then
+if [[ "$diagnostics_seen" != "1" ]]; then
   echo "Timed out waiting for diagnostics window." >&2
   echo "Observed ShouldRest windows:" >&2
   swift scripts/list_windows.swift >&2 || true

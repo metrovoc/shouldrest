@@ -89,7 +89,7 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 - Local JSON settings.
 - Restore defaults.
 - First-run onboarding plus an option to show the welcome window on the next launch.
-- About/learn-more surface with app version, product positioning, and a debug-info path.
+- About/learn-more surface with app version, product positioning, and a diagnostics path.
 - Version/update checks with disable switch.
-- Debug panel or command with settings path, log path, support path, Body Break image paths, runtime state, and timer state.
+- Diagnostics window or command with settings path, log path, support path, Body Break image paths, runtime state, and timer state.
 - Corporate/admin controls: hide update UI, hide strict preferences, hide settings/log/support/image paths, custom preferences message.

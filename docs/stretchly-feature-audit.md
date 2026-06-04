@@ -33,7 +33,7 @@ The window layer uses Electron `BrowserWindow`. In non-regular mode it creates b
 
 The context layer monitors natural idle time, DND/Focus, and process-based app exclusions. Those context states can clear or reset the break scheduler.
 
-The product surface includes tray menu controls, global shortcuts, CLI commands, notifications, sounds, break ideas, custom ideas, language support, update checks, local settings, debug/preferences info, contributor preferences, and sync preferences.
+The product surface includes tray menu controls, global shortcuts, CLI commands, notifications, sounds, break ideas, custom ideas, language support, update checks, local settings, diagnostics/preferences info, contributor preferences, and sync preferences.
 
 ## Explicitly Not Copied
 
@@ -154,11 +154,11 @@ It is intended to catch gaps that are easy to miss when a behavior is exposed on
 | `showTrayMenuInStrictMode` | Explicit divergence: Eye Gate does not expose ordinary tray/menu actions while active. |
 | `customPreferencesMessage` | Implemented as an admin preferences message. |
 | `disableAppUpdateFeatures` | Implemented as an admin switch that hides update UI and suppresses update checks. |
-| `hidePreferencesFileLocation` | Strengthened: admin path hiding removes settings, log, support, and Body Break image paths from debug and CLI path output. |
+| `hidePreferencesFileLocation` | Strengthened: admin path hiding removes settings, log, support, and Body Break image paths from diagnostics and CLI path output. |
 | `hideStrictModePreferences` | Implemented for strict/override-related preference rows. |
 | `miniBreakManualFinish` | Implemented as optional completed Eye Gate manual-finish phase, without enabling early skip/postpone. |
 | `longBreakManualFinish` | Implemented as Body Break manual-finish phase. |
-| `breakHealthMode` | Implemented and visible in menu/debug surfaces. |
+| `breakHealthMode` | Implemented and visible in menu/diagnostics surfaces. |
 | `openAtLogin` | Implemented through macOS ServiceManagement when bundled. |
 | `_migratedOpenAtLogin` | Not a product capability; Stretchly migration sentinel only. |
 
@@ -218,7 +218,7 @@ ShouldRest must implement or exceed these Stretchly capabilities except where ex
 - Global shortcuts.
 - Stretchly default `CmdOrCtrl+X` active-rest finish shortcut semantics, registered only while a compatible rest is active.
 - CLI or URL-style automation.
-- Debug/status command.
+- Diagnostics/status command.
 
 ### Presentation And Content
 
@@ -235,10 +235,10 @@ ShouldRest must implement or exceed these Stretchly capabilities except where ex
 - Local JSON settings.
 - Restore defaults.
 - First-run onboarding plus an option to show the welcome window on the next launch.
-- About/learn-more surface with app version, product positioning, and a debug-info path.
+- About/learn-more surface with app version, product positioning, and a diagnostics path.
 - Open at login.
 - Update checks with disable switch.
-- Debug info: settings path, logs path, support path, Body Break image paths, runtime state, timer state.
+- Diagnostics info: settings path, logs path, support path, Body Break image paths, runtime state, timer state.
 - Admin controls for update UI, strict preferences, settings/log/support/image paths, and custom preferences message.
 
 ## Current Implementation Checkpoint
@@ -261,10 +261,10 @@ Implemented now:
 - NSWorkspace running-app matching for exclusions.
 - UserNotifications-based pre-break notifications.
 - Start/finish sound playback.
-- Copyable debug snapshot from the menu and CLI/URL automation.
+- Copyable diagnostics snapshot from the menu and CLI/URL automation.
 - Native preferences window for core cadence, enablement, Focus policy, and tray style.
 - Expanded preferences for notification lead times, overlay colors, sounds, Body Break interval/postpone/skip policy, natural break settings, working hours, primary app exclusion, custom Body Break idea, shortcuts, update settings, and admin controls.
-- CLI command surface for help, version, settings/log paths, pause/resume/reset, take-now, preferences, and debug requests; the settings-path command respects admin path hiding.
+- CLI command surface for help, version, settings/log paths, pause/resume/reset, take-now, preferences, and diagnostics requests; the settings-path command respects admin path hiding.
 - Stretchly-compatible `toggle`, `mini`, and `long` command aliases, delayed take-now automation, and `body`/`long` one-shot Body Break title, text, wait, and noskip options.
 - App-level CLI/URL parser tests for Stretchly-style durations, `mini`/`long` aliases, wait, noskip, pause URLs, and invalid URL rejection.
 - Distributed notification bridge for CLI-to-running-app automation.
@@ -275,7 +275,7 @@ Implemented now:
 - Open-at-login setting and ServiceManagement integration when running as a bundled app.
 - Sleep, wake, lock, and unlock correction hooks.
 - Stretchly-compatible `pauseForSuspendOrLock` preference: enabled by default, with an opt-out path that preserves schedule state and lets natural rest credit absorb sleep/lock idle time.
-- Debug panel with runtime state, timer state, settings/log/support paths, and Body Break image paths; admin path hiding removes all of those filesystem paths from copied/panel debug output and CLI path commands.
+- Diagnostics window with runtime state, timer state, settings/log/support paths, and Body Break image paths; admin path hiding removes all of those filesystem paths from copied/window diagnostics output and CLI path commands.
 - Global shortcut registration for pause, pause durations, take-now, Body Break skip-to-next, and reset.
 - Global shortcut parser tests cover Stretchly-style `CmdOrCtrl+X`, modifier aliases, whitespace/case normalization, and invalid shortcut rejection.
 - Stretchly-style active rest finish shortcut: default `CmdOrCtrl+X`, registered only while a rest is active. For Body Break, after the required duration it finishes, during the postpone window it postpones, and otherwise it uses the Body Break skip policy. For Eye Gate, it can only finish an already-completed manual-finish phase and never acts as early skip/postpone.
@@ -286,7 +286,7 @@ Implemented now:
 - Configurable active working-hours windows, including overnight windows.
 - Update feed checks with manual menu action, launch-time and 48-hour repeat checks, admin disable switch that hides normal update controls, automatic update notifications that open the release page when clicked, and explicit manual-check feedback even when automatic update notifications are disabled.
 - Update checker tests cover version comparison, GitHub-style release JSON, `version` fallback responses, unconfigured feeds, HTTP failures, and malformed responses without using the network.
-- SwiftPM localization resource bundle with English and Simplified Chinese strings for core menu, notification, status, debug, preferences, and overlay surfaces.
+- SwiftPM localization resource bundle with English and Simplified Chinese strings for core menu, notification, status, diagnostics, preferences, and overlay surfaces.
 - Localization key coverage script verifies bundled non-English `.strings` files have the same key set as English before local release verification can pass.
 - Preference-level language selector for System language, English, and Simplified Chinese; unknown legacy locale identifiers fall back to System language instead of persisting an invalid override.
 - Safe local image Body Break content path support and overlay renderer.
@@ -294,12 +294,12 @@ Implemented now:
 - Advanced app-exclusion JSON editor for multi-rule configurations, plus primary-rule form controls for common cases.
 - Localized preference labels and CLI help in the SwiftPM resource bundle.
 - First-run onboarding window that lets users accept the scientific defaults or open preferences, plus an Operations preference to show the welcome window on the next launch.
-- Stretchly-style Welcome/About surface: first-run onboarding includes a learn-more action, and the menu exposes an About panel with version, product design notes, and a direct path into debug info.
+- Stretchly-style Welcome/About surface: first-run onboarding includes a learn-more action, and the menu exposes an About panel with version, product design notes, and a direct path into diagnostics.
 - Restore Defaults asks for confirmation, then uses product defaults without reopening first-run onboarding, matching Stretchly's restore behavior.
 - Packaged-app GUI smoke check using CoreGraphics window enumeration; verified `Welcome to ShouldRest` appears on-screen in `dist/ShouldRest.app`.
 - Automated packaged-app GUI smoke script runs the app against a temporary support directory and verifies first-run onboarding plus Preferences automation through both window enumeration and smoke-run logs.
 - Unified local release verification script covers Stretchly settings-key and command coverage, localization key coverage, whitespace checks, tests, app metadata/resources, strict codesign, first-run/Preferences GUI smoke, ad-hoc DMG creation, and DMG checksum verification.
-- Floating/all-spaces presentation for onboarding, preferences, and debug utility windows.
+- Floating/all-spaces presentation for onboarding, preferences, and diagnostics utility windows.
 - AppKit theme application for system/light/dark preferences, admin preferences message display, and optional current time during Body Break.
 - Stretchly-compatible menu bar visibility preference: visible by default, hideable for CLI/URL-managed setups.
 - Language override setting for bundled translations, while defaulting to the macOS system language. Current bundled translations are English and Simplified Chinese; additional languages are an expansion path, not a current claim.
@@ -321,7 +321,7 @@ Implemented now:
 - Stretchly-style sunrise pause-until-morning mode with configurable latitude/longitude, shared by menu/global-shortcut and CLI/URL automation, with fixed-hour fallback when sunrise cannot be calculated.
 - Silent-notifications policy honors Stretchly semantics across pre-break/update notifications and configured rest start/finish sounds.
 - Stretchly-style automatic resume notification is shown when a timed user pause or pause-until-morning expires; explicit manual resume paths stay quiet.
-- Break-health danger is visible in the menu status surface, not only in debug output.
+- Break-health danger is visible in the menu status surface, not only in diagnostics output.
 - Menu status uses localized rest-kind names and shows the Stretchly-style Body Break countdown in Eye Gate units when both rest kinds are enabled.
 - Menu bar tooltip mirrors the Stretchly tray tooltip structure: product header plus dynamic status lines.
 - Paused menu status includes recovery context: timed pauses show the remaining time until automatic resume, while indefinite pauses tell users to resume from the menu when ready.

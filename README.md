@@ -2,7 +2,7 @@
 
 ShouldRest is a Mac-first rest reminder built around short, frequent, hard-to-ignore Eye Gates and configurable Body Breaks.
 
-The product keeps Stretchly-compatible scheduling, automation, update, debug, and preference capabilities where they support real rest behavior. It intentionally diverges from weak 20-second skip/postpone flows by making Eye Gate opaque, full-screen, and strict by default.
+The product keeps Stretchly-compatible scheduling, automation, update, diagnostics, and preference capabilities where they support real rest behavior. It intentionally diverges from weak 20-second skip/postpone flows by making Eye Gate opaque, full-screen, and strict by default.
 
 ## Release Status
 

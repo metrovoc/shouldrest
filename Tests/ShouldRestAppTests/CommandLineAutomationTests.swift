@@ -1,8 +1,20 @@
+import Darwin
 import XCTest
 @testable import shouldrest
 
 @MainActor
 final class CommandLineAutomationTests: XCTestCase {
+    func testHelpDescribesDebugCommandsAsDiagnostics() {
+        let output = captureStandardOutput {
+            XCTAssertTrue(CommandLineAutomation.handle(arguments: ["shouldrest", "help"]))
+        }
+
+        XCTAssertTrue(output.contains("debug                        Copy diagnostics from the running app."))
+        XCTAssertTrue(output.contains("debug-panel                  Open the diagnostics window in the running app."))
+        XCTAssertFalse(output.localizedCaseInsensitiveContains("copy debug info"))
+        XCTAssertFalse(output.localizedCaseInsensitiveContains("debug panel"))
+    }
+
     func testEmergencyAutomationSignalWritesAndConsumesMarker() throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -154,5 +166,22 @@ final class CommandLineAutomationTests: XCTestCase {
         XCTAssertNil(CommandLineAutomation.request(from: try XCTUnwrap(URL(string: "stretchly://pause?duration=1h"))))
         XCTAssertNil(CommandLineAutomation.request(from: try XCTUnwrap(URL(string: "shouldrest://pause?duration=bad"))))
         XCTAssertNil(CommandLineAutomation.request(from: try XCTUnwrap(URL(string: "shouldrest://unknown"))))
+    }
+
+    private func captureStandardOutput(_ work: () -> Void) -> String {
+        let originalStdout = dup(STDOUT_FILENO)
+        let pipe = Pipe()
+
+        fflush(stdout)
+        dup2(pipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
+        work()
+
+        fflush(stdout)
+        dup2(originalStdout, STDOUT_FILENO)
+        close(originalStdout)
+        pipe.fileHandleForWriting.closeFile()
+
+        let data = pipe.fileHandleForReading.readDataToEndOfFile()
+        return String(decoding: data, as: UTF8.self)
     }
 }

@@ -1219,7 +1219,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     @objc private func copyDebugInfo() {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(debugInfo(), forType: .string)
-        logger.log("Debug info copied")
+        logger.log("Diagnostics copied")
     }
 
     @objc private func showSettingsFile() {
@@ -1253,7 +1253,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         debugWindowController?.window?.makeKeyAndOrderFront(nil)
         debugWindowController?.window?.orderFrontRegardless()
         NSApp.activate(ignoringOtherApps: true)
-        logger.log("Debug panel opened")
+        logger.log("Diagnostics window opened")
     }
 
     @objc private func showAboutPanel() {
