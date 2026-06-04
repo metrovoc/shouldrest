@@ -337,4 +337,23 @@ final class MenuStatusPresenterTests: XCTestCase {
         XCTAssertEqual(lines.first, "Eye Gate active, 15s remaining")
         XCTAssertEqual(lines[1], "Emergency Exit lives in the overlay: click it or press Esc twice.")
     }
+
+    func testActiveEyeGateStatusDoesNotAdvertiseEmergencyWhenDisabled() {
+        var settings = RestSettings.defaults
+        settings.eyeGate.emergencyOverride.isEnabled = false
+        let state = RestEngineState(activeSession: RestSession(
+            kind: .eyeGate,
+            startedAt: start,
+            scheduledAt: start,
+            duration: 20,
+            manualFinishEnabled: false
+        ))
+
+        let lines = MenuStatusPresenter.lines(state: state, settings: settings, now: start.addingTimeInterval(5))
+
+        XCTAssertEqual(lines.first, "Eye Gate active, 15s remaining")
+        XCTAssertEqual(lines[1], "Keep looking away until the timer ends.")
+        XCTAssertFalse(lines[1].contains("Esc"))
+        XCTAssertFalse(lines[1].localizedCaseInsensitiveContains("Emergency Exit"))
+    }
 }

@@ -208,6 +208,10 @@ enum StatusMenuPolicy {
     static func routesEmergencyExitThroughOverlay(state: RestEngineState) -> Bool {
         state.activeSession?.kind == .eyeGate
     }
+
+    static func showsOverlayOnlyNotice(state: RestEngineState, canEmergencyExit: Bool) -> Bool {
+        state.activeSession?.kind == .eyeGate && canEmergencyExit
+    }
 }
 
 enum StatusMenuActionIcon {
@@ -575,24 +579,13 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
 
         if let active = engine.state.activeSession, active.kind == .eyeGate {
-            var addedEyeGateAction = false
-            if Date().timeIntervalSince(active.startedAt) >= active.duration, active.manualFinishEnabled {
-                menu.addItem(actionItem(L10n.tr("menu.finishEyeGate"), #selector(finishActiveBreak)))
-                addedEyeGateAction = true
-            }
-            if canEmergencyOverrideEyeGate(active, now: now) {
-                if StatusMenuPolicy.routesEmergencyExitThroughOverlay(state: engine.state) {
-                    menu.addItem(disabledItem(
-                        L10n.tr("menu.emergencyOverlayOnly"),
-                        symbolName: "exclamationmark.triangle",
-                        toolTip: L10n.tr("menu.emergencyOverlayOnlyHelp")
-                    ))
-                } else {
-                    menu.addItem(actionItem(L10n.tr("menu.emergencyOverride"), #selector(emergencyOverrideEyeGate)))
-                }
-                addedEyeGateAction = true
-            }
-            if addedEyeGateAction {
+            let canEmergencyExit = canEmergencyOverrideEyeGate(active, now: now)
+            if StatusMenuPolicy.showsOverlayOnlyNotice(state: engine.state, canEmergencyExit: canEmergencyExit) {
+                menu.addItem(disabledItem(
+                    L10n.tr("menu.emergencyOverlayOnly"),
+                    symbolName: "info.circle",
+                    toolTip: L10n.tr("menu.emergencyOverlayOnlyHelp")
+                ))
                 menu.addItem(.separator())
             }
             if !showsOrdinaryControls {

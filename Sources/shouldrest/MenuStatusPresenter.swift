@@ -27,7 +27,7 @@ enum MenuStatusPresenter {
     static func lines(state: RestEngineState, settings: RestSettings, now: Date = Date()) -> [String] {
         var lines = [primaryStatusText(state: state, now: now)]
         if let active = state.activeSession {
-            lines.append(activeSecondaryStatusText(active, now: now))
+            lines.append(activeSecondaryStatusText(active, settings: settings, now: now))
             return lines
         }
         if let pause = state.pause {
@@ -154,11 +154,14 @@ enum MenuStatusPresenter {
         session.manualFinishEnabled && now.timeIntervalSince(session.startedAt) >= session.duration
     }
 
-    private static func activeSecondaryStatusText(_ session: RestSession, now: Date) -> String {
+    private static func activeSecondaryStatusText(_ session: RestSession, settings: RestSettings, now: Date) -> String {
         switch session.kind {
         case .eyeGate:
             if isManualFinishReady(session, now: now) {
                 return L10n.tr("status.eyeGateReadyGuidance")
+            }
+            guard settings.eyeGate.emergencyOverride.isEnabled else {
+                return L10n.tr("status.eyeGateActiveNoEmergencyGuidance")
             }
             return L10n.tr("status.eyeGateActiveGuidance")
         case .bodyBreak:

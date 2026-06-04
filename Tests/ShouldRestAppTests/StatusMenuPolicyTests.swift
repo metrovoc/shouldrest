@@ -11,6 +11,7 @@ final class StatusMenuPolicyTests: XCTestCase {
 
         XCTAssertFalse(StatusMenuPolicy.showsOrdinaryControls(state: state))
         XCTAssertTrue(StatusMenuPolicy.routesEmergencyExitThroughOverlay(state: state))
+        XCTAssertTrue(StatusMenuPolicy.showsOverlayOnlyNotice(state: state, canEmergencyExit: true))
     }
 
     func testEyeGateManualFinishPhaseStillSuppressesOrdinaryMenuControls() {
@@ -24,16 +25,22 @@ final class StatusMenuPolicyTests: XCTestCase {
 
         XCTAssertFalse(StatusMenuPolicy.showsOrdinaryControls(state: state))
         XCTAssertTrue(StatusMenuPolicy.routesEmergencyExitThroughOverlay(state: state))
+        XCTAssertFalse(StatusMenuPolicy.showsOverlayOnlyNotice(state: state, canEmergencyExit: false))
     }
 
     func testBodyBreakAndIdleStatesShowOrdinaryMenuControls() {
         XCTAssertTrue(StatusMenuPolicy.showsOrdinaryControls(state: RestEngineState()))
         XCTAssertFalse(StatusMenuPolicy.routesEmergencyExitThroughOverlay(state: RestEngineState()))
+        XCTAssertFalse(StatusMenuPolicy.showsOverlayOnlyNotice(state: RestEngineState(), canEmergencyExit: true))
         XCTAssertTrue(StatusMenuPolicy.showsOrdinaryControls(
             state: RestEngineState(activeSession: session(kind: .bodyBreak))
         ))
         XCTAssertFalse(StatusMenuPolicy.routesEmergencyExitThroughOverlay(
             state: RestEngineState(activeSession: session(kind: .bodyBreak))
+        ))
+        XCTAssertFalse(StatusMenuPolicy.showsOverlayOnlyNotice(
+            state: RestEngineState(activeSession: session(kind: .bodyBreak)),
+            canEmergencyExit: true
         ))
     }
 

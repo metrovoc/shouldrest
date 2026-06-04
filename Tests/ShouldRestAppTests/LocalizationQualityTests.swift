@@ -372,13 +372,14 @@ final class LocalizationQualityTests: XCTestCase {
 
         L10n.languageOverride = "en"
         XCTAssertEqual(L10n.tr("menu.reset"), "Reset Schedule")
-        XCTAssertEqual(L10n.tr("menu.emergencyOverlayOnly"), "Emergency Exit: use overlay or Esc twice")
-        XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("Status menu actions cannot confirm"))
+        XCTAssertEqual(L10n.tr("menu.emergencyOverlayOnly"), "Overlay controls only")
+        XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("inside the overlay"))
         XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("Esc twice"))
         XCTAssertEqual(
             L10n.tr("status.eyeGateActiveGuidance"),
             "Emergency Exit lives in the overlay: click it or press Esc twice."
         )
+        XCTAssertEqual(L10n.tr("status.eyeGateActiveNoEmergencyGuidance"), "Keep looking away until the timer ends.")
         XCTAssertEqual(L10n.tr("status.eyeGateReadyGuidance"), "Finish from the overlay when ready.")
         XCTAssertEqual(
             L10n.tr("status.bodyBreakActiveGuidance"),
@@ -395,10 +396,11 @@ final class LocalizationQualityTests: XCTestCase {
 
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(L10n.tr("menu.reset"), "重置计划")
-        XCTAssertEqual(L10n.tr("menu.emergencyOverlayOnly"), "紧急退出：覆盖层内点击或按 Esc 两次")
-        XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("状态菜单不能确认紧急退出"))
+        XCTAssertEqual(L10n.tr("menu.emergencyOverlayOnly"), "仅使用覆盖层控制")
+        XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("覆盖层内完成"))
         XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("两次 Esc"))
         XCTAssertEqual(L10n.tr("status.eyeGateActiveGuidance"), "紧急退出在覆盖层内：点击它或按两次 Esc。")
+        XCTAssertEqual(L10n.tr("status.eyeGateActiveNoEmergencyGuidance"), "计时结束前，请继续看向屏幕外。")
         XCTAssertEqual(L10n.tr("status.eyeGateReadyGuidance"), "准备好后，从覆盖层内完成休息。")
         XCTAssertEqual(L10n.tr("status.bodyBreakActiveGuidance"), "使用覆盖层按钮推迟、跳过或完成。")
         XCTAssertEqual(L10n.tr("prefs.reset"), "重置计划")
