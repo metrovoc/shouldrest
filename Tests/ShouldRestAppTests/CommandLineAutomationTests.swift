@@ -12,6 +12,11 @@ final class CommandLineAutomationTests: XCTestCase {
         XCTAssertTrue(output.contains("debug                        Copy diagnostics from the running app."))
         XCTAssertTrue(output.contains("debug-panel                  Open the diagnostics window in the running app."))
         XCTAssertTrue(output.contains("emergency                    Bring the active Eye Gate overlay forward for Emergency Exit."))
+        XCTAssertTrue(output.contains("settings                     Print settings location unless hidden by policy."))
+        XCTAssertTrue(output.contains("logs                         Print log location unless hidden by policy."))
+        XCTAssertFalse(output.localizedCaseInsensitiveContains("settings path"))
+        XCTAssertFalse(output.localizedCaseInsensitiveContains("log path"))
+        XCTAssertFalse(output.localizedCaseInsensitiveContains("hidden by admin"))
         XCTAssertFalse(output.localizedCaseInsensitiveContains("copy debug info"))
         XCTAssertFalse(output.localizedCaseInsensitiveContains("debug panel"))
         XCTAssertFalse(output.localizedCaseInsensitiveContains("run it again"))
@@ -37,6 +42,11 @@ final class CommandLineAutomationTests: XCTestCase {
         XCTAssertFalse(invalidPauseOutput.contains("Invalid pause duration"))
         XCTAssertTrue(unknownCommandOutput.contains("未知命令：bogus"))
         XCTAssertTrue(unknownCommandOutput.contains("用法：shouldrest <命令> [选项]"))
+        XCTAssertTrue(unknownCommandOutput.contains("输出设置位置，除非策略隐藏"))
+        XCTAssertTrue(unknownCommandOutput.contains("输出日志位置，除非策略隐藏"))
+        XCTAssertFalse(unknownCommandOutput.contains("设置文件路径"))
+        XCTAssertFalse(unknownCommandOutput.contains("日志路径"))
+        XCTAssertFalse(unknownCommandOutput.contains("管理员"))
         XCTAssertFalse(unknownCommandOutput.contains("Unknown command"))
     }
 

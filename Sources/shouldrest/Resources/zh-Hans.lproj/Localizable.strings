@@ -529,10 +529,10 @@
 "shortcut.requiredRecordingHelp" = "按 Command、Control 或 Option 加一个按键。Esc 取消；Delete 恢复默认。";
 "shortcut.clearButtonHelp" = "清空这个快捷键。";
 "shortcut.restoreDefaultButtonHelp" = "恢复默认快捷键。";
-"cli.help" = "用法：shouldrest <命令> [选项]\n\n命令：\n  help                         显示帮助。\n  version                      显示版本。\n  settings                     输出设置文件路径，除非管理员隐藏。\n  logs                         输出日志路径。\n  pause [-d duration]          暂停休息。时长：indefinitely、until-morning、60、1h、1h20m。\n  resume                       恢复休息。\n  toggle                       暂停或恢复休息。\n  reset                        重置计划和健康值。\n  eye|mini [-w wait] [-n]      立即或延迟开始护眼休息；不支持自定义可阅读内容。\n  body|long [-T title] [-t text] [-w wait] [-n]  立即开始或自定义活动休息。\n  emergency                    把当前护眼覆盖层带到前台以便紧急退出。\n  preferences                  打开运行中 app 的偏好设置。\n  debug                        复制运行中 app 的诊断信息。\n  debug-panel                  打开运行中 app 的诊断窗口。\n  about                        打开运行中 app 的关于窗口。\n  url shouldrest://<command>    发送 URL 风格自动化命令。";
+"cli.help" = "用法：shouldrest <命令> [选项]\n\n命令：\n  help                         显示帮助。\n  version                      显示版本。\n  settings                     输出设置位置，除非策略隐藏。\n  logs                         输出日志位置，除非策略隐藏。\n  pause [-d duration]          暂停休息。时长：indefinitely、until-morning、60、1h、1h20m。\n  resume                       恢复休息。\n  toggle                       暂停或恢复休息。\n  reset                        重置计划和健康值。\n  eye|mini [-w wait] [-n]      立即或延迟开始护眼休息；不支持自定义可阅读内容。\n  body|long [-T title] [-t text] [-w wait] [-n]  立即开始或自定义活动休息。\n  emergency                    把当前护眼覆盖层带到前台以便紧急退出。\n  preferences                  打开运行中 app 的偏好设置。\n  debug                        复制运行中 app 的诊断信息。\n  debug-panel                  打开运行中 app 的诊断窗口。\n  about                        打开运行中 app 的关于窗口。\n  url shouldrest://<command>    发送 URL 风格自动化命令。";
 "cli.invalidURL" = "ShouldRest URL 无效：%@";
-"cli.settingsPathHidden" = "管理员已隐藏设置文件路径。";
-"cli.logsPathHidden" = "管理员已隐藏日志路径。";
+"cli.settingsPathHidden" = "策略已隐藏设置位置。";
+"cli.logsPathHidden" = "策略已隐藏日志位置。";
 "cli.urlUsage" = "用法：shouldrest url shouldrest://pause?duration=30m";
 "cli.invalidPauseDuration" = "暂停时长无效：%@";
 "cli.invalidWaitDuration" = "等待时长无效：%@";
