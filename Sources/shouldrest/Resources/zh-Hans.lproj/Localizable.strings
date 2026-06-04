@@ -19,7 +19,7 @@
 "menu.pauseUntilMorning" = "暂停到早晨";
 "menu.pauseUntilMorningWithTime" = "暂停到早晨（%@）";
 "menu.pauseIndefinitely" = "无限期暂停";
-"menu.pauseIndefinitelyConfirming" = "确认无限期暂停";
+"menu.pauseIndefinitelyConfirming" = "再次点击确认无限期暂停";
 "menu.reset" = "重置计划";
 "pause.indefiniteConfirmTitle" = "无限期暂停？";
 "pause.indefiniteConfirmBody" = "ShouldRest 会停止安排休息，直到你从菜单手动恢复。只需要短暂中断时，请优先使用定时暂停。";
