@@ -114,6 +114,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(englishValues.contains("Manual pause"))
         XCTAssertFalse(englishValues.contains("Click Again to Pause Indefinitely"))
         XCTAssertFalse(englishValues.contains("Confirm Pause Indefinitely"))
+        XCTAssertFalse(englishValues.contains("Next scheduled rest now"))
         XCTAssertFalse(englishValues.contains("Resume at hour"))
         XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("scheduler"))
         XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("danger indicator"))
@@ -142,6 +143,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(simplifiedChineseValues.contains("有效 JSON"))
         XCTAssertFalse(simplifiedChineseValues.contains("一次性自动化任务"))
         XCTAssertFalse(simplifiedChineseValues.contains("再次点击确认无限期暂停"))
+        XCTAssertFalse(simplifiedChineseValues.contains("立即执行下一项计划休息"))
         XCTAssertFalse(simplifiedChineseValues.contains("不透明"))
         XCTAssertFalse(simplifiedChineseValues.contains("..."))
 
@@ -193,6 +195,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(englishValues.contains("Start Eye Gate Now"))
         XCTAssertTrue(englishValues.contains("Start Body Break Now"))
         XCTAssertTrue(englishValues.contains("Start Next Rest Now"))
+        XCTAssertTrue(englishValues.contains("Start next scheduled rest"))
         XCTAssertTrue(englishValues.contains("Start Eye Gate"))
         XCTAssertTrue(englishValues.contains("Start Body Break"))
         XCTAssertTrue(englishValues.contains("pending automation requests"))
@@ -245,6 +248,7 @@ final class LocalizationQualityTests: XCTestCase {
         L10n.languageOverride = "en"
         XCTAssertEqual(L10n.tr("prefs.eyeGateNow"), "Start Eye Gate")
         XCTAssertEqual(L10n.tr("prefs.bodyBreakNow"), "Start Body Break")
+        XCTAssertEqual(L10n.tr("prefs.nextScheduledRest"), "Start next scheduled rest")
         XCTAssertEqual(L10n.tr("prefs.activeRestShortcut.eyeAndBody"), "Finish Eye Gate or manage Body Break")
         XCTAssertEqual(L10n.tr("prefs.activeRestShortcut.body"), "Manage Body Break")
         XCTAssertEqual(L10n.tr("prefs.activeRestShortcut.eye"), "Finish Eye Gate")
@@ -298,6 +302,7 @@ final class LocalizationQualityTests: XCTestCase {
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(L10n.tr("prefs.eyeGateNow"), "立即开始护眼休息")
         XCTAssertEqual(L10n.tr("prefs.bodyBreakNow"), "立即开始活动休息")
+        XCTAssertEqual(L10n.tr("prefs.nextScheduledRest"), "立即开始下一项计划休息")
         XCTAssertEqual(L10n.tr("prefs.activeRestShortcut.eyeAndBody"), "完成护眼休息或管理活动休息")
         XCTAssertEqual(L10n.tr("prefs.activeRestShortcut.body"), "管理活动休息")
         XCTAssertEqual(L10n.tr("prefs.activeRestShortcut.eye"), "完成护眼休息")

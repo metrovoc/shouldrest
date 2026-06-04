@@ -430,7 +430,7 @@
 "prefs.pause5hShortcutHelp" = "暂停休息 5 小时。";
 "prefs.pauseUntilMorningShortcut" = "暂停到早晨";
 "prefs.pauseUntilMorningShortcutHelp" = "暂停休息到已配置的早晨恢复时间。";
-"prefs.nextScheduledRest" = "立即执行下一项计划休息";
+"prefs.nextScheduledRest" = "立即开始下一项计划休息";
 "prefs.nextScheduledRestHelp" = "立即开始当前计划中的下一项休息。";
 "prefs.eyeGateNow" = "立即开始护眼休息";
 "prefs.eyeGateNowHelp" = "立即开始一次护眼休息。";

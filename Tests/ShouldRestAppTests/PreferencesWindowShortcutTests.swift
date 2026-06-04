@@ -108,6 +108,20 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertFalse(visibleTexts.contains("Pause toggle"))
     }
 
+    func testNextScheduledShortcutUsesStartActionCopy() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectShortcutsTab(in: contentView)
+        let visibleTexts = visibleTexts(in: contentView)
+        let recorder = try XCTUnwrap(control(withIdentifier: "shortcut.nextScheduled", in: contentView) as? ShortcutRecorderButton)
+
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.nextScheduledRest")))
+        XCTAssertEqual(L10n.tr("prefs.nextScheduledRest"), "Start next scheduled rest")
+        XCTAssertFalse(visibleTexts.contains("Next scheduled rest now"))
+        XCTAssertEqual(recorder.toolTip, shortcutHelp("prefs.nextScheduledRestHelp", "shortcut.recordHelp"))
+    }
+
     func testShortcutControlsExposeActionHelpAlongsideRecorderInstructions() throws {
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
