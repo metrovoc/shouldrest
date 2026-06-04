@@ -147,6 +147,102 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.advancedRulesJSON")))
     }
 
+    func testEnabledAppExclusionOffersRunningAppPicker() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "primary",
+                name: "Calls",
+                matchTerms: ["zoom"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+
+        let button = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionAddRunningApp", in: contentView) as? NSButton)
+        XCTAssertFalse(button.isHidden)
+        XCTAssertTrue(button.isEnabled)
+        XCTAssertEqual(button.title, L10n.tr("prefs.addRunningApp"))
+        XCTAssertEqual(button.toolTip, L10n.tr("prefs.addRunningAppHelp"))
+        XCTAssertNotNil(button.image)
+    }
+
+    func testRunningAppPickerAddsCandidateTermsAndAutosaves() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "primary",
+                name: "",
+                matchTerms: [],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        controller.appExclusionApplicationCandidatesProvider = {
+            [AppExclusionApplicationCandidate(name: "Zoom", bundleIdentifier: "us.zoom.xos")]
+        }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+        let button = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionAddRunningApp", in: contentView) as? NSButton)
+
+        XCTAssertTrue(sendAction(from: button))
+
+        waitUntilSavedSettingsArrive(savedSettings)
+        let rule = try XCTUnwrap(savedSettings.value?.appExclusions.first)
+        XCTAssertEqual(rule.name, "Zoom")
+        XCTAssertEqual(rule.matchTerms, ["Zoom", "us.zoom.xos"])
+    }
+
+    func testRunningAppPickerSyncsPrimaryAdvancedRuleWhenJSONIsActive() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "primary",
+                name: "Old",
+                matchTerms: ["old"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            ),
+            AppExclusionRule(
+                id: "secondary",
+                name: "Keep",
+                matchTerms: ["keep"],
+                mode: .resumeOnlyWhenMatched,
+                appliesTo: [.eyeGate],
+                isEnabled: true
+            )
+        ]
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        controller.appExclusionApplicationCandidatesProvider = {
+            [AppExclusionApplicationCandidate(name: "Keynote", bundleIdentifier: "com.apple.iWork.Keynote")]
+        }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+        let button = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionAddRunningApp", in: contentView) as? NSButton)
+
+        XCTAssertTrue(sendAction(from: button))
+
+        waitUntilSavedSettingsArrive(savedSettings)
+        let rules = try XCTUnwrap(savedSettings.value?.appExclusions)
+        XCTAssertEqual(rules.count, 2)
+        XCTAssertEqual(rules[0].id, "primary")
+        XCTAssertEqual(rules[0].name, "Old")
+        XCTAssertEqual(rules[0].matchTerms, ["old", "Keynote", "com.apple.iWork.Keynote"])
+        XCTAssertEqual(rules[1], settings.appExclusions[1])
+    }
+
     func testEyeOnlyModeHidesBodyAppExclusionTarget() throws {
         var settings = RestSettings.defaults
         settings.eyeGate.isEnabled = true

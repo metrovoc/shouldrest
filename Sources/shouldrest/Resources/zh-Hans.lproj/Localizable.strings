@@ -144,6 +144,9 @@
 "prefs.name" = "名称";
 "prefs.matchTerms" = "匹配词";
 "prefs.matchTermsPlaceholder" = "添加应用名称或 Bundle ID";
+"prefs.addRunningApp" = "添加运行中应用";
+"prefs.addRunningAppHelp" = "选择当前正在运行的应用，并把应用名称和 Bundle ID 加入匹配词。";
+"prefs.noRunningApps" = "没有可添加的运行中应用";
 "prefs.mode" = "模式";
 "prefs.advancedRulesJSON" = "高级规则 JSON";
 "prefs.showAdvancedRules" = "高级规则";

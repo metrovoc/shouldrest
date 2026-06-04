@@ -159,6 +159,74 @@ private struct PreferencesHighlightSnapshot {
     var cornerRadius: CGFloat
 }
 
+struct AppExclusionApplicationCandidate: Equatable {
+    var name: String
+    var bundleIdentifier: String?
+
+    var terms: [String] {
+        Self.uniqueNonemptyTerms([name, bundleIdentifier])
+    }
+
+    var menuTitle: String {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedBundleIdentifier = bundleIdentifier?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if trimmedName.isEmpty {
+            return trimmedBundleIdentifier
+        }
+        if trimmedBundleIdentifier.isEmpty {
+            return trimmedName
+        }
+        return "\(trimmedName) - \(trimmedBundleIdentifier)"
+    }
+
+    static func currentRegularApplications() -> [AppExclusionApplicationCandidate] {
+        let ownBundleIdentifier = Bundle.main.bundleIdentifier
+        var seenKeys: Set<String> = []
+        return NSWorkspace.shared.runningApplications
+            .filter { $0.activationPolicy == .regular }
+            .compactMap { app -> AppExclusionApplicationCandidate? in
+                let name = app.localizedName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                let bundleIdentifier = app.bundleIdentifier?.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !name.isEmpty || !(bundleIdentifier?.isEmpty ?? true) else { return nil }
+                if let bundleIdentifier, bundleIdentifier == ownBundleIdentifier {
+                    return nil
+                }
+                return AppExclusionApplicationCandidate(name: name, bundleIdentifier: bundleIdentifier)
+            }
+            .filter { candidate in
+                let key = "\(candidate.name.lowercased())|\((candidate.bundleIdentifier ?? "").lowercased())"
+                guard !seenKeys.contains(key) else { return false }
+                seenKeys.insert(key)
+                return true
+            }
+            .sorted { lhs, rhs in
+                lhs.menuTitle.localizedCaseInsensitiveCompare(rhs.menuTitle) == .orderedAscending
+            }
+    }
+
+    static func uniqueNonemptyTerms(_ values: [String?]) -> [String] {
+        var seenTerms: Set<String> = []
+        return values.compactMap { value in
+            guard let term = value?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !term.isEmpty else {
+                return nil
+            }
+            let key = term.lowercased()
+            guard !seenTerms.contains(key) else { return nil }
+            seenTerms.insert(key)
+            return term
+        }
+    }
+}
+
+private final class AppExclusionApplicationCandidateBox: NSObject {
+    let candidate: AppExclusionApplicationCandidate
+
+    init(_ candidate: AppExclusionApplicationCandidate) {
+        self.candidate = candidate
+    }
+}
+
 @MainActor
 private protocol PreferencesWindowKeyboardDelegate: AnyObject {
     func focusPreferencesSearch()
@@ -265,6 +333,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let appExclusionEnabled = NSButton(checkboxWithTitle: L10n.tr("prefs.enablePrimaryExclusion"), target: nil, action: nil)
     private let appExclusionName = NSTextField()
     private let appExclusionTerms = NSTokenField()
+    private let appExclusionAddRunningApp = NSButton()
     private let appExclusionMode = NSPopUpButton()
     private let appExclusionAppliesEye = NSButton(checkboxWithTitle: L10n.tr("prefs.appliesEye"), target: nil, action: nil)
     private let appExclusionAppliesBody = NSButton(checkboxWithTitle: L10n.tr("prefs.appliesBody"), target: nil, action: nil)
@@ -358,6 +427,9 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let hideSettingsPath = NSButton(checkboxWithTitle: L10n.tr("prefs.adminHideSettingsPath"), target: nil, action: nil)
     private let hideStrictPreferences = NSButton(checkboxWithTitle: L10n.tr("prefs.adminHideStrict"), target: nil, action: nil)
     private let customPreferencesMessage = NSTextField()
+    var appExclusionApplicationCandidatesProvider: () -> [AppExclusionApplicationCandidate] = {
+        AppExclusionApplicationCandidate.currentRegularApplications()
+    }
     private let adminControlsAdvancedButton = NSButton()
     private let adminControlsStack = NSStackView()
 
@@ -404,6 +476,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         configureSoundVolumeControls()
         configureCustomBodyTextEditor()
         configureAppExclusionTokenField()
+        configureAppExclusionRunningAppButton()
         configureSoundPreviewButtons()
         configureSearchField()
         configureShortcutConflictWarning()
@@ -632,7 +705,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         appExclusionNameRow.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionNameRow")
         self.appExclusionNameRow = appExclusionNameRow
         contextStack.addArrangedSubview(appExclusionNameRow)
-        let appExclusionTermsRow = row(L10n.tr("prefs.matchTerms"), appExclusionTerms)
+        let appExclusionTermsRow = row(L10n.tr("prefs.matchTerms"), appExclusionTermsPickerRow())
         appExclusionTerms.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionTermsField")
         appExclusionTermsRow.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionTermsRow")
         self.appExclusionTermsRow = appExclusionTermsRow
@@ -994,7 +1067,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             shortcutPause30, shortcutPause1h, shortcutPause2h, shortcutPause5h, shortcutPauseUntilMorning,
             shortcutNextScheduled, shortcutEyeNow, shortcutBodyNow, shortcutEndBody,
             shortcutEmergencyEye, shortcutReset,
-            appExclusionName, appExclusionTerms, bodyConfiguredDisplay, updateFeedURL,
+            appExclusionName, bodyConfiguredDisplay, updateFeedURL,
             customPreferencesMessage
         ]
         wideFields.forEach { $0.widthAnchor.constraint(equalToConstant: 360).isActive = true }
@@ -1128,6 +1201,19 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         appExclusionTerms.tokenStyle = .rounded
         appExclusionTerms.tokenizingCharacterSet = CharacterSet(charactersIn: ",\n")
         appExclusionTerms.placeholderString = L10n.tr("prefs.matchTermsPlaceholder")
+    }
+
+    private func configureAppExclusionRunningAppButton() {
+        appExclusionAddRunningApp.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionAddRunningApp")
+        appExclusionAddRunningApp.title = L10n.tr("prefs.addRunningApp")
+        appExclusionAddRunningApp.image = NSImage(systemSymbolName: "plus.app", accessibilityDescription: nil)
+            ?? NSImage(systemSymbolName: "plus.circle", accessibilityDescription: nil)
+        appExclusionAddRunningApp.imagePosition = .imageLeading
+        appExclusionAddRunningApp.bezelStyle = .rounded
+        appExclusionAddRunningApp.target = self
+        appExclusionAddRunningApp.action = #selector(addRunningAppExclusionPressed(_:))
+        appExclusionAddRunningApp.toolTip = L10n.tr("prefs.addRunningAppHelp")
+        appExclusionAddRunningApp.widthAnchor.constraint(equalToConstant: 168).isActive = true
     }
 
     private func configureDisclosureButton(_ button: NSButton, identifier: String, expanded: Bool) {
@@ -1773,6 +1859,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         [
             appExclusionName, appExclusionTerms, appExclusionMode
         ].forEach { $0.isEnabled = exclusionEnabled }
+        appExclusionAddRunningApp.isEnabled = exclusionEnabled
         appExclusionAppliesEye.isEnabled = appExclusionAppliesEyeVisible
         appExclusionAppliesBody.isEnabled = appExclusionAppliesBodyVisible
 
@@ -1910,6 +1997,55 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
         updateDependentControlEnablement()
         scheduleAutosave()
+    }
+
+    @objc private func addRunningAppExclusionPressed(_ sender: NSButton) {
+        let candidates = appExclusionApplicationCandidatesProvider()
+            .filter { !$0.terms.isEmpty }
+        guard !candidates.isEmpty else {
+            showNoRunningApplicationsMenu(from: sender)
+            return
+        }
+
+        if candidates.count == 1, let candidate = candidates.first {
+            addAppExclusionApplicationCandidate(candidate)
+            return
+        }
+
+        let menu = NSMenu()
+        for candidate in candidates {
+            let item = NSMenuItem(
+                title: candidate.menuTitle,
+                action: #selector(addRunningAppExclusionMenuItemSelected(_:)),
+                keyEquivalent: ""
+            )
+            item.target = self
+            item.representedObject = AppExclusionApplicationCandidateBox(candidate)
+            item.image = NSImage(systemSymbolName: "app", accessibilityDescription: nil)
+            menu.addItem(item)
+        }
+        menu.popUp(
+            positioning: nil,
+            at: NSPoint(x: 0, y: sender.bounds.maxY + 4),
+            in: sender
+        )
+    }
+
+    @objc private func addRunningAppExclusionMenuItemSelected(_ sender: NSMenuItem) {
+        guard let box = sender.representedObject as? AppExclusionApplicationCandidateBox else { return }
+        addAppExclusionApplicationCandidate(box.candidate)
+    }
+
+    private func showNoRunningApplicationsMenu(from sender: NSButton) {
+        let menu = NSMenu()
+        let item = NSMenuItem(title: L10n.tr("prefs.noRunningApps"), action: nil, keyEquivalent: "")
+        item.isEnabled = false
+        menu.addItem(item)
+        menu.popUp(
+            positioning: nil,
+            at: NSPoint(x: 0, y: sender.bounds.maxY + 4),
+            in: sender
+        )
     }
 
     @objc private func shortcutClearPressed(_ sender: NSButton) {
@@ -2141,10 +2277,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     private func savedAppExclusions() -> [AppExclusionRule] {
-        let terms = tokenFieldValues(appExclusionTerms)
-            .flatMap { $0.split(whereSeparator: { $0 == "," || $0 == "\n" }) }
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
+        let terms = appExclusionMatchTerms()
         guard isOn(appExclusionEnabled), !terms.isEmpty else { return [] }
 
         var appliesTo: Set<RestKind> = []
@@ -2175,6 +2308,51 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                 isEnabled: true
             )
         ]
+    }
+
+    private func addAppExclusionApplicationCandidate(_ candidate: AppExclusionApplicationCandidate) {
+        guard isOn(appExclusionEnabled) else { return }
+        let existingTerms = appExclusionMatchTerms()
+        let nextTerms = AppExclusionApplicationCandidate.uniqueNonemptyTerms(
+            existingTerms.map { Optional($0) } + candidate.terms.map { Optional($0) }
+        )
+        appExclusionTerms.objectValue = nextTerms
+        let trimmedName = appExclusionName.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedName.isEmpty, !candidate.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            appExclusionName.stringValue = candidate.name
+        }
+        syncPrimaryAppExclusionIntoAdvancedJSONIfNeeded()
+        updateDependentControlEnablement()
+        scheduleAutosave()
+    }
+
+    private func appExclusionMatchTerms() -> [String] {
+        AppExclusionApplicationCandidate.uniqueNonemptyTerms(
+            tokenFieldValues(appExclusionTerms)
+                .flatMap { $0.split(whereSeparator: { $0 == "," || $0 == "\n" }) }
+                .map { Optional(String($0)) }
+        )
+    }
+
+    private func syncPrimaryAppExclusionIntoAdvancedJSONIfNeeded() {
+        let raw = appExclusionsJSONEditor.string.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !raw.isEmpty,
+              let data = raw.data(using: .utf8),
+              var rules = try? JSONDecoder().decode([AppExclusionRule].self, from: data),
+              !rules.isEmpty,
+              let primary = savedAppExclusions().first else {
+            return
+        }
+
+        rules[0] = AppExclusionRule(
+            id: rules[0].id,
+            name: primary.name,
+            matchTerms: primary.matchTerms,
+            mode: primary.mode,
+            appliesTo: primary.appliesTo,
+            isEnabled: primary.isEnabled
+        )
+        appExclusionsJSONEditor.string = encodedAppExclusions(rules)
     }
 
     private struct InvalidAdvancedJSON: LocalizedError {
@@ -2330,6 +2508,15 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let stack = NSStackView(views: [label, field])
         stack.orientation = .horizontal
         stack.spacing = 12
+        stack.alignment = .centerY
+        return stack
+    }
+
+    private func appExclusionTermsPickerRow() -> NSStackView {
+        appExclusionTerms.widthAnchor.constraint(equalToConstant: 300).isActive = true
+        let stack = NSStackView(views: [appExclusionTerms, appExclusionAddRunningApp])
+        stack.orientation = .horizontal
+        stack.spacing = 8
         stack.alignment = .centerY
         return stack
     }

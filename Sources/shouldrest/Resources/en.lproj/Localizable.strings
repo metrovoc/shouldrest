@@ -144,6 +144,9 @@
 "prefs.name" = "Name";
 "prefs.matchTerms" = "Match terms";
 "prefs.matchTermsPlaceholder" = "Add app names or bundle IDs";
+"prefs.addRunningApp" = "Add Running App";
+"prefs.addRunningAppHelp" = "Choose a currently running app and add its name and Bundle ID to the match terms.";
+"prefs.noRunningApps" = "No running apps available";
 "prefs.mode" = "Mode";
 "prefs.advancedRulesJSON" = "Advanced rules JSON";
 "prefs.showAdvancedRules" = "Advanced rules";
