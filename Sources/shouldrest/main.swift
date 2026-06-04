@@ -1126,11 +1126,14 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             logger.log("Emergency override armed for \(session.kind.rawValue), awaiting second overlay confirmation")
             rebuildMenu()
         case .complete:
-            completeEmergencyOverrideEyeGate(
-                session: session,
-                now: now,
-                playSound: true
-            )
+            // Closing screen-level overlay windows inside mouseDown/keyDown can wedge AppKit.
+            DispatchQueue.main.async { [weak self] in
+                self?.completeEmergencyOverrideEyeGate(
+                    session: session,
+                    now: now,
+                    playSound: true
+                )
+            }
         case .unavailable:
             logger.log("Emergency override unavailable for \(session.kind.rawValue)")
             rebuildMenu()
