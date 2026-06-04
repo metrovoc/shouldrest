@@ -746,6 +746,49 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertTrue(didComplete)
     }
 
+    func testRefreshCannotDropLocalEmergencyConfirmationForSameSession() throws {
+        let session = eyeGateSession()
+        let view = RestOverlayView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
+        view.configure(
+            session: session,
+            remainingSeconds: 60,
+            settings: .defaults,
+            showsContent: true,
+            manualAwaiting: false,
+            emergencyOverrideRemainingSeconds: 0,
+            emergencyOverrideArmed: false
+        )
+        var requestCount = 0
+        view.onEmergencyOverrideRequested = {
+            requestCount += 1
+            return requestCount == 1 ? .armed : .complete
+        }
+
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        button.performClick(nil)
+
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+
+        view.configure(
+            session: session,
+            remainingSeconds: 59,
+            settings: .defaults,
+            showsContent: true,
+            manualAwaiting: false,
+            emergencyOverrideRemainingSeconds: 0,
+            emergencyOverrideArmed: false
+        )
+
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+
+        button.performClick(nil)
+
+        XCTAssertEqual(requestCount, 1)
+        drainMainQueue()
+        XCTAssertEqual(requestCount, 2)
+    }
+
     func testArmedEmergencyMouseClickDefersConfirmationUntilMouseEventReturns() throws {
         let view = configuredEyeGateOverlay(
             remainingSeconds: 0,

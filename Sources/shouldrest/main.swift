@@ -2998,21 +2998,27 @@ final class RestOverlayView: NSView {
         remainingSeconds: Int?,
         isArmed: Bool
     ) {
-        if emergencySessionID != sessionID {
+        let isSameEmergencySession = emergencySessionID == sessionID
+        if !isSameEmergencySession {
             emergencySessionID = sessionID
             emergencyOverrideCompletionPending = false
+            emergencyOverrideArmed = false
         }
-        if remainingSeconds == nil || !isArmed {
-            emergencyOverrideCompletionPending = false
-        }
-
-        emergencyRemainingSeconds = remainingSeconds
-        emergencyOverrideArmed = isArmed
 
         guard remainingSeconds != nil else {
+            emergencyRemainingSeconds = nil
+            emergencyOverrideArmed = false
+            emergencyOverrideCompletionPending = false
             emergencyPanel.isHidden = true
             emergencyButton.isHidden = true
             return
+        }
+
+        emergencyRemainingSeconds = remainingSeconds
+        let shouldKeepLocalConfirmation = isSameEmergencySession && emergencyOverrideArmed
+        emergencyOverrideArmed = isArmed || shouldKeepLocalConfirmation
+        if !emergencyOverrideArmed {
+            emergencyOverrideCompletionPending = false
         }
 
         emergencyButton.isHidden = false
