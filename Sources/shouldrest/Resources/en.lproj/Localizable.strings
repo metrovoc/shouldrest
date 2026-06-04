@@ -15,8 +15,8 @@
 "menu.skipBodyBreakHelp" = "Skip this Body Break when skipping is allowed.";
 "menu.emergencyOverride" = "Emergency Exit";
 "menu.emergencyOverrideHelp" = "Bring the active Eye Gate overlay forward; confirm there with two clicks or two Esc presses.";
-"menu.emergencyOverlayOnly" = "Overlay controls only";
-"menu.emergencyOverlayOnlyHelp" = "Eye Gate actions stay inside the overlay. Use the overlay Emergency Exit control or press Esc twice there.";
+"menu.emergencyOverlayOnly" = "Use overlay Emergency Exit";
+"menu.emergencyOverlayOnlyHelp" = "This menu cannot exit an active Eye Gate. Return to the overlay, then click Emergency Exit in the lower-right corner or press Esc twice.";
 "menu.resume" = "Resume";
 "menu.resumeHelp" = "Resume normal rest scheduling.";
 "menu.pause" = "Pause";
@@ -101,7 +101,7 @@
 "status.nextBodyAfterEyeGates" = "Next Body Break after %d Eye Gates";
 "status.active" = "%@ active, %@ remaining";
 "status.readyToFinish" = "%@ ready to finish";
-"status.eyeGateActiveGuidance" = "Emergency Exit lives in the overlay: click it or press Esc twice.";
+"status.eyeGateActiveGuidance" = "Use the overlay Emergency Exit in the lower-right corner, or press Esc twice.";
 "status.eyeGateActiveNoEmergencyGuidance" = "Keep looking away until the timer ends.";
 "status.eyeGateReadyGuidance" = "Finish from the overlay when ready.";
 "status.bodyBreakActiveGuidance" = "Use overlay controls to postpone, skip, or finish.";

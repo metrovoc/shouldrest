@@ -15,8 +15,8 @@
 "menu.skipBodyBreakHelp" = "在允许跳过时跳过这次活动休息。";
 "menu.emergencyOverride" = "紧急退出";
 "menu.emergencyOverrideHelp" = "把当前护眼覆盖层带到前台；只在覆盖层内点两次或按两次 Esc 确认。";
-"menu.emergencyOverlayOnly" = "仅使用覆盖层控制";
-"menu.emergencyOverlayOnlyHelp" = "护眼休息的操作都在覆盖层内完成。请使用覆盖层内的紧急退出，或在覆盖层内按两次 Esc。";
+"menu.emergencyOverlayOnly" = "使用覆盖层紧急退出";
+"menu.emergencyOverlayOnlyHelp" = "此菜单不能退出进行中的护眼休息。请回到覆盖层，点击右下角的紧急退出，或按两次 Esc。";
 "menu.resume" = "恢复";
 "menu.resumeHelp" = "恢复正常休息调度。";
 "menu.pause" = "暂停";
@@ -101,7 +101,7 @@
 "status.nextBodyAfterEyeGates" = "距离下一次活动休息还有 %d 次护眼休息";
 "status.active" = "%@ 进行中，剩余 %@";
 "status.readyToFinish" = "%@ 已完成，等待结束";
-"status.eyeGateActiveGuidance" = "紧急退出在覆盖层内：点击它或按两次 Esc。";
+"status.eyeGateActiveGuidance" = "使用覆盖层右下角的紧急退出，或按两次 Esc。";
 "status.eyeGateActiveNoEmergencyGuidance" = "计时结束前，请继续看向屏幕外。";
 "status.eyeGateReadyGuidance" = "准备好后，从覆盖层内完成休息。";
 "status.bodyBreakActiveGuidance" = "使用覆盖层按钮推迟、跳过或完成。";

@@ -46,7 +46,7 @@ final class StatusMenuHeaderViewTests: XCTestCase {
             content: MenuStatusPresenter.HeaderContent(
                 title: "ShouldRest",
                 primary: "Eye Gate active, 15s remaining",
-                secondary: "Emergency Exit lives in the overlay: click it or press Esc twice.",
+                secondary: "Use the overlay Emergency Exit in the lower-right corner, or press Esc twice.",
                 healthBadge: nil,
                 icon: .restGate
             )
@@ -57,7 +57,10 @@ final class StatusMenuHeaderViewTests: XCTestCase {
         XCTAssertFalse(secondary.isHidden)
         XCTAssertEqual(secondary.lineBreakMode, .byWordWrapping)
         XCTAssertEqual(secondary.maximumNumberOfLines, 2)
-        XCTAssertEqual(secondary.stringValue, "Emergency Exit lives in the overlay: click it or press Esc twice.")
+        XCTAssertEqual(
+            secondary.stringValue,
+            "Use the overlay Emergency Exit in the lower-right corner, or press Esc twice."
+        )
     }
 
     private func textField(_ identifier: String, in view: NSView) throws -> NSTextField {
