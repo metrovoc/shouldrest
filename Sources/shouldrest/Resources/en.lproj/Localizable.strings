@@ -381,6 +381,7 @@
 "onboarding.useSelectedHelp" = "Apply the selected rhythm and start ShouldRest.";
 "onboarding.preferences" = "Open Preferences";
 "onboarding.preferencesHelp" = "Apply the selected rhythm and open Preferences to customize it before continuing.";
+"onboarding.useSelectedWithPreset" = "Start With %@";
 "about.title" = "About ShouldRest";
 "about.body" = "ShouldRest %@\n\nShouldRest is a Mac-first rest reminder built around short, frequent, hard-to-ignore Eye Gates and configurable Body Breaks.\n\nIt keeps Stretchly-compatible scheduling, automation, update, diagnostics, and preference capabilities where they support the product goal, while intentionally replacing weak 20-second skip/postpone behavior with stricter eye-rest enforcement.";
 "about.version" = "Version %@";

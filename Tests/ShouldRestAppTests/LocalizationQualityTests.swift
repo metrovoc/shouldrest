@@ -234,6 +234,22 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").contains("不再要求你点击另一个窗口"))
     }
 
+    func testOnboardingPrimaryActionNamesSelectedRhythm() {
+        defer { L10n.languageOverride = nil }
+
+        L10n.languageOverride = "en"
+        XCTAssertEqual(
+            L10n.format("onboarding.useSelectedWithPreset", "More Eye Rests"),
+            "Start With More Eye Rests"
+        )
+
+        L10n.languageOverride = "zh-Hans"
+        XCTAssertEqual(
+            L10n.format("onboarding.useSelectedWithPreset", "更多护眼休息"),
+            "使用更多护眼休息开始"
+        )
+    }
+
     func testBlockedActionNotificationsUseUserActionLanguage() {
         defer { L10n.languageOverride = nil }
 

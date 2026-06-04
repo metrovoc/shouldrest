@@ -381,6 +381,7 @@
 "onboarding.useSelectedHelp" = "应用当前选择的节奏并开始使用 ShouldRest。";
 "onboarding.preferences" = "打开偏好设置";
 "onboarding.preferencesHelp" = "应用当前选择的节奏，并打开偏好设置继续自定义。";
+"onboarding.useSelectedWithPreset" = "使用%@开始";
 "about.title" = "关于 ShouldRest";
 "about.body" = "ShouldRest %@\n\nShouldRest 是一个面向 Mac 的休息提醒应用，围绕短、频繁、难以忽视的护眼休息和可配置的活动休息构建。\n\n在符合产品目标的地方，它保留 Stretchly 兼容的调度、自动化、更新、诊断和偏好能力；同时有意用更严格的眼睛休息约束替代薄弱的 20 秒跳过/推迟行为。";
 "about.version" = "版本 %@";

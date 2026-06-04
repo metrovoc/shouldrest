@@ -13,6 +13,7 @@ final class OnboardingWindowController: NSWindowController {
     private let onLearnMore: () -> Void
     private let rhythmPresetControl = NSSegmentedControl()
     private let rhythmPresetDescription = NSTextField(labelWithString: "")
+    private var useSelectedButton: NSButton?
     private var selectedRhythmPreset: RestRhythmPreset = .firstRunDefault
 
     init(
@@ -281,7 +282,7 @@ final class OnboardingWindowController: NSWindowController {
         rhythmPresetDescription.lineBreakMode = .byWordWrapping
         rhythmPresetDescription.maximumNumberOfLines = 2
         rhythmPresetDescription.widthAnchor.constraint(lessThanOrEqualToConstant: 560).isActive = true
-        updateRhythmPresetDescription()
+        updateRhythmPresetSelectionUI()
     }
 
     private func buttonRow() -> NSView {
@@ -306,13 +307,14 @@ final class OnboardingWindowController: NSWindowController {
             action: #selector(openPreferences)
         )
         let useSelectedButton = onboardingButton(
-            title: L10n.tr("onboarding.useSelected"),
+            title: primaryActionTitle(for: selectedRhythmPreset),
             identifier: "onboarding.useSelectedButton",
             symbolName: "checkmark.circle.fill",
             help: L10n.tr("onboarding.useSelectedHelp"),
             action: #selector(useSelectedPreset)
         )
         useSelectedButton.keyEquivalent = "\r"
+        self.useSelectedButton = useSelectedButton
 
         let spacer = NSView()
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
@@ -359,12 +361,22 @@ final class OnboardingWindowController: NSWindowController {
             return
         }
         selectedRhythmPreset = preset
-        updateRhythmPresetDescription()
+        updateRhythmPresetSelectionUI()
     }
 
-    private func updateRhythmPresetDescription() {
+    private func updateRhythmPresetSelectionUI() {
         rhythmPresetDescription.stringValue = selectedRhythmPreset.help
         rhythmPresetControl.toolTip = selectedRhythmPreset.help
+
+        guard let useSelectedButton else { return }
+        let title = primaryActionTitle(for: selectedRhythmPreset)
+        useSelectedButton.title = title
+        useSelectedButton.setAccessibilityLabel(title)
+        useSelectedButton.setAccessibilityHelp(useSelectedButton.toolTip)
+    }
+
+    private func primaryActionTitle(for preset: RestRhythmPreset) -> String {
+        L10n.format("onboarding.useSelectedWithPreset", preset.title)
     }
 
     @objc private func useSelectedPreset() {

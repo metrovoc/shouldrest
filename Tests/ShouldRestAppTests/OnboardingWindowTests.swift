@@ -72,7 +72,10 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertEqual(learnMore.toolTip, L10n.tr("onboarding.learnMoreHelp"))
         XCTAssertEqual(preferences.title, L10n.tr("onboarding.preferences"))
         XCTAssertEqual(preferences.toolTip, L10n.tr("onboarding.preferencesHelp"))
-        XCTAssertEqual(useSelected.title, L10n.tr("onboarding.useSelected"))
+        XCTAssertEqual(
+            useSelected.title,
+            L10n.format("onboarding.useSelectedWithPreset", RestRhythmPreset.firstRunDefault.title)
+        )
         XCTAssertEqual(useSelected.toolTip, L10n.tr("onboarding.useSelectedHelp"))
         XCTAssertEqual(useSelected.keyEquivalent, "\r")
         XCTAssertEqual(useSelected.bezelStyle, .rounded)
@@ -92,6 +95,7 @@ final class OnboardingWindowTests: XCTestCase {
         let description = try XCTUnwrap(
             contentView.descendant(withIdentifier: "onboarding.rhythmPresetDescription") as? NSTextField
         )
+        let useSelected = try XCTUnwrap(button(withIdentifier: "onboarding.useSelectedButton", in: contentView))
 
         XCTAssertEqual(control.segmentCount, RestRhythmPreset.allCases.count)
         XCTAssertEqual(control.selectedSegment, RestRhythmPreset.firstRunDefault.rawValue)
@@ -99,14 +103,21 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertEqual(control.label(forSegment: RestRhythmPreset.frequentEye.rawValue), "More Eye Rests")
         XCTAssertEqual(control.label(forSegment: RestRhythmPreset.movement.rawValue), "More Movement")
         XCTAssertEqual(description.stringValue, RestRhythmPreset.firstRunDefault.help)
+        XCTAssertEqual(
+            useSelected.title,
+            L10n.format("onboarding.useSelectedWithPreset", RestRhythmPreset.firstRunDefault.title)
+        )
 
         control.selectedSegment = RestRhythmPreset.movement.rawValue
         XCTAssertTrue(control.sendAction(control.action, to: control.target))
 
         XCTAssertEqual(description.stringValue, RestRhythmPreset.movement.help)
+        XCTAssertEqual(
+            useSelected.title,
+            L10n.format("onboarding.useSelectedWithPreset", RestRhythmPreset.movement.title)
+        )
+        XCTAssertEqual(useSelected.accessibilityLabel(), useSelected.title)
 
-        let buttons = buttonsByTitle(in: contentView)
-        let useSelected = try XCTUnwrap(buttons[L10n.tr("onboarding.useSelected")])
         useSelected.performClick(nil)
 
         XCTAssertEqual(selectedPreset, .movement)
@@ -120,8 +131,7 @@ final class OnboardingWindowTests: XCTestCase {
             onLearnMore: {}
         )
         let contentView = try XCTUnwrap(controller.window?.contentView)
-        let buttons = buttonsByTitle(in: contentView)
-        let useSelected = try XCTUnwrap(buttons[L10n.tr("onboarding.useSelected")])
+        let useSelected = try XCTUnwrap(button(withIdentifier: "onboarding.useSelectedButton", in: contentView))
 
         useSelected.performClick(nil)
 
