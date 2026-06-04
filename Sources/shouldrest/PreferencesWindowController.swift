@@ -629,6 +629,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         buildContent()
         loadSettings()
+        focusPreferencesSearch()
     }
 
     required init?(coder: NSCoder) {
@@ -5358,7 +5359,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     func clearPreferencesSearchIfFocused() -> Bool {
         guard isSearchFieldFocused() else { return false }
         guard !searchField.stringValue.isEmpty || !searchStatusLabel.isHidden || highlightedSearchTarget != nil else {
-            return false
+            window?.makeFirstResponder(nil)
+            return true
         }
         searchField.stringValue = ""
         performPreferencesSearch("")

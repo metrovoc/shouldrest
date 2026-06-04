@@ -28,6 +28,34 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         }
     }
 
+    func testPreferencesOpenWithSafeSearchFocusInsteadOfEditableScheduleField() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
+        let searchField = try XCTUnwrap(view(withIdentifier: "prefs.searchField", in: contentView) as? NSSearchField)
+        let eyeInterval = try XCTUnwrap(view(withIdentifier: "eyeIntervalField", in: contentView) as? NSTextField)
+
+        XCTAssertTrue(isFirstResponder(searchField, in: window))
+        XCTAssertFalse(isFirstResponder(eyeInterval, in: window))
+        XCTAssertEqual(searchField.stringValue, "")
+    }
+
+    func testEscapeOnInitialEmptySearchFocusOnlyResignsSearchFocus() throws {
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
+        let searchField = try XCTUnwrap(view(withIdentifier: "prefs.searchField", in: contentView) as? NSSearchField)
+
+        XCTAssertTrue(isFirstResponder(searchField, in: window))
+
+        window.cancelOperation(nil)
+
+        XCTAssertFalse(isFirstResponder(searchField, in: window))
+        XCTAssertEqual(searchField.stringValue, "")
+        XCTAssertNil(savedSettings.value)
+    }
+
     func testPreferenceSearchJumpsToMatchingSettingWithoutAutosave() throws {
         let savedSettings = SavedSettingsBox()
         let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
