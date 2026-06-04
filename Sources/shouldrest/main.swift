@@ -402,7 +402,6 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func createStatusItem() {
         guard statusItem == nil else { return }
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.toolTip = MenuStatusPresenter.tooltip(state: engine.state, settings: settings)
         statusItem = item
         rebuildMenu()
     }
@@ -540,11 +539,19 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func rebuildMenu() {
         guard let item = statusItem else { return }
         let now = Date()
+        let accessibilityDescription = MenuStatusPresenter.menuBarAccessibilityDescription(
+            state: engine.state,
+            settings: settings,
+            now: now
+        )
+        let tooltip = MenuStatusPresenter.tooltip(state: engine.state, settings: settings, now: now)
         item.length = NSStatusItem.squareLength
-        updateMenuBarImage(on: item)
+        updateMenuBarImage(on: item, accessibilityDescription: accessibilityDescription)
         item.button?.imagePosition = .imageOnly
         item.button?.title = ""
-        item.button?.toolTip = MenuStatusPresenter.tooltip(state: engine.state, settings: settings, now: now)
+        item.button?.toolTip = tooltip
+        item.button?.setAccessibilityLabel(accessibilityDescription)
+        item.button?.setAccessibilityHelp(tooltip)
         let showsOrdinaryControls = StatusMenuPolicy.showsOrdinaryControls(state: engine.state)
 
         let menu = NSMenu()
@@ -679,24 +686,35 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         return item
     }
 
-    private func updateMenuBarImage(on item: NSStatusItem) {
+    private func updateMenuBarImage(on item: NSStatusItem, accessibilityDescription: String) {
         let icon = MenuStatusPresenter.menuBarIcon(state: engine.state)
         let key = menuBarImageKey(for: icon)
-        guard currentMenuBarImageKey != key || item.button?.image == nil else { return }
-        currentMenuBarImageKey = key
-        item.button?.image = menuBarImage(for: icon, key: key)
+        if currentMenuBarImageKey != key || item.button?.image == nil {
+            currentMenuBarImageKey = key
+            item.button?.image = menuBarImage(
+                for: icon,
+                key: key,
+                accessibilityDescription: accessibilityDescription
+            )
+        }
+        item.button?.image?.accessibilityDescription = accessibilityDescription
     }
 
     private func menuBarImageKey(for icon: MenuStatusPresenter.MenuBarIcon) -> String {
         StatusMenuImageFactory.cacheKey(for: icon)
     }
 
-    private func menuBarImage(for icon: MenuStatusPresenter.MenuBarIcon, key: String) -> NSImage? {
+    private func menuBarImage(
+        for icon: MenuStatusPresenter.MenuBarIcon,
+        key: String,
+        accessibilityDescription: String
+    ) -> NSImage? {
         if let cached = menuBarImageCache[key] {
+            cached.accessibilityDescription = accessibilityDescription
             return cached
         }
 
-        let image = StatusMenuImageFactory.image(for: icon, accessibilityDescription: L10n.tr("app.name"))
+        let image = StatusMenuImageFactory.image(for: icon, accessibilityDescription: accessibilityDescription)
         menuBarImageCache[key] = image
         return image
     }

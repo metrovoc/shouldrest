@@ -48,6 +48,18 @@ enum MenuStatusPresenter {
         return L10n.tr("status.tooltipHeader") + "\n\n" + tooltipLines.joined(separator: "\n")
     }
 
+    static func menuBarAccessibilityDescription(
+        state: RestEngineState,
+        settings: RestSettings,
+        now: Date = Date()
+    ) -> String {
+        var parts = lines(state: state, settings: settings, now: now)
+        if let healthBadge = healthBadgeText(state: state, settings: settings) {
+            parts.append(healthBadge)
+        }
+        return "\(L10n.tr("app.name")): \(parts.joined(separator: ". "))"
+    }
+
     static func headerContent(state: RestEngineState, settings: RestSettings, now: Date = Date()) -> HeaderContent {
         let statusLines = lines(state: state, settings: settings, now: now)
         return HeaderContent(

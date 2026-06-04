@@ -109,6 +109,40 @@ final class MenuStatusPresenterTests: XCTestCase {
         XCTAssertFalse(tooltip.contains("Rest pressure:"))
     }
 
+    func testMenuBarAccessibilityDescriptionIsCompactAndStateful() {
+        let engine = RestEngine(settings: .defaults, now: start)
+
+        let description = MenuStatusPresenter.menuBarAccessibilityDescription(
+            state: engine.state,
+            settings: engine.settings,
+            now: start
+        )
+
+        XCTAssertTrue(description.hasPrefix("ShouldRest: Next: Eye Gate at "))
+        XCTAssertTrue(description.contains("Next Body Break after 4 Eye Gates"))
+        XCTAssertFalse(description.contains("The rest reminder app"))
+        XCTAssertFalse(description.contains("\n"))
+        XCTAssertFalse(description.contains("Rest pressure: 0/10"))
+    }
+
+    func testMenuBarAccessibilityDescriptionIncludesMeaningfulPressureBadge() {
+        let settings = RestSettings.defaults
+        let state = RestEngineState(
+            scheduled: ScheduledRest(kind: .bodyBreak, dueAt: start.addingTimeInterval(10 * 60), notificationAt: nil),
+            dangerScore: 4
+        )
+
+        let description = MenuStatusPresenter.menuBarAccessibilityDescription(
+            state: state,
+            settings: settings,
+            now: start
+        )
+
+        XCTAssertTrue(description.hasPrefix("ShouldRest: Next: Body Break at "))
+        XCTAssertTrue(description.contains("Pressure 4/10"))
+        XCTAssertFalse(description.contains("Rest pressure:"))
+    }
+
     func testTimedPauseStatusShowsAutomaticResumeContext() {
         let state = RestEngineState(
             pause: PauseState(
