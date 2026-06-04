@@ -158,6 +158,8 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         let ideasEditor = try XCTUnwrap(view(withIdentifier: "customBodyIdeasJSONEditor", in: contentView) as? NSTextView)
         let ideasCopy = try XCTUnwrap(view(withIdentifier: "prefs.customBodyIdeasCopyBulkButton", in: contentView) as? NSButton)
         let ideasRestore = try XCTUnwrap(view(withIdentifier: "prefs.customBodyIdeasRestoreBulkButton", in: contentView) as? NSButton)
+        let statusIcon = try XCTUnwrap(view(withIdentifier: "autosaveStatusIcon", in: contentView) as? NSImageView)
+        let statusLabel = try XCTUnwrap(view(withIdentifier: "autosaveStatusLabel", in: contentView) as? NSTextField)
 
         XCTAssertEqual(appCopy.title, L10n.tr("prefs.copyBulkEditor"))
         XCTAssertEqual(appCopy.toolTip, L10n.tr("prefs.copyAppRulesBulkEditorHelp"))
@@ -178,6 +180,12 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         NSPasteboard.general.clearContents()
         XCTAssertTrue(sendAction(from: appCopy))
         XCTAssertEqual(NSPasteboard.general.string(forType: .string), appEditor.string)
+        XCTAssertEqual(statusLabel.stringValue, L10n.tr("prefs.autosaveCopied"))
+        XCTAssertEqual(statusLabel.toolTip, L10n.tr("prefs.autosaveCopied"))
+        XCTAssertEqual(statusLabel.accessibilityHelp(), L10n.tr("prefs.autosaveCopied"))
+        XCTAssertEqual(statusIcon.image?.accessibilityDescription, L10n.tr("prefs.autosaveCopied"))
+        XCTAssertEqual(statusIcon.accessibilityLabel(), L10n.tr("prefs.autosaveCopied"))
+        XCTAssertEqual(statusIcon.accessibilityHelp(), L10n.tr("prefs.autosaveCopied"))
 
         appEditor.string = "{ invalid json"
         controller.textDidChange(Notification(name: NSText.didChangeNotification, object: appEditor))

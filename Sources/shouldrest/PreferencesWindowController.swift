@@ -232,6 +232,7 @@ private enum PreferencesSaveStatus {
     case editing
     case saving
     case saved
+    case copied
     case restored
     case invalid
 }
@@ -3270,6 +3271,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(text, forType: .string)
+        setSaveStatus(.copied)
         updateAdvancedBulkEditorActionStates()
     }
 
@@ -3488,6 +3490,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             symbolName = "checkmark.circle.fill"
             color = .systemGreen
             title = L10n.tr("prefs.autosaveSaved")
+        case .copied:
+            symbolName = "doc.on.clipboard"
+            color = .systemBlue
+            title = L10n.tr("prefs.autosaveCopied")
         case .restored:
             symbolName = "arrow.counterclockwise.circle.fill"
             color = .systemBlue

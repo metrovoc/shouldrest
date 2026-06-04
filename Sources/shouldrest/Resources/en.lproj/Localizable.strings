@@ -459,6 +459,7 @@
 "prefs.autosaveEditing" = "Editing...";
 "prefs.autosaveSaving" = "Saving...";
 "prefs.autosaveSaved" = "Saved";
+"prefs.autosaveCopied" = "Copied to clipboard";
 "prefs.autosaveRestored" = "Defaults restored";
 "prefs.autosaveInvalid" = "Fix bulk editor content to save";
 "prefs.autosaveInvalidField" = "Fix %@ to save";
