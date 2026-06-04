@@ -1314,40 +1314,29 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private func configureRhythmPresetButtons() {
         configureRhythmPresetButton(
             rhythmPresetRecommendedButton,
-            identifier: "recommended",
-            title: L10n.tr("prefs.rhythmPreset.recommended"),
-            symbolName: "timer",
-            toolTip: L10n.tr("prefs.rhythmPreset.recommendedHelp")
+            preset: .recommended
         )
         configureRhythmPresetButton(
             rhythmPresetFrequentEyeButton,
-            identifier: "frequentEye",
-            title: L10n.tr("prefs.rhythmPreset.frequentEye"),
-            symbolName: "eye",
-            toolTip: L10n.tr("prefs.rhythmPreset.frequentEyeHelp")
+            preset: .frequentEye
         )
         configureRhythmPresetButton(
             rhythmPresetMovementButton,
-            identifier: "movement",
-            title: L10n.tr("prefs.rhythmPreset.movement"),
-            symbolName: "figure.walk",
-            toolTip: L10n.tr("prefs.rhythmPreset.movementHelp")
+            preset: .movement
         )
     }
 
     private func configureRhythmPresetButton(
         _ button: NSButton,
-        identifier: String,
-        title: String,
-        symbolName: String,
-        toolTip: String
+        preset: RestRhythmPreset
     ) {
-        button.identifier = NSUserInterfaceItemIdentifier("prefs.rhythmPreset.\(identifier)")
-        button.title = title
-        button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
+        button.identifier = NSUserInterfaceItemIdentifier("prefs.rhythmPreset.\(preset.identifier)")
+        button.title = preset.title
+        button.image = NSImage(systemSymbolName: preset.symbolName, accessibilityDescription: nil)
         button.imagePosition = .imageLeading
         button.bezelStyle = .rounded
-        button.toolTip = toolTip
+        button.toolTip = preset.help
+        button.tag = preset.rawValue
         button.target = self
         button.action = #selector(rhythmPresetPressed(_:))
     }
@@ -2375,47 +2364,18 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     @objc private func rhythmPresetPressed(_ sender: NSButton) {
-        if sender === rhythmPresetFrequentEyeButton {
-            applyRhythmPreset(
-                eyeIntervalMinutes: 10,
-                eyeDurationSeconds: 20,
-                bodyIntervalMinutes: 20,
-                bodyAfterEyeGateCount: 4,
-                bodyDurationMinutes: 5
-            )
-        } else if sender === rhythmPresetMovementButton {
-            applyRhythmPreset(
-                eyeIntervalMinutes: 20,
-                eyeDurationSeconds: 20,
-                bodyIntervalMinutes: 20,
-                bodyAfterEyeGateCount: 2,
-                bodyDurationMinutes: 8
-            )
-        } else {
-            applyRhythmPreset(
-                eyeIntervalMinutes: 20,
-                eyeDurationSeconds: 20,
-                bodyIntervalMinutes: 20,
-                bodyAfterEyeGateCount: 2,
-                bodyDurationMinutes: 5
-            )
-        }
+        guard let preset = RestRhythmPreset(rawValue: sender.tag) else { return }
+        applyRhythmPreset(preset)
     }
 
-    private func applyRhythmPreset(
-        eyeIntervalMinutes: Int,
-        eyeDurationSeconds: Int,
-        bodyIntervalMinutes: Int,
-        bodyAfterEyeGateCount: Int,
-        bodyDurationMinutes: Int
-    ) {
+    private func applyRhythmPreset(_ preset: RestRhythmPreset) {
         eyeEnabled.state = .on
         bodyEnabled.state = .on
-        eyeInterval.stringValue = String(eyeIntervalMinutes)
-        eyeDuration.stringValue = String(eyeDurationSeconds)
-        bodyInterval.stringValue = String(bodyIntervalMinutes)
-        bodyAfterEyeGates.stringValue = String(bodyAfterEyeGateCount)
-        bodyDuration.stringValue = String(bodyDurationMinutes)
+        eyeInterval.stringValue = String(preset.eyeIntervalMinutes)
+        eyeDuration.stringValue = String(preset.eyeDurationSeconds)
+        bodyInterval.stringValue = String(preset.bodyIntervalMinutes)
+        bodyAfterEyeGates.stringValue = String(preset.bodyAfterEyeGateCount)
+        bodyDuration.stringValue = String(preset.bodyDurationMinutes)
         syncNumberControlsFromFields()
         updateDependentControlEnablement()
         scheduleAutosave()

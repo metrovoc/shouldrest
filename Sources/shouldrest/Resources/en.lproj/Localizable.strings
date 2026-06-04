@@ -317,8 +317,9 @@
 "onboarding.emergencyFeatureBody" = "Emergency Exit is owned by the overlay: Esc, the configured shortcut, or the dim red Emergency affordance arms it first; the second click or Esc exits from inside the overlay without asking you to click another window.";
 "onboarding.bodyFeatureTitle" = "Configurable Body Breaks";
 "onboarding.bodyFeatureBody" = "Longer movement breaks can use postpones, images, display rules, and manual finish.";
+"onboarding.rhythmTitle" = "Choose your starting rhythm";
 "onboarding.learnMore" = "Learn More";
-"onboarding.useDefaults" = "Use Defaults";
+"onboarding.useSelected" = "Use Selected";
 "onboarding.preferences" = "Open Preferences";
 "about.title" = "About ShouldRest";
 "about.body" = "ShouldRest %@\n\nShouldRest is a Mac-first rest reminder built around short, frequent, hard-to-ignore Eye Gates and configurable Body Breaks.\n\nIt keeps Stretchly-compatible scheduling, automation, update, debug, and preference capabilities where they support the product goal, while intentionally replacing weak 20-second skip/postpone behavior with stricter eye-rest enforcement.";

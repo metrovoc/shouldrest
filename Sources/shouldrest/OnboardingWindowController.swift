@@ -8,21 +8,24 @@ private enum OnboardingFeatureIcon {
 
 @MainActor
 final class OnboardingWindowController: NSWindowController {
-    private let onUseDefaults: () -> Void
-    private let onOpenPreferences: () -> Void
+    private let onUsePreset: (RestRhythmPreset) -> Void
+    private let onOpenPreferences: (RestRhythmPreset) -> Void
     private let onLearnMore: () -> Void
+    private let rhythmPresetControl = NSSegmentedControl()
+    private let rhythmPresetDescription = NSTextField(labelWithString: "")
+    private var selectedRhythmPreset: RestRhythmPreset = .recommended
 
     init(
-        onUseDefaults: @escaping () -> Void,
-        onOpenPreferences: @escaping () -> Void,
+        onUsePreset: @escaping (RestRhythmPreset) -> Void,
+        onOpenPreferences: @escaping (RestRhythmPreset) -> Void,
         onLearnMore: @escaping () -> Void
     ) {
-        self.onUseDefaults = onUseDefaults
+        self.onUsePreset = onUsePreset
         self.onOpenPreferences = onOpenPreferences
         self.onLearnMore = onLearnMore
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 640, height: 380),
+            contentRect: NSRect(x: 0, y: 0, width: 680, height: 500),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -45,13 +48,14 @@ final class OnboardingWindowController: NSWindowController {
         let stack = NSStackView()
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 22
+        stack.spacing = 18
         stack.edgeInsets = NSEdgeInsets(top: 28, left: 30, bottom: 24, right: 30)
         stack.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(stack)
 
         stack.addArrangedSubview(heroView())
         stack.addArrangedSubview(featureList())
+        stack.addArrangedSubview(rhythmPresetPanel())
         stack.addArrangedSubview(buttonRow())
 
         NSLayoutConstraint.activate([
@@ -102,7 +106,7 @@ final class OnboardingWindowController: NSWindowController {
         body.maximumNumberOfLines = 3
 
         [title, subtitle, body].forEach { label in
-            label.widthAnchor.constraint(lessThanOrEqualToConstant: 480).isActive = true
+            label.widthAnchor.constraint(lessThanOrEqualToConstant: 520).isActive = true
             copy.addArrangedSubview(label)
         }
         hero.addArrangedSubview(copy)
@@ -152,7 +156,7 @@ final class OnboardingWindowController: NSWindowController {
             list.topAnchor.constraint(equalTo: panel.topAnchor, constant: 14),
             list.bottomAnchor.constraint(equalTo: panel.bottomAnchor, constant: -14)
         ])
-        panel.widthAnchor.constraint(equalToConstant: 580).isActive = true
+        panel.widthAnchor.constraint(equalToConstant: 620).isActive = true
         return panel
     }
 
@@ -193,7 +197,7 @@ final class OnboardingWindowController: NSWindowController {
         bodyLabel.textColor = .secondaryLabelColor
         bodyLabel.lineBreakMode = .byWordWrapping
         bodyLabel.maximumNumberOfLines = 2
-        bodyLabel.widthAnchor.constraint(lessThanOrEqualToConstant: 500).isActive = true
+        bodyLabel.widthAnchor.constraint(lessThanOrEqualToConstant: 540).isActive = true
 
         copy.addArrangedSubview(titleLabel)
         copy.addArrangedSubview(bodyLabel)
@@ -201,12 +205,91 @@ final class OnboardingWindowController: NSWindowController {
         return row
     }
 
+    private func rhythmPresetPanel() -> NSView {
+        let panel = NSView()
+        panel.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmPresetPanel")
+        panel.wantsLayer = true
+        panel.layer?.cornerRadius = 8
+        panel.layer?.borderWidth = 1
+        panel.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.6).cgColor
+        panel.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.07).cgColor
+
+        let stack = NSStackView()
+        stack.orientation = .vertical
+        stack.alignment = .leading
+        stack.spacing = 10
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        panel.addSubview(stack)
+
+        let titleRow = NSStackView()
+        titleRow.orientation = .horizontal
+        titleRow.alignment = .centerY
+        titleRow.spacing = 8
+
+        let icon = NSImageView(image: symbolImage("timer", accessibilityDescription: nil))
+        icon.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmPresetIcon")
+        icon.symbolConfiguration = .init(pointSize: 14, weight: .semibold)
+        icon.contentTintColor = .secondaryLabelColor
+        icon.widthAnchor.constraint(equalToConstant: 18).isActive = true
+        icon.heightAnchor.constraint(equalToConstant: 18).isActive = true
+        titleRow.addArrangedSubview(icon)
+
+        let title = NSTextField(labelWithString: L10n.tr("onboarding.rhythmTitle"))
+        title.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmTitle")
+        title.font = .systemFont(ofSize: 13, weight: .semibold)
+        titleRow.addArrangedSubview(title)
+
+        configureRhythmPresetControl()
+        configureRhythmPresetDescription()
+
+        stack.addArrangedSubview(titleRow)
+        stack.addArrangedSubview(rhythmPresetControl)
+        stack.addArrangedSubview(rhythmPresetDescription)
+
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: panel.leadingAnchor, constant: 14),
+            stack.trailingAnchor.constraint(equalTo: panel.trailingAnchor, constant: -14),
+            stack.topAnchor.constraint(equalTo: panel.topAnchor, constant: 12),
+            stack.bottomAnchor.constraint(equalTo: panel.bottomAnchor, constant: -12)
+        ])
+        panel.widthAnchor.constraint(equalToConstant: 620).isActive = true
+        return panel
+    }
+
+    private func configureRhythmPresetControl() {
+        rhythmPresetControl.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmPresetControl")
+        rhythmPresetControl.segmentCount = RestRhythmPreset.allCases.count
+        rhythmPresetControl.segmentStyle = .rounded
+        rhythmPresetControl.trackingMode = .selectOne
+        rhythmPresetControl.selectedSegment = selectedRhythmPreset.rawValue
+        rhythmPresetControl.target = self
+        rhythmPresetControl.action = #selector(rhythmPresetChanged(_:))
+        rhythmPresetControl.setContentHuggingPriority(.required, for: .horizontal)
+        rhythmPresetControl.setContentCompressionResistancePriority(.required, for: .horizontal)
+
+        for preset in RestRhythmPreset.allCases {
+            rhythmPresetControl.setLabel(preset.title, forSegment: preset.rawValue)
+            rhythmPresetControl.setWidth(176, forSegment: preset.rawValue)
+            rhythmPresetControl.setToolTip(preset.help, forSegment: preset.rawValue)
+        }
+    }
+
+    private func configureRhythmPresetDescription() {
+        rhythmPresetDescription.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmPresetDescription")
+        rhythmPresetDescription.font = .systemFont(ofSize: 12, weight: .regular)
+        rhythmPresetDescription.textColor = .secondaryLabelColor
+        rhythmPresetDescription.lineBreakMode = .byWordWrapping
+        rhythmPresetDescription.maximumNumberOfLines = 2
+        rhythmPresetDescription.widthAnchor.constraint(lessThanOrEqualToConstant: 560).isActive = true
+        updateRhythmPresetDescription()
+    }
+
     private func buttonRow() -> NSView {
         let row = NSStackView()
         row.orientation = .horizontal
         row.alignment = .centerY
         row.spacing = 10
-        row.widthAnchor.constraint(equalToConstant: 580).isActive = true
+        row.widthAnchor.constraint(equalToConstant: 620).isActive = true
 
         let learnMoreButton = onboardingButton(
             title: L10n.tr("onboarding.learnMore"),
@@ -218,12 +301,12 @@ final class OnboardingWindowController: NSWindowController {
             symbolName: "slider.horizontal.3",
             action: #selector(openPreferences)
         )
-        let useDefaultsButton = onboardingButton(
-            title: L10n.tr("onboarding.useDefaults"),
+        let useSelectedButton = onboardingButton(
+            title: L10n.tr("onboarding.useSelected"),
             symbolName: "checkmark.circle.fill",
-            action: #selector(useDefaults)
+            action: #selector(useSelectedPreset)
         )
-        useDefaultsButton.keyEquivalent = "\r"
+        useSelectedButton.keyEquivalent = "\r"
 
         let spacer = NSView()
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
@@ -232,7 +315,7 @@ final class OnboardingWindowController: NSWindowController {
         row.addArrangedSubview(learnMoreButton)
         row.addArrangedSubview(spacer)
         row.addArrangedSubview(preferencesButton)
-        row.addArrangedSubview(useDefaultsButton)
+        row.addArrangedSubview(useSelectedButton)
         return row
     }
 
@@ -260,13 +343,27 @@ final class OnboardingWindowController: NSWindowController {
             ?? NSImage(size: NSSize(width: 16, height: 16))
     }
 
-    @objc private func useDefaults() {
-        onUseDefaults()
+    @objc private func rhythmPresetChanged(_ sender: NSSegmentedControl) {
+        guard let preset = RestRhythmPreset(rawValue: sender.selectedSegment) else {
+            sender.selectedSegment = selectedRhythmPreset.rawValue
+            return
+        }
+        selectedRhythmPreset = preset
+        updateRhythmPresetDescription()
+    }
+
+    private func updateRhythmPresetDescription() {
+        rhythmPresetDescription.stringValue = selectedRhythmPreset.help
+        rhythmPresetControl.toolTip = selectedRhythmPreset.help
+    }
+
+    @objc private func useSelectedPreset() {
+        onUsePreset(selectedRhythmPreset)
         close()
     }
 
     @objc private func openPreferences() {
-        onOpenPreferences()
+        onOpenPreferences(selectedRhythmPreset)
         close()
     }
 

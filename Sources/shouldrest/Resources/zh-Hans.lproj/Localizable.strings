@@ -317,8 +317,9 @@
 "onboarding.emergencyFeatureBody" = "紧急退出由覆盖层自身处理：Esc、配置的快捷键或淡红色紧急入口都会先进入待确认状态；第二次点击或再次按 Esc 才会从覆盖层内退出，不再要求你点击另一个窗口。";
 "onboarding.bodyFeatureTitle" = "活动休息可配置";
 "onboarding.bodyFeatureBody" = "更长的活动休息支持推迟、图片、显示器规则和手动完成。";
+"onboarding.rhythmTitle" = "选择初始休息节奏";
 "onboarding.learnMore" = "了解更多";
-"onboarding.useDefaults" = "使用默认值";
+"onboarding.useSelected" = "使用所选节奏";
 "onboarding.preferences" = "打开偏好设置";
 "about.title" = "关于 ShouldRest";
 "about.body" = "ShouldRest %@\n\nShouldRest 是一个面向 Mac 的休息提醒应用，围绕短、频繁、难以忽视的护眼休息和可配置的活动休息构建。\n\n在符合产品目标的地方，它保留 Stretchly 兼容的调度、自动化、更新、调试和偏好能力；同时有意用更严格的眼睛休息约束替代薄弱的 20 秒跳过/推迟行为。";
