@@ -296,13 +296,7 @@ struct AppExclusionApplicationCandidate: Equatable {
     var menuTitle: String {
         let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         let trimmedBundleIdentifier = bundleIdentifier?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if trimmedName.isEmpty {
-            return trimmedBundleIdentifier
-        }
-        if trimmedBundleIdentifier.isEmpty {
-            return trimmedName
-        }
-        return "\(trimmedName) - \(trimmedBundleIdentifier)"
+        return trimmedName.isEmpty ? trimmedBundleIdentifier : trimmedName
     }
 
     static func currentRegularApplications() -> [AppExclusionApplicationCandidate] {
@@ -3983,7 +3977,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         if terms.isEmpty {
             preview = L10n.tr("prefs.appExclusionPreviewEmpty")
         } else {
-            let termSummary = appExclusionTermsSummary(terms)
+            let termSummary = appExclusionTermsSummary(terms, preferredName: appExclusionName.stringValue)
             let targetSummary = appExclusionTargetSummary(appExclusionAppliesToSelection())
             let mode = selected(AppExclusionRule.Mode.self, from: appExclusionMode, fallback: .pauseWhenMatched)
             switch mode {
@@ -4204,7 +4198,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     private func appExclusionRuleSummary(_ rule: AppExclusionRule) -> String {
-        let terms = rule.matchTerms.isEmpty ? L10n.tr("prefs.appExclusionNoTerms") : rule.matchTerms.joined(separator: ", ")
+        let terms = appExclusionTermsSummary(rule.matchTerms, preferredName: rule.name)
         let applies = appExclusionTargetSummary(rule.appliesTo)
         let summary: String
         switch rule.mode {
@@ -4217,10 +4211,36 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         return "\(summary.prefix(93))…"
     }
 
-    private func appExclusionTermsSummary(_ terms: [String]) -> String {
-        let summary = terms.joined(separator: ", ")
+    private func appExclusionTermsSummary(_ terms: [String], preferredName: String? = nil) -> String {
+        let displayTerms = appExclusionDisplayTerms(terms, preferredName: preferredName)
+        let summary = displayTerms.isEmpty ? L10n.tr("prefs.appExclusionNoTerms") : displayTerms.joined(separator: ", ")
         guard summary.count > 80 else { return summary }
         return "\(summary.prefix(77))…"
+    }
+
+    private func appExclusionDisplayTerms(_ terms: [String], preferredName: String?) -> [String] {
+        let cleanedTerms = AppExclusionApplicationCandidate.uniqueNonemptyTerms(terms.map { Optional($0) })
+        let name = preferredName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        guard !name.isEmpty,
+              cleanedTerms.contains(where: { $0.caseInsensitiveCompare(name) == .orderedSame }) else {
+            return cleanedTerms
+        }
+        let extraTerms = cleanedTerms.filter { $0.caseInsensitiveCompare(name) != .orderedSame }
+        guard !extraTerms.isEmpty,
+              extraTerms.allSatisfy(looksLikeAppIdentifier) else {
+            return cleanedTerms
+        }
+        return [name]
+    }
+
+    private func looksLikeAppIdentifier(_ value: String) -> Bool {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.contains("."),
+              !trimmed.contains(where: { $0.isWhitespace }) else {
+            return false
+        }
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: ".-_"))
+        return trimmed.unicodeScalars.allSatisfy { allowed.contains($0) }
     }
 
     private func appExclusionTargetSummary(_ appliesTo: Set<RestKind>) -> String {

@@ -461,6 +461,18 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
             preview.stringValue,
             "Run Eye Gate and Body Break only during Zoom, us.zoom.xos."
         )
+
+        let name = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionNameField", in: contentView) as? NSTextField)
+        name.stringValue = "Zoom"
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: name))
+
+        XCTAssertEqual(preview.stringValue, "Run Eye Gate and Body Break only during Zoom.")
+
+        name.stringValue = "Zoom"
+        terms.objectValue = ["Zoom", "Notion"]
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: terms))
+
+        XCTAssertEqual(preview.stringValue, "Run Eye Gate and Body Break only during Zoom, Notion.")
     }
 
     func testEnabledAppExclusionOffersRunningAppPicker() throws {
@@ -489,6 +501,17 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertEqual(button.accessibilityHelp(), L10n.tr("prefs.addRunningAppHelp"))
         XCTAssertEqual(button.image?.accessibilityDescription, L10n.tr("prefs.addRunningApp"))
         XCTAssertNotNil(button.image)
+    }
+
+    func testRunningAppPickerMenuTitlesHideBundleIdentifiers() {
+        let candidate = AppExclusionApplicationCandidate(name: "Zoom", bundleIdentifier: "us.zoom.xos")
+        XCTAssertEqual(candidate.menuTitle, "Zoom")
+        XCTAssertEqual(candidate.terms, ["Zoom", "us.zoom.xos"])
+        XCTAssertFalse(candidate.menuTitle.contains("us.zoom.xos"))
+
+        let fallback = AppExclusionApplicationCandidate(name: " ", bundleIdentifier: "com.example.Tool")
+        XCTAssertEqual(fallback.menuTitle, "com.example.Tool")
+        XCTAssertEqual(fallback.terms, ["com.example.Tool"])
     }
 
     func testLegacyTargetlessAppExclusionGetsVisibleDefaultTarget() throws {
@@ -638,6 +661,9 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         let rule = try XCTUnwrap(savedSettings.value?.appExclusions.first)
         XCTAssertEqual(rule.name, "Zoom")
         XCTAssertEqual(rule.matchTerms, ["Zoom", "us.zoom.xos"])
+        let body = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionRuleBody.0", in: contentView) as? NSTextField)
+        XCTAssertEqual(body.stringValue, "Pause Body Break during Zoom.")
+        XCTAssertFalse(body.stringValue.contains("us.zoom.xos"))
     }
 
     func testRunningAppPickerAppendsRuleWhenRuleListIsActive() throws {
