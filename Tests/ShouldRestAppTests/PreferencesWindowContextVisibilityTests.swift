@@ -23,6 +23,8 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         let icon = try XCTUnwrap(view(withIdentifier: "prefs.contextSummaryIcon", in: contentView) as? NSImageView)
 
         XCTAssertNotNil(icon.image)
+        XCTAssertEqual(icon.image?.accessibilityDescription, summary.stringValue)
+        XCTAssertEqual(icon.accessibilityHelp(), summary.stringValue)
         XCTAssertEqual(
             summary.stringValue,
             "Idle periods over 6 min count as completed rest. " +

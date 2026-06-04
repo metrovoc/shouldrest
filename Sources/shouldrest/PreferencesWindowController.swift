@@ -1264,9 +1264,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func scheduleSummaryView() -> NSStackView {
         scheduleSummaryIcon.identifier = NSUserInterfaceItemIdentifier("prefs.scheduleSummaryIcon")
-        scheduleSummaryIcon.image = NSImage(systemSymbolName: "timer", accessibilityDescription: nil)
+        scheduleSummaryIcon.image = NSImage(
+            systemSymbolName: "timer",
+            accessibilityDescription: L10n.tr("prefs.tabSchedule")
+        )
         scheduleSummaryIcon.symbolConfiguration = .init(pointSize: 15, weight: .semibold)
         scheduleSummaryIcon.contentTintColor = .secondaryLabelColor
+        scheduleSummaryIcon.setAccessibilityLabel(L10n.tr("prefs.tabSchedule"))
         scheduleSummaryIcon.widthAnchor.constraint(equalToConstant: 20).isActive = true
 
         scheduleSummaryLabel.identifier = NSUserInterfaceItemIdentifier("prefs.scheduleSummaryLabel")
@@ -1291,9 +1295,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func contextSummaryView() -> NSStackView {
         contextSummaryIcon.identifier = NSUserInterfaceItemIdentifier("prefs.contextSummaryIcon")
-        contextSummaryIcon.image = NSImage(systemSymbolName: "scope", accessibilityDescription: nil)
+        contextSummaryIcon.image = NSImage(
+            systemSymbolName: "scope",
+            accessibilityDescription: L10n.tr("prefs.tabContext")
+        )
         contextSummaryIcon.symbolConfiguration = .init(pointSize: 15, weight: .semibold)
         contextSummaryIcon.contentTintColor = .secondaryLabelColor
+        contextSummaryIcon.setAccessibilityLabel(L10n.tr("prefs.tabContext"))
         contextSummaryIcon.widthAnchor.constraint(equalToConstant: 20).isActive = true
 
         contextSummaryLabel.identifier = NSUserInterfaceItemIdentifier("prefs.contextSummaryLabel")
@@ -1793,14 +1801,20 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         localImagePath.placeholderString = L10n.tr("prefs.noImageSelected")
 
         localImageChooseButton.title = L10n.tr("prefs.chooseFile")
-        localImageChooseButton.image = NSImage(systemSymbolName: "photo", accessibilityDescription: nil)
+        localImageChooseButton.image = NSImage(
+            systemSymbolName: "photo",
+            accessibilityDescription: localImageChooseButton.title
+        )
         localImageChooseButton.imagePosition = .imageLeading
         localImageChooseButton.target = self
         localImageChooseButton.action = #selector(chooseLocalImagePressed)
         setHelp(L10n.tr("prefs.chooseBodyImageHelp"), on: localImageChooseButton)
 
         localImageClearButton.title = L10n.tr("prefs.clear")
-        localImageClearButton.image = NSImage(systemSymbolName: "xmark.circle", accessibilityDescription: nil)
+        localImageClearButton.image = NSImage(
+            systemSymbolName: "xmark.circle",
+            accessibilityDescription: localImageClearButton.title
+        )
         localImageClearButton.imagePosition = .imageLeading
         localImageClearButton.target = self
         localImageClearButton.action = #selector(clearLocalImagePressed)
@@ -2645,6 +2659,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         } else {
             scheduleSummaryLabel.stringValue = L10n.tr("prefs.scheduleSummary.none")
         }
+        scheduleSummaryLabel.toolTip = scheduleSummaryLabel.stringValue
+        scheduleSummaryLabel.setAccessibilityHelp(scheduleSummaryLabel.stringValue)
+        scheduleSummaryIcon.image?.accessibilityDescription = scheduleSummaryLabel.stringValue
+        scheduleSummaryIcon.setAccessibilityHelp(scheduleSummaryLabel.stringValue)
         updateRhythmPresetButtonStates()
     }
 
@@ -3554,6 +3572,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         contextSummaryLabel.stringValue = summary
         contextSummaryLabel.toolTip = summary
         contextSummaryLabel.setAccessibilityHelp(summary)
+        contextSummaryIcon.image?.accessibilityDescription = summary
+        contextSummaryIcon.setAccessibilityHelp(summary)
     }
 
     private func contextIdleSummary() -> String {
@@ -4539,7 +4559,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private func updateLocalImagePreview() {
         let path = localImagePath.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !path.isEmpty else {
-            localImagePreview.image = NSImage(systemSymbolName: "photo", accessibilityDescription: nil)
+            localImagePreview.image = NSImage(
+                systemSymbolName: "photo",
+                accessibilityDescription: L10n.tr("prefs.imagePreviewEmpty")
+            )
             localImagePreview.contentTintColor = .tertiaryLabelColor
             localImagePreviewLabel.stringValue = L10n.tr("prefs.imagePreviewEmpty")
             localImagePreviewLabel.toolTip = L10n.tr("prefs.imageDropHelp")
@@ -4549,12 +4572,17 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let url = URL(fileURLWithPath: path)
         localImagePreviewLabel.toolTip = path
         guard let image = NSImage(contentsOfFile: path) else {
-            localImagePreview.image = NSImage(systemSymbolName: "exclamationmark.triangle", accessibilityDescription: nil)
+            let description = L10n.format("prefs.imagePreviewUnavailable", url.lastPathComponent)
+            localImagePreview.image = NSImage(
+                systemSymbolName: "exclamationmark.triangle",
+                accessibilityDescription: description
+            )
             localImagePreview.contentTintColor = .systemOrange
-            localImagePreviewLabel.stringValue = L10n.format("prefs.imagePreviewUnavailable", url.lastPathComponent)
+            localImagePreviewLabel.stringValue = description
             return
         }
 
+        image.accessibilityDescription = url.lastPathComponent
         localImagePreview.image = image
         localImagePreview.contentTintColor = nil
         localImagePreviewLabel.stringValue = url.lastPathComponent

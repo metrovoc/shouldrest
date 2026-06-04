@@ -18,12 +18,15 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
 
         XCTAssertNil(view(withIdentifier: "localImagePathField", in: contentView))
         XCTAssertEqual(preview.toolTip, L10n.tr("prefs.imageDropHelp"))
+        XCTAssertEqual(preview.image?.accessibilityDescription, L10n.tr("prefs.imagePreviewEmpty"))
         XCTAssertEqual(label.stringValue, L10n.tr("prefs.imagePreviewEmpty"))
         XCTAssertEqual(label.toolTip, L10n.tr("prefs.imageDropHelp"))
         XCTAssertEqual(chooseButton.toolTip, L10n.tr("prefs.chooseBodyImageHelp"))
         XCTAssertEqual(chooseButton.accessibilityHelp(), L10n.tr("prefs.chooseBodyImageHelp"))
+        XCTAssertEqual(chooseButton.image?.accessibilityDescription, chooseButton.title)
         XCTAssertEqual(clearButton.toolTip, L10n.tr("prefs.clearBodyImageHelp"))
         XCTAssertEqual(clearButton.accessibilityHelp(), L10n.tr("prefs.clearBodyImageHelp"))
+        XCTAssertEqual(clearButton.image?.accessibilityDescription, clearButton.title)
         XCTAssertFalse(clearButton.isEnabled)
     }
 
@@ -39,6 +42,7 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
         let imageView = try XCTUnwrap(view(withIdentifier: "localImagePreview", in: contentView) as? NSImageView)
         let label = try XCTUnwrap(view(withIdentifier: "localImagePreviewLabel", in: contentView) as? NSTextField)
         XCTAssertNotNil(imageView.image)
+        XCTAssertEqual(imageView.image?.accessibilityDescription, "body-preview.png")
         XCTAssertEqual(label.stringValue, "body-preview.png")
         XCTAssertFalse(visibleTexts(in: contentView).contains(imageURL.path))
     }
@@ -55,7 +59,9 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
         try selectAppearanceTab(in: contentView)
 
         let label = try XCTUnwrap(view(withIdentifier: "localImagePreviewLabel", in: contentView) as? NSTextField)
+        let imageView = try XCTUnwrap(view(withIdentifier: "localImagePreview", in: contentView) as? NSImageView)
         XCTAssertEqual(label.stringValue, L10n.format("prefs.imagePreviewUnavailable", missingURL.lastPathComponent))
+        XCTAssertEqual(imageView.image?.accessibilityDescription, label.stringValue)
     }
 
     func testDroppingImageIntoPreviewUpdatesPathPreviewAndAutosaves() throws {
@@ -73,6 +79,7 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
         waitUntilSavedSettingsArrive(savedSettings)
 
         XCTAssertEqual(label.stringValue, "dropped-body-preview.png")
+        XCTAssertEqual(preview.image?.accessibilityDescription, "dropped-body-preview.png")
         XCTAssertEqual(savedSettings.value?.contentLibrary.localImagePaths, [imageURL.standardizedFileURL.path])
         XCTAssertEqual(savedSettings.value?.bodyBreak.content, .localImage)
         XCTAssertTrue(clearButton.isEnabled)
@@ -98,6 +105,8 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
 
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(label.stringValue, L10n.tr("prefs.imagePreviewEmpty"))
+        let imageView = try XCTUnwrap(view(withIdentifier: "localImagePreview", in: contentView) as? NSImageView)
+        XCTAssertEqual(imageView.image?.accessibilityDescription, L10n.tr("prefs.imagePreviewEmpty"))
         XCTAssertEqual(label.toolTip, L10n.tr("prefs.imageDropHelp"))
         XCTAssertFalse(clearButton.isEnabled)
         XCTAssertEqual(savedSettings.value?.contentLibrary.localImagePaths, [])

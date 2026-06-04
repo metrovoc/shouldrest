@@ -21,6 +21,10 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
             label.stringValue,
             L10n.format("prefs.scheduleSummary.eyeAndBody", 10, 20, 4, 5)
         )
+        XCTAssertEqual(label.toolTip, label.stringValue)
+        XCTAssertEqual(label.accessibilityHelp(), label.stringValue)
+        XCTAssertEqual(icon.image?.accessibilityDescription, label.stringValue)
+        XCTAssertEqual(icon.accessibilityHelp(), label.stringValue)
     }
 
     func testScheduleRhythmPresetsExposeIconButtonsWithHelp() throws {
