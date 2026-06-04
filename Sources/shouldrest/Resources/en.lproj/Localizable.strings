@@ -16,7 +16,7 @@
 "menu.emergencyOverride" = "Emergency Exit";
 "menu.emergencyOverrideHelp" = "Bring the active Eye Gate overlay forward; confirm there with two clicks or two Esc presses.";
 "menu.emergencyOverlayOnly" = "Use Emergency Exit in the overlay";
-"menu.emergencyOverlayOnlyHelp" = "This menu cannot exit an active Eye Gate. Return to the overlay, then click Emergency Exit in the lower-right corner or press Esc twice.";
+"menu.emergencyOverlayOnlyHelp" = "This menu cannot exit an active Eye Gate. Return to the overlay, then click the lower-right Emergency Exit twice or press Esc twice.";
 "menu.resume" = "Resume";
 "menu.resumeHelp" = "Resume normal rest scheduling.";
 "menu.pause" = "Pause";
@@ -77,7 +77,7 @@
 "notification.shortcutsUnavailable" = "Some shortcuts could not be registered: %@.";
 "notification.resumingBreaks" = "Resuming breaks";
 "notification.quitBlocked" = "Finish %@ before quitting.";
-"notification.quitBlockedEyeGateEmergency" = "Use Emergency Exit in the overlay to quit during Eye Gate. Click Emergency Exit or press Esc twice; this records a missed rest.";
+"notification.quitBlockedEyeGateEmergency" = "Use Emergency Exit in the overlay to quit during Eye Gate. Click Emergency Exit twice or press Esc twice; this records a missed rest.";
 "notification.resetBlocked" = "Finish %@ before resetting the schedule.";
 "notification.pauseBlocked" = "Finish %@ before pausing.";
 "status.noRests" = "No enabled rests";
@@ -102,7 +102,7 @@
 "status.nextBodyAfterEyeGates" = "Next Body Break after %d Eye Gates";
 "status.active" = "%@ active, %@ remaining";
 "status.readyToFinish" = "%@ ready to finish";
-"status.eyeGateActiveGuidance" = "Use the overlay Emergency Exit in the lower-right corner, or press Esc twice.";
+"status.eyeGateActiveGuidance" = "Click Emergency Exit twice in the overlay, or press Esc twice.";
 "status.eyeGateActiveNoEmergencyGuidance" = "Keep looking away until the timer ends.";
 "status.eyeGateReadyGuidance" = "Finish from the overlay when ready.";
 "status.bodyBreakActiveGuidance" = "Use overlay controls to postpone, skip, or finish.";

@@ -394,7 +394,7 @@ final class MenuStatusPresenterTests: XCTestCase {
         let lines = MenuStatusPresenter.lines(state: state, settings: .defaults, now: start.addingTimeInterval(5))
 
         XCTAssertEqual(lines.first, "Eye Gate active, 15s remaining")
-        XCTAssertEqual(lines[1], "Use the overlay Emergency Exit in the lower-right corner, or press Esc twice.")
+        XCTAssertEqual(lines[1], "Click Emergency Exit twice in the overlay, or press Esc twice.")
     }
 
     func testActiveEyeGateStatusDoesNotAdvertiseEmergencyWhenDisabled() {

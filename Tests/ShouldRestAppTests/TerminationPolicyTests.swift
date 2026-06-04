@@ -126,7 +126,7 @@ final class TerminationPolicyTests: XCTestCase {
 
         XCTAssertEqual(
             BlockedActionCopy.quitMessage(state: state, settings: .defaults, now: start.addingTimeInterval(1)),
-            "Use Emergency Exit in the overlay to quit during Eye Gate. Click Emergency Exit or press Esc twice; this records a missed rest."
+            "Use Emergency Exit in the overlay to quit during Eye Gate. Click Emergency Exit twice or press Esc twice; this records a missed rest."
         )
         XCTAssertEqual(
             BlockedActionCopy.quitMessage(state: state, settings: .defaults, now: start.addingTimeInterval(60)),

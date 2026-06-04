@@ -46,7 +46,7 @@ final class StatusMenuHeaderViewTests: XCTestCase {
             content: MenuStatusPresenter.HeaderContent(
                 title: "ShouldRest",
                 primary: "Eye Gate active, 15s remaining",
-                secondary: "Use the overlay Emergency Exit in the lower-right corner, or press Esc twice.",
+                secondary: "Click Emergency Exit twice in the overlay, or press Esc twice.",
                 healthBadge: nil,
                 icon: .restGate
             )
@@ -59,7 +59,7 @@ final class StatusMenuHeaderViewTests: XCTestCase {
         XCTAssertEqual(secondary.maximumNumberOfLines, 2)
         XCTAssertEqual(
             secondary.stringValue,
-            "Use the overlay Emergency Exit in the lower-right corner, or press Esc twice."
+            "Click Emergency Exit twice in the overlay, or press Esc twice."
         )
     }
 

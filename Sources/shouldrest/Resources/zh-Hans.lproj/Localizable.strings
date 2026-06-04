@@ -16,7 +16,7 @@
 "menu.emergencyOverride" = "紧急退出";
 "menu.emergencyOverrideHelp" = "把当前护眼覆盖层带到前台；只在覆盖层内点两次或按两次 Esc 确认。";
 "menu.emergencyOverlayOnly" = "在覆盖层内使用紧急退出";
-"menu.emergencyOverlayOnlyHelp" = "此菜单不能退出进行中的护眼休息。请回到覆盖层，点击右下角的紧急退出，或按两次 Esc。";
+"menu.emergencyOverlayOnlyHelp" = "此菜单不能退出进行中的护眼休息。请回到覆盖层，在右下角点击紧急退出两次，或按两次 Esc。";
 "menu.resume" = "恢复";
 "menu.resumeHelp" = "恢复正常休息调度。";
 "menu.pause" = "暂停";
@@ -77,7 +77,7 @@
 "notification.shortcutsUnavailable" = "部分快捷键无法注册：%@。";
 "notification.resumingBreaks" = "正在恢复休息";
 "notification.quitBlocked" = "请先完成%@，再退出。";
-"notification.quitBlockedEyeGateEmergency" = "要在护眼休息中退出，请在覆盖层内使用紧急退出：点击紧急退出或按两次 Esc；这会记录一次未完成休息。";
+"notification.quitBlockedEyeGateEmergency" = "要在护眼休息中退出，请在覆盖层内点击紧急退出两次，或按两次 Esc；这会记录一次未完成休息。";
 "notification.resetBlocked" = "请先完成%@，再重置计划。";
 "notification.pauseBlocked" = "请先完成%@，再暂停。";
 "status.noRests" = "没有启用的休息计划";
@@ -102,7 +102,7 @@
 "status.nextBodyAfterEyeGates" = "距离下一次活动休息还有 %d 次护眼休息";
 "status.active" = "%@ 进行中，剩余 %@";
 "status.readyToFinish" = "%@ 已完成，等待结束";
-"status.eyeGateActiveGuidance" = "使用覆盖层右下角的紧急退出，或按两次 Esc。";
+"status.eyeGateActiveGuidance" = "在覆盖层内点击紧急退出两次，或按两次 Esc。";
 "status.eyeGateActiveNoEmergencyGuidance" = "计时结束前，请继续看向屏幕外。";
 "status.eyeGateReadyGuidance" = "准备好后，从覆盖层内完成休息。";
 "status.bodyBreakActiveGuidance" = "使用覆盖层按钮推迟、跳过或完成。";

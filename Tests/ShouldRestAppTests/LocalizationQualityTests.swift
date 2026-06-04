@@ -390,11 +390,11 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("menu.reset"), "Reset Schedule")
         XCTAssertEqual(L10n.tr("menu.emergencyOverlayOnly"), "Use Emergency Exit in the overlay")
         XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("This menu cannot exit"))
-        XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("lower-right corner"))
+        XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("lower-right Emergency Exit twice"))
         XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("Esc twice"))
         XCTAssertEqual(
             L10n.tr("status.eyeGateActiveGuidance"),
-            "Use the overlay Emergency Exit in the lower-right corner, or press Esc twice."
+            "Click Emergency Exit twice in the overlay, or press Esc twice."
         )
         XCTAssertEqual(L10n.tr("status.eyeGateActiveNoEmergencyGuidance"), "Keep looking away until the timer ends.")
         XCTAssertEqual(L10n.tr("status.eyeGateReadyGuidance"), "Finish from the overlay when ready.")
@@ -406,9 +406,10 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.format("notification.quitBlocked", "Eye Gate"), "Finish Eye Gate before quitting.")
         XCTAssertEqual(
             L10n.tr("notification.quitBlockedEyeGateEmergency"),
-            "Use Emergency Exit in the overlay to quit during Eye Gate. Click Emergency Exit or press Esc twice; this records a missed rest."
+            "Use Emergency Exit in the overlay to quit during Eye Gate. Click Emergency Exit twice or press Esc twice; this records a missed rest."
         )
         XCTAssertTrue(L10n.tr("notification.quitBlockedEyeGateEmergency").contains("Emergency Exit in the overlay"))
+        XCTAssertTrue(L10n.tr("notification.quitBlockedEyeGateEmergency").contains("Emergency Exit twice"))
         XCTAssertTrue(L10n.tr("notification.quitBlockedEyeGateEmergency").contains("Esc twice"))
         XCTAssertTrue(L10n.tr("notification.quitBlockedEyeGateEmergency").contains("missed rest"))
         XCTAssertEqual(L10n.format("notification.resetBlocked", "Eye Gate"), "Finish Eye Gate before resetting the schedule.")
@@ -425,8 +426,9 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("menu.emergencyOverlayOnly"), "在覆盖层内使用紧急退出")
         XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("此菜单不能退出"))
         XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("右下角"))
+        XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("紧急退出两次"))
         XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("两次 Esc"))
-        XCTAssertEqual(L10n.tr("status.eyeGateActiveGuidance"), "使用覆盖层右下角的紧急退出，或按两次 Esc。")
+        XCTAssertEqual(L10n.tr("status.eyeGateActiveGuidance"), "在覆盖层内点击紧急退出两次，或按两次 Esc。")
         XCTAssertEqual(L10n.tr("status.eyeGateActiveNoEmergencyGuidance"), "计时结束前，请继续看向屏幕外。")
         XCTAssertEqual(L10n.tr("status.eyeGateReadyGuidance"), "准备好后，从覆盖层内完成休息。")
         XCTAssertEqual(L10n.tr("status.bodyBreakActiveGuidance"), "使用覆盖层按钮推迟、跳过或完成。")
@@ -434,9 +436,9 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.format("notification.quitBlocked", "护眼休息"), "请先完成护眼休息，再退出。")
         XCTAssertEqual(
             L10n.tr("notification.quitBlockedEyeGateEmergency"),
-            "要在护眼休息中退出，请在覆盖层内使用紧急退出：点击紧急退出或按两次 Esc；这会记录一次未完成休息。"
+            "要在护眼休息中退出，请在覆盖层内点击紧急退出两次，或按两次 Esc；这会记录一次未完成休息。"
         )
-        XCTAssertTrue(L10n.tr("notification.quitBlockedEyeGateEmergency").contains("覆盖层内使用紧急退出"))
+        XCTAssertTrue(L10n.tr("notification.quitBlockedEyeGateEmergency").contains("覆盖层内点击紧急退出两次"))
         XCTAssertTrue(L10n.tr("notification.quitBlockedEyeGateEmergency").contains("两次 Esc"))
         XCTAssertTrue(L10n.tr("notification.quitBlockedEyeGateEmergency").contains("未完成休息"))
         XCTAssertEqual(L10n.format("notification.resetBlocked", "护眼休息"), "请先完成护眼休息，再重置计划。")
