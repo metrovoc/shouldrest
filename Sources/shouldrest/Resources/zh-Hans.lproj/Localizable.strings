@@ -262,7 +262,9 @@
 "prefs.hideAdvancedIdeas" = "隐藏高级提示";
 "prefs.localImagePath" = "活动休息图片";
 "prefs.chooseFile" = "选择...";
+"prefs.chooseBodyImageHelp" = "选择一张本地图片作为活动休息内容。";
 "prefs.clear" = "清空";
+"prefs.clearBodyImageHelp" = "清空当前选择的活动休息图片。";
 "prefs.noImageSelected" = "未选择图片";
 "prefs.imagePreviewEmpty" = "未选择图片";
 "prefs.imagePreviewUnavailable" = "%@ 无法预览";
@@ -331,6 +333,7 @@
 "prefs.unit.percent" = "%";
 "prefs.unit.hour" = "点";
 "prefs.restoreDefaults" = "恢复默认";
+"prefs.restoreDefaultsHelp" = "确认后用应用默认值替换当前偏好设置；欢迎窗口仍会保持已完成。";
 "prefs.restoreDefaultsWarning" = "这会用应用默认值替换当前偏好设置。欢迎窗口仍会保持已完成。";
 "prefs.restoreDefaultsContinue" = "恢复默认";
 "prefs.restoreDefaultsCancel" = "取消";

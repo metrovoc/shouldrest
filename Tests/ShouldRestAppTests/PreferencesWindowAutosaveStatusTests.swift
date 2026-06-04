@@ -35,7 +35,11 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
         XCTAssertEqual(title.stringValue, L10n.tr("preferences.title"))
         XCTAssertEqual(subtitle.stringValue, L10n.tr("prefs.headerSubtitle"))
         XCTAssertEqual(statusLabel.stringValue, L10n.tr("prefs.autosaveReady"))
-        XCTAssertNotNil(view(withIdentifier: "prefs.restoreDefaultsButton", in: contentView) as? NSButton)
+        let restoreDefaultsButton = try XCTUnwrap(view(withIdentifier: "prefs.restoreDefaultsButton", in: contentView) as? NSButton)
+        XCTAssertEqual(restoreDefaultsButton.toolTip, L10n.tr("prefs.restoreDefaultsHelp"))
+        XCTAssertEqual(restoreDefaultsButton.accessibilityHelp(), L10n.tr("prefs.restoreDefaultsHelp"))
+        XCTAssertNotNil(restoreDefaultsButton.image)
+        XCTAssertEqual(restoreDefaultsButton.imagePosition, .imageLeading)
     }
 
     func testRestoreDefaultsConfirmationDefaultsToCancel() throws {

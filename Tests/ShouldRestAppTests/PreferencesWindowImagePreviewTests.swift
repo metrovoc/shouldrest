@@ -13,8 +13,16 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
 
         let preview = try XCTUnwrap(view(withIdentifier: "localImagePreview", in: contentView) as? LocalImagePreviewView)
         let label = try XCTUnwrap(view(withIdentifier: "localImagePreviewLabel", in: contentView) as? NSTextField)
+        let chooseButton = try XCTUnwrap(button(withTitle: L10n.tr("prefs.chooseFile"), in: contentView))
+        let clearButton = try XCTUnwrap(button(withTitle: L10n.tr("prefs.clear"), in: contentView))
+
         XCTAssertEqual(preview.toolTip, L10n.tr("prefs.imageDropHelp"))
         XCTAssertEqual(label.stringValue, L10n.tr("prefs.imagePreviewEmpty"))
+        XCTAssertEqual(chooseButton.toolTip, L10n.tr("prefs.chooseBodyImageHelp"))
+        XCTAssertEqual(chooseButton.accessibilityHelp(), L10n.tr("prefs.chooseBodyImageHelp"))
+        XCTAssertEqual(clearButton.toolTip, L10n.tr("prefs.clearBodyImageHelp"))
+        XCTAssertEqual(clearButton.accessibilityHelp(), L10n.tr("prefs.clearBodyImageHelp"))
+        XCTAssertFalse(clearButton.isEnabled)
     }
 
     func testImagePreviewShowsSelectedImageFileName() throws {

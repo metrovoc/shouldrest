@@ -262,7 +262,9 @@
 "prefs.hideAdvancedIdeas" = "Hide advanced ideas";
 "prefs.localImagePath" = "Body Break image";
 "prefs.chooseFile" = "Choose...";
+"prefs.chooseBodyImageHelp" = "Choose a local image for Body Break content.";
 "prefs.clear" = "Clear";
+"prefs.clearBodyImageHelp" = "Clear the selected Body Break image.";
 "prefs.noImageSelected" = "No image selected";
 "prefs.imagePreviewEmpty" = "No image selected";
 "prefs.imagePreviewUnavailable" = "%@ cannot be previewed";
@@ -331,6 +333,7 @@
 "prefs.unit.percent" = "%";
 "prefs.unit.hour" = "hour";
 "prefs.restoreDefaults" = "Restore Defaults";
+"prefs.restoreDefaultsHelp" = "Replace current preferences with app defaults after confirmation. The welcome window stays completed.";
 "prefs.restoreDefaultsWarning" = "This will replace your current preferences with app defaults. The welcome window will stay completed.";
 "prefs.restoreDefaultsContinue" = "Restore Defaults";
 "prefs.restoreDefaultsCancel" = "Cancel";

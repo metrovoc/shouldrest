@@ -1106,6 +1106,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         restoreDefaultsButton.identifier = NSUserInterfaceItemIdentifier("prefs.restoreDefaultsButton")
         restoreDefaultsButton.image = NSImage(systemSymbolName: "arrow.counterclockwise", accessibilityDescription: nil)
         restoreDefaultsButton.imagePosition = .imageLeading
+        setHelp(L10n.tr("prefs.restoreDefaultsHelp"), on: restoreDefaultsButton)
         let spacer = NSView()
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
         footer.addArrangedSubview(spacer)
@@ -1555,12 +1556,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         localImageChooseButton.imagePosition = .imageLeading
         localImageChooseButton.target = self
         localImageChooseButton.action = #selector(chooseLocalImagePressed)
+        setHelp(L10n.tr("prefs.chooseBodyImageHelp"), on: localImageChooseButton)
 
         localImageClearButton.title = L10n.tr("prefs.clear")
         localImageClearButton.image = NSImage(systemSymbolName: "xmark.circle", accessibilityDescription: nil)
         localImageClearButton.imagePosition = .imageLeading
         localImageClearButton.target = self
         localImageClearButton.action = #selector(clearLocalImagePressed)
+        setHelp(L10n.tr("prefs.clearBodyImageHelp"), on: localImageClearButton)
 
         localImagePreview.identifier = NSUserInterfaceItemIdentifier("localImagePreview")
         localImagePreview.translatesAutoresizingMaskIntoConstraints = false
