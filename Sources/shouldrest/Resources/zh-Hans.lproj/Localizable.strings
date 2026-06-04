@@ -314,8 +314,8 @@
 "prefs.chooseBodyImageHelp" = "选择一张本地图片作为活动休息内容。";
 "prefs.clear" = "清空";
 "prefs.clearBodyImageHelp" = "清空当前选择的活动休息图片。";
-"prefs.noImageSelected" = "未选择图片";
-"prefs.imagePreviewEmpty" = "未选择图片";
+"prefs.noImageSelected" = "拖入或选择图片";
+"prefs.imagePreviewEmpty" = "拖入或选择图片";
 "prefs.imagePreviewUnavailable" = "%@ 无法预览";
 "prefs.imageDropHelp" = "可将图片拖到这里，或选择文件。";
 "prefs.sectionShortcuts" = "全局快捷键";

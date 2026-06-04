@@ -183,10 +183,13 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.adminHideUpdates"), "Hide update UI")
         XCTAssertEqual(L10n.tr("prefs.adminHideSettingsPath"), "Hide settings, log, support, and image paths")
         XCTAssertEqual(L10n.tr("prefs.adminHideStrict"), "Hide strict preferences")
+        XCTAssertEqual(L10n.tr("prefs.imagePreviewEmpty"), "Drop or choose an image")
+        XCTAssertEqual(L10n.tr("prefs.noImageSelected"), "Drop or choose an image")
         XCTAssertEqual(L10n.tr("menu.copyDebug"), "Copy Diagnostics")
         XCTAssertEqual(L10n.tr("menu.debugPanel"), "Diagnostics...")
         XCTAssertEqual(L10n.tr("debug.title"), "ShouldRest Diagnostics")
         XCTAssertEqual(L10n.tr("about.debug"), "Diagnostics")
+        XCTAssertNotEqual(L10n.tr("prefs.imagePreviewEmpty"), "No image selected")
         XCTAssertNotEqual(L10n.tr("prefs.eyeGateNow"), "Eye Gate now")
         XCTAssertNotEqual(L10n.tr("prefs.bodyBreakNow"), "Body Break now")
 
@@ -206,10 +209,13 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.adminHideUpdates"), "隐藏更新界面")
         XCTAssertEqual(L10n.tr("prefs.adminHideSettingsPath"), "隐藏设置、日志、支持与图片路径")
         XCTAssertEqual(L10n.tr("prefs.adminHideStrict"), "隐藏严格模式偏好")
+        XCTAssertEqual(L10n.tr("prefs.imagePreviewEmpty"), "拖入或选择图片")
+        XCTAssertEqual(L10n.tr("prefs.noImageSelected"), "拖入或选择图片")
         XCTAssertEqual(L10n.tr("menu.copyDebug"), "复制诊断信息")
         XCTAssertEqual(L10n.tr("menu.debugPanel"), "诊断...")
         XCTAssertEqual(L10n.tr("debug.title"), "ShouldRest 诊断")
         XCTAssertEqual(L10n.tr("about.debug"), "诊断")
+        XCTAssertNotEqual(L10n.tr("prefs.imagePreviewEmpty"), "未选择图片")
         L10n.languageOverride = nil
     }
 

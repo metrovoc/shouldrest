@@ -4223,7 +4223,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             localImagePreview.image = NSImage(systemSymbolName: "photo", accessibilityDescription: nil)
             localImagePreview.contentTintColor = .tertiaryLabelColor
             localImagePreviewLabel.stringValue = L10n.tr("prefs.imagePreviewEmpty")
-            localImagePreviewLabel.toolTip = nil
+            localImagePreviewLabel.toolTip = L10n.tr("prefs.imageDropHelp")
             return
         }
 

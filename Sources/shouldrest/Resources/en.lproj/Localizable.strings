@@ -314,8 +314,8 @@
 "prefs.chooseBodyImageHelp" = "Choose a local image for Body Break content.";
 "prefs.clear" = "Clear";
 "prefs.clearBodyImageHelp" = "Clear the selected Body Break image.";
-"prefs.noImageSelected" = "No image selected";
-"prefs.imagePreviewEmpty" = "No image selected";
+"prefs.noImageSelected" = "Drop or choose an image";
+"prefs.imagePreviewEmpty" = "Drop or choose an image";
 "prefs.imagePreviewUnavailable" = "%@ cannot be previewed";
 "prefs.imageDropHelp" = "Drop an image here, or choose a file.";
 "prefs.sectionShortcuts" = "Global Shortcuts";

@@ -19,6 +19,7 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
         XCTAssertNil(view(withIdentifier: "localImagePathField", in: contentView))
         XCTAssertEqual(preview.toolTip, L10n.tr("prefs.imageDropHelp"))
         XCTAssertEqual(label.stringValue, L10n.tr("prefs.imagePreviewEmpty"))
+        XCTAssertEqual(label.toolTip, L10n.tr("prefs.imageDropHelp"))
         XCTAssertEqual(chooseButton.toolTip, L10n.tr("prefs.chooseBodyImageHelp"))
         XCTAssertEqual(chooseButton.accessibilityHelp(), L10n.tr("prefs.chooseBodyImageHelp"))
         XCTAssertEqual(clearButton.toolTip, L10n.tr("prefs.clearBodyImageHelp"))
@@ -97,6 +98,7 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
 
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(label.stringValue, L10n.tr("prefs.imagePreviewEmpty"))
+        XCTAssertEqual(label.toolTip, L10n.tr("prefs.imageDropHelp"))
         XCTAssertFalse(clearButton.isEnabled)
         XCTAssertEqual(savedSettings.value?.contentLibrary.localImagePaths, [])
         XCTAssertEqual(savedSettings.value?.bodyBreak.content, .richRestIdea)
@@ -117,6 +119,7 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
 
         XCTAssertNil(savedSettings.value)
         XCTAssertEqual(label.stringValue, L10n.tr("prefs.imagePreviewEmpty"))
+        XCTAssertEqual(label.toolTip, L10n.tr("prefs.imageDropHelp"))
     }
 
     func testImagePreviewReadsImageFileURLFromDragPasteboard() throws {
