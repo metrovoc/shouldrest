@@ -159,7 +159,7 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         let searchField = try XCTUnwrap(view(withIdentifier: "prefs.searchField", in: contentView) as? NSSearchField)
         let searchStatus = try XCTUnwrap(view(withIdentifier: "prefs.searchStatusLabel", in: contentView) as? NSTextField)
 
-        searchField.stringValue = "bulk edit app rules"
+        searchField.stringValue = "import app rules"
 
         XCTAssertTrue(sendAction(from: searchField))
 

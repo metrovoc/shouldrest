@@ -76,12 +76,12 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
         L10n.languageOverride = "en"
         XCTAssertEqual(L10n.tr("prefs.autosaveReady"), "All changes saved")
         XCTAssertEqual(L10n.tr("prefs.autosaveCopied"), "Copied to clipboard")
-        XCTAssertEqual(L10n.format("prefs.autosaveCopiedField", "App rules bulk edit"), "Copied App rules bulk edit to clipboard")
+        XCTAssertEqual(L10n.format("prefs.autosaveCopiedField", "App rules import text"), "Copied App rules import text to clipboard")
 
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(L10n.tr("prefs.autosaveReady"), "所有更改已保存")
         XCTAssertEqual(L10n.tr("prefs.autosaveCopied"), "已复制到剪贴板")
-        XCTAssertEqual(L10n.format("prefs.autosaveCopiedField", "应用规则批量编辑"), "应用规则批量编辑已复制到剪贴板")
+        XCTAssertEqual(L10n.format("prefs.autosaveCopiedField", "应用规则导入文本"), "应用规则导入文本已复制到剪贴板")
     }
 
     private func view(withIdentifier identifier: String, in view: NSView) -> NSView? {
