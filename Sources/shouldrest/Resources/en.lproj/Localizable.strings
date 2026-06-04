@@ -429,6 +429,7 @@
 "prefs.imagePreviewEmpty" = "Drop or choose an image";
 "prefs.imagePreviewUnavailable" = "%@ cannot be previewed";
 "prefs.imageDropHelp" = "Drop an image here, or choose a file.";
+"prefs.imageDropDisabledBodyOffHelp" = "Turn on Body Break before dropping an image.";
 "prefs.sectionShortcuts" = "Global Shortcuts";
 "prefs.pauseToggle" = "Pause or resume";
 "prefs.pauseToggleShortcutHelp" = "Pause breaks indefinitely when running, or resume them when already paused.";

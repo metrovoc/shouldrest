@@ -1932,9 +1932,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         localImagePreview.layer?.borderWidth = 1
         localImagePreview.layer?.borderColor = NSColor.separatorColor.cgColor
         localImagePreview.layer?.backgroundColor = NSColor.textBackgroundColor.withAlphaComponent(0.45).cgColor
-        localImagePreview.toolTip = L10n.tr("prefs.imageDropHelp")
         localImagePreview.setAccessibilityLabel(L10n.tr("prefs.localImagePath"))
-        localImagePreview.setAccessibilityHelp(L10n.tr("prefs.imageDropHelp"))
+        updateLocalImagePreviewDropHelp(bodyBreakEnabled: true)
         localImagePreview.onImageURLDropped = { [weak self] url in
             self?.applyLocalImageURL(url)
         }
@@ -2948,8 +2947,17 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         localImageChooseButton.isEnabled = bodyBreakEnabled
         updateLocalImageClearButtonState(bodyBreakEnabled: bodyBreakEnabled)
         localImagePreview.isDropEnabled = bodyBreakEnabled
+        updateLocalImagePreviewDropHelp(bodyBreakEnabled: bodyBreakEnabled)
         updateBodyContentSummary()
         updateCustomBodyAddIdeaButtonState()
+    }
+
+    private func updateLocalImagePreviewDropHelp(bodyBreakEnabled: Bool) {
+        let help = bodyBreakEnabled
+            ? L10n.tr("prefs.imageDropHelp")
+            : L10n.tr("prefs.imageDropDisabledBodyOffHelp")
+        localImagePreview.toolTip = help
+        localImagePreview.setAccessibilityHelp(help)
     }
 
     private func updateLocalImageClearButtonState(bodyBreakEnabled: Bool) {

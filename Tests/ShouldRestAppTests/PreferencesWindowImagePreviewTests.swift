@@ -17,7 +17,9 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
         let clearButton = try XCTUnwrap(button(withTitle: L10n.tr("prefs.clear"), in: contentView))
 
         XCTAssertNil(view(withIdentifier: "localImagePathField", in: contentView))
+        XCTAssertTrue(preview.isDropEnabled)
         XCTAssertEqual(preview.toolTip, L10n.tr("prefs.imageDropHelp"))
+        XCTAssertEqual(preview.accessibilityHelp(), L10n.tr("prefs.imageDropHelp"))
         XCTAssertEqual(preview.image?.accessibilityDescription, L10n.tr("prefs.imagePreviewEmpty"))
         XCTAssertEqual(label.stringValue, L10n.tr("prefs.imagePreviewEmpty"))
         XCTAssertEqual(label.toolTip, L10n.tr("prefs.imageDropHelp"))
@@ -43,7 +45,11 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
 
         try selectAppearanceTab(in: contentView)
 
+        let preview = try XCTUnwrap(view(withIdentifier: "localImagePreview", in: contentView) as? LocalImagePreviewView)
         let clearButton = try XCTUnwrap(button(withTitle: L10n.tr("prefs.clear"), in: contentView))
+        XCTAssertFalse(preview.isDropEnabled)
+        XCTAssertEqual(preview.toolTip, L10n.tr("prefs.imageDropDisabledBodyOffHelp"))
+        XCTAssertEqual(preview.accessibilityHelp(), L10n.tr("prefs.imageDropDisabledBodyOffHelp"))
         XCTAssertFalse(clearButton.isEnabled)
         XCTAssertEqual(clearButton.toolTip, L10n.tr("prefs.clearBodyImageDisabledBodyOffHelp"))
         XCTAssertEqual(clearButton.accessibilityHelp(), L10n.tr("prefs.clearBodyImageDisabledBodyOffHelp"))
