@@ -15,7 +15,7 @@
 "menu.pause5h" = "5 Hours";
 "menu.pauseUntilMorning" = "Until Morning";
 "menu.pauseIndefinitely" = "Indefinitely";
-"menu.pauseIndefinitelyConfirming" = "Indefinitely...";
+"menu.pauseIndefinitelyConfirming" = "Confirm Pause Indefinitely";
 "menu.reset" = "Reset Schedule";
 "pause.indefiniteConfirmTitle" = "Pause Indefinitely?";
 "pause.indefiniteConfirmBody" = "ShouldRest will stop scheduling rests until you resume it from the menu. Use a timed pause when you only need a short interruption.";
