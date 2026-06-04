@@ -415,6 +415,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private var searchTargets: [PreferencesSearchTarget] = []
     private var highlightedSearchTarget: PreferencesHighlightSnapshot?
     private var currentSearchQuery = ""
+    private var currentSearchMatchIndex: Int?
     private weak var currentSearchTargetView: NSView?
 
     private let eyeEnabled = NSButton(checkboxWithTitle: L10n.tr("prefs.enableEyeGate"), target: nil, action: nil)
@@ -1592,6 +1593,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         searchField.placeholderString = L10n.tr("prefs.searchPlaceholder")
         searchField.toolTip = L10n.tr("prefs.searchHelp")
         searchField.sendsSearchStringImmediately = true
+        searchField.sendsWholeSearchString = false
         searchField.delegate = self
         searchField.target = self
         searchField.action = #selector(preferencesSearchChanged(_:))
@@ -3368,7 +3370,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     func controlTextDidEndEditing(_ obj: Notification) {
         if let field = obj.object as? NSSearchField, field === searchField {
-            performPreferencesSearch(field.stringValue)
             return
         }
         if let field = obj.object as? NSTextField {
@@ -3392,7 +3393,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
               commandSelector == #selector(NSResponder.insertNewline(_:)) else {
             return false
         }
-        performPreferencesSearch(searchField.stringValue, advances: true)
+        performPreferencesSearch(searchField.stringValue, advances: true, keepsSearchFocused: true)
         return true
     }
 
@@ -4735,16 +4736,21 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     @objc private func preferencesSearchChanged(_ sender: NSSearchField) {
-        performPreferencesSearch(sender.stringValue)
+        performPreferencesSearch(sender.stringValue, keepsSearchFocused: true)
     }
 
-    private func performPreferencesSearch(_ query: String, advances: Bool = false) {
+    private func performPreferencesSearch(
+        _ query: String,
+        advances: Bool = false,
+        keepsSearchFocused: Bool = false
+    ) {
         let normalizedQuery = Self.normalizedSearchText(query)
         let previousQuery = currentSearchQuery
         let previousTargetView = currentSearchTargetView
         clearHighlightedSearchTarget()
         guard !normalizedQuery.isEmpty else {
             currentSearchQuery = ""
+            currentSearchMatchIndex = nil
             currentSearchTargetView = nil
             setSearchStatus("", hidden: true)
             return
@@ -4756,6 +4762,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         guard !matches.isEmpty else {
             currentSearchQuery = normalizedQuery
+            currentSearchMatchIndex = nil
             currentSearchTargetView = nil
             setSearchStatus(
                 L10n.format(
@@ -4770,20 +4777,29 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let targetIndex: Int
         if advances,
            normalizedQuery == previousQuery,
-           let previousTargetView,
-           let previousIndex = matches.firstIndex(where: { $0.view === previousTargetView }) {
+           let currentSearchMatchIndex {
+            targetIndex = (currentSearchMatchIndex + 1) % matches.count
+        } else if advances,
+                  normalizedQuery == previousQuery,
+                  let previousTargetView,
+                  let previousIndex = matches.firstIndex(where: { $0.view === previousTargetView }) {
             targetIndex = (previousIndex + 1) % matches.count
         } else {
             targetIndex = 0
         }
         let target = matches[targetIndex]
         currentSearchQuery = normalizedQuery
+        currentSearchMatchIndex = targetIndex
         currentSearchTargetView = target.view
 
         preferencesTabView?.selectTabViewItem(withIdentifier: target.tabIdentifier)
         target.view.scrollToVisible(target.view.bounds)
         highlightSearchTarget(target.view)
-        focusSearchTarget(target.view)
+        if keepsSearchFocused {
+            focusSearchFieldIfNeeded()
+        } else {
+            focusSearchTarget(target.view)
+        }
         setSearchStatus(searchStatusText(
             target: target,
             index: targetIndex,
@@ -4933,6 +4949,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             return true
         }
         return false
+    }
+
+    private func focusSearchFieldIfNeeded() {
+        guard !isSearchFieldFocused() else { return }
+        window?.makeFirstResponder(searchField)
     }
 
     private func localImagePickerRow() -> NSStackView {

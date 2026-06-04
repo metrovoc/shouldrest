@@ -40,6 +40,8 @@ final class PreferencesWindowNavigationTests: XCTestCase {
 
         XCTAssertEqual(searchField.placeholderString, L10n.tr("prefs.searchPlaceholder"))
         XCTAssertEqual(searchField.toolTip, L10n.tr("prefs.searchHelp"))
+        XCTAssertTrue(searchField.sendsSearchStringImmediately)
+        XCTAssertFalse(searchField.sendsWholeSearchString)
         searchField.stringValue = L10n.tr("prefs.pause5hShortcut")
 
         XCTAssertTrue(sendAction(from: searchField))
@@ -56,13 +58,14 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         let highlightedRow = try XCTUnwrap(highlightedAncestor(of: pause5h))
         XCTAssertEqual(highlightedRow.layer?.borderWidth, 1)
         XCTAssertNotNil(highlightedRow.layer?.backgroundColor)
-        XCTAssertTrue(isFirstResponder(pause5hRecorder, in: window))
+        XCTAssertTrue(isFirstResponder(searchField, in: window))
+        XCTAssertFalse(isFirstResponder(pause5hRecorder, in: window))
         XCTAssertNotEqual(pause5hRecorder.title, L10n.tr("shortcut.recording"))
         XCTAssertEqual(saveStatus.stringValue, L10n.tr("prefs.autosaveReady"))
         XCTAssertNil(savedSettings.value)
     }
 
-    func testPreferenceSearchFocusesMatchedTextFieldWithoutAutosave() throws {
+    func testPreferenceSearchHighlightsMatchedTextFieldWithoutStealingFocusOrAutosave() throws {
         let savedSettings = SavedSettingsBox()
         let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
         let window = try XCTUnwrap(controller.window)
@@ -76,7 +79,8 @@ final class PreferencesWindowNavigationTests: XCTestCase {
 
         let updateFeedURL = try XCTUnwrap(view(withIdentifier: "prefs.updateFeedURLField", in: contentView) as? NSTextField)
         XCTAssertEqual(tabView.selectedTabViewItem?.identifier as? String, L10n.tr("prefs.tabAdvanced"))
-        XCTAssertTrue(isFirstResponder(updateFeedURL, in: window))
+        XCTAssertTrue(isFirstResponder(searchField, in: window))
+        XCTAssertFalse(isFirstResponder(updateFeedURL, in: window))
         XCTAssertNil(savedSettings.value)
     }
 
@@ -100,7 +104,8 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         XCTAssertEqual(tabView.selectedTabViewItem?.identifier as? String, L10n.tr("prefs.tabSchedule"))
         XCTAssertTrue(searchStatus.stringValue.contains(L10n.tr("prefs.eyeEmergencyOverride")))
         XCTAssertEqual(emergency.layer?.borderWidth, 1)
-        XCTAssertTrue(isFirstResponder(emergency, in: window))
+        XCTAssertTrue(isFirstResponder(searchField, in: window))
+        XCTAssertFalse(isFirstResponder(emergency, in: window))
         XCTAssertNil(savedSettings.value)
     }
 
@@ -124,7 +129,8 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         XCTAssertEqual(tabView.selectedTabViewItem?.identifier as? String, L10n.tr("prefs.tabAppearance"))
         XCTAssertTrue(searchStatus.stringValue.contains(L10n.tr("prefs.theme")))
         XCTAssertEqual(theme.title, L10n.tr("prefs.theme.system"))
-        XCTAssertTrue(isFirstResponder(theme, in: window))
+        XCTAssertTrue(isFirstResponder(searchField, in: window))
+        XCTAssertFalse(isFirstResponder(theme, in: window))
         XCTAssertNil(savedSettings.value)
     }
 
@@ -159,7 +165,8 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         XCTAssertEqual(tabView.selectedTabViewItem?.identifier as? String, L10n.tr("prefs.tabContext"))
         XCTAssertEqual(bulkRules.title, L10n.tr("prefs.showAdvancedRules"))
         XCTAssertTrue(searchStatus.stringValue.contains(L10n.tr("prefs.showAdvancedRules")))
-        XCTAssertTrue(isFirstResponder(bulkRules, in: window))
+        XCTAssertTrue(isFirstResponder(searchField, in: window))
+        XCTAssertFalse(isFirstResponder(bulkRules, in: window))
         XCTAssertNil(savedSettings.value)
 
         searchField.stringValue = "json"
@@ -203,6 +210,7 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         XCTAssertNotEqual(firstRow.layer?.borderWidth, 1)
         XCTAssertTrue(searchStatus.stringValue.hasPrefix("2/2"))
         XCTAssertTrue(searchStatus.stringValue.contains(L10n.tr("prefs.bodyStartSound")))
+        XCTAssertTrue(isFirstResponder(searchField, in: try XCTUnwrap(controller.window)))
         XCTAssertNil(savedSettings.value)
     }
 
