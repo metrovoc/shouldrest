@@ -112,7 +112,7 @@
 "status.deferralGuidance" = "当前上下文结束后会自动恢复调度。";
 "status.health" = "休息欠账：%d/10";
 "status.healthBadge" = "欠账 %d/10";
-"status.tooltipHeader" = "ShouldRest - 休息提醒应用";
+"status.tooltipHeader" = "ShouldRest - 短时护眼，强保护";
 "kind.eyeGate" = "护眼休息";
 "kind.eyeGateShort" = "眼";
 "kind.bodyBreak" = "活动休息";

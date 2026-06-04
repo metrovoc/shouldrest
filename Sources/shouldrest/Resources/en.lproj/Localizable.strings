@@ -112,7 +112,7 @@
 "status.deferralGuidance" = "Scheduling resumes automatically when this context ends.";
 "status.health" = "Rest debt: %d/10";
 "status.healthBadge" = "Debt %d/10";
-"status.tooltipHeader" = "ShouldRest - The rest reminder app";
+"status.tooltipHeader" = "ShouldRest - Short eye rests, protected";
 "kind.eyeGate" = "Eye Gate";
 "kind.eyeGateShort" = "E";
 "kind.bodyBreak" = "Body Break";

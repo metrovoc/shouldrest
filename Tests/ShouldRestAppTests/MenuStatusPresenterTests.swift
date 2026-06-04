@@ -52,7 +52,7 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         let tooltip = MenuStatusPresenter.tooltip(state: engine.state, settings: engine.settings, now: start)
 
-        XCTAssertTrue(tooltip.hasPrefix("ShouldRest - The rest reminder app\n\n"))
+        XCTAssertTrue(tooltip.hasPrefix("ShouldRest - Short eye rests, protected\n\n"))
         XCTAssertTrue(tooltip.contains("Next: Eye Gate"))
         XCTAssertTrue(tooltip.contains("Next Body Break after 4 Eye Gates"))
         XCTAssertTrue(tooltip.contains("Rest debt: 0/10"))

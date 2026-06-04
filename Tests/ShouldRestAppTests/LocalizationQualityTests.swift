@@ -273,6 +273,12 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("settings path hidden"))
         XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("logs path hidden"))
         XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("hidden by admin"))
+        XCTAssertFalse(englishValues.contains("The rest reminder app"))
+        XCTAssertFalse(simplifiedChineseValues.contains("休息提醒应用"))
+        XCTAssertEqual(L10n.tr("status.tooltipHeader"), "ShouldRest - Short eye rests, protected")
+        L10n.languageOverride = "zh-Hans"
+        XCTAssertEqual(L10n.tr("status.tooltipHeader"), "ShouldRest - 短时护眼，强保护")
+        L10n.languageOverride = "en"
         XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("hidden by administrator"))
         XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("settings file path"))
         XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("app paths"))
