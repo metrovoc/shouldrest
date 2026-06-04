@@ -11,8 +11,10 @@ final class CommandLineAutomationTests: XCTestCase {
 
         XCTAssertTrue(output.contains("debug                        Copy diagnostics from the running app."))
         XCTAssertTrue(output.contains("debug-panel                  Open the diagnostics window in the running app."))
+        XCTAssertTrue(output.contains("emergency                    Arm Emergency Exit inside the active Eye Gate overlay."))
         XCTAssertFalse(output.localizedCaseInsensitiveContains("copy debug info"))
         XCTAssertFalse(output.localizedCaseInsensitiveContains("debug panel"))
+        XCTAssertFalse(output.localizedCaseInsensitiveContains("run it again"))
     }
 
     func testEmergencyAutomationSignalWritesAndConsumesMarker() throws {

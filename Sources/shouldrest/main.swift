@@ -952,7 +952,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func emergencyOverrideEyeGate() {
-        performEmergencyOverrideEyeGate()
+        armEyeGateEmergencyForBlockedAction(actionName: "shortcut")
     }
 
     private func handleEmergencyAutomation() {
@@ -962,7 +962,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
         logger.log("Emergency automation request received during active Eye Gate")
         _ = EmergencyAutomationSignal.consume()
-        performEmergencyOverrideEyeGate()
+        armEyeGateEmergencyForBlockedAction(actionName: "automation")
     }
 
     private func consumeEmergencyAutomationSignalIfNeeded() -> Bool {
@@ -971,8 +971,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             return false
         }
         _ = EmergencyAutomationSignal.consume()
-        logger.log("Emergency automation signal consumed as confirmation request")
-        performEmergencyOverrideEyeGate()
+        logger.log("Emergency automation signal consumed as overlay arming request")
+        armEyeGateEmergencyForBlockedAction(actionName: "automation")
         return true
     }
 
@@ -992,22 +992,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         guard let active = engine.state.activeSession, active.kind == .eyeGate else { return }
         let now = Date()
 
-        if emergencyOverrideCoordinator.isArmed(for: active) {
-            overlayController.update(
-                session: active,
-                settings: overlaySettings(for: active),
-                now: now,
-                manualAwaiting: false,
-                emergencyOverrideAction: overlayEmergencyOverrideAction(for: active, now: now),
-                emergencyOverrideArmed: true,
-                bodyActions: nil
-            )
-            _ = overlayController.activateEmergencyOverrideIfAvailable()
-            logger.log("Emergency Exit already armed inside overlay after blocked \(actionName) request")
-            return
-        }
-
-        let decision = emergencyOverrideCoordinator.request(
+        let decision = emergencyOverrideCoordinator.arm(
             session: active,
             policy: settings.eyeGate.emergencyOverride,
             now: now
@@ -1017,7 +1002,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             handleEmergencyOverrideDecision(decision, session: active, now: now)
             _ = overlayController.activateEmergencyOverrideIfAvailable()
         case .complete:
-            logger.log("Ignored blocked \(actionName) request as Emergency Exit confirmation")
+            logger.log("Ignored external \(actionName) request as Emergency Exit confirmation")
         case .unavailable:
             logger.log("Blocked \(actionName) request could not arm Emergency Exit")
         }

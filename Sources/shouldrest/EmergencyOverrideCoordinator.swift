@@ -22,6 +22,20 @@ struct EmergencyOverrideCoordinator {
         armedSessionID == session.id
     }
 
+    mutating func arm(
+        session: RestSession,
+        policy: EmergencyOverridePolicy,
+        now: Date
+    ) -> EmergencyOverrideDecision {
+        guard Self.isAvailable(session: session, policy: policy, now: now) else {
+            clear()
+            return .unavailable
+        }
+
+        armedSessionID = session.id
+        return .armed
+    }
+
     mutating func request(
         session: RestSession,
         policy: EmergencyOverridePolicy,

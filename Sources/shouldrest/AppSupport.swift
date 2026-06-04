@@ -303,7 +303,7 @@ enum CommandLineAutomation {
         case "emergency", "emergency-exit", "emergencyExit":
             return dispatchOrQueue(
                 AutomationRequest(command: .emergency),
-                message: "Requested Emergency Exit. Run it again during the same Eye Gate to confirm."
+                message: "Requested Emergency Exit. Confirm from the overlay with a second click or Esc."
             )
         case "preferences":
             return dispatchOrQueue(
