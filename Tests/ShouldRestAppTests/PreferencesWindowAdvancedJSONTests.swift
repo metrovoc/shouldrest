@@ -173,9 +173,9 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertEqual(appCopy.accessibilityHelp(), L10n.tr("prefs.copyAppRulesBulkEditorHelp"))
         XCTAssertEqual(appCopy.image?.accessibilityDescription, L10n.tr("prefs.copyAppRulesBulkEditor"))
         XCTAssertEqual(appRestore.title, L10n.tr("prefs.restoreAppRulesBulkEditor"))
-        XCTAssertEqual(appRestore.toolTip, L10n.tr("prefs.restoreBulkEditorDisabledNoChangesHelp"))
+        XCTAssertEqual(appRestore.toolTip, L10n.tr("prefs.restoreAppRulesBulkEditorDisabledNoChangesHelp"))
         XCTAssertEqual(appRestore.accessibilityLabel(), L10n.tr("prefs.restoreAppRulesBulkEditor"))
-        XCTAssertEqual(appRestore.accessibilityHelp(), L10n.tr("prefs.restoreBulkEditorDisabledNoChangesHelp"))
+        XCTAssertEqual(appRestore.accessibilityHelp(), L10n.tr("prefs.restoreAppRulesBulkEditorDisabledNoChangesHelp"))
         XCTAssertEqual(appRestore.image?.accessibilityDescription, L10n.tr("prefs.restoreAppRulesBulkEditor"))
         XCTAssertEqual(ideasCopy.title, L10n.tr("prefs.copyIdeasBulkEditor"))
         XCTAssertEqual(ideasCopy.accessibilityLabel(), L10n.tr("prefs.copyIdeasBulkEditor"))
@@ -184,8 +184,8 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertEqual(ideasRestore.accessibilityLabel(), L10n.tr("prefs.restoreIdeasBulkEditor"))
         XCTAssertEqual(ideasRestore.image?.accessibilityDescription, L10n.tr("prefs.restoreIdeasBulkEditor"))
         XCTAssertEqual(ideasCopy.toolTip, L10n.tr("prefs.copyIdeasBulkEditorHelp"))
-        XCTAssertEqual(ideasRestore.toolTip, L10n.tr("prefs.restoreBulkEditorDisabledNoChangesHelp"))
-        XCTAssertEqual(ideasRestore.accessibilityHelp(), L10n.tr("prefs.restoreBulkEditorDisabledNoChangesHelp"))
+        XCTAssertEqual(ideasRestore.toolTip, L10n.tr("prefs.restoreIdeasBulkEditorDisabledNoChangesHelp"))
+        XCTAssertEqual(ideasRestore.accessibilityHelp(), L10n.tr("prefs.restoreIdeasBulkEditorDisabledNoChangesHelp"))
         XCTAssertTrue(appCopy.isEnabled)
         XCTAssertFalse(appRestore.isEnabled)
         XCTAssertTrue(ideasCopy.isEnabled)
@@ -209,8 +209,8 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertTrue(sendAction(from: appRestore))
         XCTAssertTrue(appEditor.string.contains("Alpha"))
         XCTAssertFalse(appRestore.isEnabled)
-        XCTAssertEqual(appRestore.toolTip, L10n.tr("prefs.restoreBulkEditorDisabledNoChangesHelp"))
-        XCTAssertEqual(appRestore.accessibilityHelp(), L10n.tr("prefs.restoreBulkEditorDisabledNoChangesHelp"))
+        XCTAssertEqual(appRestore.toolTip, L10n.tr("prefs.restoreAppRulesBulkEditorDisabledNoChangesHelp"))
+        XCTAssertEqual(appRestore.accessibilityHelp(), L10n.tr("prefs.restoreAppRulesBulkEditorDisabledNoChangesHelp"))
         XCTAssertTrue(controller.flushPendingAutosave(showAlerts: false))
         XCTAssertEqual(savedSettings.value?.appExclusions.first?.name, "Alpha")
 
@@ -232,8 +232,8 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertTrue(sendAction(from: ideasRestore))
         XCTAssertTrue(ideasEditor.string.contains("Stretch"))
         XCTAssertFalse(ideasRestore.isEnabled)
-        XCTAssertEqual(ideasRestore.toolTip, L10n.tr("prefs.restoreBulkEditorDisabledNoChangesHelp"))
-        XCTAssertEqual(ideasRestore.accessibilityHelp(), L10n.tr("prefs.restoreBulkEditorDisabledNoChangesHelp"))
+        XCTAssertEqual(ideasRestore.toolTip, L10n.tr("prefs.restoreIdeasBulkEditorDisabledNoChangesHelp"))
+        XCTAssertEqual(ideasRestore.accessibilityHelp(), L10n.tr("prefs.restoreIdeasBulkEditorDisabledNoChangesHelp"))
         XCTAssertTrue(controller.flushPendingAutosave(showAlerts: false))
         XCTAssertEqual(savedSettings.value?.contentLibrary.customBodyBreakIdeas.first?.title, "Stretch")
     }
@@ -258,8 +258,8 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertTrue(sendAction(from: appCheckbox))
 
         XCTAssertFalse(appCopy.isEnabled)
-        XCTAssertEqual(appCopy.toolTip, L10n.tr("prefs.copyBulkEditorDisabledEmptyHelp"))
-        XCTAssertEqual(appCopy.accessibilityHelp(), L10n.tr("prefs.copyBulkEditorDisabledEmptyHelp"))
+        XCTAssertEqual(appCopy.toolTip, L10n.tr("prefs.copyAppRulesBulkEditorDisabledEmptyHelp"))
+        XCTAssertEqual(appCopy.accessibilityHelp(), L10n.tr("prefs.copyAppRulesBulkEditorDisabledEmptyHelp"))
 
         appEditor.string = "[{}]"
         controller.textDidChange(Notification(name: NSText.didChangeNotification, object: appEditor))
@@ -269,8 +269,8 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertEqual(appCopy.accessibilityHelp(), L10n.tr("prefs.copyAppRulesBulkEditorHelp"))
 
         XCTAssertFalse(ideasCopy.isEnabled)
-        XCTAssertEqual(ideasCopy.toolTip, L10n.tr("prefs.copyBulkEditorDisabledEmptyHelp"))
-        XCTAssertEqual(ideasCopy.accessibilityHelp(), L10n.tr("prefs.copyBulkEditorDisabledEmptyHelp"))
+        XCTAssertEqual(ideasCopy.toolTip, L10n.tr("prefs.copyIdeasBulkEditorDisabledEmptyHelp"))
+        XCTAssertEqual(ideasCopy.accessibilityHelp(), L10n.tr("prefs.copyIdeasBulkEditorDisabledEmptyHelp"))
 
         ideasEditor.string = "[{}]"
         controller.textDidChange(Notification(name: NSText.didChangeNotification, object: ideasEditor))

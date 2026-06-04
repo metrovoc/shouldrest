@@ -344,9 +344,11 @@
 "prefs.restoreAppRulesBulkEditor" = "还原应用规则文本";
 "prefs.copyAppRulesBulkEditorHelp" = "复制当前应用规则导入文本，用于导出或备份。";
 "prefs.copyAppRulesBulkEditorDisabledOffHelp" = "开启应用规则后才能复制应用规则文本。";
+"prefs.copyAppRulesBulkEditorDisabledEmptyHelp" = "先添加应用规则导入文本，才能复制。";
 "prefs.copyBulkEditorDisabledEmptyHelp" = "先添加导入文本，才能复制。";
 "prefs.restoreAppRulesBulkEditorHelp" = "用上次保存的应用规则替换当前导入文本。";
 "prefs.restoreAppRulesBulkEditorDisabledOffHelp" = "开启应用规则后才能还原已保存文本。";
+"prefs.restoreAppRulesBulkEditorDisabledNoChangesHelp" = "修改应用规则导入文本后，才能还原已保存应用规则。";
 "prefs.restoreBulkEditorDisabledNoChangesHelp" = "修改导入文本后才能还原已保存文本。";
 "prefs.exclusionMode.pauseWhenMatched" = "这些应用运行时暂停休息";
 "prefs.exclusionMode.resumeOnlyWhenMatched" = "只在这些应用运行时安排休息";
@@ -425,8 +427,10 @@
 "prefs.restoreIdeasBulkEditor" = "还原提示文本";
 "prefs.copyIdeasBulkEditorHelp" = "复制当前提示导入文本，用于导出或备份。";
 "prefs.copyIdeasBulkEditorDisabledBodyOffHelp" = "开启活动休息后才能复制提示文本。";
+"prefs.copyIdeasBulkEditorDisabledEmptyHelp" = "先添加提示导入文本，才能复制。";
 "prefs.restoreIdeasBulkEditorHelp" = "用上次保存的自定义提示替换当前导入文本。";
 "prefs.restoreIdeasBulkEditorDisabledBodyOffHelp" = "开启活动休息后才能还原已保存提示文本。";
+"prefs.restoreIdeasBulkEditorDisabledNoChangesHelp" = "修改提示导入文本后，才能还原已保存自定义提示。";
 "prefs.localImagePath" = "活动休息图片";
 "prefs.chooseFile" = "选择图片…";
 "prefs.chooseBodyImageHelp" = "选择一张本地图片作为活动休息内容。";

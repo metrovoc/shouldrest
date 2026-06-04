@@ -408,10 +408,20 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.restoreBulkEditor"), "Restore Saved Text")
         XCTAssertEqual(L10n.tr("prefs.copyAppRulesBulkEditor"), "Copy App Rules Text")
         XCTAssertEqual(L10n.tr("prefs.restoreAppRulesBulkEditor"), "Restore App Rules Text")
+        XCTAssertEqual(L10n.tr("prefs.copyAppRulesBulkEditorDisabledEmptyHelp"), "Add app-rule import text before copying it.")
+        XCTAssertEqual(
+            L10n.tr("prefs.restoreAppRulesBulkEditorDisabledNoChangesHelp"),
+            "Change the app-rule import text before restoring saved app rules."
+        )
         XCTAssertEqual(L10n.tr("prefs.advancedIdeasJSON"), "Idea import text")
         XCTAssertEqual(L10n.tr("prefs.showAdvancedIdeas"), "Import or Export Ideas")
         XCTAssertEqual(L10n.tr("prefs.copyIdeasBulkEditor"), "Copy Idea Text")
         XCTAssertEqual(L10n.tr("prefs.restoreIdeasBulkEditor"), "Restore Idea Text")
+        XCTAssertEqual(L10n.tr("prefs.copyIdeasBulkEditorDisabledEmptyHelp"), "Add idea import text before copying it.")
+        XCTAssertEqual(
+            L10n.tr("prefs.restoreIdeasBulkEditorDisabledNoChangesHelp"),
+            "Change the idea import text before restoring saved custom ideas."
+        )
         XCTAssertEqual(L10n.tr("prefs.invalidJSONTitle"), "Import text has an invalid format")
         XCTAssertEqual(L10n.tr("prefs.previewSound"), "Play Preview")
         XCTAssertEqual(L10n.tr("prefs.cancelCustomIdeaEdit"), "Cancel Edit")
@@ -516,10 +526,20 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.restoreBulkEditor"), "还原已保存文本")
         XCTAssertEqual(L10n.tr("prefs.copyAppRulesBulkEditor"), "复制应用规则文本")
         XCTAssertEqual(L10n.tr("prefs.restoreAppRulesBulkEditor"), "还原应用规则文本")
+        XCTAssertEqual(L10n.tr("prefs.copyAppRulesBulkEditorDisabledEmptyHelp"), "先添加应用规则导入文本，才能复制。")
+        XCTAssertEqual(
+            L10n.tr("prefs.restoreAppRulesBulkEditorDisabledNoChangesHelp"),
+            "修改应用规则导入文本后，才能还原已保存应用规则。"
+        )
         XCTAssertEqual(L10n.tr("prefs.advancedIdeasJSON"), "提示导入文本")
         XCTAssertEqual(L10n.tr("prefs.showAdvancedIdeas"), "导入或导出提示")
         XCTAssertEqual(L10n.tr("prefs.copyIdeasBulkEditor"), "复制提示文本")
         XCTAssertEqual(L10n.tr("prefs.restoreIdeasBulkEditor"), "还原提示文本")
+        XCTAssertEqual(L10n.tr("prefs.copyIdeasBulkEditorDisabledEmptyHelp"), "先添加提示导入文本，才能复制。")
+        XCTAssertEqual(
+            L10n.tr("prefs.restoreIdeasBulkEditorDisabledNoChangesHelp"),
+            "修改提示导入文本后，才能还原已保存自定义提示。"
+        )
         XCTAssertEqual(L10n.tr("prefs.invalidJSONTitle"), "导入文本格式无效")
         XCTAssertEqual(L10n.tr("prefs.cancelCustomIdeaEdit"), "取消编辑")
         XCTAssertEqual(L10n.tr("prefs.sectionOperations"), "应用行为")

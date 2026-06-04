@@ -3427,7 +3427,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                 hasText: !appText.isEmpty,
                 enabledHelp: L10n.tr("prefs.copyAppRulesBulkEditorHelp"),
                 disabledFeatureHelp: L10n.tr("prefs.copyAppRulesBulkEditorDisabledOffHelp"),
-                disabledEmptyHelp: L10n.tr("prefs.copyBulkEditorDisabledEmptyHelp")
+                disabledEmptyHelp: L10n.tr("prefs.copyAppRulesBulkEditorDisabledEmptyHelp")
             ),
             on: appExclusionsCopyBulkButton
         )
@@ -3439,7 +3439,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                 hasUnsavedEditorChanges: appExclusionsJSONEditor.string != savedAppText,
                 enabledHelp: L10n.tr("prefs.restoreAppRulesBulkEditorHelp"),
                 disabledFeatureHelp: L10n.tr("prefs.restoreAppRulesBulkEditorDisabledOffHelp"),
-                disabledNoChangesHelp: L10n.tr("prefs.restoreBulkEditorDisabledNoChangesHelp")
+                disabledNoChangesHelp: L10n.tr("prefs.restoreAppRulesBulkEditorDisabledNoChangesHelp")
             ),
             on: appExclusionsRestoreBulkButton
         )
@@ -3455,7 +3455,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                 hasText: !ideasText.isEmpty,
                 enabledHelp: L10n.tr("prefs.copyIdeasBulkEditorHelp"),
                 disabledFeatureHelp: L10n.tr("prefs.copyIdeasBulkEditorDisabledBodyOffHelp"),
-                disabledEmptyHelp: L10n.tr("prefs.copyBulkEditorDisabledEmptyHelp")
+                disabledEmptyHelp: L10n.tr("prefs.copyIdeasBulkEditorDisabledEmptyHelp")
             ),
             on: customBodyIdeasCopyBulkButton
         )
@@ -3467,7 +3467,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                 hasUnsavedEditorChanges: customBodyIdeasJSONEditor.string != savedIdeasText,
                 enabledHelp: L10n.tr("prefs.restoreIdeasBulkEditorHelp"),
                 disabledFeatureHelp: L10n.tr("prefs.restoreIdeasBulkEditorDisabledBodyOffHelp"),
-                disabledNoChangesHelp: L10n.tr("prefs.restoreBulkEditorDisabledNoChangesHelp")
+                disabledNoChangesHelp: L10n.tr("prefs.restoreIdeasBulkEditorDisabledNoChangesHelp")
             ),
             on: customBodyIdeasRestoreBulkButton
         )

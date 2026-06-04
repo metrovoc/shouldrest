@@ -344,9 +344,11 @@
 "prefs.restoreAppRulesBulkEditor" = "Restore App Rules Text";
 "prefs.copyAppRulesBulkEditorHelp" = "Copy the current app-rule import text for export or backup.";
 "prefs.copyAppRulesBulkEditorDisabledOffHelp" = "Turn on App Rules before copying app-rule text.";
+"prefs.copyAppRulesBulkEditorDisabledEmptyHelp" = "Add app-rule import text before copying it.";
 "prefs.copyBulkEditorDisabledEmptyHelp" = "Add import text before copying it.";
 "prefs.restoreAppRulesBulkEditorHelp" = "Replace the app-rule import text with the last saved app rules.";
 "prefs.restoreAppRulesBulkEditorDisabledOffHelp" = "Turn on App Rules before restoring saved app-rule text.";
+"prefs.restoreAppRulesBulkEditorDisabledNoChangesHelp" = "Change the app-rule import text before restoring saved app rules.";
 "prefs.restoreBulkEditorDisabledNoChangesHelp" = "Change the import text before restoring saved text.";
 "prefs.exclusionMode.pauseWhenMatched" = "Pause rests during these apps";
 "prefs.exclusionMode.resumeOnlyWhenMatched" = "Run rests only during these apps";
@@ -425,8 +427,10 @@
 "prefs.restoreIdeasBulkEditor" = "Restore Idea Text";
 "prefs.copyIdeasBulkEditorHelp" = "Copy the current idea import text for export or backup.";
 "prefs.copyIdeasBulkEditorDisabledBodyOffHelp" = "Turn on Body Break before copying idea text.";
+"prefs.copyIdeasBulkEditorDisabledEmptyHelp" = "Add idea import text before copying it.";
 "prefs.restoreIdeasBulkEditorHelp" = "Replace the idea import text with the last saved custom ideas.";
 "prefs.restoreIdeasBulkEditorDisabledBodyOffHelp" = "Turn on Body Break before restoring saved idea text.";
+"prefs.restoreIdeasBulkEditorDisabledNoChangesHelp" = "Change the idea import text before restoring saved custom ideas.";
 "prefs.localImagePath" = "Body Break image";
 "prefs.chooseFile" = "Choose Image…";
 "prefs.chooseBodyImageHelp" = "Choose a local image for Body Break content.";
