@@ -62,7 +62,7 @@
 "status.pauseReason.user" = "Paused by you";
 "status.pauseReason.untilMorning" = "Until morning";
 "status.pauseReason.suspendOrLock" = "Sleep or lock";
-"status.pauseReason.appExclusion" = "App exclusion";
+"status.pauseReason.appExclusion" = "App rule";
 "status.pauseReason.focusMode" = "Focus mode";
 "status.durationSeconds" = "%ds";
 "status.durationUnderMinute" = "under 1m";
@@ -78,8 +78,8 @@
 "status.eyeGateReadyGuidance" = "Finish from the overlay when ready.";
 "status.bodyBreakActiveGuidance" = "Use overlay controls to postpone, skip, or finish.";
 "status.readyCompact" = "done";
-"status.deferredShort" = "Deferred";
-"status.deferred" = "%@ deferred: %@";
+"status.deferredShort" = "Delayed";
+"status.deferred" = "%@ delayed: %@";
 "status.health" = "Rest pressure: %d/10";
 "status.healthBadge" = "Pressure %d/10";
 "status.tooltipHeader" = "ShouldRest - The rest reminder app";
@@ -89,7 +89,7 @@
 "kind.bodyBreakShort" = "B";
 "deferral.outsideWorkingHours" = "outside working hours";
 "deferral.focusMode" = "Focus / Do Not Disturb";
-"deferral.appExclusion" = "app exclusion: %@";
+"deferral.appExclusion" = "app rule: %@";
 "overlay.eyeTitle" = "Look far away";
 "overlay.eyeBody" = "Relax your focus. Blink slowly and keep your eyes off the screen until the timer ends.";
 "overlay.bodyTitle" = "Body Break";
@@ -135,7 +135,7 @@
 "debug.summaryBodyActiveBody" = "Use the overlay buttons to postpone, skip, or finish based on the current Body Break settings.";
 "debug.summaryPausedTitle" = "Rests are paused";
 "debug.summaryPausedBody" = "Resume from the status menu or automation when you want ShouldRest to schedule breaks again.";
-"debug.summaryDeferredTitle" = "%@ is deferred";
+"debug.summaryDeferredTitle" = "%@ is delayed";
 "debug.summaryDeferredBody" = "Reason: %@.";
 "debug.summaryScheduledTitle" = "Next rest is scheduled";
 "debug.summaryScheduledBody" = "%@ is due at %@.";
@@ -154,7 +154,7 @@
 "prefs.monitorFocus" = "Monitor Focus / Do Not Disturb";
 "prefs.focusDefersBody" = "Focus mode defers Body Break";
 "prefs.workingHours" = "Use active working hours";
-"prefs.enablePrimaryExclusion" = "Enable app exclusions";
+"prefs.enablePrimaryExclusion" = "Enable app rules";
 "prefs.appliesEye" = "Applies to Eye Gate";
 "prefs.appliesBody" = "Applies to Body Break";
 "prefs.appExclusionNeedsTarget" = "Each app rule must apply to at least one enabled rest type.";
@@ -228,7 +228,7 @@
 "prefs.naturalIdleMinutes" = "Credit idle after";
 "prefs.workingStart" = "Working day starts";
 "prefs.workingEnd" = "Working day ends";
-"prefs.sectionExclusion" = "App Exclusions";
+"prefs.sectionExclusion" = "App Rules";
 "prefs.name" = "Rule name";
 "prefs.matchTerms" = "Apps to match";
 "prefs.matchTermsPlaceholder" = "App names or bundle IDs";

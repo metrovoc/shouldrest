@@ -522,6 +522,9 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(requestCount, 1)
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
         XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
+
+        drainMainQueue()
+        XCTAssertEqual(requestCount, 1)
     }
 
     func testEmergencyConfirmationStaysInEmergencyAffordance() throws {

@@ -62,7 +62,7 @@
 "status.pauseReason.user" = "你已暂停";
 "status.pauseReason.untilMorning" = "暂停到早晨";
 "status.pauseReason.suspendOrLock" = "睡眠或锁屏";
-"status.pauseReason.appExclusion" = "应用排除";
+"status.pauseReason.appExclusion" = "应用规则";
 "status.pauseReason.focusMode" = "专注模式";
 "status.durationSeconds" = "%d 秒";
 "status.durationUnderMinute" = "不到 1 分钟";
@@ -89,7 +89,7 @@
 "kind.bodyBreakShort" = "动";
 "deferral.outsideWorkingHours" = "非工作时间";
 "deferral.focusMode" = "专注 / 勿扰模式";
-"deferral.appExclusion" = "应用排除：%@";
+"deferral.appExclusion" = "应用规则：%@";
 "overlay.eyeTitle" = "看向远处";
 "overlay.eyeBody" = "放松对焦，慢慢眨眼，计时结束前不要看屏幕。";
 "overlay.bodyTitle" = "活动休息";
@@ -154,7 +154,7 @@
 "prefs.monitorFocus" = "监测专注 / 勿扰模式";
 "prefs.focusDefersBody" = "专注模式延后活动休息";
 "prefs.workingHours" = "使用工作时间窗口";
-"prefs.enablePrimaryExclusion" = "启用应用排除规则";
+"prefs.enablePrimaryExclusion" = "启用应用规则";
 "prefs.appliesEye" = "适用于护眼休息";
 "prefs.appliesBody" = "适用于活动休息";
 "prefs.appExclusionNeedsTarget" = "每条应用规则至少需要适用于一种已启用的休息类型。";
@@ -228,7 +228,7 @@
 "prefs.naturalIdleMinutes" = "空闲达到";
 "prefs.workingStart" = "工作日开始";
 "prefs.workingEnd" = "工作日结束";
-"prefs.sectionExclusion" = "应用排除规则";
+"prefs.sectionExclusion" = "应用规则";
 "prefs.name" = "规则名称";
 "prefs.matchTerms" = "匹配应用";
 "prefs.matchTermsPlaceholder" = "应用名称或 Bundle ID";

@@ -163,6 +163,42 @@ final class MenuStatusPresenterTests: XCTestCase {
         )
     }
 
+    func testDeferralStatusUsesUserFacingReasonCopy() {
+        let appRuleState = RestEngineState(
+            activeDeferral: RestDeferral(
+                kind: .bodyBreak,
+                reason: .appExclusion("Presentation"),
+                startedAt: start,
+                lastSeenAt: start
+            )
+        )
+        let focusState = RestEngineState(
+            activeDeferral: RestDeferral(
+                kind: .bodyBreak,
+                reason: .focusMode,
+                startedAt: start,
+                lastSeenAt: start
+            )
+        )
+
+        XCTAssertEqual(
+            MenuStatusPresenter.lines(state: appRuleState, settings: .defaults, now: start)[0],
+            "Body Break delayed: app rule: Presentation"
+        )
+        XCTAssertEqual(
+            MenuStatusPresenter.lines(state: focusState, settings: .defaults, now: start)[0],
+            "Body Break delayed: Focus / Do Not Disturb"
+        )
+        XCTAssertFalse(
+            MenuStatusPresenter.lines(state: appRuleState, settings: .defaults, now: start)[0]
+                .localizedCaseInsensitiveContains("exclusion")
+        )
+        XCTAssertFalse(
+            MenuStatusPresenter.lines(state: appRuleState, settings: .defaults, now: start)[0]
+                .localizedCaseInsensitiveContains("deferred")
+        )
+    }
+
     func testDefaultMenuBarPresentationIsCompactIconOnly() {
         let engine = RestEngine(settings: .defaults, now: start)
 
