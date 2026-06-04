@@ -220,12 +220,12 @@ enum CommandLineAutomation {
                 print(AppPaths.logURL.path)
             }
             return true
-        case "debug":
+        case "support", "support-report", "report", "debug":
             return dispatchOrQueue(
                 AutomationRequest(command: .debug),
                 message: L10n.tr("cli.requestedDiagnostics")
             )
-        case "debug-panel", "debugPanel":
+        case "support-panel", "support-report-panel", "report-panel", "debug-panel", "debugPanel":
             return dispatchOrQueue(
                 AutomationRequest(command: .debugPanel),
                 message: L10n.tr("cli.requestedDiagnosticsWindow")
@@ -400,9 +400,9 @@ enum CommandLineAutomation {
             command = .emergency
         case "preferences":
             command = .preferences
-        case "debug":
+        case "support", "support-report", "report", "debug":
             command = .debug
-        case "debug-panel", "debugPanel":
+        case "support-panel", "support-report-panel", "report-panel", "debug-panel", "debugPanel":
             command = .debugPanel
         case "about":
             command = .about

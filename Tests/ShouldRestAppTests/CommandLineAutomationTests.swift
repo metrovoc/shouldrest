@@ -11,8 +11,8 @@ final class CommandLineAutomationTests: XCTestCase {
 
         XCTAssertTrue(output.contains("eye|mini [-w wait]           Start Eye Gate now or after wait; it is always strict and text-free."))
         XCTAssertTrue(output.contains("preferences                  Open ShouldRest preferences."))
-        XCTAssertTrue(output.contains("debug                        Copy support report."))
-        XCTAssertTrue(output.contains("debug-panel                  Open the support report window."))
+        XCTAssertTrue(output.contains("support                      Copy support report."))
+        XCTAssertTrue(output.contains("support-panel                Open the support report window."))
         XCTAssertTrue(output.contains("about                        Open the About window."))
         XCTAssertTrue(output.contains("url shouldrest://<command>    Run a shouldrest:// command."))
         XCTAssertTrue(output.contains("emergency                    Bring the active Eye Gate overlay forward for Emergency Exit."))
@@ -29,6 +29,7 @@ final class CommandLineAutomationTests: XCTestCase {
         XCTAssertFalse(output.localizedCaseInsensitiveContains("log path"))
         XCTAssertFalse(output.localizedCaseInsensitiveContains("hidden by admin"))
         XCTAssertFalse(output.localizedCaseInsensitiveContains("copy debug info"))
+        XCTAssertFalse(output.contains("debug                        Copy support report."))
         XCTAssertFalse(output.localizedCaseInsensitiveContains("debug panel"))
         XCTAssertFalse(output.localizedCaseInsensitiveContains("diagnostics window"))
         XCTAssertFalse(output.localizedCaseInsensitiveContains("run it again"))
@@ -175,8 +176,19 @@ final class CommandLineAutomationTests: XCTestCase {
         XCTAssertTrue(request.noSkip)
     }
 
-    func testParsesDebugPanelURLAutomation() throws {
-        let url = try XCTUnwrap(URL(string: "shouldrest://debug-panel"))
+    func testParsesSupportReportURLAutomation() throws {
+        let url = try XCTUnwrap(URL(string: "shouldrest://support"))
+        let request = try XCTUnwrap(CommandLineAutomation.request(from: url))
+
+        XCTAssertEqual(request.command, .debug)
+        XCTAssertNil(request.duration)
+        XCTAssertNil(request.title)
+        XCTAssertNil(request.text)
+        XCTAssertFalse(request.noSkip)
+    }
+
+    func testParsesSupportPanelURLAutomation() throws {
+        let url = try XCTUnwrap(URL(string: "shouldrest://support-panel"))
         let request = try XCTUnwrap(CommandLineAutomation.request(from: url))
 
         XCTAssertEqual(request.command, .debugPanel)
@@ -184,6 +196,13 @@ final class CommandLineAutomationTests: XCTestCase {
         XCTAssertNil(request.title)
         XCTAssertNil(request.text)
         XCTAssertFalse(request.noSkip)
+    }
+
+    func testKeepsLegacyDebugPanelURLAutomationAlias() throws {
+        let url = try XCTUnwrap(URL(string: "shouldrest://debug-panel"))
+        let request = try XCTUnwrap(CommandLineAutomation.request(from: url))
+
+        XCTAssertEqual(request.command, .debugPanel)
     }
 
     func testParsesAboutURLAutomation() throws {
