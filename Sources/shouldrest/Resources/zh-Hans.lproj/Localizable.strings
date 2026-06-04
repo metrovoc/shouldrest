@@ -178,6 +178,8 @@
 "prefs.rhythmPreset.frequentEyeHelp" = "护眼休息每 10 分钟 20 秒；活动休息每 4 次护眼后 5 分钟。";
 "prefs.rhythmPreset.movement" = "更多活动";
 "prefs.rhythmPreset.movementHelp" = "护眼休息每 20 分钟 20 秒；活动休息每 2 次护眼后 8 分钟。";
+"prefs.rhythmPreset.applyHelp" = "应用%@。%@";
+"prefs.rhythmPreset.selectedHelp" = "当前已应用%@。%@";
 "prefs.everyMinutes" = "每隔";
 "prefs.durationSeconds" = "覆盖屏幕";
 "prefs.overlayColor" = "覆盖层颜色";

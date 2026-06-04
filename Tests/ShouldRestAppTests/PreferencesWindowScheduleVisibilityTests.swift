@@ -42,7 +42,23 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
             XCTAssertNotNil(button.image)
             XCTAssertEqual(button.imagePosition, .imageLeading)
             XCTAssertFalse(button.toolTip?.isEmpty ?? true)
+            XCTAssertEqual(button.accessibilityLabel(), button.title)
+            XCTAssertEqual(button.accessibilityHelp(), button.toolTip)
         }
+        XCTAssertEqual(recommended.state, .off)
+        XCTAssertEqual(frequentEye.state, .on)
+        XCTAssertEqual(movement.state, .off)
+        XCTAssertNil(recommended.contentTintColor)
+        XCTAssertNotNil(frequentEye.contentTintColor)
+        XCTAssertNil(movement.contentTintColor)
+        XCTAssertEqual(
+            frequentEye.toolTip,
+            L10n.format(
+                "prefs.rhythmPreset.selectedHelp",
+                RestRhythmPreset.frequentEye.title,
+                RestRhythmPreset.frequentEye.help
+            )
+        )
     }
 
     func testFrequentEyeRhythmPresetUpdatesFieldsSlidersSummaryAndAutosaves() throws {
@@ -93,6 +109,48 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         )
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(savedSettings.value?.eyeGate.interval, 45 * 60)
+    }
+
+    func testRhythmPresetSelectionFollowsAppliedAndCustomScheduleValues() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectScheduleTab(in: contentView)
+        let frequentEye = try XCTUnwrap(view(withIdentifier: "prefs.rhythmPreset.frequentEye", in: contentView) as? NSButton)
+        let movement = try XCTUnwrap(view(withIdentifier: "prefs.rhythmPreset.movement", in: contentView) as? NSButton)
+        let bodyDurationSlider = try XCTUnwrap(view(withIdentifier: "bodyDurationSlider", in: contentView) as? NSSlider)
+
+        XCTAssertEqual(frequentEye.state, .on)
+        XCTAssertEqual(movement.state, .off)
+
+        XCTAssertTrue(sendAction(from: movement))
+
+        XCTAssertEqual(frequentEye.state, .off)
+        XCTAssertEqual(movement.state, .on)
+        XCTAssertEqual(
+            movement.toolTip,
+            L10n.format(
+                "prefs.rhythmPreset.selectedHelp",
+                RestRhythmPreset.movement.title,
+                RestRhythmPreset.movement.help
+            )
+        )
+
+        bodyDurationSlider.doubleValue = 7
+        XCTAssertTrue(sendAction(from: bodyDurationSlider))
+
+        XCTAssertEqual(frequentEye.state, .off)
+        XCTAssertEqual(movement.state, .off)
+        XCTAssertNil(frequentEye.contentTintColor)
+        XCTAssertNil(movement.contentTintColor)
+        XCTAssertEqual(
+            movement.toolTip,
+            L10n.format(
+                "prefs.rhythmPreset.applyHelp",
+                RestRhythmPreset.movement.title,
+                RestRhythmPreset.movement.help
+            )
+        )
     }
 
     func testScheduleSummaryFollowsDisabledRestTypes() throws {

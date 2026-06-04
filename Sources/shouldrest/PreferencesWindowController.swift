@@ -371,6 +371,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let rhythmPresetRecommendedButton = NSButton()
     private let rhythmPresetFrequentEyeButton = NSButton()
     private let rhythmPresetMovementButton = NSButton()
+    private var rhythmPresetButtonEntries: [(button: NSButton, preset: RestRhythmPreset)] {
+        [
+            (rhythmPresetRecommendedButton, .recommended),
+            (rhythmPresetFrequentEyeButton, .frequentEye),
+            (rhythmPresetMovementButton, .movement)
+        ]
+    }
     private let soundPlayer = SoundPlayer()
     private var isLoadingSettings = false
     private var hasPendingTextEditing = false
@@ -1340,8 +1347,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         button.title = preset.title
         button.image = NSImage(systemSymbolName: preset.symbolName, accessibilityDescription: nil)
         button.imagePosition = .imageLeading
+        button.imageHugsTitle = true
         button.bezelStyle = .rounded
-        button.toolTip = preset.help
+        button.setButtonType(.toggle)
+        button.allowsMixedState = false
+        button.toolTip = rhythmPresetButtonHelp(for: preset, isSelected: false)
+        button.setAccessibilityLabel(preset.title)
+        button.setAccessibilityHelp(button.toolTip)
         button.tag = preset.rawValue
         button.target = self
         button.action = #selector(rhythmPresetPressed(_:))
@@ -2266,6 +2278,42 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         } else {
             scheduleSummaryLabel.stringValue = L10n.tr("prefs.scheduleSummary.none")
         }
+        updateRhythmPresetButtonStates()
+    }
+
+    private func updateRhythmPresetButtonStates() {
+        let selectedPreset = currentMatchingRhythmPreset()
+        rhythmPresetButtonEntries.forEach { entry in
+            let isSelected = entry.preset == selectedPreset
+            entry.button.state = isSelected ? .on : .off
+            entry.button.contentTintColor = isSelected ? .controlAccentColor : nil
+            entry.button.toolTip = rhythmPresetButtonHelp(for: entry.preset, isSelected: isSelected)
+            entry.button.setAccessibilityHelp(entry.button.toolTip)
+        }
+    }
+
+    private func currentMatchingRhythmPreset() -> RestRhythmPreset? {
+        guard isOn(eyeEnabled),
+              isOn(bodyEnabled) else { return nil }
+
+        let eyeIntervalMinutes = max(1, intValue(eyeInterval))
+        let eyeDurationSeconds = max(1, intValue(eyeDuration))
+        let bodyIntervalMinutes = max(1, intValue(bodyInterval))
+        let bodyDurationMinutes = max(1, intValue(bodyDuration))
+        let bodyAfterEyeGateCount = max(1, intValue(bodyAfterEyeGates))
+
+        return RestRhythmPreset.allCases.first { preset in
+            preset.eyeIntervalMinutes == eyeIntervalMinutes &&
+                preset.eyeDurationSeconds == eyeDurationSeconds &&
+                preset.bodyIntervalMinutes == bodyIntervalMinutes &&
+                preset.bodyDurationMinutes == bodyDurationMinutes &&
+                preset.bodyAfterEyeGateCount == bodyAfterEyeGateCount
+        }
+    }
+
+    private func rhythmPresetButtonHelp(for preset: RestRhythmPreset, isSelected: Bool) -> String {
+        let key = isSelected ? "prefs.rhythmPreset.selectedHelp" : "prefs.rhythmPreset.applyHelp"
+        return L10n.format(key, preset.title, preset.help)
     }
 
     private func updateShortcutPreferenceVisibility(
