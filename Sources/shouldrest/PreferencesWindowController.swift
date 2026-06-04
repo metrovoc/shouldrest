@@ -1641,7 +1641,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         configureBulkEditorActionButton(
             appExclusionsCopyBulkButton,
             identifier: "prefs.appExclusionsCopyBulkButton",
-            title: L10n.tr("prefs.copyBulkEditor"),
+            title: L10n.tr("prefs.copyAppRulesBulkEditor"),
             symbolName: "doc.on.doc",
             help: L10n.tr("prefs.copyAppRulesBulkEditorHelp"),
             action: #selector(copyAppRulesBulkEditorPressed(_:))
@@ -1649,7 +1649,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         configureBulkEditorActionButton(
             appExclusionsRestoreBulkButton,
             identifier: "prefs.appExclusionsRestoreBulkButton",
-            title: L10n.tr("prefs.restoreBulkEditor"),
+            title: L10n.tr("prefs.restoreAppRulesBulkEditor"),
             symbolName: "arrow.counterclockwise",
             help: L10n.tr("prefs.restoreAppRulesBulkEditorHelp"),
             action: #selector(restoreAppRulesBulkEditorPressed(_:))
@@ -1657,7 +1657,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         configureBulkEditorActionButton(
             customBodyIdeasCopyBulkButton,
             identifier: "prefs.customBodyIdeasCopyBulkButton",
-            title: L10n.tr("prefs.copyBulkEditor"),
+            title: L10n.tr("prefs.copyIdeasBulkEditor"),
             symbolName: "doc.on.doc",
             help: L10n.tr("prefs.copyIdeasBulkEditorHelp"),
             action: #selector(copyIdeasBulkEditorPressed(_:))
@@ -1665,7 +1665,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         configureBulkEditorActionButton(
             customBodyIdeasRestoreBulkButton,
             identifier: "prefs.customBodyIdeasRestoreBulkButton",
-            title: L10n.tr("prefs.restoreBulkEditor"),
+            title: L10n.tr("prefs.restoreIdeasBulkEditor"),
             symbolName: "arrow.counterclockwise",
             help: L10n.tr("prefs.restoreIdeasBulkEditorHelp"),
             action: #selector(restoreIdeasBulkEditorPressed(_:))
