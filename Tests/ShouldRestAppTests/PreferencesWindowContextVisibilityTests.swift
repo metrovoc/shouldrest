@@ -404,6 +404,9 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertTrue(button.isEnabled)
         XCTAssertEqual(button.title, L10n.tr("prefs.addRunningApp"))
         XCTAssertEqual(button.toolTip, L10n.tr("prefs.addRunningAppHelp"))
+        XCTAssertEqual(button.accessibilityLabel(), L10n.tr("prefs.addRunningApp"))
+        XCTAssertEqual(button.accessibilityHelp(), L10n.tr("prefs.addRunningAppHelp"))
+        XCTAssertEqual(button.image?.accessibilityDescription, L10n.tr("prefs.addRunningApp"))
         XCTAssertNotNil(button.image)
     }
 

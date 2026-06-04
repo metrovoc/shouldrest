@@ -1695,7 +1695,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         appExclusionAddRunningApp.bezelStyle = .rounded
         appExclusionAddRunningApp.target = self
         appExclusionAddRunningApp.action = #selector(addRunningAppExclusionPressed(_:))
-        appExclusionAddRunningApp.toolTip = L10n.tr("prefs.addRunningAppHelp")
+        setTextButtonHelp(
+            title: appExclusionAddRunningApp.title,
+            help: L10n.tr("prefs.addRunningAppHelp"),
+            on: appExclusionAddRunningApp
+        )
         appExclusionAddRunningApp.widthAnchor.constraint(equalToConstant: 168).isActive = true
     }
 
@@ -1833,7 +1837,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         localImageChooseButton.imagePosition = .imageLeading
         localImageChooseButton.target = self
         localImageChooseButton.action = #selector(chooseLocalImagePressed)
-        setHelp(L10n.tr("prefs.chooseBodyImageHelp"), on: localImageChooseButton)
+        setTextButtonHelp(
+            title: localImageChooseButton.title,
+            help: L10n.tr("prefs.chooseBodyImageHelp"),
+            on: localImageChooseButton
+        )
 
         localImageClearButton.title = L10n.tr("prefs.clear")
         localImageClearButton.image = NSImage(
@@ -1843,7 +1851,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         localImageClearButton.imagePosition = .imageLeading
         localImageClearButton.target = self
         localImageClearButton.action = #selector(clearLocalImagePressed)
-        setHelp(L10n.tr("prefs.clearBodyImageHelp"), on: localImageClearButton)
+        setTextButtonHelp(
+            title: localImageClearButton.title,
+            help: L10n.tr("prefs.clearBodyImageHelp"),
+            on: localImageClearButton
+        )
 
         localImagePreview.identifier = NSUserInterfaceItemIdentifier("localImagePreview")
         localImagePreview.translatesAutoresizingMaskIntoConstraints = false
