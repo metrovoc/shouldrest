@@ -50,7 +50,7 @@ enum MenuStatusPresenter {
             title: L10n.tr("app.name"),
             primary: statusLines.first ?? L10n.tr("status.noRests"),
             secondary: statusLines.dropFirst().first,
-            healthBadge: settings.presentation.breakHealthMode ? L10n.format("status.healthBadge", state.dangerScore) : nil,
+            healthBadge: healthBadgeText(state: state, settings: settings),
             icon: menuBarIcon(state: state)
         )
     }
@@ -106,6 +106,13 @@ enum MenuStatusPresenter {
         case .bodyBreak:
             return .systemSymbol("figure.walk")
         }
+    }
+
+    private static func healthBadgeText(state: RestEngineState, settings: RestSettings) -> String? {
+        guard settings.presentation.breakHealthMode, state.dangerScore > 0 else {
+            return nil
+        }
+        return L10n.format("status.healthBadge", state.dangerScore)
     }
 
     private static func primaryStatusText(state: RestEngineState, now: Date) -> String {

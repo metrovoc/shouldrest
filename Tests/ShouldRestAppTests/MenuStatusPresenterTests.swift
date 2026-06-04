@@ -89,6 +89,16 @@ final class MenuStatusPresenterTests: XCTestCase {
         XCTAssertNil(content.healthBadge)
     }
 
+    func testHeaderContentHidesZeroHealthBadgeWithoutHidingTooltipHealth() {
+        let engine = RestEngine(settings: .defaults, now: start)
+
+        let content = MenuStatusPresenter.headerContent(state: engine.state, settings: engine.settings, now: start)
+        let tooltip = MenuStatusPresenter.tooltip(state: engine.state, settings: engine.settings, now: start)
+
+        XCTAssertNil(content.healthBadge)
+        XCTAssertTrue(tooltip.contains("Rest pressure: 0/10"))
+    }
+
     func testTooltipHidesHealthWhenBreakHealthModeIsDisabled() {
         var settings = RestSettings.defaults
         settings.presentation.breakHealthMode = false
