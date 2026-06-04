@@ -11,7 +11,7 @@ final class StatusMenuClipboardFeedbackTests: XCTestCase {
 
         let feedback = StatusMenuClipboardFeedback.copy(
             "state=active",
-            kind: .diagnostics,
+            kind: .supportReport,
             pasteboard: pasteboard
         )
 

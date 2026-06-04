@@ -180,7 +180,8 @@ final class CommandLineAutomationTests: XCTestCase {
         let url = try XCTUnwrap(URL(string: "shouldrest://support"))
         let request = try XCTUnwrap(CommandLineAutomation.request(from: url))
 
-        XCTAssertEqual(request.command, .debug)
+        XCTAssertEqual(request.command, .supportReport)
+        XCTAssertEqual(request.command.rawValue, "debug")
         XCTAssertNil(request.duration)
         XCTAssertNil(request.title)
         XCTAssertNil(request.text)
@@ -191,7 +192,8 @@ final class CommandLineAutomationTests: XCTestCase {
         let url = try XCTUnwrap(URL(string: "shouldrest://support-panel"))
         let request = try XCTUnwrap(CommandLineAutomation.request(from: url))
 
-        XCTAssertEqual(request.command, .debugPanel)
+        XCTAssertEqual(request.command, .supportReportPanel)
+        XCTAssertEqual(request.command.rawValue, "debugPanel")
         XCTAssertNil(request.duration)
         XCTAssertNil(request.title)
         XCTAssertNil(request.text)
@@ -202,7 +204,8 @@ final class CommandLineAutomationTests: XCTestCase {
         let url = try XCTUnwrap(URL(string: "shouldrest://debug-panel"))
         let request = try XCTUnwrap(CommandLineAutomation.request(from: url))
 
-        XCTAssertEqual(request.command, .debugPanel)
+        XCTAssertEqual(request.command, .supportReportPanel)
+        XCTAssertEqual(request.command.rawValue, "debugPanel")
     }
 
     func testParsesAboutURLAutomation() throws {

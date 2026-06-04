@@ -17,7 +17,7 @@ final class StatusMenuPolicyTests: XCTestCase {
     func testActiveEyeGateKeepsSafeSupportActionsVisibleWithoutOrdinaryControls() {
         let state = RestEngineState(activeSession: session(kind: .eyeGate))
 
-        XCTAssertTrue(StrictRestStatusMenuPolicy.showsSafeDiagnosticsCopy(state: state))
+        XCTAssertTrue(StrictRestStatusMenuPolicy.showsSafeSupportReportCopy(state: state))
         XCTAssertTrue(StrictRestStatusMenuPolicy.showsDisabledQuitExplanation(state: state, settings: .defaults))
         XCTAssertFalse(StatusMenuPolicy.showsOrdinaryControls(state: state))
     }
@@ -50,9 +50,9 @@ final class StatusMenuPolicyTests: XCTestCase {
             state: RestEngineState(activeSession: session(kind: .bodyBreak)),
             canEmergencyExit: true
         ))
-        XCTAssertFalse(StrictRestStatusMenuPolicy.showsSafeDiagnosticsCopy(state: RestEngineState()))
+        XCTAssertFalse(StrictRestStatusMenuPolicy.showsSafeSupportReportCopy(state: RestEngineState()))
         XCTAssertFalse(StrictRestStatusMenuPolicy.showsDisabledQuitExplanation(state: RestEngineState(), settings: .defaults))
-        XCTAssertFalse(StrictRestStatusMenuPolicy.showsSafeDiagnosticsCopy(
+        XCTAssertFalse(StrictRestStatusMenuPolicy.showsSafeSupportReportCopy(
             state: RestEngineState(activeSession: session(kind: .bodyBreak))
         ))
         XCTAssertFalse(StrictRestStatusMenuPolicy.showsDisabledQuitExplanation(

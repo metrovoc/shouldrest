@@ -16,8 +16,8 @@ final class StatusMenuActionIconTests: XCTestCase {
             "resetBreaks": "arrow.counterclockwise",
             "openPreferences": "gearshape",
             "checkForUpdatesNow": "arrow.triangle.2.circlepath",
-            "copyDebugInfo": "doc.on.doc",
-            "openDebugPanel": "doc.text.magnifyingglass",
+            "copySupportReport": "doc.on.doc",
+            "openSupportReportPanel": "doc.text.magnifyingglass",
             "showAboutPanel": "info.circle",
             "showSettingsFile": "folder",
             "copySettingsPath": "doc.on.doc"
@@ -53,8 +53,8 @@ final class StatusMenuActionIconTests: XCTestCase {
             "resetBreaks": L10n.tr("menu.resetHelp"),
             "openPreferences": L10n.tr("menu.preferencesHelp"),
             "checkForUpdatesNow": L10n.tr("menu.checkUpdatesHelp"),
-            "copyDebugInfo": L10n.tr("menu.copyDebugHelp"),
-            "openDebugPanel": L10n.tr("menu.debugPanelHelp"),
+            "copySupportReport": L10n.tr("menu.copyDebugHelp"),
+            "openSupportReportPanel": L10n.tr("menu.debugPanelHelp"),
             "showAboutPanel": L10n.tr("menu.aboutHelp"),
             "showSettingsFile": L10n.tr("menu.showSettingsFileHelp"),
             "copySettingsPath": L10n.tr("menu.copySettingsPathHelp")

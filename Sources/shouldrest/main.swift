@@ -233,7 +233,7 @@ enum StatusMenuPolicy {
 }
 
 enum StrictRestStatusMenuPolicy {
-    static func showsSafeDiagnosticsCopy(state: RestEngineState) -> Bool {
+    static func showsSafeSupportReportCopy(state: RestEngineState) -> Bool {
         state.activeSession?.kind == .eyeGate
     }
 
@@ -275,9 +275,9 @@ enum StatusMenuActionIcon {
             return "gearshape"
         case "checkForUpdatesNow":
             return "arrow.triangle.2.circlepath"
-        case "copyDebugInfo":
+        case "copySupportReport":
             return "doc.on.doc"
-        case "openDebugPanel":
+        case "openSupportReportPanel":
             return "doc.text.magnifyingglass"
         case "showAboutPanel":
             return "info.circle"
@@ -328,9 +328,9 @@ enum StatusMenuActionHelp {
             return L10n.tr("menu.preferencesHelp")
         case "checkForUpdatesNow":
             return L10n.tr("menu.checkUpdatesHelp")
-        case "copyDebugInfo":
+        case "copySupportReport":
             return L10n.tr("menu.copyDebugHelp")
-        case "openDebugPanel":
+        case "openSupportReportPanel":
             return L10n.tr("menu.debugPanelHelp")
         case "showAboutPanel":
             return L10n.tr("menu.aboutHelp")
@@ -372,12 +372,12 @@ enum DisabledStatusMenuItemFactory {
 
 enum StatusMenuClipboardFeedback {
     enum Kind {
-        case diagnostics
+        case supportReport
         case settingsPath
 
         var notificationBody: String {
             switch self {
-            case .diagnostics:
+            case .supportReport:
                 return L10n.tr("menu.copyDebugDone")
             case .settingsPath:
                 return L10n.tr("menu.copySettingsPathDone")
@@ -828,8 +828,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func appendStrictRestSupportItems(to menu: NSMenu, now: Date) {
-        if StrictRestStatusMenuPolicy.showsSafeDiagnosticsCopy(state: engine.state) {
-            menu.addItem(actionItem(L10n.tr("menu.copyDebug"), #selector(copyDebugInfo)))
+        if StrictRestStatusMenuPolicy.showsSafeSupportReportCopy(state: engine.state) {
+            menu.addItem(actionItem(L10n.tr("menu.copyDebug"), #selector(copySupportReport)))
             menu.addItem(.separator())
         }
         if StrictRestStatusMenuPolicy.showsDisabledQuitExplanation(state: engine.state, settings: settings) {
@@ -936,8 +936,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
         submenu.addItem(actionItem(L10n.tr("menu.about"), #selector(showAboutPanel)))
         submenu.addItem(.separator())
-        submenu.addItem(actionItem(L10n.tr("menu.copyDebug"), #selector(copyDebugInfo)))
-        submenu.addItem(actionItem(L10n.tr("menu.debugPanel"), #selector(openDebugPanel)))
+        submenu.addItem(actionItem(L10n.tr("menu.copyDebug"), #selector(copySupportReport)))
+        submenu.addItem(actionItem(L10n.tr("menu.debugPanel"), #selector(openSupportReportPanel)))
         if !settings.admin.hideSettingsFileLocation {
             submenu.addItem(settingsFileMenuItem())
         }
@@ -1551,10 +1551,10 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         NSWorkspace.shared.open(latestReleaseURL)
     }
 
-    @objc private func copyDebugInfo() {
-        let notificationBody = StatusMenuClipboardFeedback.copy(debugInfo(), kind: .diagnostics)
+    @objc private func copySupportReport() {
+        let notificationBody = StatusMenuClipboardFeedback.copy(debugInfo(), kind: .supportReport)
         showAppNotification(title: L10n.tr("app.name"), body: notificationBody)
-        logger.log("Diagnostics copied")
+        logger.log("Support report copied")
     }
 
     @objc private func showSettingsFile() {
@@ -1568,7 +1568,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         logger.log("Settings path copied")
     }
 
-    @objc private func openDebugPanel() {
+    @objc private func openSupportReportPanel() {
         if debugWindowController == nil {
             debugWindowController = DebugWindowController(
                 debugInfoProvider: { [weak self] in
@@ -1588,7 +1588,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         debugWindowController?.window?.makeKeyAndOrderFront(nil)
         debugWindowController?.window?.orderFrontRegardless()
         NSApp.activate(ignoringOtherApps: true)
-        logger.log("Diagnostics window opened")
+        logger.log("Support report window opened")
     }
 
     @objc private func showAboutPanel() {
@@ -1597,7 +1597,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 version: AppVersion.current,
                 projectURL: URL(string: "https://github.com/metrovoc/shouldrest")!,
                 onOpenDebug: { [weak self] in
-                    self?.openDebugPanel()
+                    self?.openSupportReportPanel()
                 }
             )
         }
@@ -1675,10 +1675,10 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             handleEmergencyAutomation()
         case .preferences:
             openPreferences()
-        case .debug:
-            copyDebugInfo()
-        case .debugPanel:
-            openDebugPanel()
+        case .supportReport:
+            copySupportReport()
+        case .supportReportPanel:
+            openSupportReportPanel()
         case .about:
             showAboutPanel()
         }

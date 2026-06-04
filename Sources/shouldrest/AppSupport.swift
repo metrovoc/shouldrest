@@ -119,8 +119,8 @@ enum AutomationCommand: String {
     case body
     case emergency
     case preferences
-    case debug
-    case debugPanel
+    case supportReport = "debug"
+    case supportReportPanel = "debugPanel"
     case about
 }
 
@@ -222,12 +222,12 @@ enum CommandLineAutomation {
             return true
         case "support", "support-report", "report", "debug":
             return dispatchOrQueue(
-                AutomationRequest(command: .debug),
+                AutomationRequest(command: .supportReport),
                 message: L10n.tr("cli.requestedDiagnostics")
             )
         case "support-panel", "support-report-panel", "report-panel", "debug-panel", "debugPanel":
             return dispatchOrQueue(
-                AutomationRequest(command: .debugPanel),
+                AutomationRequest(command: .supportReportPanel),
                 message: L10n.tr("cli.requestedDiagnosticsWindow")
             )
         case "about":
@@ -401,9 +401,9 @@ enum CommandLineAutomation {
         case "preferences":
             command = .preferences
         case "support", "support-report", "report", "debug":
-            command = .debug
+            command = .supportReport
         case "support-panel", "support-report-panel", "report-panel", "debug-panel", "debugPanel":
-            command = .debugPanel
+            command = .supportReportPanel
         case "about":
             command = .about
         default:
