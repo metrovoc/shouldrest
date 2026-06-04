@@ -23,7 +23,7 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         XCTAssertTrue(lines[0].contains("Eye Gate"))
         XCTAssertFalse(lines[0].contains("eyeGate"))
-        XCTAssertEqual(lines[1], "Next Body Break after 2 Eye Gates")
+        XCTAssertEqual(lines[1], "Next Body Break after 4 Eye Gates")
     }
 
     func testTooltipIncludesHeaderAndStatusLines() {
@@ -33,7 +33,7 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         XCTAssertTrue(tooltip.hasPrefix("ShouldRest - The rest reminder app\n\n"))
         XCTAssertTrue(tooltip.contains("Next: Eye Gate"))
-        XCTAssertTrue(tooltip.contains("Next Body Break after 2 Eye Gates"))
+        XCTAssertTrue(tooltip.contains("Next Body Break after 4 Eye Gates"))
     }
 
     func testNextScheduledRestMenuActionNamesConcreteRestKind() {
@@ -65,7 +65,7 @@ final class MenuStatusPresenterTests: XCTestCase {
     func testHeaderContentPromotesStatusLinesAndHealthBadge() {
         let settings = RestSettings.defaults
         let state = RestEngineState(
-            scheduled: ScheduledRest(kind: .eyeGate, dueAt: start.addingTimeInterval(20 * 60), notificationAt: nil),
+            scheduled: ScheduledRest(kind: .eyeGate, dueAt: start.addingTimeInterval(10 * 60), notificationAt: nil),
             dangerScore: 3
         )
 
@@ -73,7 +73,7 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         XCTAssertEqual(content.title, "ShouldRest")
         XCTAssertTrue(content.primary.hasPrefix("Next: Eye Gate at "))
-        XCTAssertEqual(content.secondary, "Next Body Break after 2 Eye Gates")
+        XCTAssertEqual(content.secondary, "Next Body Break after 4 Eye Gates")
         XCTAssertEqual(content.healthBadge, "Pressure 3/10")
         XCTAssertEqual(content.icon, .restGate)
     }
@@ -153,7 +153,7 @@ final class MenuStatusPresenterTests: XCTestCase {
         let settings = RestSettings.defaults
         let states = [
             RestEngineState(
-                scheduled: ScheduledRest(kind: .eyeGate, dueAt: start.addingTimeInterval(20 * 60), notificationAt: nil)
+                scheduled: ScheduledRest(kind: .eyeGate, dueAt: start.addingTimeInterval(10 * 60), notificationAt: nil)
             ),
             RestEngineState(
                 activeSession: RestSession(
@@ -248,7 +248,7 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         let lines = MenuStatusPresenter.lines(state: engine.state, settings: engine.settings, now: start)
 
-        XCTAssertEqual(lines[1], "Next Body Break after 1 Eye Gate")
+        XCTAssertEqual(lines[1], "Next Body Break after 3 Eye Gates")
     }
 
     func testActiveStatusUsesLocalizedBodyBreakName() {

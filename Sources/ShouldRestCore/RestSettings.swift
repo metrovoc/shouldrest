@@ -48,7 +48,7 @@ public struct RestSettings: Codable, Equatable, Sendable {
     public static let defaults = RestSettings(
         eyeGate: .eyeGateDefault,
         bodyBreak: .bodyBreakDefault,
-        bodyBreakAfterEyeGates: 2,
+        bodyBreakAfterEyeGates: 4,
         notifications: .defaults,
         naturalBreaks: .defaults,
         focusMode: .defaults,
@@ -146,7 +146,7 @@ public struct RestRule: Codable, Equatable, Sendable {
 
     public static let eyeGateDefault = RestRule(
         isEnabled: true,
-        interval: 20 * 60,
+        interval: 10 * 60,
         duration: 20,
         ordinarySkipEnabled: false,
         postpone: .disabled,

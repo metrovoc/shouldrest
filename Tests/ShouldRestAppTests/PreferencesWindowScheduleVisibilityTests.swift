@@ -19,7 +19,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertNotNil(icon.image)
         XCTAssertEqual(
             label.stringValue,
-            L10n.format("prefs.scheduleSummary.eyeAndBody", 20, 20, 2, 5)
+            L10n.format("prefs.scheduleSummary.eyeAndBody", 10, 20, 4, 5)
         )
     }
 
@@ -89,7 +89,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
 
         XCTAssertEqual(
             label.stringValue,
-            L10n.format("prefs.scheduleSummary.eyeAndBody", 45, 20, 2, 5)
+            L10n.format("prefs.scheduleSummary.eyeAndBody", 45, 20, 4, 5)
         )
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(savedSettings.value?.eyeGate.interval, 45 * 60)
@@ -110,7 +110,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
 
         XCTAssertEqual(
             label.stringValue,
-            L10n.format("prefs.scheduleSummary.eyeOnly", 20, 20)
+            L10n.format("prefs.scheduleSummary.eyeOnly", 10, 20)
         )
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(savedSettings.value?.bodyBreak.isEnabled, false)

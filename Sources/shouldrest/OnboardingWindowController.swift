@@ -13,7 +13,7 @@ final class OnboardingWindowController: NSWindowController {
     private let onLearnMore: () -> Void
     private let rhythmPresetControl = NSSegmentedControl()
     private let rhythmPresetDescription = NSTextField(labelWithString: "")
-    private var selectedRhythmPreset: RestRhythmPreset = .recommended
+    private var selectedRhythmPreset: RestRhythmPreset = .firstRunDefault
 
     init(
         onUsePreset: @escaping (RestRhythmPreset) -> Void,

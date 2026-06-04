@@ -47,7 +47,7 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.emergencyFeatureTitle")))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.bodyFeatureTitle")))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.rhythmTitle")))
-        XCTAssertTrue(texts.contains(RestRhythmPreset.recommended.help))
+        XCTAssertTrue(texts.contains(RestRhythmPreset.firstRunDefault.help))
     }
 
     func testOnboardingButtonsUseIconsHelpAndDefaultAction() throws {
@@ -94,19 +94,35 @@ final class OnboardingWindowTests: XCTestCase {
         )
 
         XCTAssertEqual(control.segmentCount, RestRhythmPreset.allCases.count)
-        XCTAssertEqual(control.selectedSegment, RestRhythmPreset.recommended.rawValue)
+        XCTAssertEqual(control.selectedSegment, RestRhythmPreset.firstRunDefault.rawValue)
         XCTAssertEqual(control.label(forSegment: RestRhythmPreset.recommended.rawValue), "Balanced")
         XCTAssertEqual(control.label(forSegment: RestRhythmPreset.frequentEye.rawValue), "More Eye Rests")
         XCTAssertEqual(control.label(forSegment: RestRhythmPreset.movement.rawValue), "More Movement")
-        XCTAssertEqual(description.stringValue, RestRhythmPreset.recommended.help)
+        XCTAssertEqual(description.stringValue, RestRhythmPreset.firstRunDefault.help)
 
-        control.selectedSegment = RestRhythmPreset.frequentEye.rawValue
+        control.selectedSegment = RestRhythmPreset.movement.rawValue
         XCTAssertTrue(control.sendAction(control.action, to: control.target))
 
-        XCTAssertEqual(description.stringValue, RestRhythmPreset.frequentEye.help)
+        XCTAssertEqual(description.stringValue, RestRhythmPreset.movement.help)
 
         let buttons = buttonsByTitle(in: contentView)
         let useSelected = try XCTUnwrap(buttons[L10n.tr("onboarding.useSelected")])
+        useSelected.performClick(nil)
+
+        XCTAssertEqual(selectedPreset, .movement)
+    }
+
+    func testOnboardingPrimaryActionUsesFrequentEyeFirstRunDefault() throws {
+        var selectedPreset: RestRhythmPreset?
+        let controller = OnboardingWindowController(
+            onUsePreset: { selectedPreset = $0 },
+            onOpenPreferences: { _ in },
+            onLearnMore: {}
+        )
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let buttons = buttonsByTitle(in: contentView)
+        let useSelected = try XCTUnwrap(buttons[L10n.tr("onboarding.useSelected")])
+
         useSelected.performClick(nil)
 
         XCTAssertEqual(selectedPreset, .frequentEye)

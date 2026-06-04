@@ -6,6 +6,8 @@ enum RestRhythmPreset: Int, CaseIterable, Equatable {
     case frequentEye
     case movement
 
+    static let firstRunDefault: RestRhythmPreset = .frequentEye
+
     var identifier: String {
         switch self {
         case .recommended:
