@@ -2505,9 +2505,16 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             let value = pair.recorder.shortcutValue.trimmingCharacters(in: .whitespacesAndNewlines)
             let isRequired = fallback != nil
             let canClear = isRequired ? value != (fallback ?? "") : !value.isEmpty
-            let help = isRequired
-                ? L10n.tr("shortcut.restoreDefaultButtonHelp")
-                : L10n.tr("shortcut.clearButtonHelp")
+            let help: String
+            if isRequired {
+                help = canClear
+                    ? L10n.tr("shortcut.restoreDefaultButtonHelp")
+                    : L10n.tr("shortcut.restoreDefaultButtonDisabledDefaultHelp")
+            } else {
+                help = canClear
+                    ? L10n.tr("shortcut.clearButtonHelp")
+                    : L10n.tr("shortcut.clearButtonDisabledEmptyHelp")
+            }
             pair.button.isEnabled = canClear
             pair.button.contentTintColor = canClear ? .secondaryLabelColor : .tertiaryLabelColor
             pair.button.image = NSImage(
