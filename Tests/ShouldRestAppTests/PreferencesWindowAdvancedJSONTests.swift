@@ -227,6 +227,63 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertEqual(savedSettings.value?.contentLibrary.customBodyBreakIdeas.first?.title, "Stretch")
     }
 
+    func testAdvancedBulkCopyButtonsExplainDisabledPrerequisites() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = []
+        settings.contentLibrary.customBodyBreakIdeas = []
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let appCheckbox = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionEnabled", in: contentView) as? NSButton)
+        let appEditor = try XCTUnwrap(view(withIdentifier: "appExclusionsJSONEditor", in: contentView) as? NSTextView)
+        let appCopy = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionsCopyBulkButton", in: contentView) as? NSButton)
+        let ideasEditor = try XCTUnwrap(view(withIdentifier: "customBodyIdeasJSONEditor", in: contentView) as? NSTextView)
+        let ideasCopy = try XCTUnwrap(view(withIdentifier: "prefs.customBodyIdeasCopyBulkButton", in: contentView) as? NSButton)
+
+        XCTAssertFalse(appCopy.isEnabled)
+        XCTAssertEqual(appCopy.toolTip, L10n.tr("prefs.copyAppRulesBulkEditorDisabledOffHelp"))
+        XCTAssertEqual(appCopy.accessibilityHelp(), L10n.tr("prefs.copyAppRulesBulkEditorDisabledOffHelp"))
+
+        appCheckbox.state = .on
+        XCTAssertTrue(sendAction(from: appCheckbox))
+
+        XCTAssertFalse(appCopy.isEnabled)
+        XCTAssertEqual(appCopy.toolTip, L10n.tr("prefs.copyBulkEditorDisabledEmptyHelp"))
+        XCTAssertEqual(appCopy.accessibilityHelp(), L10n.tr("prefs.copyBulkEditorDisabledEmptyHelp"))
+
+        appEditor.string = "[{}]"
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: appEditor))
+
+        XCTAssertTrue(appCopy.isEnabled)
+        XCTAssertEqual(appCopy.toolTip, L10n.tr("prefs.copyAppRulesBulkEditorHelp"))
+        XCTAssertEqual(appCopy.accessibilityHelp(), L10n.tr("prefs.copyAppRulesBulkEditorHelp"))
+
+        XCTAssertFalse(ideasCopy.isEnabled)
+        XCTAssertEqual(ideasCopy.toolTip, L10n.tr("prefs.copyBulkEditorDisabledEmptyHelp"))
+        XCTAssertEqual(ideasCopy.accessibilityHelp(), L10n.tr("prefs.copyBulkEditorDisabledEmptyHelp"))
+
+        ideasEditor.string = "[{}]"
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: ideasEditor))
+
+        XCTAssertTrue(ideasCopy.isEnabled)
+        XCTAssertEqual(ideasCopy.toolTip, L10n.tr("prefs.copyIdeasBulkEditorHelp"))
+        XCTAssertEqual(ideasCopy.accessibilityHelp(), L10n.tr("prefs.copyIdeasBulkEditorHelp"))
+    }
+
+    func testIdeasBulkCopyButtonExplainsDisabledBodyBreakPrerequisite() throws {
+        var settings = RestSettings.defaults
+        settings.bodyBreak.isEnabled = false
+        settings.contentLibrary.customBodyBreakIdeas = [
+            RestIdea(id: "stretch", kind: .bodyBreak, title: "Stretch", body: "Open shoulders")
+        ]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let ideasCopy = try XCTUnwrap(view(withIdentifier: "prefs.customBodyIdeasCopyBulkButton", in: contentView) as? NSButton)
+
+        XCTAssertFalse(ideasCopy.isEnabled)
+        XCTAssertEqual(ideasCopy.toolTip, L10n.tr("prefs.copyIdeasBulkEditorDisabledBodyOffHelp"))
+        XCTAssertEqual(ideasCopy.accessibilityHelp(), L10n.tr("prefs.copyIdeasBulkEditorDisabledBodyOffHelp"))
+    }
+
     func testAdvancedJSONLoadsPrettyPrintedMultilineContent() throws {
         var settings = RestSettings.defaults
         settings.appExclusions = [

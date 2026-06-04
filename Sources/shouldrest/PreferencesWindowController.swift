@@ -3336,12 +3336,24 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private func updateAdvancedBulkEditorActionStates() {
         let appText = appExclusionsJSONEditor.string.trimmingCharacters(in: .whitespacesAndNewlines)
         let savedAppText = savedAppRulesBulkEditorText()
-        appExclusionsCopyBulkButton.isEnabled = !appText.isEmpty
+        let appRulesEnabled = isOn(appExclusionEnabled)
+        appExclusionsCopyBulkButton.isEnabled = appRulesEnabled && !appText.isEmpty
+        setTextButtonHelp(
+            title: appExclusionsCopyBulkButton.title,
+            help: advancedCopyHelp(
+                isFeatureEnabled: appRulesEnabled,
+                hasText: !appText.isEmpty,
+                enabledHelp: L10n.tr("prefs.copyAppRulesBulkEditorHelp"),
+                disabledFeatureHelp: L10n.tr("prefs.copyAppRulesBulkEditorDisabledOffHelp"),
+                disabledEmptyHelp: L10n.tr("prefs.copyBulkEditorDisabledEmptyHelp")
+            ),
+            on: appExclusionsCopyBulkButton
+        )
         appExclusionsRestoreBulkButton.isEnabled = isOn(appExclusionEnabled) && appExclusionsJSONEditor.string != savedAppText
         setTextButtonHelp(
             title: appExclusionsRestoreBulkButton.title,
             help: advancedRestoreHelp(
-                isFeatureEnabled: isOn(appExclusionEnabled),
+                isFeatureEnabled: appRulesEnabled,
                 hasUnsavedEditorChanges: appExclusionsJSONEditor.string != savedAppText,
                 enabledHelp: L10n.tr("prefs.restoreAppRulesBulkEditorHelp"),
                 disabledFeatureHelp: L10n.tr("prefs.restoreAppRulesBulkEditorDisabledOffHelp"),
@@ -3354,6 +3366,17 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let savedIdeasText = savedIdeasBulkEditorText()
         let bodyBreakEnabled = isOn(bodyEnabled)
         customBodyIdeasCopyBulkButton.isEnabled = bodyBreakEnabled && !ideasText.isEmpty
+        setTextButtonHelp(
+            title: customBodyIdeasCopyBulkButton.title,
+            help: advancedCopyHelp(
+                isFeatureEnabled: bodyBreakEnabled,
+                hasText: !ideasText.isEmpty,
+                enabledHelp: L10n.tr("prefs.copyIdeasBulkEditorHelp"),
+                disabledFeatureHelp: L10n.tr("prefs.copyIdeasBulkEditorDisabledBodyOffHelp"),
+                disabledEmptyHelp: L10n.tr("prefs.copyBulkEditorDisabledEmptyHelp")
+            ),
+            on: customBodyIdeasCopyBulkButton
+        )
         customBodyIdeasRestoreBulkButton.isEnabled = bodyBreakEnabled && customBodyIdeasJSONEditor.string != savedIdeasText
         setTextButtonHelp(
             title: customBodyIdeasRestoreBulkButton.title,
@@ -3366,6 +3389,22 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             ),
             on: customBodyIdeasRestoreBulkButton
         )
+    }
+
+    private func advancedCopyHelp(
+        isFeatureEnabled: Bool,
+        hasText: Bool,
+        enabledHelp: String,
+        disabledFeatureHelp: String,
+        disabledEmptyHelp: String
+    ) -> String {
+        guard isFeatureEnabled else {
+            return disabledFeatureHelp
+        }
+        guard hasText else {
+            return disabledEmptyHelp
+        }
+        return enabledHelp
     }
 
     private func advancedRestoreHelp(
