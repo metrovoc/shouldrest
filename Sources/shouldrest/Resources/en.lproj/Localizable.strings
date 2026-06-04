@@ -127,7 +127,7 @@
 "overlay.eyeCompleteBody" = "Finish when you are ready to look back at the screen.";
 "overlay.bodyCompleteTitle" = "Body Break complete";
 "overlay.bodyCompleteBody" = "Finish when you are ready to return to work.";
-"overlay.ready" = "ready";
+"overlay.ready" = "Ready";
 "overlay.emergencyOverride" = "Emergency Exit · Esc";
 "overlay.emergencyOverrideConfirm" = "Click again · Esc again";
 "overlay.emergencyOverrideArmed" = "Click again · Esc again";

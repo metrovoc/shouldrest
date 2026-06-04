@@ -16,6 +16,13 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("overlay.ready"), "就绪")
     }
 
+    func testEnglishOverlayReadyStatusUsesPolishedStateCopy() {
+        L10n.languageOverride = "en"
+        defer { L10n.languageOverride = nil }
+
+        XCTAssertEqual(L10n.tr("overlay.ready"), "Ready")
+    }
+
     func testSimplifiedChineseVisibleValuesAvoidUntranslatedCoreTerms() throws {
         let values = try simplifiedChineseLocalizedValues().joined(separator: "\n")
 

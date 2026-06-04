@@ -105,7 +105,7 @@ final class RestOverlayViewCountdownTests: XCTestCase {
         let countdown = try XCTUnwrap(view.descendant(withIdentifier: "overlay.countdown.label") as? NSTextField)
         XCTAssertEqual(title.stringValue, "Eye Gate complete")
         XCTAssertEqual(detail.stringValue, "Finish when you are ready to look back at the screen.")
-        XCTAssertEqual(countdown.stringValue, "ready")
+        XCTAssertEqual(countdown.stringValue, "Ready")
         assertOverlayLabelHelp(title)
         assertOverlayLabelHelp(detail)
         assertOverlayLabelHelp(countdown)
