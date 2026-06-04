@@ -86,6 +86,28 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertFalse(visibleTexts.contains("Pause toggle"))
     }
 
+    func testShortcutControlsExposeActionHelpAlongsideRecorderInstructions() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectShortcutsTab(in: contentView)
+
+        let pause30 = try XCTUnwrap(control(withIdentifier: "shortcut.pause30", in: contentView) as? ShortcutRecorderButton)
+        let emergency = try XCTUnwrap(control(withIdentifier: "shortcut.emergencyEye", in: contentView) as? ShortcutRecorderButton)
+        let endActive = try XCTUnwrap(control(withIdentifier: "shortcut.endBody", in: contentView) as? ShortcutRecorderButton)
+
+        XCTAssertEqual(pause30.toolTip, shortcutHelp("prefs.pause30ShortcutHelp", "shortcut.recordHelp"))
+        XCTAssertEqual(pause30.accessibilityHelp(), shortcutHelp("prefs.pause30ShortcutHelp", "shortcut.recordHelp"))
+        XCTAssertEqual(emergency.toolTip, shortcutHelp("prefs.emergencyEyeGateShortcutHelp", "shortcut.requiredHelp"))
+        XCTAssertEqual(emergency.accessibilityHelp(), shortcutHelp("prefs.emergencyEyeGateShortcutHelp", "shortcut.requiredHelp"))
+        XCTAssertEqual(endActive.toolTip, shortcutHelp("prefs.activeRestShortcut.bodyHelp", "shortcut.clearHelp"))
+        XCTAssertFalse((emergency.toolTip ?? "").localizedCaseInsensitiveContains("shortcut again"))
+
+        let visibleTexts = visibleTexts(in: contentView)
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.pause30ShortcutHelp")))
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.emergencyEyeGateShortcutHelp")))
+    }
+
     func testActiveRestShortcutUsesBodyBreakActionCopyByDefault() throws {
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
@@ -189,8 +211,8 @@ final class PreferencesWindowShortcutTests: XCTestCase {
 
         XCTAssertNil(eyeNow.validationWarning)
         XCTAssertNil(bodyNow.validationWarning)
-        XCTAssertEqual(eyeNow.toolTip, L10n.tr("shortcut.clearHelp"))
-        XCTAssertEqual(bodyNow.toolTip, L10n.tr("shortcut.clearHelp"))
+        XCTAssertEqual(eyeNow.toolTip, shortcutHelp("prefs.eyeGateNowHelp", "shortcut.clearHelp"))
+        XCTAssertEqual(bodyNow.toolTip, shortcutHelp("prefs.bodyBreakNowHelp", "shortcut.clearHelp"))
     }
 
     func testUnsupportedShortcutMarksOnlyInvalidRecorder() throws {
@@ -421,9 +443,12 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         try selectShortcutsTab(in: contentView)
         let emergencyShortcut = try XCTUnwrap(control(withIdentifier: "shortcut.emergencyEye", in: contentView) as? ShortcutRecorderButton)
 
-        XCTAssertEqual(emergencyShortcut.toolTip, L10n.tr("shortcut.requiredHelp"))
+        XCTAssertEqual(emergencyShortcut.toolTip, shortcutHelp("prefs.emergencyEyeGateShortcutHelp", "shortcut.requiredHelp"))
         emergencyShortcut.performClick(nil)
-        XCTAssertEqual(emergencyShortcut.toolTip, L10n.tr("shortcut.requiredRecordingHelp"))
+        XCTAssertEqual(
+            emergencyShortcut.toolTip,
+            shortcutHelp("prefs.emergencyEyeGateShortcutHelp", "shortcut.requiredRecordingHelp")
+        )
         emergencyShortcut.keyDown(with: try keyEvent(keyCode: kVK_Delete))
         waitUntilSavedSettingsArrive(savedSettings)
 
@@ -511,6 +536,10 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         while settings.value == nil && Date() < deadline {
             RunLoop.current.run(until: Date().addingTimeInterval(0.05))
         }
+    }
+
+    private func shortcutHelp(_ actionHelpKey: String, _ interactionHelpKey: String) -> String {
+        "\(L10n.tr(actionHelpKey))\n\(L10n.tr(interactionHelpKey))"
     }
 
     private func visibleTexts(in view: NSView, ancestorHidden: Bool = false) -> [String] {

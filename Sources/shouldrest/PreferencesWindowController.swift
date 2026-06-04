@@ -992,18 +992,54 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         shortcutEndBody.identifier = NSUserInterfaceItemIdentifier("shortcut.endBody")
         shortcutEmergencyEye.identifier = NSUserInterfaceItemIdentifier("shortcut.emergencyEye")
         shortcutReset.identifier = NSUserInterfaceItemIdentifier("shortcut.reset")
-        shortcutsStack.addArrangedSubview(shortcutRow(L10n.tr("prefs.pauseToggle"), shortcutPauseToggle))
-        shortcutsStack.addArrangedSubview(shortcutRow(L10n.tr("prefs.pause30Shortcut"), shortcutPause30))
-        shortcutsStack.addArrangedSubview(shortcutRow(L10n.tr("prefs.pause1hShortcut"), shortcutPause1h))
-        shortcutsStack.addArrangedSubview(shortcutRow(L10n.tr("prefs.pause2hShortcut"), shortcutPause2h))
-        shortcutsStack.addArrangedSubview(shortcutRow(L10n.tr("prefs.pause5hShortcut"), shortcutPause5h))
-        shortcutsStack.addArrangedSubview(shortcutRow(L10n.tr("prefs.pauseUntilMorningShortcut"), shortcutPauseUntilMorning))
-        shortcutsStack.addArrangedSubview(shortcutRow(L10n.tr("prefs.nextScheduledRest"), shortcutNextScheduled))
-        let shortcutEyeNowRow = shortcutRow(L10n.tr("prefs.eyeGateNow"), shortcutEyeNow)
+        shortcutsStack.addArrangedSubview(shortcutRow(
+            L10n.tr("prefs.pauseToggle"),
+            shortcutPauseToggle,
+            help: L10n.tr("prefs.pauseToggleShortcutHelp")
+        ))
+        shortcutsStack.addArrangedSubview(shortcutRow(
+            L10n.tr("prefs.pause30Shortcut"),
+            shortcutPause30,
+            help: L10n.tr("prefs.pause30ShortcutHelp")
+        ))
+        shortcutsStack.addArrangedSubview(shortcutRow(
+            L10n.tr("prefs.pause1hShortcut"),
+            shortcutPause1h,
+            help: L10n.tr("prefs.pause1hShortcutHelp")
+        ))
+        shortcutsStack.addArrangedSubview(shortcutRow(
+            L10n.tr("prefs.pause2hShortcut"),
+            shortcutPause2h,
+            help: L10n.tr("prefs.pause2hShortcutHelp")
+        ))
+        shortcutsStack.addArrangedSubview(shortcutRow(
+            L10n.tr("prefs.pause5hShortcut"),
+            shortcutPause5h,
+            help: L10n.tr("prefs.pause5hShortcutHelp")
+        ))
+        shortcutsStack.addArrangedSubview(shortcutRow(
+            L10n.tr("prefs.pauseUntilMorningShortcut"),
+            shortcutPauseUntilMorning,
+            help: L10n.tr("prefs.pauseUntilMorningShortcutHelp")
+        ))
+        shortcutsStack.addArrangedSubview(shortcutRow(
+            L10n.tr("prefs.nextScheduledRest"),
+            shortcutNextScheduled,
+            help: L10n.tr("prefs.nextScheduledRestHelp")
+        ))
+        let shortcutEyeNowRow = shortcutRow(
+            L10n.tr("prefs.eyeGateNow"),
+            shortcutEyeNow,
+            help: L10n.tr("prefs.eyeGateNowHelp")
+        )
         shortcutEyeNowRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutEyeNowRow")
         self.shortcutEyeNowRow = shortcutEyeNowRow
         shortcutsStack.addArrangedSubview(shortcutEyeNowRow)
-        let shortcutBodyNowRow = shortcutRow(L10n.tr("prefs.bodyBreakNow"), shortcutBodyNow)
+        let shortcutBodyNowRow = shortcutRow(
+            L10n.tr("prefs.bodyBreakNow"),
+            shortcutBodyNow,
+            help: L10n.tr("prefs.bodyBreakNowHelp")
+        )
         shortcutBodyNowRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutBodyNowRow")
         self.shortcutBodyNowRow = shortcutBodyNowRow
         shortcutsStack.addArrangedSubview(shortcutBodyNowRow)
@@ -1013,7 +1049,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                 bodyBreakEnabled: settings.bodyBreak.isEnabled,
                 eyeManualFinishEnabled: settings.eyeGate.manualFinishEnabled
             ),
-            shortcutEndBody
+            shortcutEndBody,
+            help: activeRestShortcutHelp(
+                eyeGateEnabled: settings.eyeGate.isEnabled,
+                bodyBreakEnabled: settings.bodyBreak.isEnabled,
+                eyeManualFinishEnabled: settings.eyeGate.manualFinishEnabled
+            )
         )
         shortcutEndBodyRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutEndBodyRow")
         if let label = shortcutEndBodyRow.arrangedSubviews.first as? NSTextField {
@@ -1022,11 +1063,19 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
         self.shortcutEndBodyRow = shortcutEndBodyRow
         shortcutsStack.addArrangedSubview(shortcutEndBodyRow)
-        let shortcutEmergencyEyeRow = shortcutRow(L10n.tr("prefs.emergencyEyeGate"), shortcutEmergencyEye)
+        let shortcutEmergencyEyeRow = shortcutRow(
+            L10n.tr("prefs.emergencyEyeGate"),
+            shortcutEmergencyEye,
+            help: L10n.tr("prefs.emergencyEyeGateShortcutHelp")
+        )
         shortcutEmergencyEyeRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutEmergencyEyeRow")
         self.shortcutEmergencyEyeRow = shortcutEmergencyEyeRow
         shortcutsStack.addArrangedSubview(shortcutEmergencyEyeRow)
-        shortcutsStack.addArrangedSubview(shortcutRow(L10n.tr("prefs.reset"), shortcutReset))
+        shortcutsStack.addArrangedSubview(shortcutRow(
+            L10n.tr("prefs.reset"),
+            shortcutReset,
+            help: L10n.tr("prefs.resetShortcutHelp")
+        ))
         addTab(to: tabView, title: L10n.tr("prefs.tabShortcuts"), icon: .systemSymbol("keyboard"), stack: shortcutsStack)
 
         let advancedStack = contentStack()
@@ -2653,6 +2702,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         shortcutEndBodyLabel?.stringValue = title
         shortcutEndBodyLabel?.toolTip = help
         shortcutEndBodyLabel?.setAccessibilityHelp(help)
+        shortcutEndBody.actionHelp = help
         shortcutEndBodyRow?.toolTip = help
         shortcutEndBodyRow?.setAccessibilityHelp(help)
     }
@@ -4053,7 +4103,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         return stack
     }
 
-    private func shortcutRow(_ title: String, _ recorder: ShortcutRecorderButton) -> NSStackView {
+    private func shortcutRow(_ title: String, _ recorder: ShortcutRecorderButton, help: String? = nil) -> NSStackView {
+        recorder.actionHelp = help
         let clearButton = NSButton()
         clearButton.title = ""
         clearButton.bezelStyle = .inline
@@ -4072,7 +4123,15 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         controls.orientation = .horizontal
         controls.spacing = 6
         controls.alignment = .centerY
-        return row(title, controls)
+        let label = NSTextField(labelWithString: title)
+        label.widthAnchor.constraint(equalToConstant: 220).isActive = true
+        label.toolTip = help
+        label.setAccessibilityHelp(help)
+        let stack = NSStackView(views: [label, controls])
+        stack.orientation = .horizontal
+        stack.spacing = 12
+        stack.alignment = .centerY
+        return stack
     }
 
     private func multilineRow(_ title: String, _ field: NSView) -> NSStackView {
@@ -4900,6 +4959,13 @@ final class ShortcutRecorderButton: NSButton {
             }
         }
     }
+    var actionHelp: String? {
+        didSet {
+            if !isRecording {
+                updateDisplay()
+            }
+        }
+    }
     var displayValue: String {
         ShortcutDisplay.string(shortcutValue)
     }
@@ -5006,21 +5072,23 @@ final class ShortcutRecorderButton: NSButton {
         switch state {
         case .unset:
             title = L10n.tr("shortcut.notSet")
-            toolTip = L10n.tr("shortcut.recordHelp")
+            toolTip = combinedHelp(with: L10n.tr("shortcut.recordHelp"))
             contentTintColor = .secondaryLabelColor
             setSymbol("keyboard.badge.ellipsis", fallback: "keyboard")
         case .recording:
             title = L10n.tr("shortcut.recording")
-            toolTip = requiredFallbackShortcutValue == nil
+            let interactionHelp = requiredFallbackShortcutValue == nil
                 ? L10n.tr("shortcut.recordingHelp")
                 : L10n.tr("shortcut.requiredRecordingHelp")
+            toolTip = combinedHelp(with: interactionHelp)
             contentTintColor = .controlAccentColor
             setSymbol("record.circle", fallback: "keyboard")
         case .assigned(let display):
             title = display
-            toolTip = requiredFallbackShortcutValue == nil
+            let interactionHelp = requiredFallbackShortcutValue == nil
                 ? L10n.tr("shortcut.clearHelp")
                 : L10n.tr("shortcut.requiredHelp")
+            toolTip = combinedHelp(with: interactionHelp)
             contentTintColor = nil
             setSymbol("keyboard")
         }
@@ -5029,6 +5097,14 @@ final class ShortcutRecorderButton: NSButton {
             applyValidationWarningIfNeeded()
         }
         applyAccessibilityMetadata()
+    }
+
+    private func combinedHelp(with interactionHelp: String) -> String {
+        guard let actionHelp = actionHelp?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !actionHelp.isEmpty else {
+            return interactionHelp
+        }
+        return "\(actionHelp)\n\(interactionHelp)"
     }
 
     private func applyValidationWarningIfNeeded() {
