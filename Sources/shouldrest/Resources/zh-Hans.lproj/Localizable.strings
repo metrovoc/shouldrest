@@ -72,7 +72,7 @@
 "notification.updateTitle" = "ShouldRest 更新";
 "notification.updateAvailable" = "版本 %@ 已可用。";
 "notification.updateCurrent" = "ShouldRest 已是最新。";
-"notification.updateNoFeed" = "未配置更新源。";
+"notification.updateNoFeed" = "未配置更新来源。";
 "notification.updateFailed" = "更新检查失败：%@";
 "notification.shortcutsUnavailable" = "部分快捷键无法注册：%@。";
 "notification.resumingBreaks" = "正在恢复休息";
@@ -457,8 +457,8 @@
 "prefs.pauseUntilMorningLongitude" = "日出经度";
 "prefs.pauseForSuspendOrLock" = "Mac 睡眠或锁屏时暂停休息";
 "prefs.pauseForSuspendOrLockHelp" = "Mac 睡眠或锁屏期间暂停后续休息，回来后继续。";
-"prefs.updateFeedURL" = "更新源地址";
-"prefs.updateFeedURLHelp" = "ShouldRest 检查更新信息的位置；如果自行管理更新，可以留空。";
+"prefs.updateFeedURL" = "更新来源";
+"prefs.updateFeedURLHelp" = "ShouldRest 查找新版本的位置；如果自行管理更新，可以留空。";
 "prefs.preferencesMessage" = "偏好设置提示";
 "prefs.preferencesMessageHelp" = "可选提示，会显示在偏好设置顶部，适合托管部署使用。";
 "prefs.showAdminControls" = "管理员控制";

@@ -72,7 +72,7 @@
 "notification.updateTitle" = "ShouldRest Update";
 "notification.updateAvailable" = "Version %@ is available.";
 "notification.updateCurrent" = "ShouldRest is up to date.";
-"notification.updateNoFeed" = "No update feed is configured.";
+"notification.updateNoFeed" = "No update source is configured.";
 "notification.updateFailed" = "Update check failed: %@";
 "notification.shortcutsUnavailable" = "Some shortcuts could not be registered: %@.";
 "notification.resumingBreaks" = "Resuming breaks";
@@ -457,8 +457,8 @@
 "prefs.pauseUntilMorningLongitude" = "Sunrise longitude";
 "prefs.pauseForSuspendOrLock" = "Pause rests while Mac sleeps or locks";
 "prefs.pauseForSuspendOrLockHelp" = "Pause upcoming rests while your Mac sleeps or is locked, then resume when you return.";
-"prefs.updateFeedURL" = "Update feed URL";
-"prefs.updateFeedURLHelp" = "Where ShouldRest checks for update metadata. Leave blank if you manage updates manually.";
+"prefs.updateFeedURL" = "Update source";
+"prefs.updateFeedURLHelp" = "Where ShouldRest looks for new releases. Leave blank if you manage updates yourself.";
 "prefs.preferencesMessage" = "Preferences message";
 "prefs.preferencesMessageHelp" = "Optional message shown at the top of Preferences for managed setups.";
 "prefs.showAdminControls" = "Administrative controls";
