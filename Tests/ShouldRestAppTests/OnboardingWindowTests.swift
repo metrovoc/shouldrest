@@ -129,6 +129,10 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertEqual(eyeDuration.stringValue, L10n.format("onboarding.metric.eyeDurationValue", 20))
         XCTAssertEqual(bodyAfter.stringValue, L10n.format("onboarding.metric.bodyAfterValue", 4))
         XCTAssertEqual(bodyDuration.stringValue, L10n.format("onboarding.metric.bodyDurationValue", 5))
+        assertMetricHelp(eyeInterval, titleKey: "onboarding.metric.eyeInterval")
+        assertMetricHelp(eyeDuration, titleKey: "onboarding.metric.eyeDuration")
+        assertMetricHelp(bodyAfter, titleKey: "onboarding.metric.bodyAfter")
+        assertMetricHelp(bodyDuration, titleKey: "onboarding.metric.bodyDuration")
         XCTAssertEqual(
             useSelected.title,
             L10n.format("onboarding.useSelectedWithPreset", RestRhythmPreset.firstRunDefault.title)
@@ -143,6 +147,10 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertEqual(eyeDuration.stringValue, L10n.format("onboarding.metric.eyeDurationValue", 20))
         XCTAssertEqual(bodyAfter.stringValue, L10n.format("onboarding.metric.bodyAfterValue", 2))
         XCTAssertEqual(bodyDuration.stringValue, L10n.format("onboarding.metric.bodyDurationValue", 8))
+        assertMetricHelp(eyeInterval, titleKey: "onboarding.metric.eyeInterval")
+        assertMetricHelp(eyeDuration, titleKey: "onboarding.metric.eyeDuration")
+        assertMetricHelp(bodyAfter, titleKey: "onboarding.metric.bodyAfter")
+        assertMetricHelp(bodyDuration, titleKey: "onboarding.metric.bodyDuration")
         XCTAssertEqual(
             useSelected.title,
             L10n.format("onboarding.useSelectedWithPreset", RestRhythmPreset.movement.title)
@@ -206,6 +214,18 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertEqual(settings.bodyBreakAfterEyeGates, 4)
         XCTAssertEqual(settings.bodyBreak.duration, 5 * 60)
     }
+}
+
+@MainActor
+private func assertMetricHelp(
+    _ label: NSTextField,
+    titleKey: String,
+    file: StaticString = #filePath,
+    line: UInt = #line
+) {
+    let expectedHelp = "\(L10n.tr(titleKey)): \(label.stringValue)"
+    XCTAssertEqual(label.toolTip, expectedHelp, file: file, line: line)
+    XCTAssertEqual(label.accessibilityHelp(), expectedHelp, file: file, line: line)
 }
 
 private extension NSView {

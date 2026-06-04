@@ -473,12 +473,38 @@ final class OnboardingWindowController: NSWindowController {
             "onboarding.metric.bodyDurationValue",
             selectedRhythmPreset.bodyDurationMinutes
         )
+        updateRhythmMetricAccessibility()
 
         guard let useSelectedButton else { return }
         let title = primaryActionTitle(for: selectedRhythmPreset)
         useSelectedButton.title = title
         useSelectedButton.setAccessibilityLabel(title)
         useSelectedButton.setAccessibilityHelp(useSelectedButton.toolTip)
+    }
+
+    private func updateRhythmMetricAccessibility() {
+        updateRhythmMetricAccessibility(
+            title: L10n.tr("onboarding.metric.eyeInterval"),
+            valueLabel: rhythmMetricEyeInterval
+        )
+        updateRhythmMetricAccessibility(
+            title: L10n.tr("onboarding.metric.eyeDuration"),
+            valueLabel: rhythmMetricEyeDuration
+        )
+        updateRhythmMetricAccessibility(
+            title: L10n.tr("onboarding.metric.bodyAfter"),
+            valueLabel: rhythmMetricBodyAfter
+        )
+        updateRhythmMetricAccessibility(
+            title: L10n.tr("onboarding.metric.bodyDuration"),
+            valueLabel: rhythmMetricBodyDuration
+        )
+    }
+
+    private func updateRhythmMetricAccessibility(title: String, valueLabel: NSTextField) {
+        let help = "\(title): \(valueLabel.stringValue)"
+        valueLabel.toolTip = help
+        valueLabel.setAccessibilityHelp(help)
     }
 
     private func primaryActionTitle(for preset: RestRhythmPreset) -> String {
