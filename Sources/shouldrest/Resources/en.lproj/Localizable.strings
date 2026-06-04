@@ -34,13 +34,13 @@
 "menu.pauseIndefinitelyConfirming" = "Indefinitely…";
 "menu.pauseIndefinitelyHelp" = "Pause rests until you resume them manually.";
 "menu.reset" = "Reset Schedule";
-"menu.resetHelp" = "Reset timers, pauses, delayed rests, rest pressure, and queued commands after confirmation.";
+"menu.resetHelp" = "Reset timers, pauses, delayed rests, rest debt, and queued commands after confirmation.";
 "pause.indefiniteConfirmTitle" = "Pause Indefinitely?";
 "pause.indefiniteConfirmBody" = "ShouldRest will stop scheduling rests until you resume it from the menu. Use a timed pause when you only need a short interruption.";
 "pause.indefiniteConfirmAction" = "Pause Indefinitely";
 "pause.indefiniteConfirmCancel" = "Cancel";
 "reset.confirmTitle" = "Reset Schedule?";
-"reset.confirmBody" = "This clears current timers, pauses, delayed rests, rest pressure, and queued commands. Preferences are not changed.";
+"reset.confirmBody" = "This clears current timers, pauses, delayed rests, rest debt, and queued commands. Preferences are not changed.";
 "reset.confirmAction" = "Reset Schedule";
 "reset.confirmCancel" = "Cancel";
 "menu.preferences" = "Preferences…";
@@ -109,8 +109,8 @@
 "status.readyCompact" = "done";
 "status.deferredShort" = "Delayed";
 "status.deferred" = "%@ delayed: %@";
-"status.health" = "Rest pressure: %d/10";
-"status.healthBadge" = "Pressure %d/10";
+"status.health" = "Rest debt: %d/10";
+"status.healthBadge" = "Debt %d/10";
 "status.tooltipHeader" = "ShouldRest - The rest reminder app";
 "kind.eyeGate" = "Eye Gate";
 "kind.eyeGateShort" = "E";
@@ -199,8 +199,8 @@
 "prefs.appExclusionNeedsTarget" = "Each app rule must apply to at least one enabled rest type.";
 "prefs.currentTimeBody" = "Show current time during Body Break";
 "prefs.currentTimeBodyHelp" = "Show the current clock time next to the Body Break countdown.";
-"prefs.breakHealth" = "Show rest pressure indicator";
-"prefs.breakHealthHelp" = "Show a compact menu bar indicator when missed or delayed rests increase rest pressure.";
+"prefs.breakHealth" = "Show rest debt indicator";
+"prefs.breakHealthHelp" = "Show a compact menu bar indicator when missed or delayed rests build rest debt.";
 "prefs.silentNotifications" = "Silent mode";
 "prefs.silentNotificationsHelp" = "Keep notifications visible but mute notification sounds, rest sounds, and sound previews.";
 "prefs.openAtLogin" = "Open at login";
@@ -465,7 +465,7 @@
 "prefs.emergencyEyeGate" = "Emergency Exit shortcut";
 "prefs.emergencyEyeGateShortcutHelp" = "During an active Eye Gate, bring the overlay forward. Confirm only from the overlay with two clicks or two Esc presses.";
 "prefs.reset" = "Reset Schedule";
-"prefs.resetShortcutHelp" = "Reset timers, pauses, delayed rests, rest pressure, and queued commands after confirmation.";
+"prefs.resetShortcutHelp" = "Reset timers, pauses, delayed rests, rest debt, and queued commands after confirmation.";
 "prefs.sectionOperations" = "App behavior";
 "prefs.pauseUntilMorningMode" = "Morning resume";
 "prefs.pauseUntilMorningModeHelp" = "Choose the resume time used by Pause Until Morning: a fixed time or sunrise.";
@@ -500,8 +500,8 @@
 "prefs.searchNoResults" = "No setting matches \"%@\"";
 "prefs.shortcutConflictTitle" = "Shortcut conflict";
 "prefs.shortcutConflict" = "Shortcut conflict: %@ is assigned to %@.";
-"prefs.shortcutConflictReview" = "Show";
-"prefs.shortcutConflictReviewHelp" = "Focus the affected shortcut.";
+"prefs.shortcutConflictReview" = "Review Conflict";
+"prefs.shortcutConflictReviewHelp" = "Jump to the first shortcut in conflict.";
 "prefs.shortcutUnsupported" = "Unsupported shortcut: %@ for %@.";
 "prefs.display.all" = "All displays";
 "prefs.display.primary" = "Primary display";
@@ -551,7 +551,7 @@
 "shortcut.clearButtonDisabledEmptyHelp" = "Assign a shortcut before clearing it.";
 "shortcut.restoreDefaultButtonHelp" = "Restore the default shortcut.";
 "shortcut.restoreDefaultButtonDisabledDefaultHelp" = "This shortcut is already using the default.";
-"cli.help" = "Usage: shouldrest <command> [options]\n\nCommands:\n  help                         Show this help.\n  version                      Show version.\n  settings                     Show settings location.\n  logs                         Show log location.\n  pause [-d duration]          Pause breaks. Duration: indefinitely, until-morning, 60, 1h, 1h20m.\n  resume                       Resume breaks.\n  toggle                       Pause or resume breaks.\n  reset                        Reset schedule and health.\n  eye|mini [-w wait]           Start Eye Gate now or after wait; it is always strict and text-free.\n  body|long [-T title] [-t text] [-w wait] [-n]  Start or customize Body Break.\n  emergency                    Bring the active Eye Gate overlay forward for Emergency Exit.\n  preferences                  Open ShouldRest preferences.\n  debug                        Copy diagnostics.\n  debug-panel                  Open the diagnostics window.\n  about                        Open the About window.\n  url shouldrest://<command>    Run a shouldrest:// command.";
+"cli.help" = "Usage: shouldrest <command> [options]\n\nCommands:\n  help                         Show this help.\n  version                      Show version.\n  settings                     Show settings location.\n  logs                         Show log location.\n  pause [-d duration]          Pause breaks. Duration: indefinitely, until-morning, 60, 1h, 1h20m.\n  resume                       Resume breaks.\n  toggle                       Pause or resume breaks.\n  reset                        Reset schedule and rest debt.\n  eye|mini [-w wait]           Start Eye Gate now or after wait; it is always strict and text-free.\n  body|long [-T title] [-t text] [-w wait] [-n]  Start or customize Body Break.\n  emergency                    Bring the active Eye Gate overlay forward for Emergency Exit.\n  preferences                  Open ShouldRest preferences.\n  debug                        Copy diagnostics.\n  debug-panel                  Open the diagnostics window.\n  about                        Open the About window.\n  url shouldrest://<command>    Run a shouldrest:// command.";
 "cli.invalidURL" = "Invalid ShouldRest URL: %@";
 "cli.settingsPathHidden" = "Settings location is hidden in this setup.";
 "cli.logsPathHidden" = "Log location is hidden in this setup.";

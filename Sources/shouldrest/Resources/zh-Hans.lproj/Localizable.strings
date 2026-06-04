@@ -34,13 +34,13 @@
 "menu.pauseIndefinitelyConfirming" = "无限期暂停…";
 "menu.pauseIndefinitelyHelp" = "暂停休息，直到你手动恢复。";
 "menu.reset" = "重置计划";
-"menu.resetHelp" = "确认后重置计时、暂停、已延后的休息、休息压力和排队等待的命令。";
+"menu.resetHelp" = "确认后重置计时、暂停、已延后的休息、休息欠账和排队等待的命令。";
 "pause.indefiniteConfirmTitle" = "无限期暂停？";
 "pause.indefiniteConfirmBody" = "ShouldRest 会停止安排休息，直到你从菜单手动恢复。只需要短暂中断时，请优先使用定时暂停。";
 "pause.indefiniteConfirmAction" = "无限期暂停";
 "pause.indefiniteConfirmCancel" = "取消";
 "reset.confirmTitle" = "重置计划？";
-"reset.confirmBody" = "这会清除当前计时、暂停、已延后的休息、休息压力和排队等待的命令。偏好设置不会改变。";
+"reset.confirmBody" = "这会清除当前计时、暂停、已延后的休息、休息欠账和排队等待的命令。偏好设置不会改变。";
 "reset.confirmAction" = "重置计划";
 "reset.confirmCancel" = "取消";
 "menu.preferences" = "偏好设置…";
@@ -109,8 +109,8 @@
 "status.readyCompact" = "完成";
 "status.deferredShort" = "已延后";
 "status.deferred" = "%@ 已延后：%@";
-"status.health" = "休息压力：%d/10";
-"status.healthBadge" = "压力 %d/10";
+"status.health" = "休息欠账：%d/10";
+"status.healthBadge" = "欠账 %d/10";
 "status.tooltipHeader" = "ShouldRest - 休息提醒应用";
 "kind.eyeGate" = "护眼休息";
 "kind.eyeGateShort" = "眼";
@@ -199,8 +199,8 @@
 "prefs.appExclusionNeedsTarget" = "每条应用规则至少需要适用于一种已启用的休息类型。";
 "prefs.currentTimeBody" = "活动休息中显示当前时间";
 "prefs.currentTimeBodyHelp" = "在活动休息倒计时旁显示当前时钟时间。";
-"prefs.breakHealth" = "显示休息压力指示器";
-"prefs.breakHealthHelp" = "错过或延后休息导致休息压力上升时，在菜单栏显示紧凑指示器。";
+"prefs.breakHealth" = "显示休息欠账指示器";
+"prefs.breakHealthHelp" = "错过或延后休息累积休息欠账时，在菜单栏显示紧凑指示器。";
 "prefs.silentNotifications" = "静音模式";
 "prefs.silentNotificationsHelp" = "通知仍会显示，但不播放通知声音、休息声音和声音试听。";
 "prefs.openAtLogin" = "登录时打开";
@@ -465,7 +465,7 @@
 "prefs.emergencyEyeGate" = "紧急退出快捷键";
 "prefs.emergencyEyeGateShortcutHelp" = "护眼休息进行中时，把覆盖层带到前台。只在覆盖层内点两次或按两次 Esc 确认退出。";
 "prefs.reset" = "重置计划";
-"prefs.resetShortcutHelp" = "确认后重置计时、暂停、已延后的休息、休息压力和排队等待的命令。";
+"prefs.resetShortcutHelp" = "确认后重置计时、暂停、已延后的休息、休息欠账和排队等待的命令。";
 "prefs.sectionOperations" = "应用行为";
 "prefs.pauseUntilMorningMode" = "早晨恢复";
 "prefs.pauseUntilMorningModeHelp" = "选择“暂停到早晨”使用固定时间恢复，还是按日出恢复。";
@@ -500,8 +500,8 @@
 "prefs.searchNoResults" = "没有匹配“%@”的设置";
 "prefs.shortcutConflictTitle" = "快捷键冲突";
 "prefs.shortcutConflict" = "快捷键冲突：%@ 同时分配给 %@。";
-"prefs.shortcutConflictReview" = "定位";
-"prefs.shortcutConflictReviewHelp" = "聚焦到受影响的快捷键。";
+"prefs.shortcutConflictReview" = "查看冲突";
+"prefs.shortcutConflictReviewHelp" = "跳到第一个冲突的快捷键。";
 "prefs.shortcutUnsupported" = "不支持的快捷键：%@（%@）。";
 "prefs.display.all" = "所有显示器";
 "prefs.display.primary" = "主显示器";
@@ -551,7 +551,7 @@
 "shortcut.clearButtonDisabledEmptyHelp" = "先设置快捷键，才能清空。";
 "shortcut.restoreDefaultButtonHelp" = "恢复默认快捷键。";
 "shortcut.restoreDefaultButtonDisabledDefaultHelp" = "当前已使用默认快捷键。";
-"cli.help" = "用法：shouldrest <命令> [选项]\n\n命令：\n  help                         显示帮助。\n  version                      显示版本。\n  settings                     显示设置位置。\n  logs                         显示日志位置。\n  pause [-d duration]          暂停休息。时长：indefinitely、until-morning、60、1h、1h20m。\n  resume                       恢复休息。\n  toggle                       暂停或恢复休息。\n  reset                        重置计划和健康值。\n  eye|mini [-w wait]           立即或延迟开始护眼休息；始终严格且不显示自定义文字。\n  body|long [-T title] [-t text] [-w wait] [-n]  立即开始或自定义活动休息。\n  emergency                    把当前护眼覆盖层带到前台以便紧急退出。\n  preferences                  打开偏好设置。\n  debug                        复制诊断信息。\n  debug-panel                  打开诊断窗口。\n  about                        打开关于窗口。\n  url shouldrest://<command>    执行 shouldrest:// 命令。";
+"cli.help" = "用法：shouldrest <命令> [选项]\n\n命令：\n  help                         显示帮助。\n  version                      显示版本。\n  settings                     显示设置位置。\n  logs                         显示日志位置。\n  pause [-d duration]          暂停休息。时长：indefinitely、until-morning、60、1h、1h20m。\n  resume                       恢复休息。\n  toggle                       暂停或恢复休息。\n  reset                        重置计划和休息欠账。\n  eye|mini [-w wait]           立即或延迟开始护眼休息；始终严格且不显示自定义文字。\n  body|long [-T title] [-t text] [-w wait] [-n]  立即开始或自定义活动休息。\n  emergency                    把当前护眼覆盖层带到前台以便紧急退出。\n  preferences                  打开偏好设置。\n  debug                        复制诊断信息。\n  debug-panel                  打开诊断窗口。\n  about                        打开关于窗口。\n  url shouldrest://<command>    执行 shouldrest:// 命令。";
 "cli.invalidURL" = "ShouldRest URL 无效：%@";
 "cli.settingsPathHidden" = "当前设置已隐藏设置位置。";
 "cli.logsPathHidden" = "当前设置已隐藏日志位置。";

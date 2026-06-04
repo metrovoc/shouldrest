@@ -226,6 +226,8 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertFalse(reviewButton.isHidden)
         XCTAssertTrue(reviewButton.isEnabled)
         XCTAssertEqual(reviewButton.title, L10n.tr("prefs.shortcutConflictReview"))
+        XCTAssertEqual(reviewButton.title, "Review Conflict")
+        XCTAssertNotEqual(reviewButton.title, "Show")
         XCTAssertEqual(reviewButton.toolTip, L10n.tr("prefs.shortcutConflictReviewHelp"))
         XCTAssertEqual(reviewButton.accessibilityLabel(), L10n.tr("prefs.shortcutConflictReview"))
         XCTAssertEqual(reviewButton.accessibilityHelp(), L10n.tr("prefs.shortcutConflictReviewHelp"))

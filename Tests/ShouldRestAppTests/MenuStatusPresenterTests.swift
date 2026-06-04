@@ -55,7 +55,7 @@ final class MenuStatusPresenterTests: XCTestCase {
         XCTAssertTrue(tooltip.hasPrefix("ShouldRest - The rest reminder app\n\n"))
         XCTAssertTrue(tooltip.contains("Next: Eye Gate"))
         XCTAssertTrue(tooltip.contains("Next Body Break after 4 Eye Gates"))
-        XCTAssertTrue(tooltip.contains("Rest pressure: 0/10"))
+        XCTAssertTrue(tooltip.contains("Rest debt: 0/10"))
     }
 
     func testNextScheduledRestMenuActionNamesConcreteRestKind() {
@@ -84,7 +84,7 @@ final class MenuStatusPresenterTests: XCTestCase {
         L10n.languageOverride = "en"
     }
 
-    func testHeaderContentPromotesStatusLinesAndHealthBadge() {
+    func testHeaderContentPromotesStatusLinesAndRestDebtBadge() {
         let settings = RestSettings.defaults
         let state = RestEngineState(
             scheduled: ScheduledRest(kind: .eyeGate, dueAt: start.addingTimeInterval(10 * 60), notificationAt: nil),
@@ -99,7 +99,7 @@ final class MenuStatusPresenterTests: XCTestCase {
             "Next: Eye Gate in 10m (\(start.addingTimeInterval(10 * 60).formatted(date: .omitted, time: .shortened)))"
         )
         XCTAssertEqual(content.secondary, "Next Body Break after 4 Eye Gates")
-        XCTAssertEqual(content.healthBadge, "Pressure 3/10")
+        XCTAssertEqual(content.healthBadge, "Debt 3/10")
         XCTAssertEqual(content.icon, .restGate)
     }
 
@@ -120,7 +120,7 @@ final class MenuStatusPresenterTests: XCTestCase {
         let tooltip = MenuStatusPresenter.tooltip(state: engine.state, settings: engine.settings, now: start)
 
         XCTAssertNil(content.healthBadge)
-        XCTAssertTrue(tooltip.contains("Rest pressure: 0/10"))
+        XCTAssertTrue(tooltip.contains("Rest debt: 0/10"))
     }
 
     func testTooltipHidesHealthWhenBreakHealthModeIsDisabled() {
@@ -130,7 +130,7 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         let tooltip = MenuStatusPresenter.tooltip(state: engine.state, settings: engine.settings, now: start)
 
-        XCTAssertFalse(tooltip.contains("Rest pressure:"))
+        XCTAssertFalse(tooltip.contains("Rest debt:"))
     }
 
     func testMenuBarAccessibilityDescriptionIsCompactAndStateful() {
@@ -147,10 +147,10 @@ final class MenuStatusPresenterTests: XCTestCase {
         XCTAssertTrue(description.contains("Next Body Break after 4 Eye Gates"))
         XCTAssertFalse(description.contains("The rest reminder app"))
         XCTAssertFalse(description.contains("\n"))
-        XCTAssertFalse(description.contains("Rest pressure: 0/10"))
+        XCTAssertFalse(description.contains("Rest debt: 0/10"))
     }
 
-    func testMenuBarAccessibilityDescriptionIncludesMeaningfulPressureBadge() {
+    func testMenuBarAccessibilityDescriptionIncludesMeaningfulRestDebtBadge() {
         let settings = RestSettings.defaults
         let state = RestEngineState(
             scheduled: ScheduledRest(kind: .bodyBreak, dueAt: start.addingTimeInterval(10 * 60), notificationAt: nil),
@@ -164,8 +164,8 @@ final class MenuStatusPresenterTests: XCTestCase {
         )
 
         XCTAssertTrue(description.hasPrefix("ShouldRest: Next: Body Break in 10m ("))
-        XCTAssertTrue(description.contains("Pressure 4/10"))
-        XCTAssertFalse(description.contains("Rest pressure:"))
+        XCTAssertTrue(description.contains("Debt 4/10"))
+        XCTAssertFalse(description.contains("Rest debt:"))
     }
 
     func testTimedPauseStatusShowsAutomaticResumeContext() {
