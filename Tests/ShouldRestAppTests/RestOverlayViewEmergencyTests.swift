@@ -96,6 +96,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         requestTime = start.addingTimeInterval(2)
         button.performClick(nil)
+        drainMainQueue()
 
         XCTAssertNil(engine.state.activeSession)
         XCTAssertFalse(coordinator.isArmed(for: session))
@@ -160,6 +161,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         requestTime = start.addingTimeInterval(2)
         button.performClick(nil)
+        drainMainQueue()
 
         XCTAssertNil(engine.state.activeSession)
         XCTAssertFalse(coordinator.isArmed(for: session))
@@ -297,6 +299,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
         view.performEmergencyOverrideKeyCommand()
+        drainMainQueue()
         XCTAssertEqual(requestCount, 2)
     }
 
@@ -328,6 +331,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         view.keyDown(with: event)
 
+        drainMainQueue()
         XCTAssertEqual(requestCount, 2)
     }
 
@@ -405,7 +409,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
     }
 
-    func testArmedEmergencyButtonClickRequestsExitImmediately() throws {
+    func testArmedEmergencyButtonClickRequestsExitAfterEventReturns() throws {
         let view = configuredEyeGateOverlay(
             remainingSeconds: 0,
             isArmed: true
@@ -418,6 +422,8 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
         button.performClick(nil)
 
+        XCTAssertEqual(requestCount, 0)
+        drainMainQueue()
         XCTAssertEqual(requestCount, 1)
     }
 
@@ -436,6 +442,8 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
         button.performClick(nil)
 
+        XCTAssertEqual(requestCount, 0)
+        drainMainQueue()
         XCTAssertEqual(requestCount, 1)
     }
 
@@ -455,6 +463,8 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 2))
 
+        XCTAssertEqual(requestCount, 1)
+        drainMainQueue()
         XCTAssertEqual(requestCount, 2)
     }
 
@@ -475,7 +485,27 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
 
+        XCTAssertEqual(requestCount, 1)
+        drainMainQueue()
         XCTAssertEqual(requestCount, 2)
+    }
+
+    func testArmedEmergencyMouseClickDefersConfirmationUntilMouseEventReturns() throws {
+        let view = configuredEyeGateOverlay(
+            remainingSeconds: 0,
+            isArmed: true
+        )
+        view.layoutSubtreeIfNeeded()
+        var requestCount = 0
+        view.onEmergencyOverrideRequested = {
+            requestCount += 1
+        }
+
+        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+
+        XCTAssertEqual(requestCount, 0)
+        drainMainQueue()
+        XCTAssertEqual(requestCount, 1)
     }
 
     func testSingleEmergencyMouseDownOnlyArmsAndNeverCompletesAsHold() throws {
@@ -609,6 +639,18 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             duration: 60,
             manualFinishEnabled: false
         )
+    }
+
+    private func drainMainQueue(
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        let expectation = XCTestExpectation(description: "drain main queue")
+        DispatchQueue.main.async {
+            expectation.fulfill()
+        }
+        let result = XCTWaiter().wait(for: [expectation], timeout: 1)
+        XCTAssertEqual(result, .completed, file: file, line: line)
     }
 
     private func mouseEvent(at point: NSPoint, clickCount: Int) throws -> NSEvent {

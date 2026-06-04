@@ -2641,9 +2641,18 @@ final class RestOverlayView: NSView {
     }
 
     private func requestEmergencyOverride() {
+        let confirmsAlreadyArmedEmergency = emergencyOverrideArmed
         if case .activated = activateEmergencyOverrideIfAvailable() {
             armEmergencyOverrideLocallyIfNeeded()
-            onEmergencyOverrideRequested?()
+            let request = onEmergencyOverrideRequested
+            if confirmsAlreadyArmedEmergency {
+                // Let AppKit unwind the click/key event before the handler closes overlay windows.
+                DispatchQueue.main.async {
+                    request?()
+                }
+            } else {
+                request?()
+            }
         }
     }
 
