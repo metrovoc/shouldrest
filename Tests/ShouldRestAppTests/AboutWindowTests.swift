@@ -24,6 +24,21 @@ final class AboutWindowTests: XCTestCase {
         XCTAssertNotNil(contentView.descendant(withIdentifier: "about.feature.eyeGate"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "about.feature.bodyBreak"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "about.feature.compatibility"))
+        XCTAssertEqual(
+            (contentView.descendant(withIdentifier: "about.feature.eyeGate.icon") as? NSImageView)?
+                .image?.accessibilityDescription,
+            L10n.tr("about.eyeGateTitle")
+        )
+        XCTAssertEqual(
+            (contentView.descendant(withIdentifier: "about.feature.bodyBreak.icon") as? NSImageView)?
+                .image?.accessibilityDescription,
+            L10n.tr("about.bodyBreakTitle")
+        )
+        XCTAssertEqual(
+            (contentView.descendant(withIdentifier: "about.feature.compatibility.icon") as? NSImageView)?
+                .image?.accessibilityDescription,
+            L10n.tr("about.compatibilityTitle")
+        )
     }
 
     func testAboutWindowCopySeparatesVersionAndProductChoices() throws {
@@ -66,6 +81,8 @@ final class AboutWindowTests: XCTestCase {
             XCTAssertNotNil(button.image)
             XCTAssertEqual(button.imagePosition, .imageLeading)
             XCTAssertFalse(button.toolTip?.isEmpty ?? true)
+            XCTAssertEqual(button.accessibilityLabel(), button.title)
+            XCTAssertEqual(button.accessibilityHelp(), button.toolTip)
         }
         XCTAssertEqual(buttons.debug.title, L10n.tr("about.debug"))
         XCTAssertEqual(buttons.debug.title, "Diagnostics")

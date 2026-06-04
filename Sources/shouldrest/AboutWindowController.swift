@@ -148,7 +148,8 @@ final class AboutWindowController: NSWindowController {
         row.alignment = .top
         row.spacing = 10
 
-        let icon = NSImageView(image: symbolImage(symbolName))
+        let icon = NSImageView(image: symbolImage(symbolName, accessibilityDescription: title))
+        icon.identifier = NSUserInterfaceItemIdentifier("\(identifier).icon")
         icon.contentTintColor = .secondaryLabelColor
         icon.imageScaling = .scaleProportionallyUpOrDown
         icon.translatesAutoresizingMaskIntoConstraints = false
@@ -233,6 +234,8 @@ final class AboutWindowController: NSWindowController {
         button.imagePosition = .imageLeading
         button.imageHugsTitle = true
         button.toolTip = toolTip
+        button.setAccessibilityLabel(title)
+        button.setAccessibilityHelp(toolTip)
         button.setContentHuggingPriority(.required, for: .horizontal)
     }
 
@@ -255,7 +258,7 @@ final class AboutWindowController: NSWindowController {
         return RestGateIcon.fallbackAppImage(size: 72, accessibilityDescription: L10n.tr("app.name"))
     }
 
-    private func symbolImage(_ name: String) -> NSImage {
-        NSImage(systemSymbolName: name, accessibilityDescription: nil) ?? NSImage()
+    private func symbolImage(_ name: String, accessibilityDescription: String? = nil) -> NSImage {
+        NSImage(systemSymbolName: name, accessibilityDescription: accessibilityDescription) ?? NSImage()
     }
 }
