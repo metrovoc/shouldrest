@@ -748,6 +748,45 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(requestCount, 2)
     }
 
+    func testSecondDistinctEmergencyMouseClickConfirmsWithoutWaitingForMainQueue() throws {
+        let view = configuredEyeGateOverlay()
+        view.layoutSubtreeIfNeeded()
+        var requestCount = 0
+        view.onEmergencyOverrideRequested = {
+            requestCount += 1
+            return requestCount == 1 ? .armed : .complete
+        }
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+
+        try performEmergencyClick(on: view, clickCount: 1, timestamp: 1, eventNumber: 11)
+
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+
+        try performEmergencyClick(on: view, clickCount: 1, timestamp: 1.01, eventNumber: 12)
+
+        XCTAssertEqual(requestCount, 2)
+    }
+
+    func testSecondDistinctEscapePressConfirmsWithoutWaitingForMainQueue() throws {
+        let view = configuredEyeGateOverlay()
+        var requestCount = 0
+        view.onEmergencyOverrideRequested = {
+            requestCount += 1
+            return requestCount == 1 ? .armed : .complete
+        }
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+
+        view.keyDown(with: try escapeKeyEvent(timestamp: 1))
+
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+
+        view.keyDown(with: try escapeKeyEvent(timestamp: 1.01))
+
+        XCTAssertEqual(requestCount, 2)
+    }
+
     func testExternalFocusDoesNotCountAsFirstOverlayConfirmation() throws {
         let start = Date(timeIntervalSinceReferenceDate: 4_000)
         let session = RestSession(
@@ -1224,7 +1263,9 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
     private func performEmergencyClick(
         on view: RestOverlayView,
         at point: NSPoint? = nil,
-        clickCount: Int
+        clickCount: Int,
+        timestamp: TimeInterval = 0,
+        eventNumber: Int = 0
     ) throws {
         let clickPoint: NSPoint
         if let point {
@@ -1232,8 +1273,18 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         } else {
             clickPoint = try emergencyClickPoint(in: view)
         }
-        view.mouseDown(with: try mouseEvent(at: clickPoint, clickCount: clickCount))
-        view.mouseUp(with: try mouseUpEvent(at: clickPoint, clickCount: clickCount))
+        view.mouseDown(with: try mouseEvent(
+            at: clickPoint,
+            clickCount: clickCount,
+            timestamp: timestamp,
+            eventNumber: eventNumber
+        ))
+        view.mouseUp(with: try mouseUpEvent(
+            at: clickPoint,
+            clickCount: clickCount,
+            timestamp: timestamp,
+            eventNumber: eventNumber
+        ))
     }
 
     private func emergencyClickPoint(in view: RestOverlayView) throws -> NSPoint {
@@ -1241,29 +1292,39 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         return NSPoint(x: button.frame.midX, y: button.frame.midY)
     }
 
-    private func mouseEvent(at point: NSPoint, clickCount: Int) throws -> NSEvent {
+    private func mouseEvent(
+        at point: NSPoint,
+        clickCount: Int,
+        timestamp: TimeInterval = 0,
+        eventNumber: Int = 0
+    ) throws -> NSEvent {
         try XCTUnwrap(NSEvent.mouseEvent(
             with: .leftMouseDown,
             location: point,
             modifierFlags: [],
-            timestamp: 0,
+            timestamp: timestamp,
             windowNumber: 0,
             context: nil,
-            eventNumber: 0,
+            eventNumber: eventNumber,
             clickCount: clickCount,
             pressure: 1
         ))
     }
 
-    private func mouseUpEvent(at point: NSPoint, clickCount: Int) throws -> NSEvent {
+    private func mouseUpEvent(
+        at point: NSPoint,
+        clickCount: Int,
+        timestamp: TimeInterval = 0,
+        eventNumber: Int = 0
+    ) throws -> NSEvent {
         try XCTUnwrap(NSEvent.mouseEvent(
             with: .leftMouseUp,
             location: point,
             modifierFlags: [],
-            timestamp: 0,
+            timestamp: timestamp,
             windowNumber: 0,
             context: nil,
-            eventNumber: 0,
+            eventNumber: eventNumber,
             clickCount: clickCount,
             pressure: 0
         ))
@@ -1283,12 +1344,16 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         ))
     }
 
-    private func escapeKeyEvent(isRepeat: Bool = false, windowNumber: Int = 0) throws -> NSEvent {
+    private func escapeKeyEvent(
+        isRepeat: Bool = false,
+        windowNumber: Int = 0,
+        timestamp: TimeInterval = 0
+    ) throws -> NSEvent {
         try XCTUnwrap(NSEvent.keyEvent(
             with: .keyDown,
             location: .zero,
             modifierFlags: [],
-            timestamp: 0,
+            timestamp: timestamp,
             windowNumber: windowNumber,
             context: nil,
             characters: "\u{1B}",

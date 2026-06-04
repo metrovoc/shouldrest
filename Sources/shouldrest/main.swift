@@ -2511,7 +2511,7 @@ final class OverlayWindow: NSWindow {
     override func keyDown(with event: NSEvent) {
         switch emergencyOverrideKeyHandling(for: event) {
         case .trigger:
-            overlayView.performEmergencyOverrideKeyCommand()
+            overlayView.performEmergencyOverrideKeyCommand(event: event)
         case .consumeRepeat:
             break
         case .passThrough:
@@ -2601,6 +2601,34 @@ final class RestOverlayView: NSView {
         case emergency
     }
 
+    private struct EmergencyOverrideInputToken: Equatable {
+        let type: NSEvent.EventType
+        let timestamp: TimeInterval
+        let eventNumber: Int
+        let keyCode: UInt16
+        let clickCount: Int
+
+        init(_ event: NSEvent) {
+            type = event.type
+            timestamp = event.timestamp
+            switch event.type {
+            case .keyDown, .keyUp:
+                eventNumber = 0
+                keyCode = event.keyCode
+                clickCount = 0
+            case .leftMouseDown, .leftMouseUp, .rightMouseDown, .rightMouseUp,
+                    .otherMouseDown, .otherMouseUp:
+                eventNumber = event.eventNumber
+                keyCode = 0
+                clickCount = event.clickCount
+            default:
+                eventNumber = 0
+                keyCode = 0
+                clickCount = 0
+            }
+        }
+    }
+
     private let titleLabel = NSTextField(labelWithString: "")
     private let detailLabel = NSTextField(labelWithString: "")
     private let countdownLabel = NSTextField(labelWithString: "")
@@ -2616,7 +2644,8 @@ final class RestOverlayView: NSView {
     private var emergencyRemainingSeconds: Int?
     private var emergencyOverrideArmed = false
     private var emergencyOverrideRequestInFlight = false
-    private var emergencyOverrideEventCycleLocked = false
+    private var emergencyOverrideSyntheticCycleLocked = false
+    private var emergencyOverrideLastInputToken: EmergencyOverrideInputToken?
     private var emergencyMouseDownStartedInActivationFrame = false
     private var emergencySessionID: UUID?
     private var emergencyPanelWidthConstraint: NSLayoutConstraint?
@@ -2814,13 +2843,13 @@ final class RestOverlayView: NSView {
 
         let point = convert(event.locationInWindow, from: nil)
         guard emergencyHitTarget(at: point) != nil else { return }
-        requestEmergencyOverride()
+        requestEmergencyOverride(from: event)
     }
 
     override func keyDown(with event: NSEvent) {
         switch emergencyOverrideKeyHandling(for: event) {
         case .trigger:
-            performEmergencyOverrideKeyCommand()
+            performEmergencyOverrideKeyCommand(event: event)
         case .consumeRepeat:
             break
         case .passThrough:
@@ -2919,32 +2948,52 @@ final class RestOverlayView: NSView {
     }
 
     @objc private func emergencyOverridePressed() {
-        requestEmergencyOverride()
+        requestEmergencyOverride(from: NSApp.currentEvent)
     }
 
-    private func requestEmergencyOverride() {
+    private func requestEmergencyOverride(from event: NSEvent? = nil) {
         guard let request = onEmergencyOverrideRequested else {
-            return
-        }
-        guard !emergencyOverrideEventCycleLocked else {
             return
         }
         guard !emergencyOverrideRequestInFlight else {
             return
         }
-
         guard case .activated = activateEmergencyOverrideIfAvailable() else {
             return
         }
-
-        emergencyOverrideEventCycleLocked = true
-        DispatchQueue.main.async { [weak self] in
-            self?.emergencyOverrideEventCycleLocked = false
+        guard acceptEmergencyOverrideInput(event) else {
+            return
         }
+
         emergencyOverrideRequestInFlight = true
         let decision = request()
         emergencyOverrideRequestInFlight = false
         applyEmergencyOverrideDecision(decision)
+    }
+
+    private func acceptEmergencyOverrideInput(_ event: NSEvent?) -> Bool {
+        guard let event else {
+            guard !emergencyOverrideSyntheticCycleLocked else {
+                return false
+            }
+            emergencyOverrideSyntheticCycleLocked = true
+            DispatchQueue.main.async { [weak self] in
+                self?.emergencyOverrideSyntheticCycleLocked = false
+            }
+            return true
+        }
+
+        let token = EmergencyOverrideInputToken(event)
+        guard emergencyOverrideLastInputToken != token else {
+            return false
+        }
+        emergencyOverrideLastInputToken = token
+        DispatchQueue.main.async { [weak self] in
+            if self?.emergencyOverrideLastInputToken == token {
+                self?.emergencyOverrideLastInputToken = nil
+            }
+        }
+        return true
     }
 
     private func applyEmergencyOverrideDecision(_ decision: EmergencyOverrideDecision) {
@@ -2953,6 +3002,8 @@ final class RestOverlayView: NSView {
             armEmergencyOverrideLocallyIfNeeded()
         case .complete:
             emergencyOverrideArmed = false
+            emergencyOverrideSyntheticCycleLocked = false
+            emergencyOverrideLastInputToken = nil
             updateEmergencyAffordanceUI()
         case .unavailable:
             clearEmergencyOverrideLocally()
@@ -2984,8 +3035,8 @@ final class RestOverlayView: NSView {
         }
     }
 
-    func performEmergencyOverrideKeyCommand() {
-        requestEmergencyOverride()
+    func performEmergencyOverrideKeyCommand(event: NSEvent? = nil) {
+        requestEmergencyOverride(from: event)
     }
 
     func performBodyPostponeAction() {
@@ -3022,7 +3073,8 @@ final class RestOverlayView: NSView {
         emergencyRemainingSeconds = nil
         emergencyOverrideArmed = false
         emergencyOverrideRequestInFlight = false
-        emergencyOverrideEventCycleLocked = false
+        emergencyOverrideSyntheticCycleLocked = false
+        emergencyOverrideLastInputToken = nil
         emergencyPanel.isHidden = true
         emergencyButton.isHidden = true
     }
@@ -3036,7 +3088,8 @@ final class RestOverlayView: NSView {
         if !isSameEmergencySession {
             emergencySessionID = sessionID
             emergencyOverrideRequestInFlight = false
-            emergencyOverrideEventCycleLocked = false
+            emergencyOverrideSyntheticCycleLocked = false
+            emergencyOverrideLastInputToken = nil
             emergencyOverrideArmed = false
             emergencyMouseDownStartedInActivationFrame = false
         }
@@ -3045,7 +3098,8 @@ final class RestOverlayView: NSView {
             emergencyRemainingSeconds = nil
             emergencyOverrideArmed = false
             emergencyOverrideRequestInFlight = false
-            emergencyOverrideEventCycleLocked = false
+            emergencyOverrideSyntheticCycleLocked = false
+            emergencyOverrideLastInputToken = nil
             emergencyMouseDownStartedInActivationFrame = false
             emergencyPanel.isHidden = true
             emergencyButton.isHidden = true
