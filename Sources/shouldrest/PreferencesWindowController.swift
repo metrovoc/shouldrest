@@ -458,6 +458,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let appExclusionMode = NSPopUpButton()
     private let appExclusionAppliesEye = NSButton(checkboxWithTitle: L10n.tr("prefs.appliesEye"), target: nil, action: nil)
     private let appExclusionAppliesBody = NSButton(checkboxWithTitle: L10n.tr("prefs.appliesBody"), target: nil, action: nil)
+    private let appExclusionPreviewLabel = NSTextField(labelWithString: "")
     private var appExclusionNameRow: NSView?
     private var appExclusionTermsRow: NSView?
     private var appExclusionModeRow: NSView?
@@ -616,6 +617,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         configureSoundVolumeControls()
         configureCustomBodyTextEditor()
         configureAppExclusionTokenField()
+        configureAppExclusionPreview()
         configureAppExclusionRunningAppButton()
         configureAppExclusionAddRuleButton()
         configureAppExclusionRulesList()
@@ -870,6 +872,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         contextStack.addArrangedSubview(appExclusionAppliesEye)
         appExclusionAppliesBody.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionAppliesBody")
         contextStack.addArrangedSubview(appExclusionAppliesBody)
+        contextStack.addArrangedSubview(indentedControlRow(appExclusionPreviewLabel))
         let appExclusionAddRuleRow = indentedControlRow(appExclusionRuleActionRow())
         appExclusionAddRuleRow.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionAddRuleRow")
         self.appExclusionAddRuleRow = appExclusionAddRuleRow
@@ -1472,6 +1475,15 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         appExclusionTerms.placeholderString = L10n.tr("prefs.matchTermsPlaceholder")
     }
 
+    private func configureAppExclusionPreview() {
+        appExclusionPreviewLabel.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionPreviewLabel")
+        appExclusionPreviewLabel.font = .systemFont(ofSize: 12)
+        appExclusionPreviewLabel.textColor = .secondaryLabelColor
+        appExclusionPreviewLabel.lineBreakMode = .byWordWrapping
+        appExclusionPreviewLabel.maximumNumberOfLines = 3
+        appExclusionPreviewLabel.widthAnchor.constraint(equalToConstant: 360).isActive = true
+    }
+
     private func configureAppExclusionRunningAppButton() {
         appExclusionAddRunningApp.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionAddRunningApp")
         appExclusionAddRunningApp.title = L10n.tr("prefs.addRunningApp")
@@ -1689,7 +1701,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let controls: [NSControl] = [
             eyeColor, bodyColor, eyeNotify, eyeManualFinish, eyeEmergencyOverride, bodyNotify, bodyAllowSkip, bodyManualFinish, bodyCoversAllDisplays,
             bodyBlankSecondaryDisplays, naturalBreaks, focusMonitor, focusDefersBody, workingHoursEnabled,
-            appExclusionEnabled, appExclusionAppliesEye, appExclusionAppliesBody, themeSource,
+            appExclusionEnabled, appExclusionMode, appExclusionAppliesEye, appExclusionAppliesBody, themeSource,
             languageIdentifier, currentTimeInBodyBreak, breakHealth, silentNotifications,
             eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, useBuiltInIdeas, openAtLogin,
             checkUpdates, notifyNewVersion, showOnboardingNextLaunch, pauseUntilMorningMode,
@@ -2240,6 +2252,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let appExclusionAppliesBodyVisible = exclusionEnabled && bodyBreakEnabled
         appExclusionAppliesEye.isHidden = !appExclusionAppliesEyeVisible
         appExclusionAppliesBody.isHidden = !appExclusionAppliesBodyVisible
+        appExclusionPreviewLabel.isHidden = !exclusionEnabled
         let hasVisibleExclusionTarget =
             (appExclusionAppliesEyeVisible && isOn(appExclusionAppliesEye)) ||
             (appExclusionAppliesBodyVisible && isOn(appExclusionAppliesBody))
@@ -3129,7 +3142,37 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         appExclusionAddRuleButton.isEnabled = isOn(appExclusionEnabled) &&
             currentAppExclusionRule(id: "preview") != nil
         appExclusionCancelEditButton.isEnabled = isOn(appExclusionEnabled)
+        updateAppExclusionPreview()
         updateAppExclusionActionButtonPresentation()
+    }
+
+    private func updateAppExclusionPreview() {
+        guard isOn(appExclusionEnabled) else {
+            appExclusionPreviewLabel.stringValue = ""
+            appExclusionPreviewLabel.toolTip = nil
+            appExclusionPreviewLabel.setAccessibilityHelp(nil)
+            return
+        }
+
+        let terms = appExclusionMatchTerms()
+        let preview: String
+        if terms.isEmpty {
+            preview = L10n.tr("prefs.appExclusionPreviewEmpty")
+        } else {
+            let termSummary = appExclusionTermsSummary(terms)
+            let targetSummary = appExclusionTargetSummary(appExclusionAppliesToSelection())
+            let mode = selected(AppExclusionRule.Mode.self, from: appExclusionMode, fallback: .pauseWhenMatched)
+            switch mode {
+            case .pauseWhenMatched:
+                preview = L10n.format("prefs.appExclusionPreviewPause", termSummary, targetSummary)
+            case .resumeOnlyWhenMatched:
+                preview = L10n.format("prefs.appExclusionPreviewResumeOnly", termSummary, targetSummary)
+            }
+        }
+
+        appExclusionPreviewLabel.stringValue = preview
+        appExclusionPreviewLabel.toolTip = preview
+        appExclusionPreviewLabel.setAccessibilityHelp(preview)
     }
 
     private func updateAppExclusionActionButtonPresentation() {
@@ -3250,19 +3293,28 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         case .resumeOnlyWhenMatched:
             mode = L10n.tr("prefs.exclusionMode.resumeOnlyWhenMatched")
         }
-        let applies: String
-        if rule.appliesTo.contains(.eyeGate), rule.appliesTo.contains(.bodyBreak) {
-            applies = L10n.tr("prefs.appExclusionAppliesEyeBody")
-        } else if rule.appliesTo.contains(.eyeGate) {
-            applies = L10n.tr("prefs.appExclusionAppliesEye")
-        } else if rule.appliesTo.contains(.bodyBreak) {
-            applies = L10n.tr("prefs.appExclusionAppliesBody")
-        } else {
-            applies = L10n.tr("prefs.appExclusionAppliesNone")
-        }
+        let applies = appExclusionTargetSummary(rule.appliesTo)
         let summary = "\(terms) - \(mode) - \(applies)"
         guard summary.count > 96 else { return summary }
         return "\(summary.prefix(93))..."
+    }
+
+    private func appExclusionTermsSummary(_ terms: [String]) -> String {
+        let summary = terms.joined(separator: ", ")
+        guard summary.count > 80 else { return summary }
+        return "\(summary.prefix(77))..."
+    }
+
+    private func appExclusionTargetSummary(_ appliesTo: Set<RestKind>) -> String {
+        if appliesTo.contains(.eyeGate), appliesTo.contains(.bodyBreak) {
+            return L10n.tr("prefs.appExclusionAppliesEyeBody")
+        } else if appliesTo.contains(.eyeGate) {
+            return L10n.tr("prefs.appExclusionAppliesEye")
+        } else if appliesTo.contains(.bodyBreak) {
+            return L10n.tr("prefs.appExclusionAppliesBody")
+        } else {
+            return L10n.tr("prefs.appExclusionAppliesNone")
+        }
     }
 
     private struct InvalidAdvancedJSON: LocalizedError {

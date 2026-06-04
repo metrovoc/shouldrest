@@ -37,6 +37,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertTrue(try view(withIdentifier: "prefs.appExclusionModeRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.appExclusionAppliesEye", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.appExclusionAppliesBody", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.appExclusionPreviewLabel", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "appExclusions", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.appExclusionsJSONRow", in: contentView).isHidden)
 
@@ -142,6 +143,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertFalse(try view(withIdentifier: "prefs.appExclusionModeRow", in: contentView).isHidden)
         XCTAssertFalse(try view(withIdentifier: "prefs.appExclusionAppliesEye", in: contentView).isHidden)
         XCTAssertFalse(try view(withIdentifier: "prefs.appExclusionAppliesBody", in: contentView).isHidden)
+        XCTAssertFalse(try view(withIdentifier: "prefs.appExclusionPreviewLabel", in: contentView).isHidden)
         XCTAssertFalse(try view(withIdentifier: "appExclusions", in: contentView).isHidden)
         XCTAssertFalse(try view(withIdentifier: "prefs.appExclusionAddRuleRow", in: contentView).isHidden)
         XCTAssertFalse(try view(withIdentifier: "prefs.appExclusionRulesListRow", in: contentView).isHidden)
@@ -159,6 +161,73 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertFalse(visibleTexts.contains("Mode"))
         XCTAssertFalse(visibleTexts.contains("Current rules"))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.advancedRulesJSON")))
+    }
+
+    func testAppExclusionPreviewShowsEmptyDraftGuidance() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "empty-draft",
+                name: "Calls",
+                matchTerms: [],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+        let preview = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionPreviewLabel", in: contentView) as? NSTextField)
+
+        XCTAssertFalse(preview.isHidden)
+        XCTAssertEqual(preview.stringValue, "Add an app name or bundle ID to preview this rule.")
+        XCTAssertEqual(preview.toolTip, preview.stringValue)
+        XCTAssertEqual(preview.accessibilityHelp(), preview.stringValue)
+    }
+
+    func testAppExclusionPreviewExplainsDraftAndUpdatesWhileEditing() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "enabled",
+                name: "Calls",
+                matchTerms: [],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+        let terms = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionTermsField", in: contentView) as? NSTokenField)
+        let mode = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionMode", in: contentView) as? NSPopUpButton)
+        let appliesEye = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionAppliesEye", in: contentView) as? NSButton)
+        let preview = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionPreviewLabel", in: contentView) as? NSTextField)
+
+        terms.objectValue = ["Zoom", "us.zoom.xos"]
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: terms))
+
+        XCTAssertEqual(preview.stringValue, "Matches Zoom, us.zoom.xos. Pauses Body Break while matched.")
+
+        selectPopup(mode, representedObject: AppExclusionRule.Mode.resumeOnlyWhenMatched.rawValue)
+        XCTAssertTrue(sendAction(from: mode))
+        appliesEye.state = .on
+        XCTAssertTrue(sendAction(from: appliesEye))
+
+        XCTAssertEqual(
+            preview.stringValue,
+            "Matches Zoom, us.zoom.xos. Runs Eye Gate and Body Break only while matched."
+        )
     }
 
     func testEnabledAppExclusionOffersRunningAppPicker() throws {

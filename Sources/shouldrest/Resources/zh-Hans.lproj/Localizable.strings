@@ -232,6 +232,9 @@
 "prefs.appExclusionAppliesBody" = "活动休息";
 "prefs.appExclusionAppliesNone" = "未选择休息类型";
 "prefs.appExclusionNoTerms" = "未选择匹配应用";
+"prefs.appExclusionPreviewEmpty" = "添加应用名称或 Bundle ID 后即可预览这条规则。";
+"prefs.appExclusionPreviewPause" = "匹配 %@。匹配时暂停%@。";
+"prefs.appExclusionPreviewResumeOnly" = "匹配 %@。仅在匹配时运行%@。";
 "prefs.advancedRulesJSON" = "应用规则 JSON";
 "prefs.showAdvancedRules" = "批量编辑应用规则";
 "prefs.hideAdvancedRules" = "隐藏批量编辑器";

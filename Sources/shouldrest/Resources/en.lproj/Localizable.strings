@@ -232,6 +232,9 @@
 "prefs.appExclusionAppliesBody" = "Body Break";
 "prefs.appExclusionAppliesNone" = "No rest type";
 "prefs.appExclusionNoTerms" = "No matched apps";
+"prefs.appExclusionPreviewEmpty" = "Add an app name or bundle ID to preview this rule.";
+"prefs.appExclusionPreviewPause" = "Matches %@. Pauses %@ while matched.";
+"prefs.appExclusionPreviewResumeOnly" = "Matches %@. Runs %@ only while matched.";
 "prefs.advancedRulesJSON" = "App rules JSON";
 "prefs.showAdvancedRules" = "Bulk Edit App Rules";
 "prefs.hideAdvancedRules" = "Hide Bulk Editor";
