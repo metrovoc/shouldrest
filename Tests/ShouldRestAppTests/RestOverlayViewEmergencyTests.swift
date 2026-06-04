@@ -107,6 +107,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
     func testSecondEmergencyClickCompletesWithoutWaitingForTickRefresh() throws {
         let start = Date(timeIntervalSinceReferenceDate: 2_500)
         var settings = RestSettings.defaults
+        settings.eyeGate.duration = 60
         settings.eyeGate.emergencyOverride = EmergencyOverridePolicy(
             isEnabled: true,
             confirmationSteps: 1,
@@ -963,6 +964,78 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         drainMainQueue()
         XCTAssertEqual(decisions, [.armed])
         XCTAssertEqual(engine.state.activeSession?.id, session.id)
+    }
+
+    func testLegacyHoldElapsedWithRefreshStillNeedsSecondEmergencyClick() throws {
+        let start = Date(timeIntervalSinceReferenceDate: 7_200)
+        var settings = RestSettings.defaults
+        settings.eyeGate.duration = 60
+        settings.eyeGate.emergencyOverride = EmergencyOverridePolicy(
+            isEnabled: true,
+            confirmationSteps: 1,
+            minimumHoldDuration: 30
+        )
+        var engine = RestEngine(settings: settings, now: start)
+        guard case .started(let session) = engine.takeNow(.eyeGate, now: start) else {
+            return XCTFail("Expected Eye Gate to start")
+        }
+
+        let view = RestOverlayView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
+        var coordinator = EmergencyOverrideCoordinator()
+        var requestTime = start.addingTimeInterval(1)
+        view.configure(
+            session: session,
+            remainingSeconds: 59,
+            settings: settings,
+            showsContent: true,
+            manualAwaiting: false,
+            emergencyOverrideRemainingSeconds: 0,
+            emergencyOverrideArmed: false
+        )
+        view.layoutSubtreeIfNeeded()
+        view.onEmergencyOverrideRequested = {
+            let decision = coordinator.request(
+                session: session,
+                policy: settings.eyeGate.emergencyOverride,
+                now: requestTime
+            )
+            if case .complete = decision {
+                _ = engine.emergencyOverride(now: requestTime)
+            }
+            return decision
+        }
+
+        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        drainMainQueue()
+
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        XCTAssertTrue(coordinator.isArmed(for: session))
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+        XCTAssertEqual(engine.state.activeSession?.id, session.id)
+
+        requestTime = start.addingTimeInterval(31)
+        view.configure(
+            session: session,
+            remainingSeconds: 29,
+            settings: settings,
+            showsContent: true,
+            manualAwaiting: false,
+            emergencyOverrideRemainingSeconds: 0,
+            emergencyOverrideArmed: coordinator.isArmed(for: session)
+        )
+        drainMainQueue()
+
+        XCTAssertTrue(coordinator.isArmed(for: session))
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+        XCTAssertEqual(engine.state.activeSession?.id, session.id)
+        XCTAssertEqual(engine.state.statistics.emergencyOverrides, 0)
+
+        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        drainMainQueue()
+
+        XCTAssertFalse(coordinator.isArmed(for: session))
+        XCTAssertNil(engine.state.activeSession)
+        XCTAssertEqual(engine.state.statistics.emergencyOverrides, 1)
     }
 
     func testEmergencyConfirmationStaysInEmergencyAffordance() throws {
