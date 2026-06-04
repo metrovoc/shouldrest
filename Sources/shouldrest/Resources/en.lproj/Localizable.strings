@@ -19,7 +19,7 @@
 "menu.pauseUntilMorning" = "Until Morning";
 "menu.pauseUntilMorningWithTime" = "Until Morning (%@)";
 "menu.pauseIndefinitely" = "Indefinitely";
-"menu.pauseIndefinitelyConfirming" = "Click Again to Pause Indefinitely";
+"menu.pauseIndefinitelyConfirming" = "Indefinitely...";
 "menu.reset" = "Reset Schedule";
 "pause.indefiniteConfirmTitle" = "Pause Indefinitely?";
 "pause.indefiniteConfirmBody" = "ShouldRest will stop scheduling rests until you resume it from the menu. Use a timed pause when you only need a short interruption.";

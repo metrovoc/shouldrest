@@ -176,13 +176,13 @@ final class TerminationPolicyTests: XCTestCase {
         }
     }
 
-    func testPauseIndefinitelyMenuTitleSignalsConfirmationOnlyWhenUsed() {
+    func testPauseIndefinitelyMenuTitleUsesDialogEllipsisWhenConfirmationWillOpen() {
         L10n.languageOverride = "en"
         defer { L10n.languageOverride = nil }
 
         XCTAssertEqual(
             PauseMenuCopy.indefiniteTitle(confirmsBeforePausing: true),
-            "Click Again to Pause Indefinitely"
+            "Indefinitely..."
         )
         XCTAssertEqual(
             PauseMenuCopy.indefiniteTitle(confirmsBeforePausing: false),
@@ -192,7 +192,7 @@ final class TerminationPolicyTests: XCTestCase {
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(
             PauseMenuCopy.indefiniteTitle(confirmsBeforePausing: true),
-            "再次点击确认无限期暂停"
+            "无限期暂停..."
         )
         XCTAssertEqual(
             PauseMenuCopy.indefiniteTitle(confirmsBeforePausing: false),
