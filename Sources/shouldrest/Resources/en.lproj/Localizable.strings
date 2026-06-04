@@ -119,6 +119,10 @@
 "prefs.tabShortcuts" = "Shortcuts";
 "prefs.tabAdvanced" = "Advanced";
 "prefs.sectionEyeGate" = "Eye Gate";
+"prefs.scheduleSummary.eyeAndBody" = "Eye Gate runs every %d min for %d sec. Body Break starts after %d Eye Gates and lasts %d min.";
+"prefs.scheduleSummary.eyeOnly" = "Eye Gate runs every %d min for %d sec. Body Break is off.";
+"prefs.scheduleSummary.bodyOnly" = "Eye Gate is off. Body Break runs every %d min for %d min.";
+"prefs.scheduleSummary.none" = "At least one rest type must stay enabled.";
 "prefs.everyMinutes" = "Repeat every";
 "prefs.durationSeconds" = "Cover screen for";
 "prefs.overlayColor" = "Overlay color";

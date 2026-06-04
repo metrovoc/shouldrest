@@ -5,6 +5,81 @@ import XCTest
 
 @MainActor
 final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
+    func testScheduleTabShowsReadableCurrentRhythmSummary() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectScheduleTab(in: contentView)
+
+        let summary = try XCTUnwrap(view(withIdentifier: "prefs.scheduleSummary", in: contentView) as? NSStackView)
+        let icon = try XCTUnwrap(view(withIdentifier: "prefs.scheduleSummaryIcon", in: contentView) as? NSImageView)
+        let label = try XCTUnwrap(view(withIdentifier: "prefs.scheduleSummaryLabel", in: contentView) as? NSTextField)
+
+        XCTAssertFalse(summary.isHidden)
+        XCTAssertNotNil(icon.image)
+        XCTAssertEqual(
+            label.stringValue,
+            L10n.format("prefs.scheduleSummary.eyeAndBody", 20, 20, 2, 5)
+        )
+    }
+
+    func testScheduleSummaryUpdatesWhenCoreSliderChangesAndAutosaves() throws {
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectScheduleTab(in: contentView)
+        let slider = try XCTUnwrap(view(withIdentifier: "eyeIntervalSlider", in: contentView) as? NSSlider)
+        let label = try XCTUnwrap(view(withIdentifier: "prefs.scheduleSummaryLabel", in: contentView) as? NSTextField)
+
+        slider.doubleValue = 45
+        XCTAssertTrue(sendAction(from: slider))
+
+        XCTAssertEqual(
+            label.stringValue,
+            L10n.format("prefs.scheduleSummary.eyeAndBody", 45, 20, 2, 5)
+        )
+        waitUntilSavedSettingsArrive(savedSettings)
+        XCTAssertEqual(savedSettings.value?.eyeGate.interval, 45 * 60)
+    }
+
+    func testScheduleSummaryFollowsDisabledRestTypes() throws {
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectScheduleTab(in: contentView)
+        let bodyEnabled = try XCTUnwrap(view(withIdentifier: "prefs.bodyEnabled", in: contentView) as? NSButton)
+        let eyeEnabled = try XCTUnwrap(view(withIdentifier: "prefs.eyeEnabled", in: contentView) as? NSButton)
+        let label = try XCTUnwrap(view(withIdentifier: "prefs.scheduleSummaryLabel", in: contentView) as? NSTextField)
+
+        bodyEnabled.state = .off
+        XCTAssertTrue(sendAction(from: bodyEnabled))
+
+        XCTAssertEqual(
+            label.stringValue,
+            L10n.format("prefs.scheduleSummary.eyeOnly", 20, 20)
+        )
+        waitUntilSavedSettingsArrive(savedSettings)
+        XCTAssertEqual(savedSettings.value?.bodyBreak.isEnabled, false)
+
+        savedSettings.value = nil
+        bodyEnabled.state = .on
+        XCTAssertTrue(sendAction(from: bodyEnabled))
+        waitUntilSavedSettingsArrive(savedSettings)
+
+        savedSettings.value = nil
+        eyeEnabled.state = .off
+        XCTAssertTrue(sendAction(from: eyeEnabled))
+
+        XCTAssertEqual(
+            label.stringValue,
+            L10n.format("prefs.scheduleSummary.bodyOnly", 20, 5)
+        )
+        waitUntilSavedSettingsArrive(savedSettings)
+        XCTAssertEqual(savedSettings.value?.eyeGate.isEnabled, false)
+    }
+
     func testDisabledEyeGateHidesDependentScheduleRows() throws {
         var settings = RestSettings.defaults
         settings.eyeGate.isEnabled = false

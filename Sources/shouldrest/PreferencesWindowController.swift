@@ -366,6 +366,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let searchStatusLabel = NSTextField(labelWithString: "")
     private let saveStatusIcon = NSImageView()
     private let saveStatusLabel = NSTextField(labelWithString: "")
+    private let scheduleSummaryIcon = NSImageView()
+    private let scheduleSummaryLabel = NSTextField(labelWithString: "")
     private let soundPlayer = SoundPlayer()
     private var isLoadingSettings = false
     private var hasPendingTextEditing = false
@@ -636,6 +638,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             icon: .restGate,
             identifier: "prefs.section.eyeGate"
         ))
+        scheduleStack.addArrangedSubview(scheduleSummaryView())
         eyeEnabled.identifier = NSUserInterfaceItemIdentifier("prefs.eyeEnabled")
         scheduleStack.addArrangedSubview(eyeEnabled)
         let eyeIntervalRow = numberRow(
@@ -1111,6 +1114,33 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         stack.spacing = 14
         stack.edgeInsets = NSEdgeInsets(top: 24, left: 24, bottom: 24, right: 24)
         stack.translatesAutoresizingMaskIntoConstraints = false
+        return stack
+    }
+
+    private func scheduleSummaryView() -> NSStackView {
+        scheduleSummaryIcon.identifier = NSUserInterfaceItemIdentifier("prefs.scheduleSummaryIcon")
+        scheduleSummaryIcon.image = NSImage(systemSymbolName: "timer", accessibilityDescription: nil)
+        scheduleSummaryIcon.symbolConfiguration = .init(pointSize: 15, weight: .semibold)
+        scheduleSummaryIcon.contentTintColor = .secondaryLabelColor
+        scheduleSummaryIcon.widthAnchor.constraint(equalToConstant: 20).isActive = true
+
+        scheduleSummaryLabel.identifier = NSUserInterfaceItemIdentifier("prefs.scheduleSummaryLabel")
+        scheduleSummaryLabel.textColor = .secondaryLabelColor
+        scheduleSummaryLabel.lineBreakMode = .byWordWrapping
+        scheduleSummaryLabel.maximumNumberOfLines = 3
+        scheduleSummaryLabel.widthAnchor.constraint(equalToConstant: 590).isActive = true
+
+        let stack = NSStackView(views: [scheduleSummaryIcon, scheduleSummaryLabel])
+        stack.identifier = NSUserInterfaceItemIdentifier("prefs.scheduleSummary")
+        stack.orientation = .horizontal
+        stack.spacing = 8
+        stack.alignment = .top
+        stack.edgeInsets = NSEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
+        stack.wantsLayer = true
+        stack.layer?.cornerRadius = 7
+        stack.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.08).cgColor
+        stack.layer?.borderWidth = 1
+        stack.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.55).cgColor
         return stack
     }
 
@@ -1991,6 +2021,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private func updateDependentControlEnablement() {
         let eyeGateEnabled = isOn(eyeEnabled)
         let strictPreferencesHidden = isOn(hideStrictPreferences)
+        updateScheduleSummary()
         [eyeIntervalRow, eyeDurationRow, eyeColorRow].forEach { $0?.isHidden = !eyeGateEnabled }
         [eyeNotify, eyeManualFinish].forEach { $0.isHidden = !eyeGateEnabled }
         setNumberInputEnabled(eyeInterval, eyeGateEnabled)
@@ -2120,6 +2151,40 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             eyeManualFinishEnabled: isOn(eyeManualFinish),
             strictPreferencesHidden: strictPreferencesHidden
         )
+    }
+
+    private func updateScheduleSummary() {
+        let eyeGateEnabled = isOn(eyeEnabled)
+        let bodyBreakEnabled = isOn(bodyEnabled)
+        let eyeIntervalMinutes = max(1, intValue(eyeInterval))
+        let eyeDurationSeconds = max(1, intValue(eyeDuration))
+        let bodyIntervalMinutes = max(1, intValue(bodyInterval))
+        let bodyDurationMinutes = max(1, intValue(bodyDuration))
+        let bodyAfterEyeGateCount = max(1, intValue(bodyAfterEyeGates))
+
+        if eyeGateEnabled && bodyBreakEnabled {
+            scheduleSummaryLabel.stringValue = L10n.format(
+                "prefs.scheduleSummary.eyeAndBody",
+                eyeIntervalMinutes,
+                eyeDurationSeconds,
+                bodyAfterEyeGateCount,
+                bodyDurationMinutes
+            )
+        } else if eyeGateEnabled {
+            scheduleSummaryLabel.stringValue = L10n.format(
+                "prefs.scheduleSummary.eyeOnly",
+                eyeIntervalMinutes,
+                eyeDurationSeconds
+            )
+        } else if bodyBreakEnabled {
+            scheduleSummaryLabel.stringValue = L10n.format(
+                "prefs.scheduleSummary.bodyOnly",
+                bodyIntervalMinutes,
+                bodyDurationMinutes
+            )
+        } else {
+            scheduleSummaryLabel.stringValue = L10n.tr("prefs.scheduleSummary.none")
+        }
     }
 
     private func updateShortcutPreferenceVisibility(
@@ -2478,6 +2543,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             if hasCustomBodyIdeaRotation {
                 return
             }
+        }
+        if let field = obj.object as? NSTextField,
+           numberInputs.contains(where: { $0.field === field }) {
+            updateScheduleSummary()
         }
         hasPendingTextEditing = true
         setSaveStatus(.editing)
