@@ -1,4 +1,5 @@
 import AppKit
+import ShouldRestCore
 import XCTest
 @testable import shouldrest
 
@@ -72,6 +73,42 @@ final class PreferencesWindowSoundPreviewTests: XCTestCase {
         XCTAssertEqual(status.toolTip, expectedStatus)
         XCTAssertEqual(status.accessibilityLabel(), expectedStatus)
         XCTAssertEqual(status.accessibilityHelp(), expectedStatus)
+    }
+
+    func testSilentNotificationsMuteSoundPreviewWithoutHidingConfiguration() throws {
+        var settings = RestSettings.defaults
+        settings.notifications.silentNotifications = true
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+        let toggle = try XCTUnwrap(view(withIdentifier: "prefs.silentNotifications", in: contentView) as? NSButton)
+        let button = try XCTUnwrap(view(withIdentifier: "eyeStart", in: contentView) as? NSButton)
+        let popup = try XCTUnwrap(soundPopup(containingButton: button, in: contentView))
+        let soundLabel = L10n.tr("prefs.eyeStartSound")
+        let mutedHelp = L10n.format("prefs.previewSoundMutedHelp", soundLabel)
+
+        XCTAssertTrue(popup.isEnabled)
+        XCTAssertTrue(button.isEnabled)
+        XCTAssertEqual(button.toolTip, mutedHelp)
+        XCTAssertEqual(button.accessibilityHelp(), mutedHelp)
+
+        button.sendAction(button.action, to: button.target)
+
+        let status = try XCTUnwrap(view(withIdentifier: "soundPreviewStatus", in: contentView) as? NSTextField)
+        let expectedStatus = L10n.format("prefs.soundPreviewMuted", soundLabel)
+        XCTAssertFalse(status.isHidden)
+        XCTAssertEqual(status.stringValue, expectedStatus)
+        XCTAssertEqual(status.toolTip, expectedStatus)
+        XCTAssertEqual(status.accessibilityLabel(), expectedStatus)
+        XCTAssertEqual(status.accessibilityHelp(), expectedStatus)
+
+        toggle.state = .off
+        toggle.sendAction(toggle.action, to: toggle.target)
+
+        let normalHelp = L10n.format("prefs.previewSoundSpecificHelp", soundLabel)
+        XCTAssertEqual(button.toolTip, normalHelp)
+        XCTAssertEqual(button.accessibilityHelp(), normalHelp)
     }
 
     func testChangingSoundSelectionClearsPreviewStatus() throws {

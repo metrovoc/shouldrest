@@ -2189,16 +2189,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func configureSoundPreviewButton(_ button: NSButton, identifier: String, soundLabel: String) {
         let accessibilityLabel = L10n.format("prefs.previewSoundLabel", soundLabel)
-        let help = L10n.format("prefs.previewSoundSpecificHelp", soundLabel)
         button.title = L10n.tr("prefs.previewSound")
         button.image = NSImage(systemSymbolName: "speaker.wave.2", accessibilityDescription: accessibilityLabel)
         button.imagePosition = .imageLeading
-        button.toolTip = help
-        button.setAccessibilityLabel(accessibilityLabel)
-        button.setAccessibilityHelp(help)
         button.target = self
         button.action = #selector(previewSound(_:))
         button.identifier = NSUserInterfaceItemIdentifier(identifier)
+        updateSoundPreviewButton(button, soundLabel: soundLabel, mutedBySilentNotifications: false)
     }
 
     private func loadSettings() {
@@ -2797,6 +2794,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         updateAppearanceEyeGateVisibility(eyeGateEnabled: eyeGateEnabled)
         updateAppearanceBodyBreakVisibility(bodyBreakEnabled: bodyBreakEnabled)
+        updateSoundPreviewButtons()
         updateShortcutPreferenceVisibility(
             eyeGateEnabled: eyeGateEnabled,
             bodyBreakEnabled: bodyBreakEnabled,
@@ -2804,6 +2802,38 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             strictPreferencesHidden: strictPreferencesHidden
         )
         updateAdvancedBulkEditorActionStates()
+    }
+
+    private func updateSoundPreviewButtons() {
+        let mutedBySilentNotifications = isOn(silentNotifications)
+        [
+            (eyeStartSoundPreview, "eyeStart"),
+            (eyeFinishSoundPreview, "eyeFinish"),
+            (bodyStartSoundPreview, "bodyStart"),
+            (bodyFinishSoundPreview, "bodyFinish")
+        ].forEach { button, identifier in
+            guard let soundLabel = soundPreviewLabel(for: identifier) else { return }
+            updateSoundPreviewButton(
+                button,
+                soundLabel: soundLabel,
+                mutedBySilentNotifications: mutedBySilentNotifications
+            )
+        }
+    }
+
+    private func updateSoundPreviewButton(
+        _ button: NSButton,
+        soundLabel: String,
+        mutedBySilentNotifications: Bool
+    ) {
+        let accessibilityLabel = L10n.format("prefs.previewSoundLabel", soundLabel)
+        let help = mutedBySilentNotifications
+            ? L10n.format("prefs.previewSoundMutedHelp", soundLabel)
+            : L10n.format("prefs.previewSoundSpecificHelp", soundLabel)
+        button.image?.accessibilityDescription = accessibilityLabel
+        button.toolTip = help
+        button.setAccessibilityLabel(accessibilityLabel)
+        button.setAccessibilityHelp(help)
     }
 
     private func updateRestEnablementGuards(eyeGateEnabled: Bool) {
@@ -3723,6 +3753,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
         let volume = min(1, max(0, soundVolumeSlider.doubleValue))
         let option = selectedSoundOption(in: popup)
+        guard !isOn(silentNotifications) else {
+            showSoundPreviewStatus(L10n.format("prefs.soundPreviewMuted", soundLabel))
+            return
+        }
         soundPlayer.play(option == .silence ? .silent : .named(option.name, volume: volume))
         let status = option == .silence
             ? L10n.format("prefs.soundPreviewSilence", soundLabel)

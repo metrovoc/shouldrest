@@ -372,6 +372,8 @@
 "prefs.previewSoundHelp" = "Play this sound once";
 "prefs.previewSoundLabel" = "Preview %@";
 "prefs.previewSoundSpecificHelp" = "Play the selected %@ once.";
+"prefs.previewSoundMutedHelp" = "Silent notifications is on, so %@ previews will not play.";
+"prefs.soundPreviewMuted" = "Silent notifications is on. %@ preview was not played.";
 "prefs.soundPreviewSilence" = "%@ is set to silence.";
 "prefs.soundPreviewPlayed" = "Previewed %@: %@.";
 "prefs.sound.silence" = "Silence";
