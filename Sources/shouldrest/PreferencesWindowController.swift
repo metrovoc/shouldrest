@@ -10,6 +10,108 @@ final class FlippedView: NSView {
     }
 }
 
+private struct SunriseLocationPreset: Equatable {
+    static let customID = "custom"
+
+    let id: String
+    let titleKey: String
+    let latitude: Double
+    let longitude: Double
+    let timeZoneIdentifiers: Set<String>
+
+    var title: String {
+        L10n.tr(titleKey)
+    }
+
+    static let presets: [SunriseLocationPreset] = [
+        SunriseLocationPreset(
+            id: "tokyo",
+            titleKey: "prefs.sunriseLocation.tokyo",
+            latitude: 35.6762,
+            longitude: 139.6503,
+            timeZoneIdentifiers: ["Asia/Tokyo"]
+        ),
+        SunriseLocationPreset(
+            id: "san-francisco",
+            titleKey: "prefs.sunriseLocation.sanFrancisco",
+            latitude: 37.7749,
+            longitude: -122.4194,
+            timeZoneIdentifiers: ["America/Los_Angeles", "America/Vancouver"]
+        ),
+        SunriseLocationPreset(
+            id: "new-york",
+            titleKey: "prefs.sunriseLocation.newYork",
+            latitude: 40.7128,
+            longitude: -74.0060,
+            timeZoneIdentifiers: ["America/New_York", "America/Toronto"]
+        ),
+        SunriseLocationPreset(
+            id: "london",
+            titleKey: "prefs.sunriseLocation.london",
+            latitude: 51.5074,
+            longitude: -0.1278,
+            timeZoneIdentifiers: ["Europe/London"]
+        ),
+        SunriseLocationPreset(
+            id: "berlin",
+            titleKey: "prefs.sunriseLocation.berlin",
+            latitude: 52.5200,
+            longitude: 13.4050,
+            timeZoneIdentifiers: ["Europe/Berlin", "Europe/Paris", "Europe/Rome", "Europe/Madrid"]
+        ),
+        SunriseLocationPreset(
+            id: "singapore",
+            titleKey: "prefs.sunriseLocation.singapore",
+            latitude: 1.3521,
+            longitude: 103.8198,
+            timeZoneIdentifiers: ["Asia/Singapore", "Asia/Kuala_Lumpur"]
+        ),
+        SunriseLocationPreset(
+            id: "sydney",
+            titleKey: "prefs.sunriseLocation.sydney",
+            latitude: -33.8688,
+            longitude: 151.2093,
+            timeZoneIdentifiers: ["Australia/Sydney", "Australia/Melbourne"]
+        ),
+        SunriseLocationPreset(
+            id: "beijing",
+            titleKey: "prefs.sunriseLocation.beijing",
+            latitude: 39.9042,
+            longitude: 116.4074,
+            timeZoneIdentifiers: ["Asia/Shanghai", "Asia/Beijing", "Asia/Hong_Kong", "Asia/Taipei"]
+        )
+    ]
+
+    static func matching(latitude: Double?, longitude: Double?) -> SunriseLocationPreset? {
+        guard let latitude, let longitude else { return nil }
+        return presets.first { preset in
+            abs(preset.latitude - latitude) < 0.02 &&
+                abs(normalizedLongitude(preset.longitude - longitude)) < 0.02
+        }
+    }
+
+    static func defaultForCurrentTimeZone(_ timeZone: TimeZone = .current, now: Date = Date()) -> SunriseLocationPreset? {
+        if let exact = presets.first(where: { $0.timeZoneIdentifiers.contains(timeZone.identifier) }) {
+            return exact
+        }
+        let approximateLongitude = Double(timeZone.secondsFromGMT(for: now)) / 240
+        return presets.min { lhs, rhs in
+            abs(normalizedLongitude(lhs.longitude - approximateLongitude)) <
+                abs(normalizedLongitude(rhs.longitude - approximateLongitude))
+        }
+    }
+
+    private static func normalizedLongitude(_ longitude: Double) -> Double {
+        var value = longitude.truncatingRemainder(dividingBy: 360)
+        if value > 180 {
+            value -= 360
+        } else if value < -180 {
+            value += 360
+        }
+        return value
+    }
+}
+
 @MainActor
 final class LocalImagePreviewView: NSImageView {
     var onImageURLDropped: ((URL) -> Void)?
@@ -424,9 +526,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         action: nil
     )
     private let pauseUntilMorningMode = NSPopUpButton()
+    private let pauseUntilMorningLocation = NSPopUpButton()
     private let pauseUntilMorningHour = NSTextField()
     private let pauseUntilMorningLatitude = NSTextField()
     private let pauseUntilMorningLongitude = NSTextField()
+    private var pauseUntilMorningLocationRow: NSView?
     private var pauseUntilMorningHourRow: NSView?
     private var pauseUntilMorningLatitudeRow: NSView?
     private var pauseUntilMorningLongitudeRow: NSView?
@@ -857,6 +961,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         advancedStack.addArrangedSubview(showOnboardingNextLaunch)
         let pauseUntilMorningModeRow = row(L10n.tr("prefs.pauseUntilMorningMode"), pauseUntilMorningMode)
         advancedStack.addArrangedSubview(pauseUntilMorningModeRow)
+        let pauseUntilMorningLocationRow = row(L10n.tr("prefs.pauseUntilMorningLocation"), pauseUntilMorningLocation)
+        pauseUntilMorningLocation.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningLocation")
+        pauseUntilMorningLocationRow.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningLocationRow")
+        self.pauseUntilMorningLocationRow = pauseUntilMorningLocationRow
+        advancedStack.addArrangedSubview(pauseUntilMorningLocationRow)
         let pauseUntilMorningHourRow = numberRow(
             L10n.tr("prefs.pauseUntilMorningHour"),
             pauseUntilMorningHour,
@@ -1059,6 +1168,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             (MorningPauseMode.sunrise.rawValue, L10n.tr("prefs.morningMode.sunrise"))
         ])
         pauseUntilMorningMode.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningMode")
+        configureSunriseLocationPopup()
         for option in LanguageOption.allCases {
             languageIdentifier.addItem(withTitle: option.title)
             languageIdentifier.lastItem?.representedObject = option.popupValue
@@ -1098,7 +1208,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             shortcutPause30, shortcutPause1h, shortcutPause2h, shortcutPause5h, shortcutPauseUntilMorning,
             shortcutNextScheduled, shortcutEyeNow, shortcutBodyNow, shortcutEndBody,
             shortcutEmergencyEye, shortcutReset,
-            appExclusionName, bodyConfiguredDisplay, updateFeedURL,
+            appExclusionName, bodyConfiguredDisplay, pauseUntilMorningLocation, updateFeedURL,
             customPreferencesMessage
         ]
         wideFields.forEach { $0.widthAnchor.constraint(equalToConstant: 360).isActive = true }
@@ -1388,7 +1498,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             appExclusionEnabled, appExclusionAppliesEye, appExclusionAppliesBody, themeSource,
             languageIdentifier, currentTimeInBodyBreak, breakHealth, silentNotifications,
             eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, useBuiltInIdeas, openAtLogin,
-            checkUpdates, notifyNewVersion, showOnboardingNextLaunch, pauseUntilMorningMode, pauseForSuspendOrLock,
+            checkUpdates, notifyNewVersion, showOnboardingNextLaunch, pauseUntilMorningMode,
+            pauseUntilMorningLocation, pauseForSuspendOrLock,
             disableUpdateFeatures, hideSettingsPath, hideStrictPreferences, bodyCoveredDisplay, bodyContentDisplay,
             bodyConfiguredDisplay, workingStartPicker, workingEndPicker, soundVolumeSlider
         ]
@@ -1567,6 +1678,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         pauseUntilMorningHour.stringValue = String(settings.operations.resolvedPauseUntilMorningHour)
         pauseUntilMorningLatitude.stringValue = String(settings.operations.pauseUntilMorningLatitude ?? 0)
         pauseUntilMorningLongitude.stringValue = String(settings.operations.pauseUntilMorningLongitude ?? 0)
+        selectSunriseLocationForCurrentSettings()
         pauseForSuspendOrLock.state = state(settings.operations.resolvedPauseForSuspendOrLock)
         updateFeedURL.stringValue = settings.operations.updateFeedURL
         disableUpdateFeatures.state = state(settings.admin.disableAppUpdateFeatures)
@@ -1697,8 +1809,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         next.operations.showOnboardingOnNextLaunch = isOn(showOnboardingNextLaunch)
         next.operations.pauseUntilMorningMode = selected(MorningPauseMode.self, from: pauseUntilMorningMode, fallback: .hour)
         next.operations.pauseUntilMorningHour = min(23, max(0, intValue(pauseUntilMorningHour)))
-        next.operations.pauseUntilMorningLatitude = min(89.8, max(-89.8, doubleValue(pauseUntilMorningLatitude, fallback: 0)))
-        next.operations.pauseUntilMorningLongitude = normalizedLongitude(doubleValue(pauseUntilMorningLongitude, fallback: 0))
+        if let preset = selectedSunriseLocationPreset() {
+            next.operations.pauseUntilMorningLatitude = preset.latitude
+            next.operations.pauseUntilMorningLongitude = preset.longitude
+        } else {
+            next.operations.pauseUntilMorningLatitude = min(89.8, max(-89.8, doubleValue(pauseUntilMorningLatitude, fallback: 0)))
+            next.operations.pauseUntilMorningLongitude = normalizedLongitude(doubleValue(pauseUntilMorningLongitude, fallback: 0))
+        }
         next.operations.pauseForSuspendOrLock = isOn(pauseForSuspendOrLock)
         next.operations.updateFeedURL = updateFeedURL.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
         next.admin.disableAppUpdateFeatures = isOn(disableUpdateFeatures)
@@ -1944,12 +2061,15 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         let morningMode = selected(MorningPauseMode.self, from: pauseUntilMorningMode, fallback: .hour)
         let usesSunrise = morningMode == .sunrise
+        let usesCustomSunriseLocation = usesSunrise && selectedSunriseLocationPreset() == nil
+        pauseUntilMorningLocationRow?.isHidden = !usesSunrise
         pauseUntilMorningHourRow?.isHidden = usesSunrise
-        pauseUntilMorningLatitudeRow?.isHidden = !usesSunrise
-        pauseUntilMorningLongitudeRow?.isHidden = !usesSunrise
+        pauseUntilMorningLatitudeRow?.isHidden = !usesCustomSunriseLocation
+        pauseUntilMorningLongitudeRow?.isHidden = !usesCustomSunriseLocation
         setNumberInputEnabled(pauseUntilMorningHour, !usesSunrise)
-        pauseUntilMorningLatitude.isEnabled = usesSunrise
-        pauseUntilMorningLongitude.isEnabled = usesSunrise
+        pauseUntilMorningLocation.isEnabled = usesSunrise
+        pauseUntilMorningLatitude.isEnabled = usesCustomSunriseLocation
+        pauseUntilMorningLongitude.isEnabled = usesCustomSunriseLocation
 
         updateAppearanceEyeGateVisibility(eyeGateEnabled: eyeGateEnabled)
         updateAppearanceBodyBreakVisibility(bodyBreakEnabled: bodyBreakEnabled)
@@ -2073,6 +2193,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         if let popup = sender as? NSPopUpButton, isSoundPopup(popup) {
             soundPreviewStatusLabel.isHidden = true
             soundPreviewStatusLabel.stringValue = ""
+        }
+        if let popup = sender as? NSPopUpButton {
+            if popup === pauseUntilMorningMode {
+                applyDefaultSunriseLocationIfNeeded()
+            } else if popup === pauseUntilMorningLocation {
+                applySelectedSunriseLocationPreset()
+            }
         }
         updateDependentControlEnablement()
         if isAppExclusionDraftControl(sender), hasAppExclusionRuleList {
@@ -3310,6 +3437,17 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
     }
 
+    private func configureSunriseLocationPopup() {
+        pauseUntilMorningLocation.removeAllItems()
+        for preset in SunriseLocationPreset.presets {
+            pauseUntilMorningLocation.addItem(withTitle: preset.title)
+            pauseUntilMorningLocation.lastItem?.representedObject = preset.id
+        }
+        pauseUntilMorningLocation.menu?.addItem(.separator())
+        pauseUntilMorningLocation.addItem(withTitle: L10n.tr("prefs.sunriseLocation.custom"))
+        pauseUntilMorningLocation.lastItem?.representedObject = SunriseLocationPreset.customID
+    }
+
     private func state(_ value: Bool) -> NSControl.StateValue {
         value ? .on : .off
     }
@@ -3336,6 +3474,66 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func doubleValue(_ field: NSTextField, fallback: Double) -> Double {
         Double(field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)) ?? fallback
+    }
+
+    private func selectSunriseLocationForCurrentSettings() {
+        let latitude = settings.operations.pauseUntilMorningLatitude
+        let longitude = settings.operations.pauseUntilMorningLongitude
+        if let preset = SunriseLocationPreset.matching(latitude: latitude, longitude: longitude) {
+            selectPopup(pauseUntilMorningLocation, rawValue: preset.id)
+            applySunriseLocationPreset(preset)
+            return
+        }
+
+        if settings.operations.resolvedPauseUntilMorningMode == .sunrise,
+           areSunriseCoordinatesUnset(latitude: latitude, longitude: longitude),
+           let preset = SunriseLocationPreset.defaultForCurrentTimeZone() {
+            selectPopup(pauseUntilMorningLocation, rawValue: preset.id)
+            applySunriseLocationPreset(preset)
+            return
+        }
+
+        selectPopup(pauseUntilMorningLocation, rawValue: SunriseLocationPreset.customID)
+    }
+
+    private func applyDefaultSunriseLocationIfNeeded() {
+        guard selected(MorningPauseMode.self, from: pauseUntilMorningMode, fallback: .hour) == .sunrise,
+              selectedSunriseLocationPreset() == nil,
+              areSunriseCoordinatesUnset(
+                  latitude: doubleValue(pauseUntilMorningLatitude, fallback: 0),
+                  longitude: doubleValue(pauseUntilMorningLongitude, fallback: 0)
+              ),
+              let preset = SunriseLocationPreset.defaultForCurrentTimeZone() else {
+            return
+        }
+        selectPopup(pauseUntilMorningLocation, rawValue: preset.id)
+        applySunriseLocationPreset(preset)
+    }
+
+    private func applySelectedSunriseLocationPreset() {
+        guard let preset = selectedSunriseLocationPreset() else { return }
+        applySunriseLocationPreset(preset)
+    }
+
+    private func selectedSunriseLocationPreset() -> SunriseLocationPreset? {
+        guard let id = pauseUntilMorningLocation.selectedItem?.representedObject as? String,
+              id != SunriseLocationPreset.customID else {
+            return nil
+        }
+        return SunriseLocationPreset.presets.first { $0.id == id }
+    }
+
+    private func applySunriseLocationPreset(_ preset: SunriseLocationPreset) {
+        pauseUntilMorningLatitude.stringValue = formattedCoordinate(preset.latitude)
+        pauseUntilMorningLongitude.stringValue = formattedCoordinate(preset.longitude)
+    }
+
+    private func areSunriseCoordinatesUnset(latitude: Double?, longitude: Double?) -> Bool {
+        abs(latitude ?? 0) < 0.0001 && abs(longitude ?? 0) < 0.0001
+    }
+
+    private func formattedCoordinate(_ value: Double) -> String {
+        String(format: "%.4f", locale: Locale(identifier: "en_US_POSIX"), value)
     }
 
     private func hexString(from color: NSColor, fallback: String) -> String {

@@ -223,6 +223,7 @@
 "prefs.sectionOperations" = "操作";
 "prefs.pauseUntilMorningMode" = "暂停到早晨方式";
 "prefs.pauseUntilMorningHour" = "恢复时间";
+"prefs.pauseUntilMorningLocation" = "日出地点";
 "prefs.pauseUntilMorningLatitude" = "日出纬度";
 "prefs.pauseUntilMorningLongitude" = "日出经度";
 "prefs.pauseForSuspendOrLock" = "睡眠或锁屏时暂停调度";
@@ -253,6 +254,15 @@
 "prefs.displayPicker.unavailable" = "显示器 %d（未连接）";
 "prefs.morningMode.hour" = "固定时间";
 "prefs.morningMode.sunrise" = "本地日出";
+"prefs.sunriseLocation.tokyo" = "东京";
+"prefs.sunriseLocation.sanFrancisco" = "旧金山";
+"prefs.sunriseLocation.newYork" = "纽约";
+"prefs.sunriseLocation.london" = "伦敦";
+"prefs.sunriseLocation.berlin" = "柏林";
+"prefs.sunriseLocation.singapore" = "新加坡";
+"prefs.sunriseLocation.sydney" = "悉尼";
+"prefs.sunriseLocation.beijing" = "北京";
+"prefs.sunriseLocation.custom" = "自定义坐标";
 "prefs.unit.minutes" = "分钟";
 "prefs.unit.seconds" = "秒";
 "prefs.unit.times" = "次";

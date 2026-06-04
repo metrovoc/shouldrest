@@ -11,17 +11,19 @@ final class PreferencesWindowMorningPauseTests: XCTestCase {
 
         try selectAdvancedTab(in: contentView)
 
+        XCTAssertTrue(try row("prefs.pauseUntilMorningLocationRow", in: contentView).isHidden)
         XCTAssertFalse(try row("prefs.pauseUntilMorningHourRow", in: contentView).isHidden)
         XCTAssertTrue(try row("prefs.pauseUntilMorningLatitudeRow", in: contentView).isHidden)
         XCTAssertTrue(try row("prefs.pauseUntilMorningLongitudeRow", in: contentView).isHidden)
 
         let visibleTexts = visibleTexts(in: contentView)
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.pauseUntilMorningHour")))
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.pauseUntilMorningLocation")))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.pauseUntilMorningLatitude")))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.pauseUntilMorningLongitude")))
     }
 
-    func testSunriseMorningModeHidesFixedHourAndAutosavesMode() throws {
+    func testSunriseMorningModeShowsLocationPresetAndAutosavesMode() throws {
         var settings = RestSettings.defaults
         settings.operations.pauseUntilMorningMode = .hour
         let savedSettings = SavedSettingsBox()
@@ -35,16 +37,68 @@ final class PreferencesWindowMorningPauseTests: XCTestCase {
         XCTAssertTrue(sendAction(from: popup))
 
         XCTAssertTrue(try row("prefs.pauseUntilMorningHourRow", in: contentView).isHidden)
-        XCTAssertFalse(try row("prefs.pauseUntilMorningLatitudeRow", in: contentView).isHidden)
-        XCTAssertFalse(try row("prefs.pauseUntilMorningLongitudeRow", in: contentView).isHidden)
+        XCTAssertFalse(try row("prefs.pauseUntilMorningLocationRow", in: contentView).isHidden)
+        XCTAssertTrue(try row("prefs.pauseUntilMorningLatitudeRow", in: contentView).isHidden)
+        XCTAssertTrue(try row("prefs.pauseUntilMorningLongitudeRow", in: contentView).isHidden)
 
         let visibleTexts = visibleTexts(in: contentView)
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.pauseUntilMorningHour")))
-        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.pauseUntilMorningLatitude")))
-        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.pauseUntilMorningLongitude")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.pauseUntilMorningLocation")))
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.pauseUntilMorningLatitude")))
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.pauseUntilMorningLongitude")))
 
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(savedSettings.value?.operations.pauseUntilMorningMode, .sunrise)
+        XCTAssertNotEqual(savedSettings.value?.operations.pauseUntilMorningLatitude, 0)
+        XCTAssertNotEqual(savedSettings.value?.operations.pauseUntilMorningLongitude, 0)
+    }
+
+    func testSunriseCustomCoordinatesShowLatitudeAndLongitudeRows() throws {
+        var settings = RestSettings.defaults
+        settings.operations.pauseUntilMorningMode = .sunrise
+        settings.operations.pauseUntilMorningLatitude = 12.34
+        settings.operations.pauseUntilMorningLongitude = 56.78
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAdvancedTab(in: contentView)
+
+        XCTAssertTrue(try row("prefs.pauseUntilMorningHourRow", in: contentView).isHidden)
+        XCTAssertFalse(try row("prefs.pauseUntilMorningLocationRow", in: contentView).isHidden)
+        XCTAssertFalse(try row("prefs.pauseUntilMorningLatitudeRow", in: contentView).isHidden)
+        XCTAssertFalse(try row("prefs.pauseUntilMorningLongitudeRow", in: contentView).isHidden)
+
+        let locationPopup = try XCTUnwrap(view(withIdentifier: "prefs.pauseUntilMorningLocation", in: contentView) as? NSPopUpButton)
+        XCTAssertEqual(locationPopup.selectedItem?.representedObject as? String, "custom")
+    }
+
+    func testSelectingSunrisePresetHidesCoordinatesAndAutosavesPresetCoordinates() throws {
+        var settings = RestSettings.defaults
+        settings.operations.pauseUntilMorningMode = .sunrise
+        settings.operations.pauseUntilMorningLatitude = 12.34
+        settings.operations.pauseUntilMorningLongitude = 56.78
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAdvancedTab(in: contentView)
+        let popup = try XCTUnwrap(view(withIdentifier: "prefs.pauseUntilMorningLocation", in: contentView) as? NSPopUpButton)
+        selectPopup(popup, representedObject: "tokyo")
+
+        XCTAssertTrue(sendAction(from: popup))
+
+        XCTAssertFalse(try row("prefs.pauseUntilMorningLocationRow", in: contentView).isHidden)
+        XCTAssertTrue(try row("prefs.pauseUntilMorningLatitudeRow", in: contentView).isHidden)
+        XCTAssertTrue(try row("prefs.pauseUntilMorningLongitudeRow", in: contentView).isHidden)
+
+        let latitudeField = try XCTUnwrap(view(withIdentifier: "prefs.pauseUntilMorningLatitudeField", in: contentView) as? NSTextField)
+        let longitudeField = try XCTUnwrap(view(withIdentifier: "prefs.pauseUntilMorningLongitudeField", in: contentView) as? NSTextField)
+        XCTAssertEqual(latitudeField.stringValue, "35.6762")
+        XCTAssertEqual(longitudeField.stringValue, "139.6503")
+
+        waitUntilSavedSettingsArrive(savedSettings)
+        XCTAssertEqual(savedSettings.value?.operations.pauseUntilMorningLatitude, 35.6762)
+        XCTAssertEqual(savedSettings.value?.operations.pauseUntilMorningLongitude, 139.6503)
     }
 
     private func selectAdvancedTab(in view: NSView) throws {

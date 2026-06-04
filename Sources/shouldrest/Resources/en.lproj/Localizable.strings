@@ -223,6 +223,7 @@
 "prefs.sectionOperations" = "Operations";
 "prefs.pauseUntilMorningMode" = "Pause until morning";
 "prefs.pauseUntilMorningHour" = "Resume hour";
+"prefs.pauseUntilMorningLocation" = "Sunrise location";
 "prefs.pauseUntilMorningLatitude" = "Sunrise latitude";
 "prefs.pauseUntilMorningLongitude" = "Sunrise longitude";
 "prefs.pauseForSuspendOrLock" = "Pause scheduler on sleep or lock";
@@ -253,6 +254,15 @@
 "prefs.displayPicker.unavailable" = "Display %d (not connected)";
 "prefs.morningMode.hour" = "Fixed hour";
 "prefs.morningMode.sunrise" = "Local sunrise";
+"prefs.sunriseLocation.tokyo" = "Tokyo";
+"prefs.sunriseLocation.sanFrancisco" = "San Francisco";
+"prefs.sunriseLocation.newYork" = "New York";
+"prefs.sunriseLocation.london" = "London";
+"prefs.sunriseLocation.berlin" = "Berlin";
+"prefs.sunriseLocation.singapore" = "Singapore";
+"prefs.sunriseLocation.sydney" = "Sydney";
+"prefs.sunriseLocation.beijing" = "Beijing";
+"prefs.sunriseLocation.custom" = "Custom coordinates";
 "prefs.unit.minutes" = "min";
 "prefs.unit.seconds" = "sec";
 "prefs.unit.times" = "times";
