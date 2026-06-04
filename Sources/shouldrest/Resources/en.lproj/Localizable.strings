@@ -438,7 +438,7 @@
 "onboarding.body" = "The defaults are tuned for frequent, opaque 20-second Eye Gates and configurable Body Breaks.";
 "onboarding.eyeFeatureTitle" = "Short, frequent Eye Gates";
 "onboarding.eyeFeatureBody" = "Brief opaque breaks protect the habit from skip muscle memory and visual drift.";
-"onboarding.emergencyFeatureTitle" = "Emergency without deadlock";
+"onboarding.emergencyFeatureTitle" = "Emergency stays in the overlay";
 "onboarding.emergencyFeatureBody" = "Emergency Exit is owned by the overlay: Esc, the configured shortcut, or the dim red Emergency affordance arms it first; the second click or Esc exits from inside the overlay without asking you to click another window.";
 "onboarding.bodyFeatureTitle" = "Configurable Body Breaks";
 "onboarding.bodyFeatureBody" = "Longer movement breaks can use postpones, images, display rules, and wait for you to finish.";
