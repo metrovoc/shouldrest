@@ -14,6 +14,7 @@
 "menu.pause2h" = "2 小时";
 "menu.pause5h" = "5 小时";
 "menu.pauseUntilMorning" = "暂停到早晨";
+"menu.pauseUntilMorningWithTime" = "暂停到早晨（%@）";
 "menu.pauseIndefinitely" = "无限期暂停";
 "menu.pauseIndefinitelyConfirming" = "确认无限期暂停";
 "menu.reset" = "重置计划";

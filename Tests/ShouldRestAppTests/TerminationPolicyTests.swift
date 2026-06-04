@@ -111,6 +111,28 @@ final class TerminationPolicyTests: XCTestCase {
         )
     }
 
+    func testPauseUntilMorningMenuTitleShowsResumeTime() {
+        var settings = RestSettings.defaults
+        settings.operations.pauseUntilMorningMode = .hour
+        settings.operations.pauseUntilMorningHour = 9
+        let now = start
+        let target = now.addingTimeInterval(settings.operations.secondsUntilMorning(from: now))
+
+        L10n.languageOverride = "en"
+        defer { L10n.languageOverride = nil }
+        XCTAssertEqual(
+            PauseMenuCopy.untilMorningTitle(settings: settings, now: now),
+            L10n.format("menu.pauseUntilMorningWithTime", target.formatted(date: .omitted, time: .shortened))
+        )
+        XCTAssertNotEqual(PauseMenuCopy.untilMorningTitle(settings: settings, now: now), "Until Morning")
+
+        L10n.languageOverride = "zh-Hans"
+        XCTAssertEqual(
+            PauseMenuCopy.untilMorningTitle(settings: settings, now: now),
+            L10n.format("menu.pauseUntilMorningWithTime", target.formatted(date: .omitted, time: .shortened))
+        )
+    }
+
     private func session(kind: RestKind) -> RestSession {
         RestSession(
             kind: kind,

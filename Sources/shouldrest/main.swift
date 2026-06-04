@@ -113,6 +113,11 @@ enum PauseIndefinitelyConfirmation {
 }
 
 enum PauseMenuCopy {
+    static func untilMorningTitle(settings: RestSettings, now: Date = Date()) -> String {
+        let target = now.addingTimeInterval(settings.operations.secondsUntilMorning(from: now))
+        return L10n.format("menu.pauseUntilMorningWithTime", target.formatted(date: .omitted, time: .shortened))
+    }
+
     static func indefiniteTitle(confirmsBeforePausing: Bool) -> String {
         L10n.tr(confirmsBeforePausing ? "menu.pauseIndefinitelyConfirming" : "menu.pauseIndefinitely")
     }
@@ -517,7 +522,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             pauseMenu.addItem(actionItem(L10n.tr("menu.pause1h"), #selector(pauseFor1Hour)))
             pauseMenu.addItem(actionItem(L10n.tr("menu.pause2h"), #selector(pauseFor2Hours)))
             pauseMenu.addItem(actionItem(L10n.tr("menu.pause5h"), #selector(pauseFor5Hours)))
-            pauseMenu.addItem(actionItem(L10n.tr("menu.pauseUntilMorning"), #selector(pauseUntilMorning)))
+            pauseMenu.addItem(actionItem(PauseMenuCopy.untilMorningTitle(settings: settings, now: now), #selector(pauseUntilMorning)))
             pauseMenu.addItem(.separator())
             pauseMenu.addItem(actionItem(
                 PauseMenuCopy.indefiniteTitle(confirmsBeforePausing: shouldConfirmIndefinitePause()),
