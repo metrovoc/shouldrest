@@ -502,10 +502,10 @@
 "prefs.autosaveInvalid" = "Fix import text to save";
 "prefs.autosaveInvalidField" = "Fix %@ to save";
 "prefs.searchPlaceholder" = "Find a setting";
-"prefs.searchHelp" = "Press Command-F to find visible settings. Press Return for the next match, or Esc to clear.";
+"prefs.searchHelp" = "Find settings. Matching advanced sections open automatically; settings hidden by current options stay hidden. Press Return for the next match, or Esc to clear.";
 "prefs.searchMatched" = "%@ · %@";
 "prefs.searchMatchedIndexed" = "%d/%d · %@ · %@";
-"prefs.searchNoResults" = "No visible setting matches \"%@\"";
+"prefs.searchNoResults" = "No setting matches \"%@\"";
 "prefs.searchHiddenResults" = "Hidden by current options: \"%@\"";
 "prefs.shortcutConflictTitle" = "Shortcut conflict";
 "prefs.shortcutConflict" = "Shortcut conflict: %@ is assigned to %@.";

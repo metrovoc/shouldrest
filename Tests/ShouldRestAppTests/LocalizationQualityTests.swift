@@ -65,17 +65,23 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(help.contains("Pause or resume breaks"))
     }
 
-    func testPreferenceSearchCopyDistinguishesMissingAndHiddenSettings() {
+    func testPreferenceSearchCopyDistinguishesMissingHiddenAndCollapsibleSettings() {
         defer { L10n.languageOverride = nil }
 
         L10n.languageOverride = "en"
-        XCTAssertEqual(L10n.tr("prefs.searchHelp"), "Press Command-F to find visible settings. Press Return for the next match, or Esc to clear.")
-        XCTAssertEqual(L10n.format("prefs.searchNoResults", "anything"), "No visible setting matches \"anything\"")
+        XCTAssertEqual(
+            L10n.tr("prefs.searchHelp"),
+            "Find settings. Matching advanced sections open automatically; settings hidden by current options stay hidden. Press Return for the next match, or Esc to clear."
+        )
+        XCTAssertEqual(L10n.format("prefs.searchNoResults", "anything"), "No setting matches \"anything\"")
         XCTAssertEqual(L10n.format("prefs.searchHiddenResults", "anything"), "Hidden by current options: \"anything\"")
 
         L10n.languageOverride = "zh-Hans"
-        XCTAssertEqual(L10n.tr("prefs.searchHelp"), "按 Command-F 查找当前可见设置。按 Return 跳到下一个结果，按 Esc 清空。")
-        XCTAssertEqual(L10n.format("prefs.searchNoResults", "任何设置"), "没有匹配“任何设置”的可见设置")
+        XCTAssertEqual(
+            L10n.tr("prefs.searchHelp"),
+            "查找设置；匹配的高级区域会自动展开，被当前选项隐藏的设置仍会保持隐藏。按 Return 跳到下一个结果，按 Esc 清空。"
+        )
+        XCTAssertEqual(L10n.format("prefs.searchNoResults", "任何设置"), "没有匹配“任何设置”的设置")
         XCTAssertEqual(L10n.format("prefs.searchHiddenResults", "任何设置"), "“任何设置”已被当前选项隐藏")
     }
 
