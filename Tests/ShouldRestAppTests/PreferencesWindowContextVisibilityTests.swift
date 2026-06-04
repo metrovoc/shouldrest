@@ -380,11 +380,45 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
 
         try selectContextTab(in: contentView)
         let preview = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionPreviewLabel", in: contentView) as? NSTextField)
+        let actionButton = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionAddRuleButton", in: contentView) as? NSButton)
 
         XCTAssertFalse(preview.isHidden)
         XCTAssertEqual(preview.stringValue, "Choose Add Running App or type an app name to preview this rule.")
         XCTAssertEqual(preview.toolTip, preview.stringValue)
         XCTAssertEqual(preview.accessibilityHelp(), preview.stringValue)
+        XCTAssertFalse(actionButton.isEnabled)
+        XCTAssertEqual(actionButton.toolTip, L10n.tr("prefs.addAppExclusionRuleDisabledEmptyHelp"))
+        XCTAssertEqual(actionButton.accessibilityHelp(), L10n.tr("prefs.addAppExclusionRuleDisabledEmptyHelp"))
+    }
+
+    func testDisabledAppRuleAddButtonExplainsMissingPrerequisites() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = []
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+        let enabled = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionEnabled", in: contentView) as? NSButton)
+        let terms = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionTermsField", in: contentView) as? NSTokenField)
+        let actionButton = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionAddRuleButton", in: contentView) as? NSButton)
+
+        XCTAssertFalse(actionButton.isEnabled)
+        XCTAssertEqual(actionButton.toolTip, L10n.tr("prefs.addAppExclusionRuleDisabledOffHelp"))
+        XCTAssertEqual(actionButton.accessibilityHelp(), L10n.tr("prefs.addAppExclusionRuleDisabledOffHelp"))
+
+        enabled.state = .on
+        XCTAssertTrue(sendAction(from: enabled))
+
+        XCTAssertFalse(actionButton.isEnabled)
+        XCTAssertEqual(actionButton.toolTip, L10n.tr("prefs.addAppExclusionRuleDisabledEmptyHelp"))
+        XCTAssertEqual(actionButton.accessibilityHelp(), L10n.tr("prefs.addAppExclusionRuleDisabledEmptyHelp"))
+
+        terms.objectValue = ["zoom"]
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: terms))
+
+        XCTAssertTrue(actionButton.isEnabled)
+        XCTAssertEqual(actionButton.toolTip, L10n.tr("prefs.addAppExclusionRuleHelp"))
+        XCTAssertEqual(actionButton.accessibilityHelp(), L10n.tr("prefs.addAppExclusionRuleHelp"))
     }
 
     func testAppExclusionPreviewExplainsDraftAndUpdatesWhileEditing() throws {
@@ -733,9 +767,9 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
 
         XCTAssertTrue(cancelButton.isHidden)
         XCTAssertEqual(actionButton.title, L10n.tr("prefs.addAppExclusionRule"))
-        XCTAssertEqual(actionButton.toolTip, L10n.tr("prefs.addAppExclusionRuleHelp"))
+        XCTAssertEqual(actionButton.toolTip, L10n.tr("prefs.addAppExclusionRuleDisabledEmptyHelp"))
         XCTAssertEqual(actionButton.accessibilityLabel(), L10n.tr("prefs.addAppExclusionRule"))
-        XCTAssertEqual(actionButton.accessibilityHelp(), L10n.tr("prefs.addAppExclusionRuleHelp"))
+        XCTAssertEqual(actionButton.accessibilityHelp(), L10n.tr("prefs.addAppExclusionRuleDisabledEmptyHelp"))
         XCTAssertEqual(actionButton.image?.accessibilityDescription, L10n.tr("prefs.addAppExclusionRule"))
         XCTAssertEqual(cancelButton.accessibilityLabel(), L10n.tr("prefs.cancelAppExclusionRuleEdit"))
         XCTAssertEqual(cancelButton.accessibilityHelp(), L10n.tr("prefs.cancelAppExclusionRuleEditHelp"))
@@ -790,7 +824,8 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertTrue(cancelButton.isHidden)
         XCTAssertEqual(actionButton.title, L10n.tr("prefs.addAppExclusionRule"))
         XCTAssertEqual(actionButton.accessibilityLabel(), L10n.tr("prefs.addAppExclusionRule"))
-        XCTAssertEqual(actionButton.accessibilityHelp(), L10n.tr("prefs.addAppExclusionRuleHelp"))
+        XCTAssertEqual(actionButton.toolTip, L10n.tr("prefs.addAppExclusionRuleDisabledEmptyHelp"))
+        XCTAssertEqual(actionButton.accessibilityHelp(), L10n.tr("prefs.addAppExclusionRuleDisabledEmptyHelp"))
         XCTAssertEqual(actionButton.image?.accessibilityDescription, L10n.tr("prefs.addAppExclusionRule"))
         XCTAssertEqual(
             (try view(withIdentifier: "prefs.appExclusionRuleTitle.1", in: contentView) as? NSTextField)?.stringValue,

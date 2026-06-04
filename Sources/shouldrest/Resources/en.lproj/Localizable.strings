@@ -313,6 +313,8 @@
 "prefs.appExclusionModeHelp" = "Choose whether these apps pause selected rests or are the only time selected rests can run.";
 "prefs.addAppExclusionRule" = "Add App Rule";
 "prefs.addAppExclusionRuleHelp" = "Add these apps as an app rule.";
+"prefs.addAppExclusionRuleDisabledOffHelp" = "Turn on App Rules before adding a rule.";
+"prefs.addAppExclusionRuleDisabledEmptyHelp" = "Choose a running app or type an app name first.";
 "prefs.updateAppExclusionRule" = "Update App Rule";
 "prefs.updateAppExclusionRuleHelp" = "Update the selected app rule.";
 "prefs.cancelAppExclusionRuleEdit" = "Cancel";
@@ -390,6 +392,8 @@
 "prefs.customBodyTextHelp" = "Plain text shown in the Body Break overlay for this custom idea.";
 "prefs.addCustomIdea" = "Add Idea";
 "prefs.addCustomIdeaHelp" = "Add the current title and body text as a Body Break idea.";
+"prefs.addCustomIdeaDisabledBodyOffHelp" = "Turn on Body Break before adding custom ideas.";
+"prefs.addCustomIdeaDisabledEmptyHelp" = "Add a title or body text first.";
 "prefs.updateCustomIdea" = "Update Idea";
 "prefs.updateCustomIdeaHelp" = "Update the selected Body Break idea.";
 "prefs.cancelCustomIdeaEdit" = "Cancel";
