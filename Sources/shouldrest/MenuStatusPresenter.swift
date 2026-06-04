@@ -4,14 +4,25 @@ import ShouldRestCore
 enum MenuStatusPresenter {
     enum MenuBarIcon: Equatable {
         case restGate
+        case restGateWithHealthIndicator
         case systemSymbol(String)
+        case systemSymbolWithHealthIndicator(String)
 
         var fallbackSystemSymbolName: String {
             switch self {
-            case .restGate:
+            case .restGate, .restGateWithHealthIndicator:
                 return "pause.rectangle"
-            case .systemSymbol(let symbolName):
+            case .systemSymbol(let symbolName), .systemSymbolWithHealthIndicator(let symbolName):
                 return symbolName
+            }
+        }
+
+        var withHealthIndicator: MenuBarIcon {
+            switch self {
+            case .restGate, .restGateWithHealthIndicator:
+                return .restGateWithHealthIndicator
+            case .systemSymbol(let symbolName), .systemSymbolWithHealthIndicator(let symbolName):
+                return .systemSymbolWithHealthIndicator(symbolName)
             }
         }
     }
@@ -97,6 +108,14 @@ enum MenuStatusPresenter {
             return icon(for: scheduled.kind)
         }
         return icon(for: .eyeGate)
+    }
+
+    static func menuBarIcon(state: RestEngineState, settings: RestSettings) -> MenuBarIcon {
+        let icon = menuBarIcon(state: state)
+        guard settings.presentation.breakHealthMode, state.dangerScore > 0 else {
+            return icon
+        }
+        return icon.withHealthIndicator
     }
 
     static func deferralReasonText(_ reason: ContextDeferralReason) -> String {

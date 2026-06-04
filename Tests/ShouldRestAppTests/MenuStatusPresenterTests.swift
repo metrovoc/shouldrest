@@ -276,6 +276,37 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         XCTAssertEqual(MenuStatusPresenter.menuBarTitle(state: engine.state, settings: engine.settings, now: start), "")
         XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: engine.state), .restGate)
+        XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: engine.state, settings: engine.settings), .restGate)
+    }
+
+    func testMenuBarHealthIndicatorUsesIconBadgeWithoutTextTitle() {
+        let settings = RestSettings.defaults
+        let eyeDebtState = RestEngineState(
+            scheduled: ScheduledRest(kind: .eyeGate, dueAt: start.addingTimeInterval(10 * 60), notificationAt: nil),
+            dangerScore: 3
+        )
+        let bodyDebtState = RestEngineState(
+            scheduled: ScheduledRest(kind: .bodyBreak, dueAt: start.addingTimeInterval(10 * 60), notificationAt: nil),
+            dangerScore: 4
+        )
+
+        XCTAssertEqual(MenuStatusPresenter.menuBarTitle(state: eyeDebtState, settings: settings, now: start), "")
+        XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: eyeDebtState, settings: settings), .restGateWithHealthIndicator)
+        XCTAssertEqual(
+            MenuStatusPresenter.menuBarIcon(state: bodyDebtState, settings: settings),
+            .systemSymbolWithHealthIndicator("figure.walk")
+        )
+    }
+
+    func testMenuBarHealthIndicatorRespectsBreakHealthMode() {
+        var settings = RestSettings.defaults
+        settings.presentation.breakHealthMode = false
+        let state = RestEngineState(
+            scheduled: ScheduledRest(kind: .eyeGate, dueAt: start.addingTimeInterval(10 * 60), notificationAt: nil),
+            dangerScore: 3
+        )
+
+        XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: state, settings: settings), .restGate)
     }
 
     func testDefaultMenuBarPresentationStaysIconOnlyAcrossStates() {

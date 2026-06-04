@@ -20,6 +20,20 @@ final class StatusMenuImageFactoryTests: XCTestCase {
         XCTAssertLessThan(averageAlpha(in: bitmap, x: 12...13, y: 12...13), 0.42)
     }
 
+    func testRestDebtMenuBarImageUsesCompactBadgeWithoutTextOccupancy() throws {
+        let image = try XCTUnwrap(StatusMenuImageFactory.image(
+            for: .restGateWithHealthIndicator,
+            accessibilityDescription: "ShouldRest: Debt 3/10"
+        ))
+        let bitmap = try XCTUnwrap(bitmapRepresentation(of: image))
+
+        XCTAssertEqual(StatusMenuImageFactory.cacheKey(for: .restGateWithHealthIndicator), "restGate:brand:health")
+        XCTAssertEqual(image.size, NSSize(width: 18, height: 18))
+        XCTAssertTrue(image.isTemplate)
+        XCTAssertEqual(image.accessibilityDescription, "ShouldRest: Debt 3/10")
+        XCTAssertGreaterThan(maxAlpha(in: bitmap, x: 14...16, y: 14...16), 0.70)
+    }
+
     func testSystemStatusMenuImageUsesRequestedSymbolAndAccessibilityDescription() throws {
         let image = try XCTUnwrap(StatusMenuImageFactory.image(
             for: .systemSymbol("pause.circle"),
@@ -30,6 +44,20 @@ final class StatusMenuImageFactoryTests: XCTestCase {
         XCTAssertTrue(image.isTemplate)
         XCTAssertEqual(image.accessibilityDescription, "Paused")
         XCTAssertNotNil(image.tiffRepresentation)
+    }
+
+    func testSystemStatusMenuImageCanCarryRestDebtBadge() throws {
+        let image = try XCTUnwrap(StatusMenuImageFactory.image(
+            for: .systemSymbolWithHealthIndicator("pause.circle"),
+            accessibilityDescription: "Paused. Debt 4/10"
+        ))
+        let bitmap = try XCTUnwrap(bitmapRepresentation(of: image))
+
+        XCTAssertEqual(StatusMenuImageFactory.cacheKey(for: .systemSymbolWithHealthIndicator("pause.circle")), "symbol:pause.circle:health")
+        XCTAssertEqual(image.size, NSSize(width: 18, height: 18))
+        XCTAssertTrue(image.isTemplate)
+        XCTAssertEqual(image.accessibilityDescription, "Paused. Debt 4/10")
+        XCTAssertGreaterThan(maxAlpha(in: bitmap, x: 14...16, y: 14...16), 0.70)
     }
 
     private func bitmapRepresentation(of image: NSImage) -> NSBitmapImageRep? {

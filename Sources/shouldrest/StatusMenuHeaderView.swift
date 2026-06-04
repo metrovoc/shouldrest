@@ -84,9 +84,9 @@ final class StatusMenuHeaderView: NSView {
 
     private func image(for icon: MenuStatusPresenter.MenuBarIcon) -> NSImage {
         switch icon {
-        case .restGate:
+        case .restGate, .restGateWithHealthIndicator:
             return RestGateIcon.fallbackAppImage(size: Metrics.iconSize, accessibilityDescription: L10n.tr("app.name"))
-        case .systemSymbol(let symbolName):
+        case .systemSymbol(let symbolName), .systemSymbolWithHealthIndicator(let symbolName):
             let configuration = NSImage.SymbolConfiguration(pointSize: 22, weight: .medium)
             let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: L10n.tr("app.name"))?
                 .withSymbolConfiguration(configuration)

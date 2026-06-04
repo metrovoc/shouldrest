@@ -2,11 +2,15 @@ import AppKit
 
 @MainActor
 enum RestGateIcon {
-    static func menuBarImage(accessibilityDescription: String?) -> NSImage {
+    static func menuBarImage(
+        accessibilityDescription: String?,
+        showsHealthIndicator: Bool = false
+    ) -> NSImage {
         let image = image(
             size: 18,
             template: true,
-            accessibilityDescription: accessibilityDescription
+            accessibilityDescription: accessibilityDescription,
+            showsHealthIndicator: showsHealthIndicator
         )
         image.isTemplate = true
         return image
@@ -16,19 +20,24 @@ enum RestGateIcon {
         image(
             size: size,
             template: false,
-            accessibilityDescription: accessibilityDescription
+            accessibilityDescription: accessibilityDescription,
+            showsHealthIndicator: false
         )
     }
 
     private static func image(
         size: CGFloat,
         template: Bool,
-        accessibilityDescription: String?
+        accessibilityDescription: String?,
+        showsHealthIndicator: Bool
     ) -> NSImage {
         let image = NSImage(size: NSSize(width: size, height: size))
         image.lockFocus()
         if template {
             drawTemplateMark(size: size)
+            if showsHealthIndicator {
+                drawTemplateHealthIndicator(size: size)
+            }
         } else {
             drawAppMark(size: size)
         }
@@ -70,6 +79,18 @@ enum RestGateIcon {
             xRadius: corner,
             yRadius: corner
         ).fill()
+    }
+
+    static func drawTemplateHealthIndicator(size: CGFloat) {
+        NSColor.black.setFill()
+        let dotSize = max(3.8, size * 0.21)
+        let dotRect = NSRect(
+            x: size - dotSize - size * 0.08,
+            y: size * 0.08,
+            width: dotSize,
+            height: dotSize
+        )
+        NSBezierPath(ovalIn: dotRect).fill()
     }
 
     private static func drawAppMark(size: CGFloat) {

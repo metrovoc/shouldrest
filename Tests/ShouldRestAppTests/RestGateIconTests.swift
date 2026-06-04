@@ -22,6 +22,18 @@ final class RestGateIconTests: XCTestCase {
         XCTAssertLessThan(averageAlpha(in: bitmap, x: 12...13, y: 12...13), 0.42)
     }
 
+    func testMenuBarHealthIndicatorAddsCompactCornerBadgeWithoutChangingSize() throws {
+        let image = RestGateIcon.menuBarImage(
+            accessibilityDescription: "ShouldRest",
+            showsHealthIndicator: true
+        )
+        let bitmap = try XCTUnwrap(bitmapRepresentation(of: image))
+
+        XCTAssertEqual(image.size, NSSize(width: 18, height: 18))
+        XCTAssertTrue(image.isTemplate)
+        XCTAssertGreaterThan(maxAlpha(in: bitmap, x: 14...16, y: 14...16), 0.70)
+    }
+
     func testFallbackAppIconUsesRequestedSizeAndIsNotTemplate() {
         let image = RestGateIcon.fallbackAppImage(size: 64, accessibilityDescription: "ShouldRest")
 

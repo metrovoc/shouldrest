@@ -887,7 +887,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func updateMenuBarImage(on item: NSStatusItem, accessibilityDescription: String) {
-        let icon = MenuStatusPresenter.menuBarIcon(state: engine.state)
+        let icon = MenuStatusPresenter.menuBarIcon(state: engine.state, settings: settings)
         let key = menuBarImageKey(for: icon)
         if currentMenuBarImageKey != key || item.button?.image == nil {
             currentMenuBarImageKey = key

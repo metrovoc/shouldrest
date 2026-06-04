@@ -201,7 +201,7 @@
 "prefs.currentTimeBody" = "Show current time during Body Break";
 "prefs.currentTimeBodyHelp" = "Show the current clock time next to the Body Break countdown.";
 "prefs.breakHealth" = "Show rest debt indicator";
-"prefs.breakHealthHelp" = "Show a compact menu bar indicator when missed or delayed rests build rest debt.";
+"prefs.breakHealthHelp" = "Show a compact menu bar badge and status-menu debt when missed or delayed rests build up.";
 "prefs.silentNotifications" = "Silent mode";
 "prefs.silentNotificationsHelp" = "Keep notifications visible but mute notification sounds, rest sounds, and sound previews.";
 "prefs.openAtLogin" = "Open at login";

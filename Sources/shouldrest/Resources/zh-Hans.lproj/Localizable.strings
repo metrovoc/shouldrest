@@ -201,7 +201,7 @@
 "prefs.currentTimeBody" = "活动休息中显示当前时间";
 "prefs.currentTimeBodyHelp" = "在活动休息倒计时旁显示当前时钟时间。";
 "prefs.breakHealth" = "显示休息欠账指示器";
-"prefs.breakHealthHelp" = "错过或延后休息累积休息欠账时，在菜单栏显示紧凑指示器。";
+"prefs.breakHealthHelp" = "错过或延后休息累积欠账时，在菜单栏图标显示紧凑角标，并在状态菜单显示欠账。";
 "prefs.silentNotifications" = "静音模式";
 "prefs.silentNotificationsHelp" = "通知仍会显示，但不播放通知声音、休息声音和声音试听。";
 "prefs.openAtLogin" = "登录时打开";
