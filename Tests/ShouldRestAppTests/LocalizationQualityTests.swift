@@ -38,6 +38,18 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(L10n.tr("overlay.bodySkipHelp").contains("推迟"))
     }
 
+    func testBodyPostponeWindowLabelIsStandaloneInSearchAndAccessibility() {
+        defer { L10n.languageOverride = nil }
+
+        L10n.languageOverride = "en"
+        XCTAssertEqual(L10n.tr("prefs.postponeWindowPercent"), "Postpone window")
+        XCTAssertFalse(L10n.tr("prefs.postponeWindowPercent").localizedCaseInsensitiveContains("only during first"))
+
+        L10n.languageOverride = "zh-Hans"
+        XCTAssertEqual(L10n.tr("prefs.postponeWindowPercent"), "可推迟窗口")
+        XCTAssertFalse(L10n.tr("prefs.postponeWindowPercent").contains("仅前段窗口"))
+    }
+
     func testEnglishGlobalPauseCopyUsesRestsAsUmbrellaTerm() {
         L10n.languageOverride = "en"
         defer { L10n.languageOverride = nil }

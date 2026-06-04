@@ -256,7 +256,7 @@
 "prefs.bodyPostponeMinutesHelp" = "How long a Body Break moves forward when you postpone it.";
 "prefs.maxPostpones" = "Postpones allowed";
 "prefs.bodyPostponeLimitHelp" = "How many times one Body Break can be postponed. Set to 0 to hide postpone.";
-"prefs.postponeWindowPercent" = "Only during first";
+"prefs.postponeWindowPercent" = "Postpone window";
 "prefs.bodyPostponeWindowPercentHelp" = "Allow postponing only during the early part of the Body Break timer.";
 "prefs.bodyAllowSkip" = "Allow Body Break skip";
 "prefs.bodyAllowSkipHelp" = "Only Body Break can use ordinary skip. Eye Gate remains non-skippable.";

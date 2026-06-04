@@ -256,7 +256,7 @@
 "prefs.bodyPostponeMinutesHelp" = "点击推迟时，这次活动休息向后移动多久。";
 "prefs.maxPostpones" = "允许推迟";
 "prefs.bodyPostponeLimitHelp" = "同一次活动休息最多可推迟多少次。设为 0 会隐藏推迟。";
-"prefs.postponeWindowPercent" = "仅前段窗口";
+"prefs.postponeWindowPercent" = "可推迟窗口";
 "prefs.bodyPostponeWindowPercentHelp" = "只允许在活动休息计时的前段比例内推迟。";
 "prefs.bodyAllowSkip" = "允许跳过活动休息";
 "prefs.bodyAllowSkipHelp" = "只有活动休息可以普通跳过；护眼休息仍不可跳过。";
