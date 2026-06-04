@@ -36,6 +36,8 @@ final class DebugWindowTests: XCTestCase {
         XCTAssertFalse(textView.isEditable)
         XCTAssertTrue(textView.isSelectable)
         XCTAssertNotNil(textView.font)
+        XCTAssertEqual(textView.toolTip, L10n.tr("debug.textHelp"))
+        XCTAssertEqual(textView.accessibilityHelp(), L10n.tr("debug.textHelp"))
     }
 
     func testDebugActionsUseIconsAndLocalWindowState() throws {
@@ -61,12 +63,20 @@ final class DebugWindowTests: XCTestCase {
             XCTAssertNotNil(button.image)
             XCTAssertEqual(button.imagePosition, .imageLeading)
             XCTAssertFalse(button.toolTip?.isEmpty ?? true)
+            XCTAssertEqual(button.accessibilityLabel(), button.title)
+            XCTAssertEqual(button.accessibilityHelp(), button.toolTip)
         }
+        let status = try XCTUnwrap(contentView.label(withIdentifier: "debug.status"))
+        XCTAssertEqual(status.accessibilityLabel(), L10n.tr("debug.statusLabel"))
+        XCTAssertEqual(status.toolTip, L10n.tr("debug.ready"))
+        XCTAssertEqual(status.accessibilityHelp(), L10n.tr("debug.ready"))
 
         NSPasteboard.general.clearContents()
         buttons.copy.sendAction(buttons.copy.action, to: buttons.copy.target)
         XCTAssertEqual(NSPasteboard.general.string(forType: .string), "state=initial")
-        XCTAssertEqual(contentView.label(withIdentifier: "debug.status")?.stringValue, L10n.tr("debug.copied"))
+        XCTAssertEqual(status.stringValue, L10n.tr("debug.copied"))
+        XCTAssertEqual(status.toolTip, L10n.tr("debug.copied"))
+        XCTAssertEqual(status.accessibilityHelp(), L10n.tr("debug.copied"))
 
         summary = DebugSafetySummary(
             title: "Updated safety state",
@@ -78,7 +88,9 @@ final class DebugWindowTests: XCTestCase {
         XCTAssertEqual(contentView.debugTextView()?.string, "state=refreshed")
         XCTAssertEqual(contentView.label(withIdentifier: "debug.safetyTitle")?.stringValue, "Updated safety state")
         XCTAssertEqual(contentView.label(withIdentifier: "debug.safetyBody")?.stringValue, "Updated recovery guidance")
-        XCTAssertEqual(contentView.label(withIdentifier: "debug.status")?.stringValue, L10n.tr("debug.updated"))
+        XCTAssertEqual(status.stringValue, L10n.tr("debug.updated"))
+        XCTAssertEqual(status.toolTip, L10n.tr("debug.updated"))
+        XCTAssertEqual(status.accessibilityHelp(), L10n.tr("debug.updated"))
     }
 
     func testDebugPathButtonsDisableWhenPathsAreHidden() throws {
@@ -92,6 +104,8 @@ final class DebugWindowTests: XCTestCase {
         XCTAssertFalse(buttons.openSettings.isEnabled)
         XCTAssertEqual(buttons.openLog.toolTip, L10n.tr("debug.pathHidden"))
         XCTAssertEqual(buttons.openSettings.toolTip, L10n.tr("debug.pathHidden"))
+        XCTAssertEqual(buttons.openLog.accessibilityHelp(), L10n.tr("debug.pathHidden"))
+        XCTAssertEqual(buttons.openSettings.accessibilityHelp(), L10n.tr("debug.pathHidden"))
     }
 
     private func actionButtons(in view: NSView) throws -> DebugActionButtons {

@@ -220,6 +220,8 @@ final class DebugWindowController: NSWindowController {
             width: CGFloat.greatestFiniteMagnitude,
             height: CGFloat.greatestFiniteMagnitude
         )
+        textView.toolTip = L10n.tr("debug.textHelp")
+        textView.setAccessibilityHelp(L10n.tr("debug.textHelp"))
     }
 
     private func configureButtons() {
@@ -300,6 +302,8 @@ final class DebugWindowController: NSWindowController {
         button.imagePosition = .imageLeading
         button.imageHugsTitle = true
         button.toolTip = toolTip
+        button.setAccessibilityLabel(title)
+        button.setAccessibilityHelp(toolTip)
         button.setContentHuggingPriority(.required, for: .horizontal)
     }
 
@@ -307,14 +311,29 @@ final class DebugWindowController: NSWindowController {
         statusLabel.identifier = NSUserInterfaceItemIdentifier("debug.status")
         statusLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         statusLabel.textColor = .secondaryLabelColor
-        statusLabel.stringValue = L10n.tr("debug.ready")
+        statusLabel.setAccessibilityLabel(L10n.tr("debug.statusLabel"))
+        setStatus(L10n.tr("debug.ready"))
     }
 
     private func updatePathButtons() {
         openLogButton.isEnabled = logURL != nil
         openSettingsButton.isEnabled = settingsURL != nil
-        openLogButton.toolTip = logURL == nil ? L10n.tr("debug.pathHidden") : L10n.tr("debug.openLogHelp")
-        openSettingsButton.toolTip = settingsURL == nil ? L10n.tr("debug.pathHidden") : L10n.tr("debug.openSettingsHelp")
+        setButtonHelp(openLogButton, logURL == nil ? L10n.tr("debug.pathHidden") : L10n.tr("debug.openLogHelp"))
+        setButtonHelp(
+            openSettingsButton,
+            settingsURL == nil ? L10n.tr("debug.pathHidden") : L10n.tr("debug.openSettingsHelp")
+        )
+    }
+
+    private func setButtonHelp(_ button: NSButton, _ help: String) {
+        button.toolTip = help
+        button.setAccessibilityHelp(help)
+    }
+
+    private func setStatus(_ status: String) {
+        statusLabel.stringValue = status
+        statusLabel.toolTip = status
+        statusLabel.setAccessibilityHelp(status)
     }
 
     private func updateSafetySummary() {
@@ -340,12 +359,12 @@ final class DebugWindowController: NSWindowController {
     @objc private func copyPressed() {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(textView.string, forType: .string)
-        statusLabel.stringValue = L10n.tr("debug.copied")
+        setStatus(L10n.tr("debug.copied"))
     }
 
     @objc private func refreshPressed() {
         update(text: debugInfoProvider(), logURL: logURL, settingsURL: settingsURL)
-        statusLabel.stringValue = L10n.tr("debug.updated")
+        setStatus(L10n.tr("debug.updated"))
     }
 
     @objc private func openLogPressed() {

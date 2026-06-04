@@ -138,6 +138,7 @@
 "debug.title" = "ShouldRest Diagnostics";
 "debug.heading" = "Diagnostics";
 "debug.subtitle" = "Current rest state, app paths, and settings for troubleshooting.";
+"debug.textHelp" = "Selectable diagnostics text. Use Copy to place it on the clipboard.";
 "debug.copy" = "Copy";
 "debug.copyHelp" = "Copy the visible diagnostics";
 "debug.refresh" = "Refresh";
@@ -147,6 +148,7 @@
 "debug.openSettings" = "Settings";
 "debug.openSettingsHelp" = "Reveal the settings file";
 "debug.pathHidden" = "Path access is hidden in Settings";
+"debug.statusLabel" = "Diagnostics status";
 "debug.ready" = "Ready";
 "debug.copied" = "Copied";
 "debug.updated" = "Updated";

@@ -138,6 +138,7 @@
 "debug.title" = "ShouldRest 诊断";
 "debug.heading" = "诊断信息";
 "debug.subtitle" = "当前休息状态、应用路径和设置，用于排查问题。";
+"debug.textHelp" = "可选择的诊断文本。使用复制按钮可放入剪贴板。";
 "debug.copy" = "复制";
 "debug.copyHelp" = "复制当前可见的诊断信息";
 "debug.refresh" = "刷新";
@@ -147,6 +148,7 @@
 "debug.openSettings" = "设置";
 "debug.openSettingsHelp" = "在 Finder 中显示设置文件";
 "debug.pathHidden" = "路径访问已在设置中隐藏";
+"debug.statusLabel" = "诊断状态";
 "debug.ready" = "就绪";
 "debug.copied" = "已复制";
 "debug.updated" = "已刷新";
