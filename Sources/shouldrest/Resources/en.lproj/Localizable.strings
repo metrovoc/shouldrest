@@ -480,9 +480,9 @@
 "prefs.updateFeedURLHelp" = "Where ShouldRest looks for new releases. Leave blank if you manage updates yourself.";
 "prefs.preferencesMessage" = "Preferences message";
 "prefs.preferencesMessageHelp" = "Optional message shown at the top of Preferences for managed setups.";
-"prefs.showAdminControls" = "Administrative controls";
-"prefs.hideAdminControls" = "Hide administrative controls";
-"prefs.adminControlsHelp" = "Use these options for deployment policy and support diagnostics, not day-to-day rest behavior.";
+"prefs.showAdminControls" = "Advanced support controls";
+"prefs.hideAdminControls" = "Hide advanced support controls";
+"prefs.adminControlsHelp" = "Use these rarely changed support options only when you need to hide update, file-location, or strict-rest controls.";
 "prefs.autosaveReady" = "All changes saved";
 "prefs.headerSubtitle" = "Strict Eye Gates, flexible Body Breaks, and settings that save themselves.";
 "prefs.autosaveEditing" = "Editing…";

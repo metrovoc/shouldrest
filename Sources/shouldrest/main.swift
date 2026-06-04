@@ -2975,8 +2975,7 @@ final class RestOverlayView: NSView {
     }
 
     private func armEmergencyOverrideLocallyIfNeeded() {
-        guard emergencyRemainingSeconds != nil,
-              !emergencyOverrideArmed else {
+        guard emergencyRemainingSeconds != nil else {
             return
         }
         emergencyRemainingSeconds = 0

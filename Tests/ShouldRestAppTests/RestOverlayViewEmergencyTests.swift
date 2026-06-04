@@ -541,6 +541,30 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(button.accessibilityLabel(), L10n.tr("overlay.emergencyOverride"))
     }
 
+    func testArmedEmergencyReturningArmedReenablesSecondClickConfirmation() throws {
+        let view = configuredEyeGateOverlay(
+            remainingSeconds: 0,
+            isArmed: true
+        )
+        var requestCount = 0
+        view.onEmergencyOverrideRequested = {
+            requestCount += 1
+            return .armed
+        }
+
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        button.performClick(nil)
+
+        XCTAssertFalse(button.isEnabled)
+        XCTAssertEqual(requestCount, 0)
+        drainMainQueue()
+
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertTrue(button.isEnabled)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+        XCTAssertEqual(button.accessibilityLabel(), L10n.tr("overlay.emergencyOverrideConfirm"))
+    }
+
     func testUnavailableEmergencyRequestClearsLocalConfirmationState() throws {
         let view = configuredEyeGateOverlay(remainingSeconds: 0)
         var requestCount = 0
@@ -870,6 +894,25 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(requestCount, 1)
     }
 
+    func testMouseUpAfterFirstEmergencyClickDoesNotConfirmAsHold() throws {
+        let view = configuredEyeGateOverlay()
+        view.layoutSubtreeIfNeeded()
+        var requestCount = 0
+        view.onEmergencyOverrideRequested = {
+            requestCount += 1
+            return requestCount == 1 ? .armed : .complete
+        }
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+
+        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        view.mouseUp(with: try mouseUpEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        drainMainQueue()
+
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+        XCTAssertTrue(button.isEnabled)
+    }
+
     func testSingleEmergencyMouseDownWithLegacyHoldOnlyArmsAndNeverCompletes() throws {
         let start = Date(timeIntervalSinceReferenceDate: 7_000)
         var settings = RestSettings.defaults
@@ -1064,6 +1107,20 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             eventNumber: 0,
             clickCount: clickCount,
             pressure: 1
+        ))
+    }
+
+    private func mouseUpEvent(at point: NSPoint, clickCount: Int) throws -> NSEvent {
+        try XCTUnwrap(NSEvent.mouseEvent(
+            with: .leftMouseUp,
+            location: point,
+            modifierFlags: [],
+            timestamp: 0,
+            windowNumber: 0,
+            context: nil,
+            eventNumber: 0,
+            clickCount: clickCount,
+            pressure: 0
         ))
     }
 

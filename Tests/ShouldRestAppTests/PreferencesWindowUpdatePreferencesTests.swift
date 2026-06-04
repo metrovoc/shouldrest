@@ -70,6 +70,11 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         let contentView = try XCTUnwrap(controller.window?.contentView)
 
         try selectAdvancedTab(in: contentView)
+        let supportDisclosure = try XCTUnwrap(view(withIdentifier: "adminControls", in: contentView) as? NSButton)
+
+        XCTAssertEqual(supportDisclosure.title, L10n.tr("prefs.hideAdminControls"))
+        XCTAssertEqual(supportDisclosure.toolTip, L10n.tr("prefs.adminControlsHelp"))
+        XCTAssertEqual(supportDisclosure.accessibilityHelp(), L10n.tr("prefs.adminControlsHelp"))
 
         let expectedHelp: [(identifier: String, helpKey: String)] = [
             ("prefs.openAtLogin", "prefs.openAtLoginHelp"),
@@ -97,6 +102,10 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
 
         let visibleTexts = visibleTexts(in: contentView)
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.pauseForSuspendOrLock")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.hideAdminControls")))
+        XCTAssertFalse(visibleTexts.contains("Administrative controls"))
+        XCTAssertFalse(visibleTexts.contains("Hide administrative controls"))
+        XCTAssertFalse(L10n.tr("prefs.adminControlsHelp").localizedCaseInsensitiveContains("deployment"))
         XCTAssertFalse(visibleTexts.contains("Pause scheduler on sleep or lock"))
     }
 
