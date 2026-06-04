@@ -76,5 +76,21 @@ final class StatusMenuActionIconTests: XCTestCase {
         XCTAssertEqual(item.title, L10n.tr("menu.emergencyOverlayOnly"))
         XCTAssertEqual(item.toolTip, L10n.tr("menu.emergencyOverlayOnlyHelp"))
         XCTAssertEqual(item.accessibilityHelp(), L10n.tr("menu.emergencyOverlayOnlyHelp"))
+        XCTAssertNil(item.image)
+    }
+
+    func testDisabledStatusMenuItemsCanCarryAccessibleStatusIcon() {
+        let item = DisabledStatusMenuItemFactory.make(
+            title: L10n.tr("menu.emergencyOverlayOnly"),
+            toolTip: L10n.tr("menu.emergencyOverlayOnlyHelp"),
+            symbolName: "info.circle"
+        )
+
+        XCTAssertFalse(item.isEnabled)
+        XCTAssertNotNil(item.image)
+        XCTAssertTrue(item.image?.isTemplate ?? false)
+        XCTAssertEqual(item.image?.accessibilityDescription, L10n.tr("menu.emergencyOverlayOnly"))
+        XCTAssertEqual(item.toolTip, L10n.tr("menu.emergencyOverlayOnlyHelp"))
+        XCTAssertEqual(item.accessibilityHelp(), L10n.tr("menu.emergencyOverlayOnlyHelp"))
     }
 }

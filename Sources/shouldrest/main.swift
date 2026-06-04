@@ -321,12 +321,24 @@ enum StatusMenuActionHelp {
 }
 
 enum DisabledStatusMenuItemFactory {
-    static func make(title: String, toolTip: String? = nil) -> NSMenuItem {
+    static func make(title: String, toolTip: String? = nil, symbolName: String? = nil) -> NSMenuItem {
         let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
         item.isEnabled = false
         item.toolTip = toolTip
         item.setAccessibilityHelp(toolTip)
+        if let symbolName {
+            item.image = image(symbolName, accessibilityDescription: title)
+        }
         return item
+    }
+
+    private static func image(_ symbolName: String, accessibilityDescription: String) -> NSImage? {
+        let configuration = NSImage.SymbolConfiguration(pointSize: 13, weight: .regular)
+        let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: accessibilityDescription)?
+            .withSymbolConfiguration(configuration)
+        image?.isTemplate = true
+        image?.accessibilityDescription = accessibilityDescription
+        return image
     }
 }
 
@@ -785,11 +797,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func disabledItem(_ title: String, symbolName: String? = nil, toolTip: String? = nil) -> NSMenuItem {
-        let item = DisabledStatusMenuItemFactory.make(title: title, toolTip: toolTip)
-        if let symbolName {
-            item.image = menuItemImage(symbolName)
-        }
-        return item
+        DisabledStatusMenuItemFactory.make(title: title, toolTip: toolTip, symbolName: symbolName)
     }
 
     private func settingsFileMenuItem() -> NSMenuItem {
