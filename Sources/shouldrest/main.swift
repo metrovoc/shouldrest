@@ -267,6 +267,59 @@ enum StatusMenuActionIcon {
     }
 }
 
+enum StatusMenuActionHelp {
+    static func help(forActionName actionName: String) -> String? {
+        switch actionName.replacingOccurrences(of: ":", with: "") {
+        case "openLatestRelease":
+            return L10n.tr("menu.downloadLatestHelp")
+        case "takeEyeGateNow":
+            return L10n.tr("menu.takeEyeGateNowHelp")
+        case "takeBodyBreakNow":
+            return L10n.tr("menu.takeBodyBreakNowHelp")
+        case "takeNextScheduledRestNow":
+            return L10n.tr("menu.takeNextScheduledRestNowHelp")
+        case "finishActiveBreak":
+            return L10n.tr("menu.finishActiveBreakHelp")
+        case "emergencyOverrideEyeGate":
+            return L10n.tr("menu.emergencyOverrideHelp")
+        case "postponeBodyBreak":
+            return L10n.tr("menu.postponeBodyBreakHelp")
+        case "skipBodyBreak":
+            return L10n.tr("menu.skipBodyBreakHelp")
+        case "resumeBreaks":
+            return L10n.tr("menu.resumeHelp")
+        case "pauseFor30Minutes", "pauseFor1Hour", "pauseFor2Hours", "pauseFor5Hours":
+            return L10n.tr("menu.pauseDurationHelp")
+        case "pauseUntilMorning":
+            return L10n.tr("menu.pauseUntilMorningHelp")
+        case "pauseIndefinitely":
+            return L10n.tr("menu.pauseIndefinitelyHelp")
+        case "resetBreaks":
+            return L10n.tr("menu.resetHelp")
+        case "openPreferences":
+            return L10n.tr("menu.preferencesHelp")
+        case "checkForUpdatesNow":
+            return L10n.tr("menu.checkUpdatesHelp")
+        case "copyDebugInfo":
+            return L10n.tr("menu.copyDebugHelp")
+        case "openDebugPanel":
+            return L10n.tr("menu.debugPanelHelp")
+        case "showAboutPanel":
+            return L10n.tr("menu.aboutHelp")
+        case "showSettingsFile":
+            return L10n.tr("menu.showSettingsFileHelp")
+        case "copySettingsPath":
+            return L10n.tr("menu.copySettingsPathHelp")
+        default:
+            return nil
+        }
+    }
+
+    static func help(for selector: Selector) -> String? {
+        help(forActionName: NSStringFromSelector(selector))
+    }
+}
+
 enum DisabledStatusMenuItemFactory {
     static func make(title: String, toolTip: String? = nil) -> NSMenuItem {
         let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
@@ -637,6 +690,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             ))
             let pauseItem = NSMenuItem(title: L10n.tr("menu.pause"), action: nil, keyEquivalent: "")
             pauseItem.image = menuItemImage("pause.circle")
+            setMenuItemHelp(L10n.tr("menu.pauseHelp"), on: pauseItem)
             pauseItem.submenu = pauseMenu
             menu.addItem(pauseItem)
         }
@@ -648,6 +702,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         } else {
             resetItem.isEnabled = true
         }
+        resetItem.setAccessibilityHelp(resetItem.toolTip)
         menu.addItem(resetItem)
         menu.addItem(.separator())
         menu.addItem(actionItem(L10n.tr("menu.preferences"), #selector(openPreferences)))
@@ -660,7 +715,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             quitItem.toolTip = message
         } else {
             quitItem.isEnabled = true
+            quitItem.toolTip = L10n.tr("menu.quitHelp")
         }
+        quitItem.setAccessibilityHelp(quitItem.toolTip)
         quitItem.image = menuItemImage("power")
         menu.addItem(quitItem)
         setStatusMenu(menu, on: item)
@@ -739,14 +796,17 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         let item = NSMenuItem(title: L10n.tr("menu.settingsFile"), action: nil, keyEquivalent: "")
         item.image = menuItemImage("doc.text")
         item.toolTip = settingsStore.fileURL.path
+        item.setAccessibilityHelp(L10n.tr("menu.settingsFileHelp"))
 
         let submenu = NSMenu()
         let showItem = actionItem(L10n.tr("menu.showSettingsFile"), #selector(showSettingsFile))
-        showItem.toolTip = settingsStore.fileURL.path
+        showItem.toolTip = "\(L10n.tr("menu.showSettingsFileHelp"))\n\(settingsStore.fileURL.path)"
+        showItem.setAccessibilityHelp(showItem.toolTip)
         submenu.addItem(showItem)
 
         let copyItem = actionItem(L10n.tr("menu.copySettingsPath"), #selector(copySettingsPath))
-        copyItem.toolTip = settingsStore.fileURL.path
+        copyItem.toolTip = "\(L10n.tr("menu.copySettingsPathHelp"))\n\(settingsStore.fileURL.path)"
+        copyItem.setAccessibilityHelp(copyItem.toolTip)
         submenu.addItem(copyItem)
 
         item.submenu = submenu
@@ -756,6 +816,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func supportMenuItem() -> NSMenuItem {
         let item = NSMenuItem(title: L10n.tr("menu.support"), action: nil, keyEquivalent: "")
         item.image = menuItemImage("questionmark.circle")
+        setMenuItemHelp(L10n.tr("menu.supportHelp"), on: item)
 
         let submenu = NSMenu()
         if !settings.admin.disableAppUpdateFeatures {
@@ -779,7 +840,13 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         if let symbolName = StatusMenuActionIcon.symbolName(for: action) {
             item.image = menuItemImage(symbolName)
         }
+        setMenuItemHelp(StatusMenuActionHelp.help(for: action), on: item)
         return item
+    }
+
+    private func setMenuItemHelp(_ help: String?, on item: NSMenuItem) {
+        item.toolTip = help
+        item.setAccessibilityHelp(help)
     }
 
     private func canPostponeBodyBreak(_ session: RestSession, now: Date) -> Bool {

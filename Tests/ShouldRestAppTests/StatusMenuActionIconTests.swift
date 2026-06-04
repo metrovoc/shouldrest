@@ -29,6 +29,43 @@ final class StatusMenuActionIconTests: XCTestCase {
         XCTAssertNil(StatusMenuActionIcon.symbolName(forActionName: "notARealMenuAction"))
     }
 
+    func testHighFrequencyMenuActionsHaveBehaviorHelp() {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        let expectedHelp = [
+            "takeEyeGateNow": L10n.tr("menu.takeEyeGateNowHelp"),
+            "takeBodyBreakNow": L10n.tr("menu.takeBodyBreakNowHelp"),
+            "takeNextScheduledRestNow": L10n.tr("menu.takeNextScheduledRestNowHelp"),
+            "postponeBodyBreak": L10n.tr("menu.postponeBodyBreakHelp"),
+            "skipBodyBreak": L10n.tr("menu.skipBodyBreakHelp"),
+            "resumeBreaks": L10n.tr("menu.resumeHelp"),
+            "pauseFor30Minutes": L10n.tr("menu.pauseDurationHelp"),
+            "pauseUntilMorning": L10n.tr("menu.pauseUntilMorningHelp"),
+            "pauseIndefinitely": L10n.tr("menu.pauseIndefinitelyHelp"),
+            "resetBreaks": L10n.tr("menu.resetHelp"),
+            "openPreferences": L10n.tr("menu.preferencesHelp"),
+            "checkForUpdatesNow": L10n.tr("menu.checkUpdatesHelp"),
+            "copyDebugInfo": L10n.tr("menu.copyDebugHelp"),
+            "openDebugPanel": L10n.tr("menu.debugPanelHelp"),
+            "showAboutPanel": L10n.tr("menu.aboutHelp"),
+            "showSettingsFile": L10n.tr("menu.showSettingsFileHelp"),
+            "copySettingsPath": L10n.tr("menu.copySettingsPathHelp")
+        ]
+
+        for (actionName, help) in expectedHelp {
+            XCTAssertEqual(StatusMenuActionHelp.help(forActionName: actionName), help, actionName)
+        }
+
+        let emergencyHelp = try! XCTUnwrap(StatusMenuActionHelp.help(forActionName: "emergencyOverrideEyeGate"))
+        XCTAssertTrue(emergencyHelp.contains("overlay"))
+        XCTAssertFalse(emergencyHelp.localizedCaseInsensitiveContains("shortcut again"))
+    }
+
+    func testUnknownMenuActionsDoNotClaimHelp() {
+        XCTAssertNil(StatusMenuActionHelp.help(forActionName: "notARealMenuAction"))
+    }
+
     func testDisabledStatusMenuItemsCarryTooltipAndAccessibilityHelp() {
         let item = DisabledStatusMenuItemFactory.make(
             title: L10n.tr("menu.emergencyOverlayOnly"),
