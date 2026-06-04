@@ -2375,9 +2375,11 @@ final class RestOverlayView: NSView {
     private var emergencySessionID: UUID?
     private var emergencyPanelWidthConstraint: NSLayoutConstraint?
     private var emergencyPanelHeightConstraint: NSLayoutConstraint?
+    private var bodyActionRequestPending = false
     var onEmergencyOverrideRequested: (() -> Void)?
     var bodyActions: BodyOverlayActions? {
         didSet {
+            bodyActionRequestPending = false
             updateBodyActionButtons()
         }
     }
@@ -2668,18 +2670,28 @@ final class RestOverlayView: NSView {
     }
 
     @objc private func bodyPostponePressed() {
-        guard bodyActions?.canPostpone == true else { return }
-        bodyActions?.postpone?()
+        requestBodyActionIfAvailable(bodyActions?.canPostpone == true, action: bodyActions?.postpone)
     }
 
     @objc private func bodySkipPressed() {
-        guard bodyActions?.canSkip == true else { return }
-        bodyActions?.skip?()
+        requestBodyActionIfAvailable(bodyActions?.canSkip == true, action: bodyActions?.skip)
     }
 
     @objc private func bodyFinishPressed() {
-        guard bodyActions?.canFinish == true else { return }
-        bodyActions?.finish?()
+        requestBodyActionIfAvailable(bodyActions?.canFinish == true, action: bodyActions?.finish)
+    }
+
+    private func requestBodyActionIfAvailable(_ isAvailable: Bool, action: (() -> Void)?) {
+        guard isAvailable,
+              let action,
+              !bodyActionRequestPending else {
+            return
+        }
+        bodyActionRequestPending = true
+        updateBodyActionButtons()
+        DispatchQueue.main.async {
+            action()
+        }
     }
 
     func performEmergencyOverrideKeyCommand() {
@@ -2817,6 +2829,10 @@ final class RestOverlayView: NSView {
         bodyPostponeButton.isHidden = !(actions?.canPostpone ?? false)
         bodySkipButton.isHidden = !(actions?.canSkip ?? false)
         bodyFinishButton.isHidden = !(actions?.canFinish ?? false)
+        [bodyPostponeButton, bodySkipButton, bodyFinishButton].forEach { button in
+            button.isEnabled = !button.isHidden && !bodyActionRequestPending
+            button.alphaValue = bodyActionRequestPending ? 0.42 : 0.78
+        }
         bodyActionStack.isHidden = bodyPostponeButton.isHidden && bodySkipButton.isHidden && bodyFinishButton.isHidden
         bodyActionPanel.isHidden = bodyActionStack.isHidden
     }

@@ -5,25 +5,44 @@ import XCTest
 
 @MainActor
 final class RestOverlayViewBodyActionsTests: XCTestCase {
-    func testAvailableBodyOverlayActionsInvokeCallbacks() {
-        var didPostpone = false
-        var didSkip = false
+    func testAvailableBodyOverlayActionsRunAfterEventReturns() {
+        assertBodyActionDefersUntilNextMainQueueTurn(
+            action: .postpone,
+            expectedInvocation: "postpone"
+        )
+        assertBodyActionDefersUntilNextMainQueueTurn(
+            action: .skip,
+            expectedInvocation: "skip"
+        )
+        assertBodyActionDefersUntilNextMainQueueTurn(
+            action: .finish,
+            expectedInvocation: "finish"
+        )
+    }
+
+    func testPendingBodyOverlayActionDisablesButtonsAndPreventsSecondQueuedAction() throws {
+        var invokedActions: [String] = []
         let view = configuredBodyOverlay(
             actions: BodyOverlayActions(
                 canPostpone: true,
                 canFinish: false,
                 canSkip: true,
-                postpone: { didPostpone = true },
+                postpone: { invokedActions.append("postpone") },
                 finish: nil,
-                skip: { didSkip = true }
+                skip: { invokedActions.append("skip") }
             )
         )
+        let postponeButton = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodyPostpone.button") as? NSButton)
+        let skipButton = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodySkip.button") as? NSButton)
 
         view.performBodyPostponeAction()
-        view.performBodySkipAction()
 
-        XCTAssertTrue(didPostpone)
-        XCTAssertTrue(didSkip)
+        XCTAssertFalse(postponeButton.isEnabled)
+        XCTAssertFalse(skipButton.isEnabled)
+        view.performBodySkipAction()
+        XCTAssertTrue(invokedActions.isEmpty)
+        drainMainQueue()
+        XCTAssertEqual(invokedActions, ["postpone"])
     }
 
     func testAvailableBodyOverlayActionsUseStableActionRailAffordances() throws {
@@ -101,6 +120,8 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
 
         view.performBodyFinishAction()
 
+        XCTAssertFalse(didFinish)
+        drainMainQueue()
         XCTAssertTrue(didFinish)
     }
 
@@ -122,6 +143,8 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
         XCTAssertFalse(finishButton.isHidden)
         view.performBodyFinishAction()
 
+        XCTAssertFalse(didFinish)
+        drainMainQueue()
         XCTAssertTrue(didFinish)
     }
 
@@ -171,7 +194,47 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
 
         view.performBodySkipAction()
 
+        XCTAssertFalse(didSkip)
+        drainMainQueue()
         XCTAssertTrue(didSkip)
+    }
+
+    private enum BodyActionUnderTest {
+        case postpone
+        case skip
+        case finish
+    }
+
+    private func assertBodyActionDefersUntilNextMainQueueTurn(
+        action: BodyActionUnderTest,
+        expectedInvocation: String,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        var invokedActions: [String] = []
+        let view = configuredBodyOverlay(
+            actions: BodyOverlayActions(
+                canPostpone: action == .postpone,
+                canFinish: action == .finish,
+                canSkip: action == .skip,
+                postpone: { invokedActions.append("postpone") },
+                finish: { invokedActions.append("finish") },
+                skip: { invokedActions.append("skip") }
+            )
+        )
+
+        switch action {
+        case .postpone:
+            view.performBodyPostponeAction()
+        case .skip:
+            view.performBodySkipAction()
+        case .finish:
+            view.performBodyFinishAction()
+        }
+
+        XCTAssertTrue(invokedActions.isEmpty, file: file, line: line)
+        drainMainQueue(file: file, line: line)
+        XCTAssertEqual(invokedActions, [expectedInvocation], file: file, line: line)
     }
 
     private func configuredBodyOverlay(
@@ -248,6 +311,18 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
             file: file,
             line: line
         )
+    }
+
+    private func drainMainQueue(
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        let expectation = XCTestExpectation(description: "drain main queue")
+        DispatchQueue.main.async {
+            expectation.fulfill()
+        }
+        let result = XCTWaiter().wait(for: [expectation], timeout: 1)
+        XCTAssertEqual(result, .completed, file: file, line: line)
     }
 }
 
