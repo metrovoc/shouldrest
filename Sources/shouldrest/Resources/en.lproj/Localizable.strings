@@ -421,6 +421,7 @@
 "prefs.localImagePath" = "Body Break image";
 "prefs.chooseFile" = "Choose…";
 "prefs.chooseBodyImageHelp" = "Choose a local image for Body Break content.";
+"prefs.chooseBodyImageDisabledBodyOffHelp" = "Turn on Body Break before choosing an image.";
 "prefs.clear" = "Clear";
 "prefs.clearBodyImageHelp" = "Clear the selected Body Break image.";
 "prefs.clearBodyImageDisabledBodyOffHelp" = "Turn on Body Break before clearing the image.";

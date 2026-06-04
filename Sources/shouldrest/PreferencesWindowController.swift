@@ -2944,12 +2944,20 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         customBodyTextScrollView.alphaValue = bodyBreakEnabled ? 1 : 0.55
         customBodyIdeasJSONEditor.isEditable = bodyBreakEnabled
         customBodyIdeasJSONScrollView.alphaValue = bodyBreakEnabled ? 1 : 0.55
-        localImageChooseButton.isEnabled = bodyBreakEnabled
+        updateLocalImageChooseButtonState(bodyBreakEnabled: bodyBreakEnabled)
         updateLocalImageClearButtonState(bodyBreakEnabled: bodyBreakEnabled)
         localImagePreview.isDropEnabled = bodyBreakEnabled
         updateLocalImagePreviewDropHelp(bodyBreakEnabled: bodyBreakEnabled)
         updateBodyContentSummary()
         updateCustomBodyAddIdeaButtonState()
+    }
+
+    private func updateLocalImageChooseButtonState(bodyBreakEnabled: Bool) {
+        localImageChooseButton.isEnabled = bodyBreakEnabled
+        let help = bodyBreakEnabled
+            ? L10n.tr("prefs.chooseBodyImageHelp")
+            : L10n.tr("prefs.chooseBodyImageDisabledBodyOffHelp")
+        setTextButtonHelp(title: localImageChooseButton.title, help: help, on: localImageChooseButton)
     }
 
     private func updateLocalImagePreviewDropHelp(bodyBreakEnabled: Bool) {

@@ -421,6 +421,7 @@
 "prefs.localImagePath" = "活动休息图片";
 "prefs.chooseFile" = "选择…";
 "prefs.chooseBodyImageHelp" = "选择一张本地图片作为活动休息内容。";
+"prefs.chooseBodyImageDisabledBodyOffHelp" = "开启活动休息后才能选择图片。";
 "prefs.clear" = "清空";
 "prefs.clearBodyImageHelp" = "清空当前选择的活动休息图片。";
 "prefs.clearBodyImageDisabledBodyOffHelp" = "开启活动休息后才能清空图片。";
