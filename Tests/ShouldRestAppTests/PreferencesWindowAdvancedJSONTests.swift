@@ -134,6 +134,76 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertEqual(ideasScrollView.accessibilityHelp(), L10n.tr("prefs.advancedIdeasGuidance"))
     }
 
+    func testAdvancedJSONEditorsOfferCopyAndRestoreActions() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "alpha",
+                name: "Alpha",
+                matchTerms: ["alpha.app"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        settings.contentLibrary.customBodyBreakIdeas = [
+            RestIdea(id: "stretch", kind: .bodyBreak, title: "Stretch", body: "Open shoulders")
+        ]
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let appEditor = try XCTUnwrap(view(withIdentifier: "appExclusionsJSONEditor", in: contentView) as? NSTextView)
+        let appCopy = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionsCopyBulkButton", in: contentView) as? NSButton)
+        let appRestore = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionsRestoreBulkButton", in: contentView) as? NSButton)
+        let ideasEditor = try XCTUnwrap(view(withIdentifier: "customBodyIdeasJSONEditor", in: contentView) as? NSTextView)
+        let ideasCopy = try XCTUnwrap(view(withIdentifier: "prefs.customBodyIdeasCopyBulkButton", in: contentView) as? NSButton)
+        let ideasRestore = try XCTUnwrap(view(withIdentifier: "prefs.customBodyIdeasRestoreBulkButton", in: contentView) as? NSButton)
+
+        XCTAssertEqual(appCopy.title, L10n.tr("prefs.copyBulkEditor"))
+        XCTAssertEqual(appCopy.toolTip, L10n.tr("prefs.copyAppRulesBulkEditorHelp"))
+        XCTAssertEqual(appCopy.accessibilityLabel(), L10n.tr("prefs.copyBulkEditor"))
+        XCTAssertEqual(appCopy.accessibilityHelp(), L10n.tr("prefs.copyAppRulesBulkEditorHelp"))
+        XCTAssertEqual(appCopy.image?.accessibilityDescription, L10n.tr("prefs.copyBulkEditor"))
+        XCTAssertEqual(appRestore.title, L10n.tr("prefs.restoreBulkEditor"))
+        XCTAssertEqual(appRestore.toolTip, L10n.tr("prefs.restoreAppRulesBulkEditorHelp"))
+        XCTAssertEqual(appRestore.accessibilityHelp(), L10n.tr("prefs.restoreAppRulesBulkEditorHelp"))
+        XCTAssertEqual(appRestore.image?.accessibilityDescription, L10n.tr("prefs.restoreBulkEditor"))
+        XCTAssertEqual(ideasCopy.toolTip, L10n.tr("prefs.copyIdeasBulkEditorHelp"))
+        XCTAssertEqual(ideasRestore.toolTip, L10n.tr("prefs.restoreIdeasBulkEditorHelp"))
+        XCTAssertTrue(appCopy.isEnabled)
+        XCTAssertFalse(appRestore.isEnabled)
+        XCTAssertTrue(ideasCopy.isEnabled)
+        XCTAssertFalse(ideasRestore.isEnabled)
+
+        NSPasteboard.general.clearContents()
+        XCTAssertTrue(sendAction(from: appCopy))
+        XCTAssertEqual(NSPasteboard.general.string(forType: .string), appEditor.string)
+
+        appEditor.string = "{ invalid json"
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: appEditor))
+        XCTAssertTrue(appRestore.isEnabled)
+
+        XCTAssertTrue(sendAction(from: appRestore))
+        XCTAssertTrue(appEditor.string.contains("Alpha"))
+        XCTAssertFalse(appRestore.isEnabled)
+        XCTAssertTrue(controller.flushPendingAutosave(showAlerts: false))
+        XCTAssertEqual(savedSettings.value?.appExclusions.first?.name, "Alpha")
+
+        NSPasteboard.general.clearContents()
+        XCTAssertTrue(sendAction(from: ideasCopy))
+        XCTAssertEqual(NSPasteboard.general.string(forType: .string), ideasEditor.string)
+
+        ideasEditor.string = "{ invalid json"
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: ideasEditor))
+        XCTAssertTrue(ideasRestore.isEnabled)
+
+        XCTAssertTrue(sendAction(from: ideasRestore))
+        XCTAssertTrue(ideasEditor.string.contains("Stretch"))
+        XCTAssertFalse(ideasRestore.isEnabled)
+        XCTAssertTrue(controller.flushPendingAutosave(showAlerts: false))
+        XCTAssertEqual(savedSettings.value?.contentLibrary.customBodyBreakIdeas.first?.title, "Stretch")
+    }
+
     func testAdvancedJSONLoadsPrettyPrintedMultilineContent() throws {
         var settings = RestSettings.defaults
         settings.appExclusions = [

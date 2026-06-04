@@ -327,6 +327,10 @@
 "prefs.hideAdvancedRules" = "Hide Bulk Editor";
 "prefs.advancedRulesHelp" = "Use this only for importing, exporting, or pasting many app rules. The saved app rules list is the normal editor.";
 "prefs.advancedRulesGuidance" = "Paste a JSON array only for bulk import or export. Invalid text pauses autosave until fixed; use Saved app rules for normal edits.";
+"prefs.copyBulkEditor" = "Copy";
+"prefs.restoreBulkEditor" = "Restore Saved";
+"prefs.copyAppRulesBulkEditorHelp" = "Copy the current app rules bulk editor content for export or backup.";
+"prefs.restoreAppRulesBulkEditorHelp" = "Replace the app rules bulk editor content with the last saved app rules.";
 "prefs.exclusionMode.pauseWhenMatched" = "Pause while matched";
 "prefs.exclusionMode.resumeOnlyWhenMatched" = "Run only while matched";
 "prefs.sectionPresentation" = "Presentation and Sound";
@@ -392,6 +396,8 @@
 "prefs.hideAdvancedIdeas" = "Hide Bulk Editor";
 "prefs.advancedIdeasHelp" = "Use this only for importing, exporting, or pasting many ideas. The custom ideas list is the normal editor.";
 "prefs.advancedIdeasGuidance" = "Paste a JSON array only for bulk import or export. Invalid text pauses autosave until fixed; use Custom ideas for normal edits.";
+"prefs.copyIdeasBulkEditorHelp" = "Copy the current ideas bulk editor content for export or backup.";
+"prefs.restoreIdeasBulkEditorHelp" = "Replace the ideas bulk editor content with the last saved custom ideas.";
 "prefs.localImagePath" = "Body Break image";
 "prefs.chooseFile" = "Choose...";
 "prefs.chooseBodyImageHelp" = "Choose a local image for Body Break content.";

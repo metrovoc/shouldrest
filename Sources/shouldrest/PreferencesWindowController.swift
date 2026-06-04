@@ -492,6 +492,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let appExclusionsJSONEditor = NSTextView()
     private let appExclusionsJSONScrollView = NSScrollView()
     private let appExclusionsAdvancedButton = NSButton()
+    private let appExclusionsCopyBulkButton = NSButton()
+    private let appExclusionsRestoreBulkButton = NSButton()
     private var appExclusionRulesListRow: NSView?
     private var appExclusionsJSONRow: NSView?
     private var appExclusionRuleRemoveControls: [(id: String, button: NSButton)] = []
@@ -526,6 +528,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let customBodyIdeasJSONEditor = NSTextView()
     private let customBodyIdeasJSONScrollView = NSScrollView()
     private let customBodyIdeasAdvancedButton = NSButton()
+    private let customBodyIdeasCopyBulkButton = NSButton()
+    private let customBodyIdeasRestoreBulkButton = NSButton()
     private let customBodyAddIdeaButton = NSButton()
     private let customBodyCancelEditButton = NSButton()
     private let customBodyIdeasListStack = NSStackView()
@@ -647,6 +651,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         configureBodyDisplaySummary()
         configureSoundVolumeControls()
         configureCustomBodyTextEditor()
+        configureAdvancedBulkEditorActions()
         configureBodyContentSummary()
         configureAppExclusionTokenField()
         configureAppExclusionPreview()
@@ -930,7 +935,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             L10n.tr("prefs.advancedRulesJSON"),
             guidance: L10n.tr("prefs.advancedRulesGuidance"),
             field: appExclusionsJSONScrollView,
-            guidanceIdentifier: "prefs.appExclusionsJSONGuidance"
+            guidanceIdentifier: "prefs.appExclusionsJSONGuidance",
+            actions: [appExclusionsCopyBulkButton, appExclusionsRestoreBulkButton]
         )
         appExclusionsJSONRow.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionsJSONRow")
         self.appExclusionsJSONRow = appExclusionsJSONRow
@@ -1004,7 +1010,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             L10n.tr("prefs.advancedIdeasJSON"),
             guidance: L10n.tr("prefs.advancedIdeasGuidance"),
             field: customBodyIdeasJSONScrollView,
-            guidanceIdentifier: "prefs.customBodyIdeasJSONGuidance"
+            guidanceIdentifier: "prefs.customBodyIdeasJSONGuidance",
+            actions: [customBodyIdeasCopyBulkButton, customBodyIdeasRestoreBulkButton]
         )
         customBodyIdeasJSONRow.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyIdeasJSONRow")
         self.customBodyIdeasJSONRow = customBodyIdeasJSONRow
@@ -1620,6 +1627,59 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             height: 148,
             help: L10n.tr("prefs.advancedIdeasGuidance")
         )
+    }
+
+    private func configureAdvancedBulkEditorActions() {
+        configureBulkEditorActionButton(
+            appExclusionsCopyBulkButton,
+            identifier: "prefs.appExclusionsCopyBulkButton",
+            title: L10n.tr("prefs.copyBulkEditor"),
+            symbolName: "doc.on.doc",
+            help: L10n.tr("prefs.copyAppRulesBulkEditorHelp"),
+            action: #selector(copyAppRulesBulkEditorPressed(_:))
+        )
+        configureBulkEditorActionButton(
+            appExclusionsRestoreBulkButton,
+            identifier: "prefs.appExclusionsRestoreBulkButton",
+            title: L10n.tr("prefs.restoreBulkEditor"),
+            symbolName: "arrow.counterclockwise",
+            help: L10n.tr("prefs.restoreAppRulesBulkEditorHelp"),
+            action: #selector(restoreAppRulesBulkEditorPressed(_:))
+        )
+        configureBulkEditorActionButton(
+            customBodyIdeasCopyBulkButton,
+            identifier: "prefs.customBodyIdeasCopyBulkButton",
+            title: L10n.tr("prefs.copyBulkEditor"),
+            symbolName: "doc.on.doc",
+            help: L10n.tr("prefs.copyIdeasBulkEditorHelp"),
+            action: #selector(copyIdeasBulkEditorPressed(_:))
+        )
+        configureBulkEditorActionButton(
+            customBodyIdeasRestoreBulkButton,
+            identifier: "prefs.customBodyIdeasRestoreBulkButton",
+            title: L10n.tr("prefs.restoreBulkEditor"),
+            symbolName: "arrow.counterclockwise",
+            help: L10n.tr("prefs.restoreIdeasBulkEditorHelp"),
+            action: #selector(restoreIdeasBulkEditorPressed(_:))
+        )
+    }
+
+    private func configureBulkEditorActionButton(
+        _ button: NSButton,
+        identifier: String,
+        title: String,
+        symbolName: String,
+        help: String,
+        action: Selector
+    ) {
+        button.identifier = NSUserInterfaceItemIdentifier(identifier)
+        button.title = title
+        button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: title)
+        button.imagePosition = .imageLeading
+        button.bezelStyle = .rounded
+        button.target = self
+        button.action = action
+        setTextButtonHelp(title: title, help: help, on: button)
     }
 
     private func configureTextEditor(
@@ -2246,6 +2306,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         updateAppExclusionAddRuleButtonState()
         applyAdminVisibility()
         updateShortcutClearButtons()
+        updateAdvancedBulkEditorActionStates()
     }
 
     @discardableResult
@@ -2376,6 +2437,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         applyAdminVisibility()
         onSave(next)
         setSaveStatus(.saved)
+        updateAdvancedBulkEditorActionStates()
         return true
     }
 
@@ -2700,6 +2762,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             eyeManualFinishEnabled: isOn(eyeManualFinish),
             strictPreferencesHidden: strictPreferencesHidden
         )
+        updateAdvancedBulkEditorActionStates()
     }
 
     private func updateRestEnablementGuards(eyeGateEnabled: Bool) {
@@ -3170,6 +3233,84 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
     }
 
+    @objc private func copyAppRulesBulkEditorPressed(_ sender: NSButton) {
+        copyBulkEditorText(appExclusionsJSONEditor)
+    }
+
+    @objc private func restoreAppRulesBulkEditorPressed(_ sender: NSButton) {
+        restoreBulkEditorText(
+            appExclusionsJSONEditor,
+            text: savedAppRulesBulkEditorText()
+        ) { [weak self] in
+            self?.refreshAppExclusionRuleList()
+            self?.updateAppExclusionAddRuleButtonState()
+            self?.updateContextSummary()
+        }
+    }
+
+    @objc private func copyIdeasBulkEditorPressed(_ sender: NSButton) {
+        copyBulkEditorText(customBodyIdeasJSONEditor)
+    }
+
+    @objc private func restoreIdeasBulkEditorPressed(_ sender: NSButton) {
+        restoreBulkEditorText(
+            customBodyIdeasJSONEditor,
+            text: savedIdeasBulkEditorText()
+        ) { [weak self] in
+            self?.refreshCustomBodyIdeaList()
+            self?.updateCustomBodyAddIdeaButtonState()
+        }
+    }
+
+    private func copyBulkEditorText(_ editor: NSTextView) {
+        let text = editor.string
+        guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            updateAdvancedBulkEditorActionStates()
+            return
+        }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
+        updateAdvancedBulkEditorActionStates()
+    }
+
+    private func restoreBulkEditorText(
+        _ editor: NSTextView,
+        text: String,
+        afterRestore: () -> Void
+    ) {
+        guard editor.string != text else {
+            updateAdvancedBulkEditorActionStates()
+            return
+        }
+        editor.string = text
+        afterRestore()
+        updateAdvancedBulkEditorActionStates()
+        scheduleAutosave()
+    }
+
+    private func savedAppRulesBulkEditorText() -> String {
+        guard isOn(appExclusionEnabled) else { return "" }
+        return encodedAppExclusionsForEditor(settings.appExclusions)
+    }
+
+    private func savedIdeasBulkEditorText() -> String {
+        guard isOn(bodyEnabled) else { return "" }
+        return encodedCustomIdeasForEditor(settings.contentLibrary.customBodyBreakIdeas)
+    }
+
+    private func updateAdvancedBulkEditorActionStates() {
+        let appText = appExclusionsJSONEditor.string.trimmingCharacters(in: .whitespacesAndNewlines)
+        let savedAppText = savedAppRulesBulkEditorText()
+        appExclusionsCopyBulkButton.isEnabled = !appText.isEmpty
+        appExclusionsRestoreBulkButton.isEnabled = isOn(appExclusionEnabled) && appExclusionsJSONEditor.string != savedAppText
+
+        let ideasText = customBodyIdeasJSONEditor.string.trimmingCharacters(in: .whitespacesAndNewlines)
+        let savedIdeasText = savedIdeasBulkEditorText()
+        let bodyBreakEnabled = isOn(bodyEnabled)
+        customBodyIdeasCopyBulkButton.isEnabled = bodyBreakEnabled && !ideasText.isEmpty
+        customBodyIdeasRestoreBulkButton.isEnabled = bodyBreakEnabled && customBodyIdeasJSONEditor.string != savedIdeasText
+    }
+
     private func setAdvancedDisclosure(row: NSView?, button: NSButton, expanded: Bool) {
         row?.isHidden = !expanded
         updateDisclosureButton(button, expanded: expanded)
@@ -3245,10 +3386,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
         if let editor = notification.object as? NSTextView, editor === customBodyIdeasJSONEditor {
             refreshCustomBodyIdeaList()
+            updateAdvancedBulkEditorActionStates()
         }
         if let editor = notification.object as? NSTextView, editor === appExclusionsJSONEditor {
             refreshAppExclusionRuleList()
             updateAppExclusionAddRuleButtonState()
+            updateAdvancedBulkEditorActionStates()
         }
         setSaveStatus(.editing)
         scheduleAutosave()
@@ -4318,7 +4461,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         _ title: String,
         guidance: String,
         field: NSView,
-        guidanceIdentifier: String
+        guidanceIdentifier: String,
+        actions: [NSButton] = []
     ) -> NSStackView {
         let label = NSTextField(labelWithString: title)
         label.widthAnchor.constraint(equalToConstant: 220).isActive = true
@@ -4333,7 +4477,18 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         guidanceLabel.toolTip = guidance
         guidanceLabel.setAccessibilityHelp(guidance)
 
-        let fieldStack = NSStackView(views: [guidanceLabel, field])
+        var fieldViews: [NSView] = [guidanceLabel]
+        if !actions.isEmpty {
+            let actionStack = NSStackView(views: actions)
+            actionStack.identifier = NSUserInterfaceItemIdentifier("\(guidanceIdentifier).actions")
+            actionStack.orientation = .horizontal
+            actionStack.spacing = 8
+            actionStack.alignment = .centerY
+            fieldViews.append(actionStack)
+        }
+        fieldViews.append(field)
+
+        let fieldStack = NSStackView(views: fieldViews)
         fieldStack.orientation = .vertical
         fieldStack.spacing = 6
         fieldStack.alignment = .leading

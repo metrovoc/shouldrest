@@ -327,6 +327,10 @@
 "prefs.hideAdvancedRules" = "隐藏批量编辑器";
 "prefs.advancedRulesHelp" = "仅在导入、导出或粘贴多条应用规则时使用。已保存应用规则列表是常规编辑入口。";
 "prefs.advancedRulesGuidance" = "仅在批量导入或导出时粘贴 JSON 数组。内容无效时会暂停自动保存；日常编辑请使用已保存应用规则列表。";
+"prefs.copyBulkEditor" = "复制";
+"prefs.restoreBulkEditor" = "还原已保存";
+"prefs.copyAppRulesBulkEditorHelp" = "复制当前应用规则批量内容，用于导出或备份。";
+"prefs.restoreAppRulesBulkEditorHelp" = "用上次保存的应用规则替换当前批量内容。";
 "prefs.exclusionMode.pauseWhenMatched" = "匹配时暂停";
 "prefs.exclusionMode.resumeOnlyWhenMatched" = "只在匹配时运行";
 "prefs.sectionPresentation" = "外观与声音";
@@ -392,6 +396,8 @@
 "prefs.hideAdvancedIdeas" = "隐藏批量编辑器";
 "prefs.advancedIdeasHelp" = "仅在导入、导出或粘贴多条提示时使用。自定义提示列表是常规编辑入口。";
 "prefs.advancedIdeasGuidance" = "仅在批量导入或导出时粘贴 JSON 数组。内容无效时会暂停自动保存；日常编辑请使用自定义提示列表。";
+"prefs.copyIdeasBulkEditorHelp" = "复制当前提示批量内容，用于导出或备份。";
+"prefs.restoreIdeasBulkEditorHelp" = "用上次保存的自定义提示替换当前批量内容。";
 "prefs.localImagePath" = "活动休息图片";
 "prefs.chooseFile" = "选择...";
 "prefs.chooseBodyImageHelp" = "选择一张本地图片作为活动休息内容。";
