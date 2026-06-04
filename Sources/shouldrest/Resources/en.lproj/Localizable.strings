@@ -342,6 +342,8 @@
 "prefs.restoreBulkEditor" = "Restore Saved";
 "prefs.copyAppRulesBulkEditorHelp" = "Copy the current app rules bulk edit text for export or backup.";
 "prefs.restoreAppRulesBulkEditorHelp" = "Replace the app rules bulk edit text with the last saved app rules.";
+"prefs.restoreAppRulesBulkEditorDisabledOffHelp" = "Turn on App Rules before restoring saved app-rule text.";
+"prefs.restoreBulkEditorDisabledNoChangesHelp" = "Change the bulk edit text before restoring saved text.";
 "prefs.exclusionMode.pauseWhenMatched" = "Pause rests during these apps";
 "prefs.exclusionMode.resumeOnlyWhenMatched" = "Run rests only during these apps";
 "prefs.sectionPresentation" = "Presentation and Sound";
@@ -412,11 +414,14 @@
 "prefs.advancedIdeasGuidance" = "Paste exported idea text only for bulk import or export. Invalid text pauses autosave until fixed; use Custom ideas for normal edits.";
 "prefs.copyIdeasBulkEditorHelp" = "Copy the current ideas bulk edit text for export or backup.";
 "prefs.restoreIdeasBulkEditorHelp" = "Replace the ideas bulk edit text with the last saved custom ideas.";
+"prefs.restoreIdeasBulkEditorDisabledBodyOffHelp" = "Turn on Body Break before restoring saved idea text.";
 "prefs.localImagePath" = "Body Break image";
 "prefs.chooseFile" = "Choose…";
 "prefs.chooseBodyImageHelp" = "Choose a local image for Body Break content.";
 "prefs.clear" = "Clear";
 "prefs.clearBodyImageHelp" = "Clear the selected Body Break image.";
+"prefs.clearBodyImageDisabledBodyOffHelp" = "Turn on Body Break before clearing the image.";
+"prefs.clearBodyImageDisabledEmptyHelp" = "Choose an image before clearing it.";
 "prefs.noImageSelected" = "Drop or choose an image";
 "prefs.imagePreviewEmpty" = "Drop or choose an image";
 "prefs.imagePreviewUnavailable" = "%@ cannot be previewed";

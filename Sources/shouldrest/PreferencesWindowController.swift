@@ -2937,11 +2937,24 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         customBodyIdeasJSONEditor.isEditable = bodyBreakEnabled
         customBodyIdeasJSONScrollView.alphaValue = bodyBreakEnabled ? 1 : 0.55
         localImageChooseButton.isEnabled = bodyBreakEnabled
-        localImageClearButton.isEnabled = bodyBreakEnabled &&
-            !localImagePath.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        updateLocalImageClearButtonState(bodyBreakEnabled: bodyBreakEnabled)
         localImagePreview.isDropEnabled = bodyBreakEnabled
         updateBodyContentSummary()
         updateCustomBodyAddIdeaButtonState()
+    }
+
+    private func updateLocalImageClearButtonState(bodyBreakEnabled: Bool) {
+        let hasImagePath = !localImagePath.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        localImageClearButton.isEnabled = bodyBreakEnabled && hasImagePath
+        let help: String
+        if !bodyBreakEnabled {
+            help = L10n.tr("prefs.clearBodyImageDisabledBodyOffHelp")
+        } else if !hasImagePath {
+            help = L10n.tr("prefs.clearBodyImageDisabledEmptyHelp")
+        } else {
+            help = L10n.tr("prefs.clearBodyImageHelp")
+        }
+        setTextButtonHelp(title: localImageClearButton.title, help: help, on: localImageClearButton)
     }
 
     private func setNumberInputEnabled(_ field: NSTextField, _ enabled: Bool) {
@@ -3325,12 +3338,50 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let savedAppText = savedAppRulesBulkEditorText()
         appExclusionsCopyBulkButton.isEnabled = !appText.isEmpty
         appExclusionsRestoreBulkButton.isEnabled = isOn(appExclusionEnabled) && appExclusionsJSONEditor.string != savedAppText
+        setTextButtonHelp(
+            title: appExclusionsRestoreBulkButton.title,
+            help: advancedRestoreHelp(
+                isFeatureEnabled: isOn(appExclusionEnabled),
+                hasUnsavedEditorChanges: appExclusionsJSONEditor.string != savedAppText,
+                enabledHelp: L10n.tr("prefs.restoreAppRulesBulkEditorHelp"),
+                disabledFeatureHelp: L10n.tr("prefs.restoreAppRulesBulkEditorDisabledOffHelp"),
+                disabledNoChangesHelp: L10n.tr("prefs.restoreBulkEditorDisabledNoChangesHelp")
+            ),
+            on: appExclusionsRestoreBulkButton
+        )
 
         let ideasText = customBodyIdeasJSONEditor.string.trimmingCharacters(in: .whitespacesAndNewlines)
         let savedIdeasText = savedIdeasBulkEditorText()
         let bodyBreakEnabled = isOn(bodyEnabled)
         customBodyIdeasCopyBulkButton.isEnabled = bodyBreakEnabled && !ideasText.isEmpty
         customBodyIdeasRestoreBulkButton.isEnabled = bodyBreakEnabled && customBodyIdeasJSONEditor.string != savedIdeasText
+        setTextButtonHelp(
+            title: customBodyIdeasRestoreBulkButton.title,
+            help: advancedRestoreHelp(
+                isFeatureEnabled: bodyBreakEnabled,
+                hasUnsavedEditorChanges: customBodyIdeasJSONEditor.string != savedIdeasText,
+                enabledHelp: L10n.tr("prefs.restoreIdeasBulkEditorHelp"),
+                disabledFeatureHelp: L10n.tr("prefs.restoreIdeasBulkEditorDisabledBodyOffHelp"),
+                disabledNoChangesHelp: L10n.tr("prefs.restoreBulkEditorDisabledNoChangesHelp")
+            ),
+            on: customBodyIdeasRestoreBulkButton
+        )
+    }
+
+    private func advancedRestoreHelp(
+        isFeatureEnabled: Bool,
+        hasUnsavedEditorChanges: Bool,
+        enabledHelp: String,
+        disabledFeatureHelp: String,
+        disabledNoChangesHelp: String
+    ) -> String {
+        guard isFeatureEnabled else {
+            return disabledFeatureHelp
+        }
+        guard hasUnsavedEditorChanges else {
+            return disabledNoChangesHelp
+        }
+        return enabledHelp
     }
 
     private func setAdvancedDisclosure(row: NSView?, button: NSButton, expanded: Bool) {

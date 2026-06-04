@@ -342,6 +342,8 @@
 "prefs.restoreBulkEditor" = "还原已保存";
 "prefs.copyAppRulesBulkEditorHelp" = "复制当前应用规则批量编辑文本，用于导出或备份。";
 "prefs.restoreAppRulesBulkEditorHelp" = "用上次保存的应用规则替换当前批量编辑文本。";
+"prefs.restoreAppRulesBulkEditorDisabledOffHelp" = "开启应用规则后才能还原已保存文本。";
+"prefs.restoreBulkEditorDisabledNoChangesHelp" = "修改批量编辑文本后才能还原已保存文本。";
 "prefs.exclusionMode.pauseWhenMatched" = "这些应用运行时暂停休息";
 "prefs.exclusionMode.resumeOnlyWhenMatched" = "只在这些应用运行时安排休息";
 "prefs.sectionPresentation" = "外观与声音";
@@ -412,11 +414,14 @@
 "prefs.advancedIdeasGuidance" = "仅在批量导入或导出时粘贴导出的提示文本。内容无效时会暂停自动保存；日常编辑请使用自定义提示列表。";
 "prefs.copyIdeasBulkEditorHelp" = "复制当前提示批量编辑文本，用于导出或备份。";
 "prefs.restoreIdeasBulkEditorHelp" = "用上次保存的自定义提示替换当前批量编辑文本。";
+"prefs.restoreIdeasBulkEditorDisabledBodyOffHelp" = "开启活动休息后才能还原已保存提示文本。";
 "prefs.localImagePath" = "活动休息图片";
 "prefs.chooseFile" = "选择…";
 "prefs.chooseBodyImageHelp" = "选择一张本地图片作为活动休息内容。";
 "prefs.clear" = "清空";
 "prefs.clearBodyImageHelp" = "清空当前选择的活动休息图片。";
+"prefs.clearBodyImageDisabledBodyOffHelp" = "开启活动休息后才能清空图片。";
+"prefs.clearBodyImageDisabledEmptyHelp" = "请先选择图片，再清空。";
 "prefs.noImageSelected" = "拖入或选择图片";
 "prefs.imagePreviewEmpty" = "拖入或选择图片";
 "prefs.imagePreviewUnavailable" = "%@ 无法预览";

@@ -25,11 +25,27 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
         XCTAssertEqual(chooseButton.accessibilityLabel(), L10n.tr("prefs.chooseFile"))
         XCTAssertEqual(chooseButton.accessibilityHelp(), L10n.tr("prefs.chooseBodyImageHelp"))
         XCTAssertEqual(chooseButton.image?.accessibilityDescription, chooseButton.title)
-        XCTAssertEqual(clearButton.toolTip, L10n.tr("prefs.clearBodyImageHelp"))
+        XCTAssertEqual(clearButton.toolTip, L10n.tr("prefs.clearBodyImageDisabledEmptyHelp"))
         XCTAssertEqual(clearButton.accessibilityLabel(), L10n.tr("prefs.clear"))
-        XCTAssertEqual(clearButton.accessibilityHelp(), L10n.tr("prefs.clearBodyImageHelp"))
+        XCTAssertEqual(clearButton.accessibilityHelp(), L10n.tr("prefs.clearBodyImageDisabledEmptyHelp"))
         XCTAssertEqual(clearButton.image?.accessibilityDescription, clearButton.title)
         XCTAssertFalse(clearButton.isEnabled)
+    }
+
+    func testDisabledImageClearButtonExplainsBodyBreakPrerequisite() throws {
+        let imageURL = try makeTemporaryPNG(named: "body-off-preview.png")
+        var settings = RestSettings.defaults
+        settings.bodyBreak.isEnabled = false
+        settings.contentLibrary.localImagePaths = [imageURL.path]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+
+        let clearButton = try XCTUnwrap(button(withTitle: L10n.tr("prefs.clear"), in: contentView))
+        XCTAssertFalse(clearButton.isEnabled)
+        XCTAssertEqual(clearButton.toolTip, L10n.tr("prefs.clearBodyImageDisabledBodyOffHelp"))
+        XCTAssertEqual(clearButton.accessibilityHelp(), L10n.tr("prefs.clearBodyImageDisabledBodyOffHelp"))
     }
 
     func testImagePreviewShowsSelectedImageFileName() throws {
@@ -43,10 +59,14 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
 
         let imageView = try XCTUnwrap(view(withIdentifier: "localImagePreview", in: contentView) as? NSImageView)
         let label = try XCTUnwrap(view(withIdentifier: "localImagePreviewLabel", in: contentView) as? NSTextField)
+        let clearButton = try XCTUnwrap(button(withTitle: L10n.tr("prefs.clear"), in: contentView))
         XCTAssertNotNil(imageView.image)
         XCTAssertEqual(imageView.image?.accessibilityDescription, "body-preview.png")
         XCTAssertEqual(label.stringValue, "body-preview.png")
         XCTAssertFalse(visibleTexts(in: contentView).contains(imageURL.path))
+        XCTAssertTrue(clearButton.isEnabled)
+        XCTAssertEqual(clearButton.toolTip, L10n.tr("prefs.clearBodyImageHelp"))
+        XCTAssertEqual(clearButton.accessibilityHelp(), L10n.tr("prefs.clearBodyImageHelp"))
     }
 
     func testImagePreviewShowsUnavailableStateForMissingImage() throws {
@@ -111,6 +131,8 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
         XCTAssertEqual(imageView.image?.accessibilityDescription, L10n.tr("prefs.imagePreviewEmpty"))
         XCTAssertEqual(label.toolTip, L10n.tr("prefs.imageDropHelp"))
         XCTAssertFalse(clearButton.isEnabled)
+        XCTAssertEqual(clearButton.toolTip, L10n.tr("prefs.clearBodyImageDisabledEmptyHelp"))
+        XCTAssertEqual(clearButton.accessibilityHelp(), L10n.tr("prefs.clearBodyImageDisabledEmptyHelp"))
         XCTAssertEqual(savedSettings.value?.contentLibrary.localImagePaths, [])
         XCTAssertEqual(savedSettings.value?.bodyBreak.content, .richRestIdea)
     }

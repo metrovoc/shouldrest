@@ -173,11 +173,12 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertEqual(appCopy.accessibilityHelp(), L10n.tr("prefs.copyAppRulesBulkEditorHelp"))
         XCTAssertEqual(appCopy.image?.accessibilityDescription, L10n.tr("prefs.copyBulkEditor"))
         XCTAssertEqual(appRestore.title, L10n.tr("prefs.restoreBulkEditor"))
-        XCTAssertEqual(appRestore.toolTip, L10n.tr("prefs.restoreAppRulesBulkEditorHelp"))
-        XCTAssertEqual(appRestore.accessibilityHelp(), L10n.tr("prefs.restoreAppRulesBulkEditorHelp"))
+        XCTAssertEqual(appRestore.toolTip, L10n.tr("prefs.restoreBulkEditorDisabledNoChangesHelp"))
+        XCTAssertEqual(appRestore.accessibilityHelp(), L10n.tr("prefs.restoreBulkEditorDisabledNoChangesHelp"))
         XCTAssertEqual(appRestore.image?.accessibilityDescription, L10n.tr("prefs.restoreBulkEditor"))
         XCTAssertEqual(ideasCopy.toolTip, L10n.tr("prefs.copyIdeasBulkEditorHelp"))
-        XCTAssertEqual(ideasRestore.toolTip, L10n.tr("prefs.restoreIdeasBulkEditorHelp"))
+        XCTAssertEqual(ideasRestore.toolTip, L10n.tr("prefs.restoreBulkEditorDisabledNoChangesHelp"))
+        XCTAssertEqual(ideasRestore.accessibilityHelp(), L10n.tr("prefs.restoreBulkEditorDisabledNoChangesHelp"))
         XCTAssertTrue(appCopy.isEnabled)
         XCTAssertFalse(appRestore.isEnabled)
         XCTAssertTrue(ideasCopy.isEnabled)
@@ -196,10 +197,14 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         appEditor.string = "{ invalid json"
         controller.textDidChange(Notification(name: NSText.didChangeNotification, object: appEditor))
         XCTAssertTrue(appRestore.isEnabled)
+        XCTAssertEqual(appRestore.toolTip, L10n.tr("prefs.restoreAppRulesBulkEditorHelp"))
+        XCTAssertEqual(appRestore.accessibilityHelp(), L10n.tr("prefs.restoreAppRulesBulkEditorHelp"))
 
         XCTAssertTrue(sendAction(from: appRestore))
         XCTAssertTrue(appEditor.string.contains("Alpha"))
         XCTAssertFalse(appRestore.isEnabled)
+        XCTAssertEqual(appRestore.toolTip, L10n.tr("prefs.restoreBulkEditorDisabledNoChangesHelp"))
+        XCTAssertEqual(appRestore.accessibilityHelp(), L10n.tr("prefs.restoreBulkEditorDisabledNoChangesHelp"))
         XCTAssertTrue(controller.flushPendingAutosave(showAlerts: false))
         XCTAssertEqual(savedSettings.value?.appExclusions.first?.name, "Alpha")
 
@@ -210,10 +215,14 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         ideasEditor.string = "{ invalid json"
         controller.textDidChange(Notification(name: NSText.didChangeNotification, object: ideasEditor))
         XCTAssertTrue(ideasRestore.isEnabled)
+        XCTAssertEqual(ideasRestore.toolTip, L10n.tr("prefs.restoreIdeasBulkEditorHelp"))
+        XCTAssertEqual(ideasRestore.accessibilityHelp(), L10n.tr("prefs.restoreIdeasBulkEditorHelp"))
 
         XCTAssertTrue(sendAction(from: ideasRestore))
         XCTAssertTrue(ideasEditor.string.contains("Stretch"))
         XCTAssertFalse(ideasRestore.isEnabled)
+        XCTAssertEqual(ideasRestore.toolTip, L10n.tr("prefs.restoreBulkEditorDisabledNoChangesHelp"))
+        XCTAssertEqual(ideasRestore.accessibilityHelp(), L10n.tr("prefs.restoreBulkEditorDisabledNoChangesHelp"))
         XCTAssertTrue(controller.flushPendingAutosave(showAlerts: false))
         XCTAssertEqual(savedSettings.value?.contentLibrary.customBodyBreakIdeas.first?.title, "Stretch")
     }
@@ -281,6 +290,9 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         let contentView = try XCTUnwrap(controller.window?.contentView)
         let checkbox = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionEnabled", in: contentView) as? NSButton)
         let editor = try XCTUnwrap(view(withIdentifier: "appExclusionsJSONEditor", in: contentView) as? NSTextView)
+        let restoreButton = try XCTUnwrap(
+            view(withIdentifier: "prefs.appExclusionsRestoreBulkButton", in: contentView) as? NSButton
+        )
 
         XCTAssertEqual(checkbox.state, .on)
         XCTAssertFalse(editor.string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -290,6 +302,9 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
 
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(savedSettings.value?.appExclusions, [])
+        XCTAssertFalse(restoreButton.isEnabled)
+        XCTAssertEqual(restoreButton.toolTip, L10n.tr("prefs.restoreAppRulesBulkEditorDisabledOffHelp"))
+        XCTAssertEqual(restoreButton.accessibilityHelp(), L10n.tr("prefs.restoreAppRulesBulkEditorDisabledOffHelp"))
     }
 
     func testInvalidAdvancedJSONKeepsPendingAutosaveAfterFlushFailure() throws {
