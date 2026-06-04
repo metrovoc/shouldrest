@@ -714,12 +714,12 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         }
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
 
-        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        try performEmergencyClick(on: view, clickCount: 1)
 
         XCTAssertEqual(requestCount, 1)
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
 
-        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 2))
+        try performEmergencyClick(on: view, clickCount: 2)
 
         XCTAssertEqual(requestCount, 1)
         drainMainQueue()
@@ -736,13 +736,13 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         }
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
 
-        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        try performEmergencyClick(on: view, clickCount: 1)
 
         XCTAssertEqual(requestCount, 1)
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
         XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
 
-        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        try performEmergencyClick(on: view, clickCount: 1)
 
         XCTAssertEqual(requestCount, 1)
         drainMainQueue()
@@ -792,7 +792,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             return decision
         }
 
-        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        try performEmergencyClick(on: view, clickCount: 1)
 
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
         XCTAssertEqual(decisions, [.armed])
@@ -802,7 +802,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         drainMainQueue()
         XCTAssertFalse(didComplete)
 
-        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        try performEmergencyClick(on: view, clickCount: 1)
         XCTAssertEqual(decisions, [.armed])
 
         drainMainQueue()
@@ -869,11 +869,13 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
 
         XCTAssertEqual(requestCount, 0)
+        view.mouseUp(with: try mouseUpEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        XCTAssertEqual(requestCount, 0)
         drainMainQueue()
         XCTAssertEqual(requestCount, 1)
     }
 
-    func testSingleEmergencyMouseDownOnlyArmsAndNeverCompletesAsHold() throws {
+    func testSingleEmergencyMouseDownDoesNotArmOrCompleteAsHold() throws {
         let view = configuredEyeGateOverlay()
         view.layoutSubtreeIfNeeded()
         var requestCount = 0
@@ -885,12 +887,17 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
 
-        XCTAssertEqual(requestCount, 1)
-        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+        XCTAssertEqual(requestCount, 0)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverride"))
         XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
 
         drainMainQueue()
+        XCTAssertEqual(requestCount, 0)
+
+        view.mouseUp(with: try mouseUpEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+
         XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
     }
 
     func testMouseUpAfterFirstEmergencyClickDoesNotConfirmAsHold() throws {
@@ -912,7 +919,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertTrue(button.isEnabled)
     }
 
-    func testDragAndReleaseAfterFirstEmergencyClickDoesNotConfirmAsHold() throws {
+    func testDragOutAndReleaseDoesNotSpendEmergencyClick() throws {
         let view = configuredEyeGateOverlay()
         view.layoutSubtreeIfNeeded()
         var requestCount = 0
@@ -923,21 +930,25 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
 
         view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
-        view.mouseDragged(with: try mouseDraggedEvent(at: NSPoint(x: 760, y: 36), clickCount: 1))
-        view.mouseUp(with: try mouseUpEvent(at: NSPoint(x: 760, y: 36), clickCount: 1))
+        view.mouseDragged(with: try mouseDraggedEvent(at: NSPoint(x: 100, y: 100), clickCount: 1))
+        view.mouseUp(with: try mouseUpEvent(at: NSPoint(x: 100, y: 100), clickCount: 1))
         drainMainQueue()
 
-        XCTAssertEqual(requestCount, 1)
-        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+        XCTAssertEqual(requestCount, 0)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverride"))
         XCTAssertTrue(button.isEnabled)
 
-        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        try performEmergencyClick(on: view, clickCount: 1)
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+
+        try performEmergencyClick(on: view, clickCount: 1)
         drainMainQueue()
 
         XCTAssertEqual(requestCount, 2)
     }
 
-    func testSingleEmergencyMouseDownWithLegacyHoldOnlyArmsAndNeverCompletes() throws {
+    func testSingleEmergencyClickWithLegacyHoldOnlyArmsAndNeverCompletes() throws {
         let start = Date(timeIntervalSinceReferenceDate: 7_000)
         var settings = RestSettings.defaults
         settings.eyeGate.emergencyOverride = EmergencyOverridePolicy(
@@ -976,7 +987,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             return decision
         }
 
-        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        try performEmergencyClick(on: view, clickCount: 1)
         drainMainQueue()
 
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
@@ -1030,7 +1041,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             return decision
         }
 
-        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        try performEmergencyClick(on: view, clickCount: 1)
         drainMainQueue()
 
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
@@ -1055,7 +1066,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(engine.state.activeSession?.id, session.id)
         XCTAssertEqual(engine.state.statistics.emergencyOverrides, 0)
 
-        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        try performEmergencyClick(on: view, clickCount: 1)
         drainMainQueue()
 
         XCTAssertFalse(coordinator.isArmed(for: session))
@@ -1190,6 +1201,15 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         }
         let result = XCTWaiter().wait(for: [expectation], timeout: 1)
         XCTAssertEqual(result, .completed, file: file, line: line)
+    }
+
+    private func performEmergencyClick(
+        on view: RestOverlayView,
+        at point: NSPoint = NSPoint(x: 790, y: 12),
+        clickCount: Int
+    ) throws {
+        view.mouseDown(with: try mouseEvent(at: point, clickCount: clickCount))
+        view.mouseUp(with: try mouseUpEvent(at: point, clickCount: clickCount))
     }
 
     private func mouseEvent(at point: NSPoint, clickCount: Int) throws -> NSEvent {
