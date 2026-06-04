@@ -37,7 +37,11 @@ enum MenuStatusPresenter {
     }
 
     static func tooltip(state: RestEngineState, settings: RestSettings, now: Date = Date()) -> String {
-        L10n.tr("status.tooltipHeader") + "\n\n" + lines(state: state, settings: settings, now: now).joined(separator: "\n")
+        var tooltipLines = lines(state: state, settings: settings, now: now)
+        if settings.presentation.breakHealthMode {
+            tooltipLines.append(L10n.format("status.health", state.dangerScore))
+        }
+        return L10n.tr("status.tooltipHeader") + "\n\n" + tooltipLines.joined(separator: "\n")
     }
 
     static func headerContent(state: RestEngineState, settings: RestSettings, now: Date = Date()) -> HeaderContent {

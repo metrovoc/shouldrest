@@ -34,6 +34,7 @@ final class MenuStatusPresenterTests: XCTestCase {
         XCTAssertTrue(tooltip.hasPrefix("ShouldRest - The rest reminder app\n\n"))
         XCTAssertTrue(tooltip.contains("Next: Eye Gate"))
         XCTAssertTrue(tooltip.contains("Next Body Break after 4 Eye Gates"))
+        XCTAssertTrue(tooltip.contains("Rest pressure: 0/10"))
     }
 
     func testNextScheduledRestMenuActionNamesConcreteRestKind() {
@@ -86,6 +87,16 @@ final class MenuStatusPresenterTests: XCTestCase {
         let content = MenuStatusPresenter.headerContent(state: engine.state, settings: settings, now: start)
 
         XCTAssertNil(content.healthBadge)
+    }
+
+    func testTooltipHidesHealthWhenBreakHealthModeIsDisabled() {
+        var settings = RestSettings.defaults
+        settings.presentation.breakHealthMode = false
+        let engine = RestEngine(settings: settings, now: start)
+
+        let tooltip = MenuStatusPresenter.tooltip(state: engine.state, settings: engine.settings, now: start)
+
+        XCTAssertFalse(tooltip.contains("Rest pressure:"))
     }
 
     func testTimedPauseStatusShowsAutomaticResumeContext() {
