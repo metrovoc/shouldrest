@@ -13,16 +13,26 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(button.toolTip, L10n.tr("shortcut.recordHelp"))
         XCTAssertNotNil(button.image)
         XCTAssertEqual(button.imagePosition, .imageLeading)
+        XCTAssertEqual(button.accessibilityLabel(), L10n.tr("shortcut.notSet"))
+        XCTAssertEqual(button.accessibilityHelp(), L10n.tr("shortcut.recordHelp"))
+        XCTAssertEqual(button.image?.accessibilityDescription, L10n.tr("shortcut.notSet"))
+        XCTAssertNotEqual(button.image?.accessibilityDescription, "keyboard.badge.ellipsis")
 
         button.shortcutValue = "CmdOrCtrl+Option+E"
         XCTAssertEqual(button.title, "⌘⌥E")
         XCTAssertEqual(button.toolTip, L10n.tr("shortcut.clearHelp"))
         XCTAssertNotNil(button.image)
+        XCTAssertEqual(button.accessibilityLabel(), "⌘⌥E")
+        XCTAssertEqual(button.accessibilityHelp(), L10n.tr("shortcut.clearHelp"))
+        XCTAssertEqual(button.image?.accessibilityDescription, "⌘⌥E")
 
         button.performClick(nil)
         XCTAssertEqual(button.title, L10n.tr("shortcut.recording"))
         XCTAssertEqual(button.toolTip, L10n.tr("shortcut.recordingHelp"))
         XCTAssertNotNil(button.image)
+        XCTAssertEqual(button.accessibilityLabel(), L10n.tr("shortcut.recording"))
+        XCTAssertEqual(button.accessibilityHelp(), L10n.tr("shortcut.recordingHelp"))
+        XCTAssertEqual(button.image?.accessibilityDescription, L10n.tr("shortcut.recording"))
     }
 
     func testRequiredShortcutRecorderRestoresFallbackInsteadOfClearing() throws {
@@ -83,6 +93,10 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(bodyNow.validationWarning, warning)
         XCTAssertEqual(eyeNow.toolTip, warning)
         XCTAssertEqual(bodyNow.toolTip, warning)
+        XCTAssertEqual(eyeNow.accessibilityHelp(), warning)
+        XCTAssertEqual(bodyNow.accessibilityHelp(), warning)
+        XCTAssertEqual(eyeNow.image?.accessibilityDescription, eyeNow.title)
+        XCTAssertNotEqual(eyeNow.image?.accessibilityDescription, "exclamationmark.triangle.fill")
         XCTAssertWarningTint(eyeNow)
         XCTAssertWarningTint(bodyNow)
     }

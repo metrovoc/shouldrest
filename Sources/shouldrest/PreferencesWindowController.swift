@@ -4255,10 +4255,10 @@ final class ShortcutRecorderButton: NSButton {
             setSymbol("keyboard")
         }
 
-        if case .recording = state {
-            return
+        if case .recording = state {} else {
+            applyValidationWarningIfNeeded()
         }
-        applyValidationWarningIfNeeded()
+        applyAccessibilityMetadata()
     }
 
     private func applyValidationWarningIfNeeded() {
@@ -4268,9 +4268,15 @@ final class ShortcutRecorderButton: NSButton {
         setSymbol("exclamationmark.triangle.fill", fallback: "exclamationmark.triangle")
     }
 
+    private func applyAccessibilityMetadata() {
+        setAccessibilityLabel(title)
+        setAccessibilityHelp(toolTip)
+        image?.accessibilityDescription = title
+    }
+
     private func setSymbol(_ symbolName: String, fallback: String? = nil) {
-        image = NSImage(systemSymbolName: symbolName, accessibilityDescription: symbolName)
-            ?? fallback.flatMap { NSImage(systemSymbolName: $0, accessibilityDescription: $0) }
+        image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
+            ?? fallback.flatMap { NSImage(systemSymbolName: $0, accessibilityDescription: nil) }
     }
 
     private static func shortcutString(from event: NSEvent) -> String? {
