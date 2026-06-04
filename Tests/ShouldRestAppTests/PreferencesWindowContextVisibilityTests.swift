@@ -107,6 +107,54 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertTrue(summary.stringValue.contains("1 app rule can pause or scope rests."))
     }
 
+    func testContextControlsExposeBehaviorHelp() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        var settings = RestSettings.defaults
+        settings.naturalBreaks.isEnabled = true
+        settings.focusMode.monitorFocusMode = true
+        settings.focusMode.deferBodyBreak = true
+        settings.workingHours.isEnabled = true
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "calls",
+                name: "Calls",
+                matchTerms: ["zoom"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.eyeGate, .bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+
+        let expectedHelp: [(identifier: String, helpKey: String)] = [
+            ("prefs.naturalBreaks", "prefs.naturalBreaksHelp"),
+            ("naturalIdleMinutesField", "prefs.naturalIdleMinutesHelp"),
+            ("prefs.focusMonitor", "prefs.focusMonitorHelp"),
+            ("prefs.focusDefersBody", "prefs.focusDefersBodyHelp"),
+            ("prefs.workingHours", "prefs.workingHoursHelp"),
+            ("prefs.workingStartPicker", "prefs.workingStartHelp"),
+            ("prefs.workingEndPicker", "prefs.workingEndHelp"),
+            ("prefs.appExclusionEnabled", "prefs.enablePrimaryExclusionHelp"),
+            ("prefs.appExclusionNameField", "prefs.appExclusionNameHelp"),
+            ("prefs.appExclusionTermsField", "prefs.appExclusionTermsHelp"),
+            ("prefs.appExclusionMode", "prefs.appExclusionModeHelp")
+        ]
+
+        for expectation in expectedHelp {
+            let control = try XCTUnwrap(
+                view(withIdentifier: expectation.identifier, in: contentView) as? NSControl,
+                expectation.identifier
+            )
+            XCTAssertEqual(control.toolTip, L10n.tr(expectation.helpKey), expectation.identifier)
+            XCTAssertEqual(control.accessibilityHelp(), L10n.tr(expectation.helpKey), expectation.identifier)
+        }
+    }
+
     func testDisabledContextOptionsHideDependentPreferences() throws {
         var settings = RestSettings.defaults
         settings.naturalBreaks.isEnabled = false
