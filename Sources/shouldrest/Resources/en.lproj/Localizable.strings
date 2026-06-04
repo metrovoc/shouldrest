@@ -201,8 +201,8 @@
 "prefs.currentTimeBodyHelp" = "Show the current clock time next to the Body Break countdown.";
 "prefs.breakHealth" = "Show rest pressure indicator";
 "prefs.breakHealthHelp" = "Show a compact menu bar indicator when missed or delayed rests increase rest pressure.";
-"prefs.silentNotifications" = "Silent notifications";
-"prefs.silentNotificationsHelp" = "Keep notifications visible but remove notification sounds and rest sounds.";
+"prefs.silentNotifications" = "Silent mode";
+"prefs.silentNotificationsHelp" = "Keep notifications visible but mute notification sounds, rest sounds, and sound previews.";
 "prefs.openAtLogin" = "Open at login";
 "prefs.openAtLoginHelp" = "Start ShouldRest automatically after you sign in.";
 "prefs.checkUpdates" = "Check for updates";
@@ -372,8 +372,8 @@
 "prefs.previewSoundHelp" = "Play this sound once";
 "prefs.previewSoundLabel" = "Preview %@";
 "prefs.previewSoundSpecificHelp" = "Play the selected %@ once.";
-"prefs.previewSoundMutedHelp" = "Silent notifications is on, so %@ previews will not play.";
-"prefs.soundPreviewMuted" = "Silent notifications is on. %@ preview was not played.";
+"prefs.previewSoundMutedHelp" = "Silent mode is on, so %@ previews will not play.";
+"prefs.soundPreviewMuted" = "Silent mode is on. %@ preview was not played.";
 "prefs.soundPreviewSilence" = "%@ is set to silence.";
 "prefs.soundPreviewPlayed" = "Previewed %@: %@.";
 "prefs.sound.silence" = "Silence";

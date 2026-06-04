@@ -201,8 +201,8 @@
 "prefs.currentTimeBodyHelp" = "在活动休息倒计时旁显示当前时钟时间。";
 "prefs.breakHealth" = "显示休息压力指示器";
 "prefs.breakHealthHelp" = "错过或延后休息导致休息压力上升时，在菜单栏显示紧凑指示器。";
-"prefs.silentNotifications" = "静默通知";
-"prefs.silentNotificationsHelp" = "通知仍会显示，但不播放通知声音和休息声音。";
+"prefs.silentNotifications" = "静音模式";
+"prefs.silentNotificationsHelp" = "通知仍会显示，但不播放通知声音、休息声音和声音试听。";
 "prefs.openAtLogin" = "登录时打开";
 "prefs.openAtLoginHelp" = "登录后自动启动 ShouldRest。";
 "prefs.checkUpdates" = "检查更新";
@@ -372,8 +372,8 @@
 "prefs.previewSoundHelp" = "播放一次此声音";
 "prefs.previewSoundLabel" = "试听%@";
 "prefs.previewSoundSpecificHelp" = "播放一次当前选择的%@。";
-"prefs.previewSoundMutedHelp" = "已开启静音通知，%@试听不会播放。";
-"prefs.soundPreviewMuted" = "已开启静音通知。未播放%@试听。";
+"prefs.previewSoundMutedHelp" = "已开启静音模式，%@试听不会播放。";
+"prefs.soundPreviewMuted" = "已开启静音模式。未播放%@试听。";
 "prefs.soundPreviewSilence" = "%@当前设为静音。";
 "prefs.soundPreviewPlayed" = "已试听%@：%@。";
 "prefs.sound.silence" = "静音";

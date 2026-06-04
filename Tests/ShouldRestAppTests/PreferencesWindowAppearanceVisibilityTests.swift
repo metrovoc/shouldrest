@@ -65,6 +65,28 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertEqual(customBodyText.accessibilityHelp(), L10n.tr("prefs.customBodyTextHelp"))
     }
 
+    func testSilentModeCopyMatchesSoundPreviewBehavior() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+        let toggle = try XCTUnwrap(view(withIdentifier: "prefs.silentNotifications", in: contentView) as? NSButton)
+
+        XCTAssertEqual(toggle.title, "Silent mode")
+        XCTAssertEqual(
+            toggle.toolTip,
+            "Keep notifications visible but mute notification sounds, rest sounds, and sound previews."
+        )
+        XCTAssertFalse(visibleTexts(in: contentView).contains("Silent notifications"))
+
+        L10n.languageOverride = "zh-Hans"
+        XCTAssertEqual(L10n.tr("prefs.silentNotifications"), "静音模式")
+        XCTAssertFalse(L10n.tr("prefs.silentNotifications").contains("静默通知"))
+        XCTAssertTrue(L10n.tr("prefs.silentNotificationsHelp").contains("声音试听"))
+    }
+
     func testSoundVolumeValueHelpTracksSliderChanges() throws {
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
