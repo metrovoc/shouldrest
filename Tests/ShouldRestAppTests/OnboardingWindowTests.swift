@@ -15,7 +15,7 @@ final class OnboardingWindowTests: XCTestCase {
         let contentView = try XCTUnwrap(window.contentView)
 
         XCTAssertGreaterThanOrEqual(window.frame.width, 620)
-        XCTAssertGreaterThanOrEqual(window.frame.height, 480)
+        XCTAssertGreaterThanOrEqual(window.frame.height, 540)
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.brandIcon"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.featureList"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.feature.eye"))
@@ -29,6 +29,11 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetPanel"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetControl"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetDescription"))
+        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmMetricRow"))
+        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.metric.eyeInterval"))
+        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.metric.eyeDuration"))
+        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.metric.bodyAfter"))
+        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.metric.bodyDuration"))
     }
 
     func testOnboardingCopyExplainsCoreProductChoices() throws {
@@ -48,6 +53,10 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.bodyFeatureTitle")))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.rhythmTitle")))
         XCTAssertTrue(texts.contains(RestRhythmPreset.firstRunDefault.help))
+        XCTAssertTrue(texts.contains(L10n.tr("onboarding.metric.eyeInterval")))
+        XCTAssertTrue(texts.contains(L10n.tr("onboarding.metric.eyeDuration")))
+        XCTAssertTrue(texts.contains(L10n.tr("onboarding.metric.bodyAfter")))
+        XCTAssertTrue(texts.contains(L10n.tr("onboarding.metric.bodyDuration")))
     }
 
     func testOnboardingButtonsUseIconsHelpAndDefaultAction() throws {
@@ -95,6 +104,18 @@ final class OnboardingWindowTests: XCTestCase {
         let description = try XCTUnwrap(
             contentView.descendant(withIdentifier: "onboarding.rhythmPresetDescription") as? NSTextField
         )
+        let eyeInterval = try XCTUnwrap(
+            contentView.descendant(withIdentifier: "onboarding.metric.eyeInterval.value") as? NSTextField
+        )
+        let eyeDuration = try XCTUnwrap(
+            contentView.descendant(withIdentifier: "onboarding.metric.eyeDuration.value") as? NSTextField
+        )
+        let bodyAfter = try XCTUnwrap(
+            contentView.descendant(withIdentifier: "onboarding.metric.bodyAfter.value") as? NSTextField
+        )
+        let bodyDuration = try XCTUnwrap(
+            contentView.descendant(withIdentifier: "onboarding.metric.bodyDuration.value") as? NSTextField
+        )
         let useSelected = try XCTUnwrap(button(withIdentifier: "onboarding.useSelectedButton", in: contentView))
 
         XCTAssertEqual(control.segmentCount, RestRhythmPreset.allCases.count)
@@ -103,6 +124,11 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertEqual(control.label(forSegment: RestRhythmPreset.frequentEye.rawValue), "More Eye Rests")
         XCTAssertEqual(control.label(forSegment: RestRhythmPreset.movement.rawValue), "More Movement")
         XCTAssertEqual(description.stringValue, RestRhythmPreset.firstRunDefault.help)
+        XCTAssertEqual(control.accessibilityHelp(), RestRhythmPreset.firstRunDefault.help)
+        XCTAssertEqual(eyeInterval.stringValue, L10n.format("onboarding.metric.eyeIntervalValue", 10))
+        XCTAssertEqual(eyeDuration.stringValue, L10n.format("onboarding.metric.eyeDurationValue", 20))
+        XCTAssertEqual(bodyAfter.stringValue, L10n.format("onboarding.metric.bodyAfterValue", 4))
+        XCTAssertEqual(bodyDuration.stringValue, L10n.format("onboarding.metric.bodyDurationValue", 5))
         XCTAssertEqual(
             useSelected.title,
             L10n.format("onboarding.useSelectedWithPreset", RestRhythmPreset.firstRunDefault.title)
@@ -112,6 +138,11 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertTrue(control.sendAction(control.action, to: control.target))
 
         XCTAssertEqual(description.stringValue, RestRhythmPreset.movement.help)
+        XCTAssertEqual(control.accessibilityHelp(), RestRhythmPreset.movement.help)
+        XCTAssertEqual(eyeInterval.stringValue, L10n.format("onboarding.metric.eyeIntervalValue", 20))
+        XCTAssertEqual(eyeDuration.stringValue, L10n.format("onboarding.metric.eyeDurationValue", 20))
+        XCTAssertEqual(bodyAfter.stringValue, L10n.format("onboarding.metric.bodyAfterValue", 2))
+        XCTAssertEqual(bodyDuration.stringValue, L10n.format("onboarding.metric.bodyDurationValue", 8))
         XCTAssertEqual(
             useSelected.title,
             L10n.format("onboarding.useSelectedWithPreset", RestRhythmPreset.movement.title)

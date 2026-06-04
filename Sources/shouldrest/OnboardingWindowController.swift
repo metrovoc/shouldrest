@@ -13,6 +13,10 @@ final class OnboardingWindowController: NSWindowController {
     private let onLearnMore: () -> Void
     private let rhythmPresetControl = NSSegmentedControl()
     private let rhythmPresetDescription = NSTextField(labelWithString: "")
+    private let rhythmMetricEyeInterval = NSTextField(labelWithString: "")
+    private let rhythmMetricEyeDuration = NSTextField(labelWithString: "")
+    private let rhythmMetricBodyAfter = NSTextField(labelWithString: "")
+    private let rhythmMetricBodyDuration = NSTextField(labelWithString: "")
     private var useSelectedButton: NSButton?
     private var selectedRhythmPreset: RestRhythmPreset = .firstRunDefault
 
@@ -26,7 +30,7 @@ final class OnboardingWindowController: NSWindowController {
         self.onLearnMore = onLearnMore
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 680, height: 500),
+            contentRect: NSRect(x: 0, y: 0, width: 680, height: 560),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -246,6 +250,7 @@ final class OnboardingWindowController: NSWindowController {
         stack.addArrangedSubview(titleRow)
         stack.addArrangedSubview(rhythmPresetControl)
         stack.addArrangedSubview(rhythmPresetDescription)
+        stack.addArrangedSubview(rhythmMetricsView())
 
         NSLayoutConstraint.activate([
             stack.leadingAnchor.constraint(equalTo: panel.leadingAnchor, constant: 14),
@@ -255,6 +260,90 @@ final class OnboardingWindowController: NSWindowController {
         ])
         panel.widthAnchor.constraint(equalToConstant: 620).isActive = true
         return panel
+    }
+
+    private func rhythmMetricsView() -> NSView {
+        let row = NSStackView()
+        row.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmMetricRow")
+        row.orientation = .horizontal
+        row.alignment = .top
+        row.distribution = .fillEqually
+        row.spacing = 12
+        row.widthAnchor.constraint(equalToConstant: 592).isActive = true
+
+        row.addArrangedSubview(rhythmMetricColumn(
+            identifier: "onboarding.metric.eyeInterval",
+            symbolName: "repeat",
+            title: L10n.tr("onboarding.metric.eyeInterval"),
+            valueLabel: rhythmMetricEyeInterval
+        ))
+        row.addArrangedSubview(rhythmMetricColumn(
+            identifier: "onboarding.metric.eyeDuration",
+            symbolName: "eye",
+            title: L10n.tr("onboarding.metric.eyeDuration"),
+            valueLabel: rhythmMetricEyeDuration
+        ))
+        row.addArrangedSubview(rhythmMetricColumn(
+            identifier: "onboarding.metric.bodyAfter",
+            symbolName: "arrow.triangle.2.circlepath",
+            title: L10n.tr("onboarding.metric.bodyAfter"),
+            valueLabel: rhythmMetricBodyAfter
+        ))
+        row.addArrangedSubview(rhythmMetricColumn(
+            identifier: "onboarding.metric.bodyDuration",
+            symbolName: "figure.walk",
+            title: L10n.tr("onboarding.metric.bodyDuration"),
+            valueLabel: rhythmMetricBodyDuration
+        ))
+
+        updateRhythmPresetSelectionUI()
+        return row
+    }
+
+    private func rhythmMetricColumn(
+        identifier: String,
+        symbolName: String,
+        title: String,
+        valueLabel: NSTextField
+    ) -> NSView {
+        let column = NSStackView()
+        column.identifier = NSUserInterfaceItemIdentifier(identifier)
+        column.orientation = .vertical
+        column.alignment = .leading
+        column.spacing = 4
+        column.setContentCompressionResistancePriority(.required, for: .vertical)
+
+        let titleRow = NSStackView()
+        titleRow.orientation = .horizontal
+        titleRow.alignment = .centerY
+        titleRow.spacing = 5
+
+        let icon = NSImageView(image: symbolImage(symbolName, accessibilityDescription: title))
+        icon.identifier = NSUserInterfaceItemIdentifier("\(identifier).icon")
+        icon.symbolConfiguration = .init(pointSize: 11, weight: .medium)
+        icon.contentTintColor = .tertiaryLabelColor
+        icon.widthAnchor.constraint(equalToConstant: 14).isActive = true
+        icon.heightAnchor.constraint(equalToConstant: 14).isActive = true
+
+        let titleLabel = NSTextField(labelWithString: title)
+        titleLabel.identifier = NSUserInterfaceItemIdentifier("\(identifier).title")
+        titleLabel.font = .systemFont(ofSize: 11, weight: .medium)
+        titleLabel.textColor = .secondaryLabelColor
+        titleLabel.lineBreakMode = .byTruncatingTail
+        titleLabel.maximumNumberOfLines = 1
+
+        titleRow.addArrangedSubview(icon)
+        titleRow.addArrangedSubview(titleLabel)
+
+        valueLabel.identifier = NSUserInterfaceItemIdentifier("\(identifier).value")
+        valueLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+        valueLabel.textColor = .labelColor
+        valueLabel.lineBreakMode = .byTruncatingTail
+        valueLabel.maximumNumberOfLines = 1
+
+        column.addArrangedSubview(titleRow)
+        column.addArrangedSubview(valueLabel)
+        return column
     }
 
     private func configureRhythmPresetControl() {
@@ -367,6 +456,23 @@ final class OnboardingWindowController: NSWindowController {
     private func updateRhythmPresetSelectionUI() {
         rhythmPresetDescription.stringValue = selectedRhythmPreset.help
         rhythmPresetControl.toolTip = selectedRhythmPreset.help
+        rhythmPresetControl.setAccessibilityHelp(selectedRhythmPreset.help)
+        rhythmMetricEyeInterval.stringValue = L10n.format(
+            "onboarding.metric.eyeIntervalValue",
+            selectedRhythmPreset.eyeIntervalMinutes
+        )
+        rhythmMetricEyeDuration.stringValue = L10n.format(
+            "onboarding.metric.eyeDurationValue",
+            selectedRhythmPreset.eyeDurationSeconds
+        )
+        rhythmMetricBodyAfter.stringValue = L10n.format(
+            "onboarding.metric.bodyAfterValue",
+            selectedRhythmPreset.bodyAfterEyeGateCount
+        )
+        rhythmMetricBodyDuration.stringValue = L10n.format(
+            "onboarding.metric.bodyDurationValue",
+            selectedRhythmPreset.bodyDurationMinutes
+        )
 
         guard let useSelectedButton else { return }
         let title = primaryActionTitle(for: selectedRhythmPreset)

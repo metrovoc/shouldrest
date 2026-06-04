@@ -541,6 +541,14 @@
 "onboarding.bodyFeatureTitle" = "活动休息可配置";
 "onboarding.bodyFeatureBody" = "更长的活动休息支持推迟、图片、显示器规则，并可等你完成后再关闭。";
 "onboarding.rhythmTitle" = "选择初始休息节奏";
+"onboarding.metric.eyeInterval" = "护眼间隔";
+"onboarding.metric.eyeIntervalValue" = "每 %d 分钟";
+"onboarding.metric.eyeDuration" = "护眼时长";
+"onboarding.metric.eyeDurationValue" = "%d 秒";
+"onboarding.metric.bodyAfter" = "活动触发";
+"onboarding.metric.bodyAfterValue" = "%d 次护眼后";
+"onboarding.metric.bodyDuration" = "活动时长";
+"onboarding.metric.bodyDurationValue" = "%d 分钟";
 "onboarding.learnMore" = "关于 ShouldRest";
 "onboarding.learnMoreHelp" = "打开产品信息和项目链接。";
 "onboarding.useSelected" = "使用这个节奏开始";

@@ -541,6 +541,14 @@
 "onboarding.bodyFeatureTitle" = "Configurable Body Breaks";
 "onboarding.bodyFeatureBody" = "Longer movement breaks can use postpones, images, display rules, and wait for you to finish.";
 "onboarding.rhythmTitle" = "Choose your starting rhythm";
+"onboarding.metric.eyeInterval" = "Eye interval";
+"onboarding.metric.eyeIntervalValue" = "Every %d min";
+"onboarding.metric.eyeDuration" = "Eye duration";
+"onboarding.metric.eyeDurationValue" = "%d sec";
+"onboarding.metric.bodyAfter" = "Body after";
+"onboarding.metric.bodyAfterValue" = "%d Eye Gates";
+"onboarding.metric.bodyDuration" = "Body duration";
+"onboarding.metric.bodyDurationValue" = "%d min";
 "onboarding.learnMore" = "About ShouldRest";
 "onboarding.learnMoreHelp" = "Open product details and project links.";
 "onboarding.useSelected" = "Start With This Rhythm";
