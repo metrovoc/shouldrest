@@ -182,7 +182,7 @@ final class TerminationPolicyTests: XCTestCase {
 
         XCTAssertEqual(
             PauseMenuCopy.indefiniteTitle(confirmsBeforePausing: true),
-            "Indefinitely..."
+            "Indefinitely…"
         )
         XCTAssertEqual(
             PauseMenuCopy.indefiniteTitle(confirmsBeforePausing: false),
@@ -192,7 +192,7 @@ final class TerminationPolicyTests: XCTestCase {
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(
             PauseMenuCopy.indefiniteTitle(confirmsBeforePausing: true),
-            "无限期暂停..."
+            "无限期暂停…"
         )
         XCTAssertEqual(
             PauseMenuCopy.indefiniteTitle(confirmsBeforePausing: false),

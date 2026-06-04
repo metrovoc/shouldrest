@@ -31,7 +31,7 @@
 "menu.pauseUntilMorningWithTime" = "暂停到早晨（%@）";
 "menu.pauseUntilMorningHelp" = "暂停休息到已配置的早晨恢复时间。";
 "menu.pauseIndefinitely" = "无限期暂停";
-"menu.pauseIndefinitelyConfirming" = "无限期暂停...";
+"menu.pauseIndefinitelyConfirming" = "无限期暂停…";
 "menu.pauseIndefinitelyHelp" = "暂停休息，直到你手动恢复。";
 "menu.reset" = "重置计划";
 "menu.resetHelp" = "确认后重置计时、暂停状态、已延后的休息、休息压力和待处理的自动化请求。";
@@ -43,7 +43,7 @@
 "reset.confirmBody" = "这会清除当前计时、暂停状态、已延后的休息、休息压力和待处理的自动化请求。偏好设置不会改变。";
 "reset.confirmAction" = "重置计划";
 "reset.confirmCancel" = "取消";
-"menu.preferences" = "偏好设置...";
+"menu.preferences" = "偏好设置…";
 "menu.preferencesHelp" = "打开 ShouldRest 偏好设置。";
 "menu.support" = "帮助与支持";
 "menu.supportHelp" = "打开支持、诊断、更新和项目相关操作。";
@@ -54,9 +54,9 @@
 "menu.copyDebug" = "复制诊断信息";
 "menu.copyDebugHelp" = "复制当前休息状态、设置摘要和支持路径。";
 "menu.copyDebugDone" = "诊断信息已复制到剪贴板。";
-"menu.debugPanel" = "诊断...";
+"menu.debugPanel" = "诊断…";
 "menu.debugPanelHelp" = "打开诊断窗口。";
-"menu.about" = "关于 ShouldRest...";
+"menu.about" = "关于 ShouldRest…";
 "menu.aboutHelp" = "打开产品和版本信息。";
 "menu.settingsFile" = "设置文件";
 "menu.settingsFileHelp" = "显示或复制设置文件位置。";
@@ -402,7 +402,7 @@
 "prefs.copyIdeasBulkEditorHelp" = "复制当前提示批量内容，用于导出或备份。";
 "prefs.restoreIdeasBulkEditorHelp" = "用上次保存的自定义提示替换当前批量内容。";
 "prefs.localImagePath" = "活动休息图片";
-"prefs.chooseFile" = "选择...";
+"prefs.chooseFile" = "选择…";
 "prefs.chooseBodyImageHelp" = "选择一张本地图片作为活动休息内容。";
 "prefs.clear" = "清空";
 "prefs.clearBodyImageHelp" = "清空当前选择的活动休息图片。";
@@ -459,8 +459,8 @@
 "prefs.adminControlsHelp" = "这些选项用于部署策略和支持诊断，不是日常休息行为设置。";
 "prefs.autosaveReady" = "所有更改已保存";
 "prefs.headerSubtitle" = "严格护眼休息，灵活活动休息，设置会自动保存。";
-"prefs.autosaveEditing" = "正在编辑...";
-"prefs.autosaveSaving" = "正在保存...";
+"prefs.autosaveEditing" = "正在编辑…";
+"prefs.autosaveSaving" = "正在保存…";
 "prefs.autosaveSaved" = "已保存";
 "prefs.autosaveCopied" = "已复制到剪贴板";
 "prefs.autosaveRestored" = "已恢复默认";
@@ -514,7 +514,7 @@
 "prefs.invalidJSONBody" = "%@：%@";
 "shortcut.notSet" = "未设置";
 "shortcut.record" = "录制快捷键";
-"shortcut.recording" = "录制中...";
+"shortcut.recording" = "录制中…";
 "shortcut.recordHelp" = "点击后按快捷键。";
 "shortcut.recordingHelp" = "按 Command、Control 或 Option 加一个按键。Esc 取消；Delete 清空。";
 "shortcut.clearHelp" = "点击可替换该快捷键。使用清空按钮可移除。";

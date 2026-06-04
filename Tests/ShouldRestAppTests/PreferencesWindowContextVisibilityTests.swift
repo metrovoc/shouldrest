@@ -109,6 +109,39 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertTrue(summary.stringValue.contains("1 app rule can pause or scope rests."))
     }
 
+    func testAppExclusionRuleSummariesUseSingleCharacterEllipsisWhenTruncated() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        let longTerm = String(repeating: "presentation-mode-", count: 8)
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "long",
+                name: "Long presentation rule",
+                matchTerms: [longTerm, "Zoom"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.eyeGate, .bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+        let listBody = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionRuleBody.0", in: contentView) as? NSTextField)
+        XCTAssertTrue(listBody.stringValue.hasSuffix("…"))
+        XCTAssertFalse(listBody.stringValue.contains("..."))
+
+        let terms = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionTermsField", in: contentView) as? NSTokenField)
+        let preview = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionPreviewLabel", in: contentView) as? NSTextField)
+        terms.objectValue = [longTerm, longTerm]
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: terms))
+
+        XCTAssertTrue(preview.stringValue.contains("…"))
+        XCTAssertFalse(preview.stringValue.contains("..."))
+    }
+
     func testContextControlsExposeBehaviorHelp() throws {
         defer { L10n.languageOverride = nil }
         L10n.languageOverride = "en"

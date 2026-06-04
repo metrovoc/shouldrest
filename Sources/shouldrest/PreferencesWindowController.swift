@@ -3978,13 +3978,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             summary = L10n.format("prefs.appExclusionPreviewResumeOnly", terms, applies)
         }
         guard summary.count > 96 else { return summary }
-        return "\(summary.prefix(93))..."
+        return "\(summary.prefix(93))…"
     }
 
     private func appExclusionTermsSummary(_ terms: [String]) -> String {
         let summary = terms.joined(separator: ", ")
         guard summary.count > 80 else { return summary }
-        return "\(summary.prefix(77))..."
+        return "\(summary.prefix(77))…"
     }
 
     private func appExclusionTargetSummary(_ appliesTo: Set<RestKind>) -> String {
@@ -4287,7 +4287,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             .joined(separator: " ")
         let summary = collapsed.isEmpty ? L10n.tr("prefs.customIdeaEmptyBody") : collapsed
         guard summary.count > 80 else { return summary }
-        return "\(summary.prefix(77))..."
+        return "\(summary.prefix(77))…"
     }
 
     private func removeArrangedSubviews(from stack: NSStackView) {

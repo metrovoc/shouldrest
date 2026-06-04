@@ -501,6 +501,22 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         )
     }
 
+    func testCustomBodyIdeaSummariesUseSingleCharacterEllipsisWhenTruncated() throws {
+        let longBody = String(repeating: "slow shoulder roll ", count: 8)
+        var settings = RestSettings.defaults
+        settings.contentLibrary.customBodyBreakIdeas = [
+            RestIdea(id: "long", kind: .bodyBreak, title: "Long idea", body: longBody)
+        ]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+        let body = try XCTUnwrap(view(withIdentifier: "prefs.customBodyIdeaBody.0", in: contentView) as? NSTextField)
+
+        XCTAssertTrue(body.stringValue.hasSuffix("…"))
+        XCTAssertFalse(body.stringValue.contains("..."))
+    }
+
     func testDraftingCustomIdeaDoesNotAutosaveOverExistingRotationBeforeAdd() throws {
         var settings = RestSettings.defaults
         settings.contentLibrary.customBodyBreakIdeas = [
