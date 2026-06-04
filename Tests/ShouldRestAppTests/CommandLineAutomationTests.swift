@@ -11,8 +11,8 @@ final class CommandLineAutomationTests: XCTestCase {
 
         XCTAssertTrue(output.contains("eye|mini [-w wait]           Start Eye Gate now or after wait; it is always strict and text-free."))
         XCTAssertTrue(output.contains("preferences                  Open ShouldRest preferences."))
-        XCTAssertTrue(output.contains("debug                        Copy diagnostics."))
-        XCTAssertTrue(output.contains("debug-panel                  Open the diagnostics window."))
+        XCTAssertTrue(output.contains("debug                        Copy support report."))
+        XCTAssertTrue(output.contains("debug-panel                  Open the support report window."))
         XCTAssertTrue(output.contains("about                        Open the About window."))
         XCTAssertTrue(output.contains("url shouldrest://<command>    Run a shouldrest:// command."))
         XCTAssertTrue(output.contains("emergency                    Bring the active Eye Gate overlay forward for Emergency Exit."))
@@ -30,6 +30,7 @@ final class CommandLineAutomationTests: XCTestCase {
         XCTAssertFalse(output.localizedCaseInsensitiveContains("hidden by admin"))
         XCTAssertFalse(output.localizedCaseInsensitiveContains("copy debug info"))
         XCTAssertFalse(output.localizedCaseInsensitiveContains("debug panel"))
+        XCTAssertFalse(output.localizedCaseInsensitiveContains("diagnostics window"))
         XCTAssertFalse(output.localizedCaseInsensitiveContains("run it again"))
     }
 

@@ -4,7 +4,7 @@ import XCTest
 
 @MainActor
 final class StatusMenuClipboardFeedbackTests: XCTestCase {
-    func testDiagnosticsCopyWritesPasteboardAndReturnsCompletionFeedback() {
+    func testSupportReportCopyWritesPasteboardAndReturnsCompletionFeedback() {
         defer { L10n.languageOverride = nil }
         L10n.languageOverride = "en"
         let pasteboard = NSPasteboard(name: NSPasteboard.Name(UUID().uuidString))
@@ -17,7 +17,7 @@ final class StatusMenuClipboardFeedbackTests: XCTestCase {
 
         XCTAssertEqual(pasteboard.string(forType: .string), "state=active")
         XCTAssertEqual(feedback, L10n.tr("menu.copyDebugDone"))
-        XCTAssertEqual(feedback, "Diagnostics copied to the clipboard.")
+        XCTAssertEqual(feedback, "Support report copied to the clipboard.")
         XCTAssertFalse(feedback.localizedCaseInsensitiveContains("debug info"))
     }
 

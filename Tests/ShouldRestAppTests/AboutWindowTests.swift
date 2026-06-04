@@ -86,8 +86,9 @@ final class AboutWindowTests: XCTestCase {
             XCTAssertEqual(button.accessibilityHelp(), button.toolTip)
         }
         XCTAssertEqual(buttons.debug.title, L10n.tr("about.debug"))
-        XCTAssertEqual(buttons.debug.title, "Diagnostics")
+        XCTAssertEqual(buttons.debug.title, "Support Report")
         XCTAssertNotEqual(buttons.debug.title, "Debug Info")
+        XCTAssertNotEqual(buttons.debug.title, "Diagnostics")
         XCTAssertEqual(buttons.close.keyEquivalent, "\r")
 
         buttons.debug.sendAction(buttons.debug.action, to: buttons.debug.target)

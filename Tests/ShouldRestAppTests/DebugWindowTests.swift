@@ -16,7 +16,7 @@ final class DebugWindowTests: XCTestCase {
         let contentView = try XCTUnwrap(window.contentView)
 
         XCTAssertEqual(window.title, L10n.tr("debug.title"))
-        XCTAssertEqual(L10n.tr("debug.title"), "ShouldRest Diagnostics")
+        XCTAssertEqual(L10n.tr("debug.title"), "ShouldRest Support Report")
         XCTAssertGreaterThanOrEqual(window.frame.width, 740)
         XCTAssertGreaterThanOrEqual(window.frame.height, 540)
         XCTAssertNotNil(contentView.descendant(withIdentifier: "debug.headerIcon"))
@@ -81,8 +81,8 @@ final class DebugWindowTests: XCTestCase {
         }
         XCTAssertEqual(buttons.openLog.title, L10n.tr("debug.openLog"))
         XCTAssertEqual(buttons.openSettings.title, L10n.tr("debug.openSettings"))
-        XCTAssertEqual(buttons.openLog.title, "Show Log Location")
-        XCTAssertEqual(buttons.openSettings.title, "Show Settings Location")
+        XCTAssertEqual(buttons.openLog.title, "Show Log in Finder")
+        XCTAssertEqual(buttons.openSettings.title, "Show Settings in Finder")
         XCTAssertEqual(buttons.openLog.toolTip, L10n.tr("debug.openLogHelp"))
         XCTAssertEqual(buttons.openSettings.toolTip, L10n.tr("debug.openSettingsHelp"))
         let status = try XCTUnwrap(contentView.label(withIdentifier: "debug.status"))
@@ -115,7 +115,7 @@ final class DebugWindowTests: XCTestCase {
         XCTAssertEqual(status.accessibilityHelp(), L10n.tr("debug.updated"))
     }
 
-    func testDebugSearchFindsCyclesAndClearsDiagnosticsText() throws {
+    func testDebugSearchFindsCyclesAndClearsSupportReportText() throws {
         let controller = DebugWindowController()
         controller.update(text: "state=initial\nactiveSession=none\nstate=refreshed")
         let contentView = try XCTUnwrap(controller.window?.contentView)
