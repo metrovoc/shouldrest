@@ -50,6 +50,7 @@
 "notification.resumingBreaks" = "正在恢复休息";
 "notification.quitBlocked" = "请先完成%@，再退出。";
 "notification.resetBlocked" = "请先完成%@，再重置计划。";
+"notification.pauseBlocked" = "请先完成%@，再暂停。";
 "status.noRests" = "没有启用的休息计划";
 "status.pausedIndefinitely" = "已无限期暂停";
 "status.pausedUntil" = "暂停到 %@";

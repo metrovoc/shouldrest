@@ -50,6 +50,7 @@
 "notification.resumingBreaks" = "Resuming breaks";
 "notification.quitBlocked" = "Finish %@ before quitting.";
 "notification.resetBlocked" = "Finish %@ before resetting the schedule.";
+"notification.pauseBlocked" = "Finish %@ before pausing.";
 "status.noRests" = "No enabled rests";
 "status.pausedIndefinitely" = "Paused indefinitely";
 "status.pausedUntil" = "Paused until %@";

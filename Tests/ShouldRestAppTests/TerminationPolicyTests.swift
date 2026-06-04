@@ -37,6 +37,14 @@ final class TerminationPolicyTests: XCTestCase {
         let state = RestEngineState(activeSession: session(kind: .eyeGate))
 
         XCTAssertEqual(
+            StrictRestBlockedActionPolicy.feedback(
+                state: state,
+                settings: .defaults,
+                now: start.addingTimeInterval(1)
+            ),
+            .armEyeGateEmergencyInOverlay
+        )
+        XCTAssertEqual(
             TerminationPolicy.requestAction(
                 state: state,
                 settings: .defaults,
@@ -52,6 +60,14 @@ final class TerminationPolicyTests: XCTestCase {
 
         settings.eyeGate.emergencyOverride.isEnabled = false
         XCTAssertEqual(
+            StrictRestBlockedActionPolicy.feedback(
+                state: state,
+                settings: settings,
+                now: start.addingTimeInterval(1)
+            ),
+            .notifyBlocked(.eyeGate)
+        )
+        XCTAssertEqual(
             TerminationPolicy.requestAction(
                 state: state,
                 settings: settings,
@@ -61,6 +77,14 @@ final class TerminationPolicyTests: XCTestCase {
         )
 
         settings.eyeGate.emergencyOverride.isEnabled = true
+        XCTAssertEqual(
+            StrictRestBlockedActionPolicy.feedback(
+                state: state,
+                settings: settings,
+                now: start.addingTimeInterval(20)
+            ),
+            .notifyBlocked(.eyeGate)
+        )
         XCTAssertEqual(
             TerminationPolicy.requestAction(
                 state: state,
@@ -76,6 +100,14 @@ final class TerminationPolicyTests: XCTestCase {
         settings.bodyBreak.ordinarySkipEnabled = false
         let state = RestEngineState(activeSession: session(kind: .bodyBreak))
 
+        XCTAssertEqual(
+            StrictRestBlockedActionPolicy.feedback(
+                state: state,
+                settings: settings,
+                now: start.addingTimeInterval(1)
+            ),
+            .notifyBlocked(.bodyBreak)
+        )
         XCTAssertEqual(
             TerminationPolicy.requestAction(
                 state: state,
@@ -99,6 +131,10 @@ final class TerminationPolicyTests: XCTestCase {
         XCTAssertEqual(
             BlockedActionCopy.resetScheduleMessage(state: state, settings: .defaults),
             "Finish Eye Gate before resetting the schedule."
+        )
+        XCTAssertEqual(
+            BlockedActionCopy.pauseMessage(for: .eyeGate),
+            "Finish Eye Gate before pausing."
         )
         XCTAssertNil(BlockedActionCopy.quitMessage(state: RestEngineState(), settings: .defaults))
         XCTAssertNil(BlockedActionCopy.resetScheduleMessage(state: RestEngineState(), settings: .defaults))

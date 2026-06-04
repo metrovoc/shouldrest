@@ -239,8 +239,10 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.reset"), "Reset Schedule")
         XCTAssertEqual(L10n.format("notification.quitBlocked", "Eye Gate"), "Finish Eye Gate before quitting.")
         XCTAssertEqual(L10n.format("notification.resetBlocked", "Eye Gate"), "Finish Eye Gate before resetting the schedule.")
+        XCTAssertEqual(L10n.format("notification.pauseBlocked", "Eye Gate"), "Finish Eye Gate before pausing.")
         XCTAssertFalse(L10n.tr("notification.quitBlocked").localizedCaseInsensitiveContains("strict"))
         XCTAssertFalse(L10n.tr("notification.resetBlocked").localizedCaseInsensitiveContains("strict"))
+        XCTAssertFalse(L10n.tr("notification.pauseBlocked").localizedCaseInsensitiveContains("strict"))
         XCTAssertFalse(L10n.tr("notification.resetBlocked").localizedCaseInsensitiveContains("breaks"))
 
         L10n.languageOverride = "zh-Hans"
@@ -249,8 +251,10 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.reset"), "重置计划")
         XCTAssertEqual(L10n.format("notification.quitBlocked", "护眼休息"), "请先完成护眼休息，再退出。")
         XCTAssertEqual(L10n.format("notification.resetBlocked", "护眼休息"), "请先完成护眼休息，再重置计划。")
+        XCTAssertEqual(L10n.format("notification.pauseBlocked", "护眼休息"), "请先完成护眼休息，再暂停。")
         XCTAssertFalse(L10n.tr("notification.quitBlocked").contains("严格"))
         XCTAssertFalse(L10n.tr("notification.resetBlocked").contains("严格"))
+        XCTAssertFalse(L10n.tr("notification.pauseBlocked").contains("严格"))
     }
 
     func testRestoreDefaultsConfirmationNamesTheDestructiveAction() {
