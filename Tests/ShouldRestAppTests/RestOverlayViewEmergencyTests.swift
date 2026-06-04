@@ -36,6 +36,72 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(requestCount, 1)
     }
 
+    func testFirstEmergencyClickImmediatelyShowsSecondClickConfirmationWithoutExternalRefresh() throws {
+        let view = configuredEyeGateOverlay()
+        var requestCount = 0
+        view.onEmergencyOverrideRequested = {
+            requestCount += 1
+        }
+
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        button.performClick(nil)
+
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
+    }
+
+    func testSecondEmergencyClickCompletesWithoutWaitingForTickRefresh() throws {
+        let start = Date(timeIntervalSinceReferenceDate: 2_500)
+        var settings = RestSettings.defaults
+        settings.eyeGate.emergencyOverride = EmergencyOverridePolicy(
+            isEnabled: true,
+            confirmationSteps: 1,
+            minimumHoldDuration: 30
+        )
+        var engine = RestEngine(settings: settings, now: start)
+        guard case .started(let session) = engine.takeNow(.eyeGate, now: start) else {
+            return XCTFail("Expected Eye Gate to start")
+        }
+
+        let view = RestOverlayView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
+        var coordinator = EmergencyOverrideCoordinator()
+        var requestTime = start.addingTimeInterval(1)
+        view.configure(
+            session: session,
+            remainingSeconds: 59,
+            settings: settings,
+            showsContent: true,
+            manualAwaiting: false,
+            emergencyOverrideRemainingSeconds: 0,
+            emergencyOverrideArmed: false
+        )
+        view.onEmergencyOverrideRequested = {
+            let decision = coordinator.request(
+                session: session,
+                policy: settings.eyeGate.emergencyOverride,
+                now: requestTime
+            )
+            if case .complete = decision {
+                _ = engine.emergencyOverride(now: requestTime)
+            }
+        }
+
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        button.performClick(nil)
+
+        XCTAssertEqual(engine.state.activeSession?.id, session.id)
+        XCTAssertTrue(coordinator.isArmed(for: session))
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+
+        requestTime = start.addingTimeInterval(2)
+        button.performClick(nil)
+
+        XCTAssertNil(engine.state.activeSession)
+        XCTAssertFalse(coordinator.isArmed(for: session))
+        XCTAssertEqual(engine.state.statistics.emergencyOverrides, 1)
+    }
+
     func testOverlayEmergencyButtonNeedsSecondClickBeforeEngineOverrideEvenWithLegacyZeroSteps() throws {
         let start = Date(timeIntervalSinceReferenceDate: 2_000)
         var settings = RestSettings.defaults
