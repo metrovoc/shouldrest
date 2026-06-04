@@ -240,7 +240,8 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         settings.shortcuts.takeEyeGateNow = "Meta+X"
         settings.shortcuts.takeBodyBreakNow = "Command+2"
         let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
-        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
 
         try selectShortcutsTab(in: contentView)
         let warning = try XCTUnwrap(visibleTexts(in: contentView).first { $0.contains(L10n.tr("prefs.eyeGateNow")) && $0.contains("METAX") })
@@ -250,6 +251,11 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(eyeNow.validationWarning, warning)
         XCTAssertNil(bodyNow.validationWarning)
         XCTAssertEqual(eyeNow.toolTip, warning)
+        let reviewButton = try XCTUnwrap(control(withIdentifier: "prefs.shortcutConflictReviewButton", in: contentView) as? NSButton)
+        XCTAssertEqual(reviewButton.title, L10n.tr("prefs.shortcutConflictReview"))
+        XCTAssertTrue(reviewButton.isEnabled)
+        XCTAssertTrue(sendAction(from: reviewButton))
+        XCTAssertTrue(isFirstResponder(eyeNow, in: window))
         XCTAssertWarningTint(eyeNow)
     }
 
