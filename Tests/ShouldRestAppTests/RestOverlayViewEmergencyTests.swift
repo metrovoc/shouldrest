@@ -154,7 +154,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         requestTime = start.addingTimeInterval(2)
         button.performClick(nil)
-        drainMainQueue()
 
         XCTAssertNil(engine.state.activeSession)
         XCTAssertFalse(coordinator.isArmed(for: session))
@@ -220,7 +219,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         requestTime = start.addingTimeInterval(2)
         button.performClick(nil)
-        drainMainQueue()
 
         XCTAssertNil(engine.state.activeSession)
         XCTAssertFalse(coordinator.isArmed(for: session))
@@ -393,7 +391,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
         view.performEmergencyOverrideKeyCommand()
-        drainMainQueue()
         XCTAssertEqual(requestCount, 2)
     }
 
@@ -426,7 +423,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         view.keyDown(with: event)
 
-        drainMainQueue()
         XCTAssertEqual(requestCount, 2)
     }
 
@@ -450,7 +446,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(requestCount, 1)
 
         view.keyDown(with: try escapeKeyEvent())
-        drainMainQueue()
 
         XCTAssertEqual(requestCount, 2)
     }
@@ -542,7 +537,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(button.accessibilityLabel(), L10n.tr("overlay.emergencyOverride"))
     }
 
-    func testArmedEmergencyReturningArmedReenablesSecondClickConfirmation() throws {
+    func testArmedEmergencyReturningArmedKeepsSecondClickConfirmationAvailable() throws {
         let view = configuredEyeGateOverlay(
             remainingSeconds: 0,
             isArmed: true
@@ -555,10 +550,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
         button.performClick(nil)
-
-        XCTAssertFalse(button.isEnabled)
-        XCTAssertEqual(requestCount, 0)
-        drainMainQueue()
 
         XCTAssertEqual(requestCount, 1)
         XCTAssertTrue(button.isEnabled)
@@ -598,7 +589,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
     }
 
-    func testArmedEmergencyButtonClickRequestsExitAfterEventReturns() throws {
+    func testArmedEmergencyButtonClickRequestsExitImmediately() throws {
         let view = configuredEyeGateOverlay(
             remainingSeconds: 0,
             isArmed: true
@@ -612,12 +603,10 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
         button.performClick(nil)
 
-        XCTAssertEqual(requestCount, 0)
-        drainMainQueue()
         XCTAssertEqual(requestCount, 1)
     }
 
-    func testArmedEmergencyIgnoresRepeatedConfirmationBeforeDeferredRequestRuns() throws {
+    func testArmedEmergencyIgnoresReentrantConfirmationWhileRequestIsInFlight() throws {
         let view = configuredEyeGateOverlay(
             remainingSeconds: 0,
             isArmed: true
@@ -625,22 +614,18 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         var requestCount = 0
         view.onEmergencyOverrideRequested = {
             requestCount += 1
+            view.performEmergencyOverrideKeyCommand()
             return .complete
         }
 
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
         button.performClick(nil)
-        view.performEmergencyOverrideKeyCommand()
-        button.performClick(nil)
 
-        XCTAssertFalse(button.isEnabled)
-        XCTAssertEqual(requestCount, 0)
-        drainMainQueue()
         XCTAssertEqual(requestCount, 1)
         XCTAssertTrue(button.isEnabled)
     }
 
-    func testCompleteDecisionClearsEmergencyPendingIfOverlayStaysVisible() throws {
+    func testCompleteDecisionClearsEmergencyConfirmationIfOverlayStaysVisible() throws {
         let session = eyeGateSession()
         let view = RestOverlayView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
         view.configure(
@@ -661,9 +646,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
         button.performClick(nil)
 
-        XCTAssertFalse(button.isEnabled)
-        XCTAssertEqual(requestCount, 0)
-        drainMainQueue()
         XCTAssertEqual(requestCount, 1)
         XCTAssertTrue(button.isEnabled)
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverride"))
@@ -699,8 +681,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
         button.performClick(nil)
 
-        XCTAssertEqual(requestCount, 0)
-        drainMainQueue()
         XCTAssertEqual(requestCount, 1)
     }
 
@@ -721,8 +701,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         try performEmergencyClick(on: view, clickCount: 2)
 
-        XCTAssertEqual(requestCount, 1)
-        drainMainQueue()
         XCTAssertEqual(requestCount, 2)
     }
 
@@ -744,8 +722,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         try performEmergencyClick(on: view, clickCount: 1)
 
-        XCTAssertEqual(requestCount, 1)
-        drainMainQueue()
         XCTAssertEqual(requestCount, 2)
     }
 
@@ -803,7 +779,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertFalse(didComplete)
 
         try performEmergencyClick(on: view, clickCount: 1)
-        XCTAssertEqual(decisions, [.armed])
+        XCTAssertEqual(decisions, [.armed, .complete])
 
         drainMainQueue()
         XCTAssertEqual(decisions, [.armed, .complete])
@@ -849,12 +825,10 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         button.performClick(nil)
 
-        XCTAssertEqual(requestCount, 1)
-        drainMainQueue()
         XCTAssertEqual(requestCount, 2)
     }
 
-    func testArmedEmergencyMouseClickDefersConfirmationUntilMouseEventReturns() throws {
+    func testArmedEmergencyMouseClickRequestsConfirmationOnMouseUp() throws {
         let view = configuredEyeGateOverlay(
             remainingSeconds: 0,
             isArmed: true
@@ -870,8 +844,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         XCTAssertEqual(requestCount, 0)
         view.mouseUp(with: try mouseUpEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
-        XCTAssertEqual(requestCount, 0)
-        drainMainQueue()
         XCTAssertEqual(requestCount, 1)
     }
 
@@ -1067,7 +1039,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(engine.state.statistics.emergencyOverrides, 0)
 
         try performEmergencyClick(on: view, clickCount: 1)
-        drainMainQueue()
 
         XCTAssertFalse(coordinator.isArmed(for: session))
         XCTAssertNil(engine.state.activeSession)
