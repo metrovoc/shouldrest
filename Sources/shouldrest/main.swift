@@ -636,7 +636,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 now: now,
                 manualAwaiting: shouldAwaitManualFinish,
                 emergencyOverrideAction: overlayEmergencyOverrideAction(for: active, now: now),
-                emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: active),
+                emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: active, now: now),
                 bodyActions: overlayBodyActions(for: active, now: now)
             )
             if shouldAwaitManualFinish {
@@ -684,7 +684,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 settings: overlaySettings(for: session),
                 now: now,
                 emergencyOverrideAction: overlayEmergencyOverrideAction(for: session, now: now),
-                emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: session),
+                emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: session, now: now),
                 bodyActions: overlayBodyActions(for: session, now: now)
             )
             refreshActiveBreakShortcut()
@@ -1047,7 +1047,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 settings: settings,
                 now: now,
                 emergencyOverrideAction: overlayEmergencyOverrideAction(for: session, now: now),
-                emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: session),
+                emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: session, now: now),
                 bodyActions: nil
             )
             refreshActiveBreakShortcut()
@@ -1075,7 +1075,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 settings: overlaySettings(for: session),
                 now: now,
                 emergencyOverrideAction: overlayEmergencyOverrideAction(for: session, now: now),
-                emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: session),
+                emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: session, now: now),
                 bodyActions: overlayBodyActions(for: session, now: now)
             )
             refreshActiveBreakShortcut()
@@ -1250,7 +1250,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 now: now,
                 manualAwaiting: false,
                 emergencyOverrideAction: overlayEmergencyOverrideAction(for: session, now: now),
-                emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: session),
+                emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: session, now: now),
                 bodyActions: nil
             )
             logger.log("Emergency override armed for \(session.kind.rawValue), awaiting second overlay confirmation")
@@ -3107,9 +3107,7 @@ final class RestOverlayView: NSView {
         }
 
         emergencyRemainingSeconds = remainingSeconds
-        let shouldKeepLocalConfirmation = isSameEmergencySession &&
-            emergencyOverrideArmed
-        emergencyOverrideArmed = isArmed || shouldKeepLocalConfirmation
+        emergencyOverrideArmed = isArmed
 
         emergencyButton.isHidden = false
         emergencyButton.isEnabled = true
