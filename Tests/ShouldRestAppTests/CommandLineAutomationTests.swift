@@ -17,6 +17,49 @@ final class CommandLineAutomationTests: XCTestCase {
         XCTAssertFalse(output.localizedCaseInsensitiveContains("run it again"))
     }
 
+    func testCommandLineErrorsUseLocalizedCopy() {
+        L10n.languageOverride = "zh-Hans"
+        defer { L10n.languageOverride = nil }
+
+        let invalidURLOutput = captureStandardOutput {
+            XCTAssertTrue(CommandLineAutomation.handle(arguments: ["shouldrest", "shouldrest://unknown"]))
+        }
+        let invalidPauseOutput = captureStandardOutput {
+            XCTAssertTrue(CommandLineAutomation.handle(arguments: ["shouldrest", "pause", "--duration", "later"]))
+        }
+        let unknownCommandOutput = captureStandardOutput {
+            XCTAssertTrue(CommandLineAutomation.handle(arguments: ["shouldrest", "bogus"]))
+        }
+
+        XCTAssertTrue(invalidURLOutput.contains("ShouldRest URL 无效：shouldrest://unknown"))
+        XCTAssertFalse(invalidURLOutput.contains("Invalid ShouldRest URL"))
+        XCTAssertTrue(invalidPauseOutput.contains("暂停时长无效：later"))
+        XCTAssertFalse(invalidPauseOutput.contains("Invalid pause duration"))
+        XCTAssertTrue(unknownCommandOutput.contains("未知命令：bogus"))
+        XCTAssertTrue(unknownCommandOutput.contains("用法：shouldrest <命令> [选项]"))
+        XCTAssertFalse(unknownCommandOutput.contains("Unknown command"))
+    }
+
+    func testEyeGateCommandLineWarningsUseLocalizedCopy() {
+        L10n.languageOverride = "zh-Hans"
+        defer { L10n.languageOverride = nil }
+
+        let output = captureStandardOutput {
+            XCTAssertTrue(CommandLineAutomation.handle(arguments: [
+                "shouldrest",
+                "mini",
+                "--title",
+                "Read this",
+                "--noskip"
+            ]))
+        }
+
+        XCTAssertTrue(output.contains("护眼休息不支持可阅读内容自定义，已忽略。"))
+        XCTAssertTrue(output.contains("当前计划保持不变"))
+        XCTAssertFalse(output.contains("Eye Gate readable content customization is ignored."))
+        XCTAssertFalse(output.contains("current schedule kept"))
+    }
+
     func testEmergencyAutomationSignalWritesAndConsumesMarker() throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)

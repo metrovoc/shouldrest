@@ -193,10 +193,10 @@ enum CommandLineAutomation {
 
         if command.hasPrefix("shouldrest://") {
             guard let request = request(fromURLString: command) else {
-                print("Invalid ShouldRest URL: \(command)")
+                print(L10n.format("cli.invalidURL", command))
                 return true
             }
-            return dispatchOrQueue(request, message: "Requested automation URL: \(command)")
+            return dispatchOrQueue(request, message: L10n.format("cli.requestedAutomationURL", command))
         }
 
         switch command {
@@ -208,14 +208,14 @@ enum CommandLineAutomation {
             return true
         case "settings":
             if configuredSettings()?.admin.hideSettingsFileLocation == true {
-                print("Settings path hidden by administrator.")
+                print(L10n.tr("cli.settingsPathHidden"))
             } else {
                 print(AppPaths.settingsURL.path)
             }
             return true
         case "logs":
             if configuredSettings()?.admin.hideSettingsFileLocation == true {
-                print("Logs path hidden by administrator.")
+                print(L10n.tr("cli.logsPathHidden"))
             } else {
                 print(AppPaths.logURL.path)
             }
@@ -223,66 +223,66 @@ enum CommandLineAutomation {
         case "debug":
             return dispatchOrQueue(
                 AutomationRequest(command: .debug),
-                message: "Requested diagnostics from running ShouldRest."
+                message: L10n.tr("cli.requestedDiagnostics")
             )
         case "debug-panel", "debugPanel":
             return dispatchOrQueue(
                 AutomationRequest(command: .debugPanel),
-                message: "Requested diagnostics window from running ShouldRest."
+                message: L10n.tr("cli.requestedDiagnosticsWindow")
             )
         case "about":
             return dispatchOrQueue(
                 AutomationRequest(command: .about),
-                message: "Requested about window from running ShouldRest."
+                message: L10n.tr("cli.requestedAbout")
             )
         case "url":
             guard args.indices.contains(1) else {
-                print("Usage: shouldrest url shouldrest://pause?duration=30m")
+                print(L10n.tr("cli.urlUsage"))
                 return true
             }
             guard let request = request(fromURLString: args[1]) else {
-                print("Invalid ShouldRest URL: \(args[1])")
+                print(L10n.format("cli.invalidURL", args[1]))
                 return true
             }
-            return dispatchOrQueue(request, message: "Requested automation URL: \(args[1])")
+            return dispatchOrQueue(request, message: L10n.format("cli.requestedAutomationURL", args[1]))
         case "pause":
             let request = durationArgument(args)
             if let invalid = request.invalid {
-                print("Invalid pause duration: \(invalid)")
+                print(L10n.format("cli.invalidPauseDuration", invalid))
                 return true
             }
             return dispatchOrQueue(
                 AutomationRequest(command: .pause, duration: request.duration),
-                message: "Requested pause\(request.duration.map { " for \(Int($0)) seconds" } ?? " indefinitely")."
+                message: pauseRequestMessage(duration: request.duration)
             )
         case "resume":
-            return dispatchOrQueue(AutomationRequest(command: .resume), message: "Requested resume.")
+            return dispatchOrQueue(AutomationRequest(command: .resume), message: L10n.tr("cli.requestedResume"))
         case "toggle":
-            return dispatchOrQueue(AutomationRequest(command: .toggle), message: "Requested pause or resume.")
+            return dispatchOrQueue(AutomationRequest(command: .toggle), message: L10n.tr("cli.requestedToggle"))
         case "reset":
-            return dispatchOrQueue(AutomationRequest(command: .reset), message: "Requested reset.")
+            return dispatchOrQueue(AutomationRequest(command: .reset), message: L10n.tr("cli.requestedReset"))
         case "eye", "mini":
             let plan = eyeGateCommandPlan(args)
             if let invalid = plan.invalidWait {
-                print("Invalid wait duration: \(invalid)")
+                print(L10n.format("cli.invalidWaitDuration", invalid))
                 return true
             }
             if plan.ignoredReadableContent {
-                print("Eye Gate readable content customization is ignored.")
+                print(L10n.tr("cli.eyeReadableContentIgnored"))
             }
             if plan.keepsCurrentSchedule {
-                print("Requested Eye Gate noskip without wait; current schedule kept.")
+                print(L10n.tr("cli.eyeNoSkipWithoutWait"))
                 return true
             }
             guard let automationRequest = plan.request else { return true }
             return dispatchOrQueue(
                 automationRequest,
-                message: "Requested Eye Gate\(automationRequest.duration.map { " after \(Int($0)) seconds" } ?? " now")."
+                message: eyeGateRequestMessage(wait: automationRequest.duration)
             )
         case "body", "long":
             let request = restRequest(args)
             if let invalid = request.invalidWait {
-                print("Invalid wait duration: \(invalid)")
+                print(L10n.format("cli.invalidWaitDuration", invalid))
                 return true
             }
             let automationRequest = AutomationRequest(
@@ -293,25 +293,25 @@ enum CommandLineAutomation {
                 noSkip: request.noSkip
             )
             if request.noSkip, request.wait == nil {
-                return dispatchOrQueue(automationRequest, message: "Requested next Body Break content.")
+                return dispatchOrQueue(automationRequest, message: L10n.tr("cli.requestedNextBodyContent"))
             } else {
                 return dispatchOrQueue(
                     automationRequest,
-                    message: "Requested Body Break\(request.wait.map { " after \(Int($0)) seconds" } ?? " now")."
+                    message: bodyBreakRequestMessage(wait: request.wait)
                 )
             }
         case "emergency", "emergency-exit", "emergencyExit":
             return dispatchOrQueue(
                 AutomationRequest(command: .emergency),
-                message: "Requested Emergency Exit. Confirm from the overlay with a second click or Esc."
+                message: L10n.tr("cli.requestedEmergency")
             )
         case "preferences":
             return dispatchOrQueue(
                 AutomationRequest(command: .preferences),
-                message: "Requested preferences window."
+                message: L10n.tr("cli.requestedPreferences")
             )
         default:
-            print("Unknown command: \(command)\n\n\(helpText)")
+            print(L10n.format("cli.unknownCommand", command, helpText))
             return true
         }
     }
@@ -324,8 +324,29 @@ enum CommandLineAutomation {
         }
 
         pendingLaunchRequest = request
-        print("Starting ShouldRest. \(message)")
+        print(L10n.format("cli.startingShouldRest", message))
         return false
+    }
+
+    private static func pauseRequestMessage(duration: TimeInterval?) -> String {
+        guard let duration else {
+            return L10n.tr("cli.requestedPauseIndefinitely")
+        }
+        return L10n.format("cli.requestedPauseDuration", Int(duration))
+    }
+
+    private static func eyeGateRequestMessage(wait: TimeInterval?) -> String {
+        guard let wait else {
+            return L10n.tr("cli.requestedEyeNow")
+        }
+        return L10n.format("cli.requestedEyeAfter", Int(wait))
+    }
+
+    private static func bodyBreakRequestMessage(wait: TimeInterval?) -> String {
+        guard let wait else {
+            return L10n.tr("cli.requestedBodyNow")
+        }
+        return L10n.format("cli.requestedBodyAfter", Int(wait))
     }
 
     private static func post(_ request: AutomationRequest) {
