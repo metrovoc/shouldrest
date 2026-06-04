@@ -50,23 +50,30 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertTrue(texts.contains(RestRhythmPreset.recommended.help))
     }
 
-    func testOnboardingButtonsUseIconsAndDefaultAction() throws {
+    func testOnboardingButtonsUseIconsHelpAndDefaultAction() throws {
         let controller = OnboardingWindowController(
             onUsePreset: { _ in },
             onOpenPreferences: { _ in },
             onLearnMore: {}
         )
         let contentView = try XCTUnwrap(controller.window?.contentView)
-        let buttons = buttonsByTitle(in: contentView)
 
-        let learnMore = try XCTUnwrap(buttons[L10n.tr("onboarding.learnMore")])
-        let preferences = try XCTUnwrap(buttons[L10n.tr("onboarding.preferences")])
-        let useSelected = try XCTUnwrap(buttons[L10n.tr("onboarding.useSelected")])
+        let learnMore = try XCTUnwrap(button(withIdentifier: "onboarding.aboutButton", in: contentView))
+        let preferences = try XCTUnwrap(button(withIdentifier: "onboarding.preferencesButton", in: contentView))
+        let useSelected = try XCTUnwrap(button(withIdentifier: "onboarding.useSelectedButton", in: contentView))
 
         for button in [learnMore, preferences, useSelected] {
             XCTAssertNotNil(button.image)
             XCTAssertEqual(button.imagePosition, .imageLeading)
+            XCTAssertEqual(button.accessibilityLabel(), button.title)
+            XCTAssertEqual(button.accessibilityHelp(), button.toolTip)
         }
+        XCTAssertEqual(learnMore.title, L10n.tr("onboarding.learnMore"))
+        XCTAssertEqual(learnMore.toolTip, L10n.tr("onboarding.learnMoreHelp"))
+        XCTAssertEqual(preferences.title, L10n.tr("onboarding.preferences"))
+        XCTAssertEqual(preferences.toolTip, L10n.tr("onboarding.preferencesHelp"))
+        XCTAssertEqual(useSelected.title, L10n.tr("onboarding.useSelected"))
+        XCTAssertEqual(useSelected.toolTip, L10n.tr("onboarding.useSelectedHelp"))
         XCTAssertEqual(useSelected.keyEquivalent, "\r")
         XCTAssertEqual(useSelected.bezelStyle, .rounded)
     }
@@ -186,4 +193,17 @@ private func buttonsByTitle(in view: NSView, ancestorHidden: Bool = false) -> [S
         buttons.merge(buttonsByTitle(in: subview, ancestorHidden: hidden)) { current, _ in current }
     }
     return buttons
+}
+
+@MainActor
+private func button(withIdentifier identifier: String, in view: NSView) -> NSButton? {
+    if view.identifier?.rawValue == identifier {
+        return view as? NSButton
+    }
+    for subview in view.subviews {
+        if let button = button(withIdentifier: identifier, in: subview) {
+            return button
+        }
+    }
+    return nil
 }

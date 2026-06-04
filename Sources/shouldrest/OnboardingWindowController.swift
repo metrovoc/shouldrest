@@ -293,17 +293,23 @@ final class OnboardingWindowController: NSWindowController {
 
         let learnMoreButton = onboardingButton(
             title: L10n.tr("onboarding.learnMore"),
+            identifier: "onboarding.aboutButton",
             symbolName: "questionmark.circle",
+            help: L10n.tr("onboarding.learnMoreHelp"),
             action: #selector(learnMore)
         )
         let preferencesButton = onboardingButton(
             title: L10n.tr("onboarding.preferences"),
+            identifier: "onboarding.preferencesButton",
             symbolName: "slider.horizontal.3",
+            help: L10n.tr("onboarding.preferencesHelp"),
             action: #selector(openPreferences)
         )
         let useSelectedButton = onboardingButton(
             title: L10n.tr("onboarding.useSelected"),
+            identifier: "onboarding.useSelectedButton",
             symbolName: "checkmark.circle.fill",
+            help: L10n.tr("onboarding.useSelectedHelp"),
             action: #selector(useSelectedPreset)
         )
         useSelectedButton.keyEquivalent = "\r"
@@ -319,12 +325,16 @@ final class OnboardingWindowController: NSWindowController {
         return row
     }
 
-    private func onboardingButton(title: String, symbolName: String, action: Selector) -> NSButton {
+    private func onboardingButton(title: String, identifier: String, symbolName: String, help: String, action: Selector) -> NSButton {
         let button = NSButton(title: title, target: self, action: action)
+        button.identifier = NSUserInterfaceItemIdentifier(identifier)
         button.bezelStyle = .rounded
         button.image = symbolImage(symbolName, accessibilityDescription: title)
         button.imagePosition = .imageLeading
         button.imageHugsTitle = true
+        button.toolTip = help
+        button.setAccessibilityLabel(title)
+        button.setAccessibilityHelp(help)
         button.setContentHuggingPriority(.required, for: .horizontal)
         button.setContentCompressionResistancePriority(.required, for: .horizontal)
         return button

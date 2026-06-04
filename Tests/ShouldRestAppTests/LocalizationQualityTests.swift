@@ -48,6 +48,8 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(englishValues.contains("Eye Gate(s)"))
         XCTAssertFalse(englishValues.contains("%ds remaining"))
         XCTAssertFalse(englishValues.contains("Frequent Eyes"))
+        XCTAssertFalse(englishValues.contains("Learn More"))
+        XCTAssertFalse(englishValues.contains("Use Selected"))
         XCTAssertFalse(simplifiedChineseValues.contains("恢复小时"))
         XCTAssertFalse(simplifiedChineseValues.contains("危险值"))
 
@@ -61,12 +63,16 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(englishValues.contains("%@ active, %@ remaining"))
         XCTAssertTrue(englishValues.contains("Balanced"))
         XCTAssertTrue(englishValues.contains("More Eye Rests"))
+        XCTAssertTrue(englishValues.contains("About ShouldRest"))
+        XCTAssertTrue(englishValues.contains("Start With This Rhythm"))
         XCTAssertTrue(simplifiedChineseValues.contains("暂停到早晨方式"))
         XCTAssertTrue(simplifiedChineseValues.contains("恢复时间"))
         XCTAssertTrue(simplifiedChineseValues.contains("显示休息压力指示器"))
         XCTAssertTrue(simplifiedChineseValues.contains("压力 %d/10"))
         XCTAssertTrue(simplifiedChineseValues.contains("均衡"))
         XCTAssertTrue(simplifiedChineseValues.contains("更多护眼"))
+        XCTAssertTrue(simplifiedChineseValues.contains("关于 ShouldRest"))
+        XCTAssertTrue(simplifiedChineseValues.contains("使用这个节奏开始"))
     }
 
     func testEmergencyCopyUsesInternalConfirmationWithoutCountdownOrExternalWindow() {
