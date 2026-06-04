@@ -75,7 +75,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
             "Time away does not count as rest. " +
                 "Focus delays Body Break. " +
                 "Scheduling is limited to 09:00-18:00. " +
-                "2 app rules can pause rests or run them only for matched apps."
+                "2 app rules can pause rests during selected apps or limit rests to those apps."
         )
     }
 
@@ -106,7 +106,11 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         terms.objectValue = ["Zoom"]
         controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: terms))
 
-        XCTAssertTrue(summary.stringValue.contains("1 app rule can pause rests or run them only for matched apps."))
+        XCTAssertTrue(
+            summary.stringValue.contains(
+                "1 app rule can pause rests during selected apps or limit rests to those apps."
+            )
+        )
     }
 
     func testAppExclusionRuleSummariesUseSingleCharacterEllipsisWhenTruncated() throws {
@@ -410,7 +414,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         terms.objectValue = ["Zoom", "us.zoom.xos"]
         controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: terms))
 
-        XCTAssertEqual(preview.stringValue, "Matches Zoom, us.zoom.xos. Pauses Body Break while matched.")
+        XCTAssertEqual(preview.stringValue, "Pause Body Break during Zoom, us.zoom.xos.")
 
         selectPopup(mode, representedObject: AppExclusionRule.Mode.resumeOnlyWhenMatched.rawValue)
         XCTAssertTrue(sendAction(from: mode))
@@ -419,7 +423,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
 
         XCTAssertEqual(
             preview.stringValue,
-            "Matches Zoom, us.zoom.xos. Runs Eye Gate and Body Break only while matched."
+            "Run Eye Gate and Body Break only during Zoom, us.zoom.xos."
         )
     }
 
@@ -519,7 +523,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         try selectContextTab(in: contentView)
         let body = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionRuleBody.0", in: contentView) as? NSTextField)
 
-        XCTAssertEqual(body.stringValue, "匹配 zoom。匹配时暂停活动休息。")
+        XCTAssertEqual(body.stringValue, "在 zoom 运行时暂停活动休息。")
         XCTAssertFalse(body.stringValue.contains(" - "))
     }
 
