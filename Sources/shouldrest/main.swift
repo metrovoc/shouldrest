@@ -2918,7 +2918,9 @@ final class RestOverlayView: NSView {
             emergencyOverrideCompletionPending = false
             armEmergencyOverrideLocallyIfNeeded()
         case .complete:
-            break
+            emergencyOverrideCompletionPending = false
+            emergencyOverrideArmed = false
+            updateEmergencyAffordanceUI()
         case .unavailable:
             clearEmergencyOverrideLocally()
         }
