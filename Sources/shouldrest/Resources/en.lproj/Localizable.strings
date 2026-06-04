@@ -372,8 +372,8 @@
 "prefs.previewSoundHelp" = "Play this sound once";
 "prefs.previewSoundLabel" = "Preview %@";
 "prefs.previewSoundSpecificHelp" = "Play the selected %@ once.";
-"prefs.soundPreviewSilence" = "Silence selected";
-"prefs.soundPreviewPlayed" = "Previewed %@";
+"prefs.soundPreviewSilence" = "%@ is set to silence.";
+"prefs.soundPreviewPlayed" = "Previewed %@: %@.";
 "prefs.sound.silence" = "Silence";
 "prefs.sound.crystalGlass" = "Crystal Glass";
 "prefs.sound.windChime" = "Wind Chime";

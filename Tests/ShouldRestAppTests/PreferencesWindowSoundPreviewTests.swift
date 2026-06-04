@@ -45,10 +45,33 @@ final class PreferencesWindowSoundPreviewTests: XCTestCase {
         button.sendAction(button.action, to: button.target)
 
         let status = try XCTUnwrap(view(withIdentifier: "soundPreviewStatus", in: contentView) as? NSTextField)
+        let expectedStatus = L10n.format("prefs.soundPreviewSilence", L10n.tr("prefs.eyeStartSound"))
         XCTAssertFalse(status.isHidden)
-        XCTAssertEqual(status.stringValue, L10n.tr("prefs.soundPreviewSilence"))
-        XCTAssertEqual(status.toolTip, L10n.tr("prefs.soundPreviewSilence"))
-        XCTAssertEqual(status.accessibilityHelp(), L10n.tr("prefs.soundPreviewSilence"))
+        XCTAssertEqual(status.stringValue, expectedStatus)
+        XCTAssertEqual(status.toolTip, expectedStatus)
+        XCTAssertEqual(status.accessibilityLabel(), expectedStatus)
+        XCTAssertEqual(status.accessibilityHelp(), expectedStatus)
+    }
+
+    func testPreviewingSelectedSoundShowsRowAndSoundName() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+        let button = try XCTUnwrap(view(withIdentifier: "eyeStart", in: contentView) as? NSButton)
+        let popup = try XCTUnwrap(soundPopup(containingButton: button, in: contentView))
+        popup.selectItem(at: min(1, popup.numberOfItems - 1))
+        let soundTitle = try XCTUnwrap(popup.selectedItem?.title)
+
+        button.sendAction(button.action, to: button.target)
+
+        let status = try XCTUnwrap(view(withIdentifier: "soundPreviewStatus", in: contentView) as? NSTextField)
+        let expectedStatus = L10n.format("prefs.soundPreviewPlayed", L10n.tr("prefs.eyeStartSound"), soundTitle)
+        XCTAssertFalse(status.isHidden)
+        XCTAssertEqual(status.stringValue, expectedStatus)
+        XCTAssertEqual(status.toolTip, expectedStatus)
+        XCTAssertEqual(status.accessibilityLabel(), expectedStatus)
+        XCTAssertEqual(status.accessibilityHelp(), expectedStatus)
     }
 
     func testChangingSoundSelectionClearsPreviewStatus() throws {
@@ -68,6 +91,7 @@ final class PreferencesWindowSoundPreviewTests: XCTestCase {
         XCTAssertTrue(status.isHidden)
         XCTAssertEqual(status.stringValue, "")
         XCTAssertNil(status.toolTip)
+        XCTAssertNil(status.accessibilityLabel())
         XCTAssertNil(status.accessibilityHelp())
     }
 

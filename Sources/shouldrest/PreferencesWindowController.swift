@@ -3714,19 +3714,24 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     @objc private func previewSound(_ sender: NSButton) {
-        guard let popup = soundPopup(for: sender.identifier?.rawValue) else { return }
+        guard let identifier = sender.identifier?.rawValue,
+              let popup = soundPopup(for: identifier),
+              let soundLabel = soundPreviewLabel(for: identifier) else {
+            return
+        }
         let volume = min(1, max(0, soundVolumeSlider.doubleValue))
         let option = selectedSoundOption(in: popup)
         soundPlayer.play(option == .silence ? .silent : .named(option.name, volume: volume))
         let status = option == .silence
-            ? L10n.tr("prefs.soundPreviewSilence")
-            : L10n.format("prefs.soundPreviewPlayed", option.title)
+            ? L10n.format("prefs.soundPreviewSilence", soundLabel)
+            : L10n.format("prefs.soundPreviewPlayed", soundLabel, option.title)
         showSoundPreviewStatus(status)
     }
 
     private func showSoundPreviewStatus(_ status: String) {
         soundPreviewStatusLabel.stringValue = status
         soundPreviewStatusLabel.toolTip = status
+        soundPreviewStatusLabel.setAccessibilityLabel(status)
         soundPreviewStatusLabel.setAccessibilityHelp(status)
         soundPreviewStatusLabel.isHidden = false
     }
@@ -3735,6 +3740,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         soundPreviewStatusLabel.isHidden = true
         soundPreviewStatusLabel.stringValue = ""
         soundPreviewStatusLabel.toolTip = nil
+        soundPreviewStatusLabel.setAccessibilityLabel(nil)
         soundPreviewStatusLabel.setAccessibilityHelp(nil)
     }
 
@@ -5589,6 +5595,21 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             bodyStartSound
         case "bodyFinish":
             bodyFinishSound
+        default:
+            nil
+        }
+    }
+
+    private func soundPreviewLabel(for identifier: String?) -> String? {
+        switch identifier {
+        case "eyeStart":
+            L10n.tr("prefs.eyeStartSound")
+        case "eyeFinish":
+            L10n.tr("prefs.eyeFinishSound")
+        case "bodyStart":
+            L10n.tr("prefs.bodyStartSound")
+        case "bodyFinish":
+            L10n.tr("prefs.bodyFinishSound")
         default:
             nil
         }
