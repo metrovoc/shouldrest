@@ -49,6 +49,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(simplifiedChineseValues.contains("ShouldRest 调试"))
         XCTAssertFalse(simplifiedChineseValues.contains("调试信息"))
         XCTAssertFalse(simplifiedChineseValues.contains("管理员："))
+        XCTAssertFalse(simplifiedChineseValues.contains("身体休息"))
         XCTAssertFalse(simplifiedChineseLines.contains("名称"))
         XCTAssertFalse(simplifiedChineseValues.contains("匹配词"))
         XCTAssertFalse(simplifiedChineseLines.contains("模式"))

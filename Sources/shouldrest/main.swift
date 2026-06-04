@@ -2591,8 +2591,14 @@ final class RestOverlayView: NSView {
         guard showsContent else { return }
 
         if manualAwaiting {
-            titleLabel.stringValue = L10n.tr("overlay.completeTitle")
-            setDetailText(L10n.tr("overlay.completeBody"), allowsRichText: false)
+            switch session.kind {
+            case .eyeGate:
+                titleLabel.stringValue = L10n.tr("overlay.eyeCompleteTitle")
+                setDetailText(L10n.tr("overlay.eyeCompleteBody"), allowsRichText: false)
+            case .bodyBreak:
+                titleLabel.stringValue = L10n.tr("overlay.bodyCompleteTitle")
+                setDetailText(L10n.tr("overlay.bodyCompleteBody"), allowsRichText: false)
+            }
             countdownLabel.stringValue = L10n.tr("overlay.ready")
             return
         }

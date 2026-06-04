@@ -84,6 +84,41 @@ final class RestOverlayViewCountdownTests: XCTestCase {
         XCTAssertFalse(title.stringValue.contains("Look"))
     }
 
+    func testManualAwaitingEyeGateOverlayUsesKindSpecificCompletionCopy() throws {
+        L10n.languageOverride = "en"
+        defer { L10n.languageOverride = nil }
+
+        let view = configuredEyeGateOverlay(
+            remainingSeconds: 0,
+            manualAwaiting: true,
+            manualFinishEnabled: true
+        )
+
+        let title = try XCTUnwrap(view.descendant(withIdentifier: "overlay.title.label") as? NSTextField)
+        let detail = try XCTUnwrap(view.descendant(withIdentifier: "overlay.detail.label") as? NSTextField)
+        let countdown = try XCTUnwrap(view.descendant(withIdentifier: "overlay.countdown.label") as? NSTextField)
+        XCTAssertEqual(title.stringValue, "Eye Gate complete")
+        XCTAssertEqual(detail.stringValue, "Finish when you are ready to look back at the screen.")
+        XCTAssertEqual(countdown.stringValue, "ready")
+    }
+
+    func testManualAwaitingBodyBreakOverlayUsesKindSpecificCompletionCopy() throws {
+        L10n.languageOverride = "zh-Hans"
+        defer { L10n.languageOverride = nil }
+
+        let view = configuredBodyOverlay(
+            remainingSeconds: 0,
+            manualAwaiting: true
+        )
+
+        let title = try XCTUnwrap(view.descendant(withIdentifier: "overlay.title.label") as? NSTextField)
+        let detail = try XCTUnwrap(view.descendant(withIdentifier: "overlay.detail.label") as? NSTextField)
+        let countdown = try XCTUnwrap(view.descendant(withIdentifier: "overlay.countdown.label") as? NSTextField)
+        XCTAssertEqual(title.stringValue, "活动休息已完成")
+        XCTAssertEqual(detail.stringValue, "准备好返回工作时再完成。")
+        XCTAssertEqual(countdown.stringValue, "就绪")
+    }
+
     func testBodyBreakOverlayLongCustomTextStaysWithinReadableLayout() throws {
         let longWord = String(repeating: "ShouldRestNeedsUnbrokenCustomContentToWrap", count: 6)
         var settings = RestSettings.defaults
@@ -120,7 +155,8 @@ final class RestOverlayViewCountdownTests: XCTestCase {
 
     private func configuredBodyOverlay(
         remainingSeconds: Int,
-        settings: RestSettings = .defaults
+        settings: RestSettings = .defaults,
+        manualAwaiting: Bool = false
     ) -> RestOverlayView {
         let start = Date()
         let session = RestSession(
@@ -136,28 +172,33 @@ final class RestOverlayViewCountdownTests: XCTestCase {
             remainingSeconds: remainingSeconds,
             settings: settings,
             showsContent: true,
-            manualAwaiting: false,
+            manualAwaiting: manualAwaiting,
             emergencyOverrideRemainingSeconds: nil
         )
         return view
     }
 
-    private func configuredEyeGateOverlay(settings: RestSettings = .defaults) -> RestOverlayView {
+    private func configuredEyeGateOverlay(
+        settings: RestSettings = .defaults,
+        remainingSeconds: Int = 20,
+        manualAwaiting: Bool = false,
+        manualFinishEnabled: Bool = false
+    ) -> RestOverlayView {
         let start = Date()
         let session = RestSession(
             kind: .eyeGate,
             startedAt: start,
             scheduledAt: start,
             duration: 20,
-            manualFinishEnabled: false
+            manualFinishEnabled: manualFinishEnabled
         )
         let view = RestOverlayView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
         view.configure(
             session: session,
-            remainingSeconds: 20,
+            remainingSeconds: remainingSeconds,
             settings: settings,
             showsContent: true,
-            manualAwaiting: false,
+            manualAwaiting: manualAwaiting,
             emergencyOverrideRemainingSeconds: 0
         )
         return view

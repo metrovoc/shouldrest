@@ -91,10 +91,12 @@
 "deferral.appExclusion" = "应用排除：%@";
 "overlay.eyeTitle" = "看向远处";
 "overlay.eyeBody" = "放松对焦，慢慢眨眼，计时结束前不要看屏幕。";
-"overlay.bodyTitle" = "身体休息";
+"overlay.bodyTitle" = "活动休息";
 "overlay.bodyBody" = "站起来，呼吸，活动一下";
-"overlay.completeTitle" = "休息完成";
-"overlay.completeBody" = "准备好后结束休息";
+"overlay.eyeCompleteTitle" = "护眼休息已完成";
+"overlay.eyeCompleteBody" = "准备好重新看屏幕后再完成。";
+"overlay.bodyCompleteTitle" = "活动休息已完成";
+"overlay.bodyCompleteBody" = "准备好返回工作时再完成。";
 "overlay.ready" = "就绪";
 "overlay.emergencyOverride" = "紧急退出 · Esc";
 "overlay.emergencyOverrideConfirm" = "再次点击或按 Esc 退出";
@@ -103,8 +105,8 @@
 "overlay.bodyPostpone" = "推迟";
 "overlay.bodySkip" = "跳过";
 "overlay.bodyFinish" = "完成";
-"overlay.bodyPostponeHelp" = "在允许推迟的窗口内，将这次身体休息延后。";
-"overlay.bodySkipHelp" = "推迟不再可用时，跳过这次身体休息。";
+"overlay.bodyPostponeHelp" = "在允许推迟的窗口内，将这次活动休息延后。";
+"overlay.bodySkipHelp" = "推迟不再可用时，跳过这次活动休息。";
 "overlay.bodyFinishHelp" = "达到要求时长后，完成这次休息。";
 "preferences.title" = "ShouldRest 偏好设置";
 "debug.title" = "ShouldRest 诊断";
