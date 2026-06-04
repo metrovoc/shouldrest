@@ -450,6 +450,10 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertEqual(cancelButton.accessibilityLabel(), L10n.tr("prefs.cancelCustomIdeaEdit"))
         XCTAssertEqual(cancelButton.accessibilityHelp(), L10n.tr("prefs.cancelCustomIdeaEditHelp"))
         XCTAssertEqual(cancelButton.image?.accessibilityDescription, L10n.tr("prefs.cancelCustomIdeaEdit"))
+        XCTAssertGreaterThanOrEqual(
+            cancelButton.constraints.first { $0.firstAttribute == .width }?.constant ?? 0,
+            126
+        )
         XCTAssertEqual(editWalk.toolTip, L10n.tr("prefs.editCustomIdeaHelp"))
         XCTAssertEqual(editWalk.accessibilityLabel(), L10n.tr("prefs.editCustomIdea"))
         XCTAssertEqual(editWalk.accessibilityHelp(), L10n.tr("prefs.editCustomIdeaHelp"))

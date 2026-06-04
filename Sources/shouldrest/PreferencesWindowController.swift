@@ -1792,7 +1792,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             help: L10n.tr("prefs.cancelAppExclusionRuleEditHelp"),
             on: appExclusionCancelEditButton
         )
-        appExclusionCancelEditButton.widthAnchor.constraint(equalToConstant: 104).isActive = true
+        appExclusionCancelEditButton.widthAnchor.constraint(equalToConstant: 126).isActive = true
         appExclusionCancelEditButton.isHidden = true
         updateAppExclusionActionButtonPresentation()
     }
@@ -1834,7 +1834,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             help: L10n.tr("prefs.cancelCustomIdeaEditHelp"),
             on: customBodyCancelEditButton
         )
-        customBodyCancelEditButton.widthAnchor.constraint(equalToConstant: 104).isActive = true
+        customBodyCancelEditButton.widthAnchor.constraint(equalToConstant: 126).isActive = true
         customBodyCancelEditButton.isHidden = true
         updateCustomBodyActionButtonPresentation()
     }

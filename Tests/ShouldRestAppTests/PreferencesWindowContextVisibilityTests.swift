@@ -777,6 +777,10 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertEqual(cancelButton.accessibilityHelp(), L10n.tr("prefs.cancelAppExclusionRuleEditHelp"))
         XCTAssertEqual(cancelButton.image?.accessibilityDescription, L10n.tr("prefs.cancelAppExclusionRuleEdit"))
         XCTAssertGreaterThanOrEqual(
+            cancelButton.constraints.first { $0.firstAttribute == .width }?.constant ?? 0,
+            126
+        )
+        XCTAssertGreaterThanOrEqual(
             actionButton.constraints.first { $0.firstAttribute == .width }?.constant ?? 0,
             156
         )

@@ -317,7 +317,7 @@
 "prefs.addAppExclusionRuleDisabledEmptyHelp" = "请先选择运行中的应用，或输入应用名称。";
 "prefs.updateAppExclusionRule" = "更新应用规则";
 "prefs.updateAppExclusionRuleHelp" = "更新当前选中的应用规则。";
-"prefs.cancelAppExclusionRuleEdit" = "取消";
+"prefs.cancelAppExclusionRuleEdit" = "取消编辑";
 "prefs.cancelAppExclusionRuleEditHelp" = "停止编辑当前选中的应用规则。";
 "prefs.appExclusionRules" = "已保存应用规则";
 "prefs.editAppExclusionRule" = "编辑应用规则";
@@ -407,7 +407,7 @@
 "prefs.addCustomIdeaDisabledEmptyHelp" = "请先填写标题或正文。";
 "prefs.updateCustomIdea" = "更新提示";
 "prefs.updateCustomIdeaHelp" = "更新当前选中的活动休息提示。";
-"prefs.cancelCustomIdeaEdit" = "取消";
+"prefs.cancelCustomIdeaEdit" = "取消编辑";
 "prefs.cancelCustomIdeaEditHelp" = "停止编辑当前选中的活动休息提示。";
 "prefs.customIdeaRotation" = "自定义提示";
 "prefs.editCustomIdea" = "编辑提示";

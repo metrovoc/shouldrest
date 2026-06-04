@@ -317,7 +317,7 @@
 "prefs.addAppExclusionRuleDisabledEmptyHelp" = "Choose a running app or type an app name first.";
 "prefs.updateAppExclusionRule" = "Update App Rule";
 "prefs.updateAppExclusionRuleHelp" = "Update the selected app rule.";
-"prefs.cancelAppExclusionRuleEdit" = "Cancel";
+"prefs.cancelAppExclusionRuleEdit" = "Cancel Edit";
 "prefs.cancelAppExclusionRuleEditHelp" = "Stop editing the selected app rule.";
 "prefs.appExclusionRules" = "Saved app rules";
 "prefs.editAppExclusionRule" = "Edit App Rule";
@@ -407,7 +407,7 @@
 "prefs.addCustomIdeaDisabledEmptyHelp" = "Add a title or body text first.";
 "prefs.updateCustomIdea" = "Update Idea";
 "prefs.updateCustomIdeaHelp" = "Update the selected Body Break idea.";
-"prefs.cancelCustomIdeaEdit" = "Cancel";
+"prefs.cancelCustomIdeaEdit" = "Cancel Edit";
 "prefs.cancelCustomIdeaEditHelp" = "Stop editing the selected Body Break idea.";
 "prefs.customIdeaRotation" = "Custom ideas";
 "prefs.editCustomIdea" = "Edit Idea";
