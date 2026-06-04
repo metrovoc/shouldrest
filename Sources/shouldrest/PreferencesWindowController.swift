@@ -3016,8 +3016,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             updateSoundVolumeLabel()
         }
         if let popup = sender as? NSPopUpButton, isSoundPopup(popup) {
-            soundPreviewStatusLabel.isHidden = true
-            soundPreviewStatusLabel.stringValue = ""
+            clearSoundPreviewStatus()
         }
         if let popup = sender as? NSPopUpButton {
             if popup === pauseUntilMorningMode {
@@ -3670,10 +3669,24 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let volume = min(1, max(0, soundVolumeSlider.doubleValue))
         let option = selectedSoundOption(in: popup)
         soundPlayer.play(option == .silence ? .silent : .named(option.name, volume: volume))
-        soundPreviewStatusLabel.stringValue = option == .silence
+        let status = option == .silence
             ? L10n.tr("prefs.soundPreviewSilence")
             : L10n.format("prefs.soundPreviewPlayed", option.title)
+        showSoundPreviewStatus(status)
+    }
+
+    private func showSoundPreviewStatus(_ status: String) {
+        soundPreviewStatusLabel.stringValue = status
+        soundPreviewStatusLabel.toolTip = status
+        soundPreviewStatusLabel.setAccessibilityHelp(status)
         soundPreviewStatusLabel.isHidden = false
+    }
+
+    private func clearSoundPreviewStatus() {
+        soundPreviewStatusLabel.isHidden = true
+        soundPreviewStatusLabel.stringValue = ""
+        soundPreviewStatusLabel.toolTip = nil
+        soundPreviewStatusLabel.setAccessibilityHelp(nil)
     }
 
     @objc private func chooseLocalImagePressed() {

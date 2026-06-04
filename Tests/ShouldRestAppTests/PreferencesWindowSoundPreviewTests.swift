@@ -31,6 +31,8 @@ final class PreferencesWindowSoundPreviewTests: XCTestCase {
         let status = try XCTUnwrap(view(withIdentifier: "soundPreviewStatus", in: contentView) as? NSTextField)
         XCTAssertFalse(status.isHidden)
         XCTAssertEqual(status.stringValue, L10n.tr("prefs.soundPreviewSilence"))
+        XCTAssertEqual(status.toolTip, L10n.tr("prefs.soundPreviewSilence"))
+        XCTAssertEqual(status.accessibilityHelp(), L10n.tr("prefs.soundPreviewSilence"))
     }
 
     func testChangingSoundSelectionClearsPreviewStatus() throws {
@@ -49,6 +51,8 @@ final class PreferencesWindowSoundPreviewTests: XCTestCase {
 
         XCTAssertTrue(status.isHidden)
         XCTAssertEqual(status.stringValue, "")
+        XCTAssertNil(status.toolTip)
+        XCTAssertNil(status.accessibilityHelp())
     }
 
     private func soundPopup(containingButton button: NSButton, in view: NSView) -> NSPopUpButton? {
