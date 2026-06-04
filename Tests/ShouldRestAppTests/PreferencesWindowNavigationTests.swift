@@ -126,6 +126,41 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         XCTAssertNil(savedSettings.value)
     }
 
+    func testPreferenceSearchFindsBulkEditorsOnlyByExplicitJSONQuery() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "calls",
+                name: "Calls",
+                matchTerms: ["zoom"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
+        let tabView = try XCTUnwrap(view(withIdentifier: "prefs.tabView", in: contentView) as? NSTabView)
+        let searchField = try XCTUnwrap(view(withIdentifier: "prefs.searchField", in: contentView) as? NSSearchField)
+        let searchStatus = try XCTUnwrap(view(withIdentifier: "prefs.searchStatusLabel", in: contentView) as? NSTextField)
+
+        searchField.stringValue = "json"
+
+        XCTAssertTrue(sendAction(from: searchField))
+
+        let bulkRules = try XCTUnwrap(view(withIdentifier: "appExclusions", in: contentView) as? NSButton)
+        XCTAssertEqual(tabView.selectedTabViewItem?.identifier as? String, L10n.tr("prefs.tabContext"))
+        XCTAssertEqual(bulkRules.title, L10n.tr("prefs.showAdvancedRules"))
+        XCTAssertTrue(searchStatus.stringValue.contains(L10n.tr("prefs.showAdvancedRules")))
+        XCTAssertTrue(isFirstResponder(bulkRules, in: window))
+        XCTAssertNil(savedSettings.value)
+    }
+
     func testReturnInPreferenceSearchCyclesToNextVisibleMatchWithoutAutosave() throws {
         defer { L10n.languageOverride = nil }
         L10n.languageOverride = "en"
