@@ -267,6 +267,69 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertEqual(statusLabel.accessibilityHelp(), statusLabel.toolTip)
     }
 
+    func testInvalidAppRulesBulkEditorIsRevealedWhenAutosaveFails() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "alpha",
+                name: "Alpha",
+                matchTerms: ["alpha.app"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
+        let tabView = try XCTUnwrap(view(withIdentifier: "prefs.tabView", in: contentView) as? NSTabView)
+        let appRow = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionsJSONRow", in: contentView))
+        let appButton = try XCTUnwrap(view(withIdentifier: "appExclusions", in: contentView) as? NSButton)
+        let editor = try XCTUnwrap(view(withIdentifier: "appExclusionsJSONEditor", in: contentView) as? NSTextView)
+        let statusLabel = try XCTUnwrap(view(withIdentifier: "autosaveStatusLabel", in: contentView) as? NSTextField)
+
+        XCTAssertTrue(appRow.isHidden)
+        tabView.selectTabViewItem(withIdentifier: L10n.tr("prefs.tabAppearance"))
+        editor.string = "{ invalid json"
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: editor))
+
+        XCTAssertFalse(controller.flushPendingAutosave(showAlerts: false))
+
+        XCTAssertEqual(tabView.selectedTabViewItem?.identifier as? String, L10n.tr("prefs.tabContext"))
+        XCTAssertFalse(appRow.isHidden)
+        XCTAssertEqual(appButton.title, L10n.tr("prefs.hideAdvancedRules"))
+        XCTAssertEqual(statusLabel.stringValue, L10n.format("prefs.autosaveInvalidField", L10n.tr("prefs.advancedRulesJSON")))
+        XCTAssertTrue(window.firstResponder === editor)
+    }
+
+    func testInvalidIdeasBulkEditorIsRevealedWhenAutosaveFails() throws {
+        var settings = RestSettings.defaults
+        settings.contentLibrary.customBodyBreakIdeas = [
+            RestIdea(id: "stretch", kind: .bodyBreak, title: "Stretch", body: "Open shoulders")
+        ]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
+        let tabView = try XCTUnwrap(view(withIdentifier: "prefs.tabView", in: contentView) as? NSTabView)
+        let ideasRow = try XCTUnwrap(view(withIdentifier: "prefs.customBodyIdeasJSONRow", in: contentView))
+        let ideasButton = try XCTUnwrap(view(withIdentifier: "customIdeas", in: contentView) as? NSButton)
+        let editor = try XCTUnwrap(view(withIdentifier: "customBodyIdeasJSONEditor", in: contentView) as? NSTextView)
+        let statusLabel = try XCTUnwrap(view(withIdentifier: "autosaveStatusLabel", in: contentView) as? NSTextField)
+
+        XCTAssertTrue(ideasRow.isHidden)
+        tabView.selectTabViewItem(withIdentifier: L10n.tr("prefs.tabSchedule"))
+        editor.string = "{ invalid json"
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: editor))
+
+        XCTAssertFalse(controller.flushPendingAutosave(showAlerts: false))
+
+        XCTAssertEqual(tabView.selectedTabViewItem?.identifier as? String, L10n.tr("prefs.tabAppearance"))
+        XCTAssertFalse(ideasRow.isHidden)
+        XCTAssertEqual(ideasButton.title, L10n.tr("prefs.hideAdvancedIdeas"))
+        XCTAssertEqual(statusLabel.stringValue, L10n.format("prefs.autosaveInvalidField", L10n.tr("prefs.advancedIdeasJSON")))
+        XCTAssertTrue(window.firstResponder === editor)
+    }
+
     private func view(withIdentifier identifier: String, in view: NSView) -> NSView? {
         if view.identifier?.rawValue == identifier {
             return view

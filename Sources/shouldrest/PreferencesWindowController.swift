@@ -236,6 +236,29 @@ private enum PreferencesSaveStatus {
     case invalid
 }
 
+private enum PreferencesAdvancedBulkEditor {
+    case appRules
+    case customIdeas
+
+    var fieldName: String {
+        switch self {
+        case .appRules:
+            L10n.tr("prefs.advancedRulesJSON")
+        case .customIdeas:
+            L10n.tr("prefs.advancedIdeasJSON")
+        }
+    }
+
+    var tabIdentifier: String {
+        switch self {
+        case .appRules:
+            L10n.tr("prefs.tabContext")
+        case .customIdeas:
+            L10n.tr("prefs.tabAppearance")
+        }
+    }
+}
+
 private enum PreferencesSectionIcon {
     case restGate
     case systemSymbol(String)
@@ -3304,11 +3327,29 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         if let invalid = error as? InvalidAdvancedJSON {
             saveStatusInvalidFieldName = invalid.fieldName
             saveStatusInvalidDetail = invalid.errorDescription
+            revealInvalidAdvancedEditor(invalid.editor)
         } else {
             saveStatusInvalidFieldName = nil
             saveStatusInvalidDetail = error.localizedDescription
         }
         setSaveStatus(.invalid)
+    }
+
+    private func revealInvalidAdvancedEditor(_ editor: PreferencesAdvancedBulkEditor) {
+        preferencesTabView?.selectTabViewItem(withIdentifier: editor.tabIdentifier)
+
+        let textView: NSTextView
+        switch editor {
+        case .appRules:
+            setAdvancedDisclosure(row: appExclusionsJSONRow, button: appExclusionsAdvancedButton, expanded: true)
+            textView = appExclusionsJSONEditor
+        case .customIdeas:
+            setAdvancedDisclosure(row: customBodyIdeasJSONRow, button: customBodyIdeasAdvancedButton, expanded: true)
+            textView = customBodyIdeasJSONEditor
+        }
+
+        textView.scrollToVisible(textView.bounds)
+        window?.makeFirstResponder(textView)
     }
 
     @objc private func previewSound(_ sender: NSButton) {
@@ -3755,8 +3796,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     private struct InvalidAdvancedJSON: LocalizedError {
-        var fieldName: String
+        var editor: PreferencesAdvancedBulkEditor
         var underlying: Error
+
+        var fieldName: String {
+            editor.fieldName
+        }
 
         var errorDescription: String? {
             L10n.format("prefs.invalidJSONBody", fieldName, underlying.localizedDescription)
@@ -3779,7 +3824,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                 .decode([AppExclusionRule].self, from: data)
                 .map(normalizedAppExclusionRuleForPreferences)
         } catch {
-            throw InvalidAdvancedJSON(fieldName: L10n.tr("prefs.advancedRulesJSON"), underlying: error)
+            throw InvalidAdvancedJSON(editor: .appRules, underlying: error)
         }
     }
 
@@ -4057,7 +4102,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                     )
                 }
         } catch {
-            throw InvalidAdvancedJSON(fieldName: L10n.tr("prefs.advancedIdeasJSON"), underlying: error)
+            throw InvalidAdvancedJSON(editor: .customIdeas, underlying: error)
         }
     }
 
