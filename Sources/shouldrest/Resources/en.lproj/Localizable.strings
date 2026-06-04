@@ -308,7 +308,7 @@
 "prefs.showAdminControls" = "Administrative controls";
 "prefs.hideAdminControls" = "Hide administrative controls";
 "prefs.adminControlsHelp" = "Use these options for deployment policy and support diagnostics, not day-to-day rest behavior.";
-"prefs.autosaveReady" = "Autosave on";
+"prefs.autosaveReady" = "All changes saved";
 "prefs.headerSubtitle" = "Strict Eye Gates, flexible Body Breaks, and settings that save themselves.";
 "prefs.autosaveEditing" = "Editing...";
 "prefs.autosaveSaving" = "Saving...";

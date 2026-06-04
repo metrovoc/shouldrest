@@ -5,6 +5,9 @@ import XCTest
 @MainActor
 final class PreferencesWindowAutosaveStatusTests: XCTestCase {
     func testPreferencesShowIconAutosaveStatusWithoutSaveButton() throws {
+        L10n.languageOverride = "en"
+        defer { L10n.languageOverride = nil }
+
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
 
@@ -13,6 +16,7 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
 
         XCTAssertNotNil(icon.image)
         XCTAssertEqual(label.stringValue, L10n.tr("prefs.autosaveReady"))
+        XCTAssertEqual(label.stringValue, "All changes saved")
         XCTAssertFalse(buttonTitles(in: contentView).contains("Save"))
     }
 
@@ -59,6 +63,16 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
             XCTAssertFalse(alert.buttons[0].hasDestructiveAction)
             XCTAssertTrue(alert.buttons[1].hasDestructiveAction)
         }
+    }
+
+    func testAutosaveReadyCopyUsesSavedStateInEnglishAndChinese() {
+        defer { L10n.languageOverride = nil }
+
+        L10n.languageOverride = "en"
+        XCTAssertEqual(L10n.tr("prefs.autosaveReady"), "All changes saved")
+
+        L10n.languageOverride = "zh-Hans"
+        XCTAssertEqual(L10n.tr("prefs.autosaveReady"), "所有更改已保存")
     }
 
     private func view(withIdentifier identifier: String, in view: NSView) -> NSView? {

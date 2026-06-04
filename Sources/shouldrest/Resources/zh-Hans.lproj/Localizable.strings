@@ -308,7 +308,7 @@
 "prefs.showAdminControls" = "管理员控制";
 "prefs.hideAdminControls" = "隐藏管理员控制";
 "prefs.adminControlsHelp" = "这些选项用于部署策略和支持诊断，不是日常休息行为设置。";
-"prefs.autosaveReady" = "自动保存已开启";
+"prefs.autosaveReady" = "所有更改已保存";
 "prefs.headerSubtitle" = "严格护眼休息，灵活活动休息，设置会自动保存。";
 "prefs.autosaveEditing" = "正在编辑...";
 "prefs.autosaveSaving" = "正在保存...";
