@@ -1530,18 +1530,25 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func updateDisclosureButton(_ button: NSButton, expanded: Bool) {
         let title: String
+        let help: String
         switch button.identifier?.rawValue {
         case "customIdeas":
             title = expanded ? L10n.tr("prefs.hideAdvancedIdeas") : L10n.tr("prefs.showAdvancedIdeas")
+            help = L10n.tr("prefs.advancedIdeasHelp")
         case "adminControls":
             title = expanded ? L10n.tr("prefs.hideAdminControls") : L10n.tr("prefs.showAdminControls")
+            help = L10n.tr("prefs.adminControlsHelp")
         default:
             title = expanded ? L10n.tr("prefs.hideAdvancedRules") : L10n.tr("prefs.showAdvancedRules")
+            help = L10n.tr("prefs.advancedRulesHelp")
         }
         button.title = title
+        button.toolTip = help
+        button.setAccessibilityLabel(title)
+        button.setAccessibilityHelp(help)
         button.image = NSImage(
             systemSymbolName: expanded ? "chevron.down" : "chevron.right",
-            accessibilityDescription: nil
+            accessibilityDescription: title
         )
     }
 

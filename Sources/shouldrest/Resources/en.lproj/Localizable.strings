@@ -213,9 +213,10 @@
 "prefs.appExclusionAppliesBody" = "Body Break";
 "prefs.appExclusionAppliesNone" = "No rest type";
 "prefs.appExclusionNoTerms" = "No match terms";
-"prefs.advancedRulesJSON" = "Advanced rules JSON";
-"prefs.showAdvancedRules" = "Advanced rules";
-"prefs.hideAdvancedRules" = "Hide advanced rules";
+"prefs.advancedRulesJSON" = "Raw rule JSON";
+"prefs.showAdvancedRules" = "Edit raw rule JSON";
+"prefs.hideAdvancedRules" = "Hide raw rule JSON";
+"prefs.advancedRulesHelp" = "Use raw JSON only for bulk edits or import/export. The rule list above is the normal editor.";
 "prefs.exclusionMode.pauseWhenMatched" = "Pause while matched";
 "prefs.exclusionMode.resumeOnlyWhenMatched" = "Run only while matched";
 "prefs.sectionPresentation" = "Presentation and Sound";
@@ -257,9 +258,10 @@
 "prefs.editCustomIdeaHelp" = "Edit this Body Break idea.";
 "prefs.removeCustomIdeaHelp" = "Remove this Body Break idea from the rotation.";
 "prefs.customIdeaEmptyBody" = "No body text";
-"prefs.advancedIdeasJSON" = "Advanced ideas JSON";
-"prefs.showAdvancedIdeas" = "Advanced ideas";
-"prefs.hideAdvancedIdeas" = "Hide advanced ideas";
+"prefs.advancedIdeasJSON" = "Raw idea JSON";
+"prefs.showAdvancedIdeas" = "Edit raw idea JSON";
+"prefs.hideAdvancedIdeas" = "Hide raw idea JSON";
+"prefs.advancedIdeasHelp" = "Use raw JSON only for bulk edits or import/export. The idea list above is the normal editor.";
 "prefs.localImagePath" = "Body Break image";
 "prefs.chooseFile" = "Choose...";
 "prefs.chooseBodyImageHelp" = "Choose a local image for Body Break content.";
@@ -294,6 +296,7 @@
 "prefs.preferencesMessage" = "Preferences message";
 "prefs.showAdminControls" = "Administrative controls";
 "prefs.hideAdminControls" = "Hide administrative controls";
+"prefs.adminControlsHelp" = "Use these options for deployment policy and support diagnostics, not day-to-day rest behavior.";
 "prefs.autosaveReady" = "Autosave on";
 "prefs.headerSubtitle" = "Strict Eye Gates, flexible Body Breaks, and settings that save themselves.";
 "prefs.autosaveEditing" = "Editing...";

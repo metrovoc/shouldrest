@@ -5,6 +5,57 @@ import XCTest
 
 @MainActor
 final class PreferencesWindowAdvancedJSONTests: XCTestCase {
+    func testAdvancedJSONDisclosuresDescribeSecondaryRawEditors() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "alpha",
+                name: "Alpha",
+                matchTerms: ["alpha.app"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        settings.contentLibrary.customBodyBreakIdeas = [
+            RestIdea(id: "stretch", kind: .bodyBreak, title: "Stretch", body: "Open shoulders")
+        ]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        let appButton = try XCTUnwrap(view(withIdentifier: "appExclusions", in: contentView) as? NSButton)
+        let appRow = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionsJSONRow", in: contentView))
+        XCTAssertFalse(appButton.isHidden)
+        XCTAssertTrue(appRow.isHidden)
+        XCTAssertEqual(appButton.title, L10n.tr("prefs.showAdvancedRules"))
+        XCTAssertEqual(appButton.toolTip, L10n.tr("prefs.advancedRulesHelp"))
+        XCTAssertEqual(appButton.accessibilityLabel(), L10n.tr("prefs.showAdvancedRules"))
+        XCTAssertEqual(appButton.accessibilityHelp(), L10n.tr("prefs.advancedRulesHelp"))
+        XCTAssertEqual(appButton.image?.accessibilityDescription, L10n.tr("prefs.showAdvancedRules"))
+
+        XCTAssertTrue(sendAction(from: appButton))
+        XCTAssertFalse(appRow.isHidden)
+        XCTAssertEqual(appButton.title, L10n.tr("prefs.hideAdvancedRules"))
+        XCTAssertEqual(appButton.accessibilityLabel(), L10n.tr("prefs.hideAdvancedRules"))
+        XCTAssertEqual(appButton.accessibilityHelp(), L10n.tr("prefs.advancedRulesHelp"))
+        XCTAssertEqual(appButton.image?.accessibilityDescription, L10n.tr("prefs.hideAdvancedRules"))
+
+        let ideasButton = try XCTUnwrap(view(withIdentifier: "customIdeas", in: contentView) as? NSButton)
+        let ideasRow = try XCTUnwrap(view(withIdentifier: "prefs.customBodyIdeasJSONRow", in: contentView))
+        XCTAssertFalse(ideasButton.isHidden)
+        XCTAssertTrue(ideasRow.isHidden)
+        XCTAssertEqual(ideasButton.title, L10n.tr("prefs.showAdvancedIdeas"))
+        XCTAssertEqual(ideasButton.toolTip, L10n.tr("prefs.advancedIdeasHelp"))
+        XCTAssertEqual(ideasButton.accessibilityLabel(), L10n.tr("prefs.showAdvancedIdeas"))
+        XCTAssertEqual(ideasButton.accessibilityHelp(), L10n.tr("prefs.advancedIdeasHelp"))
+
+        XCTAssertTrue(sendAction(from: ideasButton))
+        XCTAssertFalse(ideasRow.isHidden)
+        XCTAssertEqual(ideasButton.title, L10n.tr("prefs.hideAdvancedIdeas"))
+        XCTAssertEqual(ideasButton.accessibilityLabel(), L10n.tr("prefs.hideAdvancedIdeas"))
+        XCTAssertEqual(ideasButton.accessibilityHelp(), L10n.tr("prefs.advancedIdeasHelp"))
+    }
+
     func testAdvancedJSONEditorsUseScrollableMultilineTextViews() throws {
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)

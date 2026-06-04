@@ -213,9 +213,10 @@
 "prefs.appExclusionAppliesBody" = "活动休息";
 "prefs.appExclusionAppliesNone" = "未选择休息类型";
 "prefs.appExclusionNoTerms" = "无匹配词";
-"prefs.advancedRulesJSON" = "高级规则 JSON";
-"prefs.showAdvancedRules" = "高级规则";
-"prefs.hideAdvancedRules" = "隐藏高级规则";
+"prefs.advancedRulesJSON" = "原始规则 JSON";
+"prefs.showAdvancedRules" = "编辑原始规则 JSON";
+"prefs.hideAdvancedRules" = "隐藏原始规则 JSON";
+"prefs.advancedRulesHelp" = "仅在批量编辑或导入导出时使用原始 JSON。上方规则列表才是常规编辑入口。";
 "prefs.exclusionMode.pauseWhenMatched" = "匹配时暂停";
 "prefs.exclusionMode.resumeOnlyWhenMatched" = "只在匹配时运行";
 "prefs.sectionPresentation" = "外观与声音";
@@ -257,9 +258,10 @@
 "prefs.editCustomIdeaHelp" = "编辑这条活动休息提示。";
 "prefs.removeCustomIdeaHelp" = "从轮换中移除此条活动休息提示。";
 "prefs.customIdeaEmptyBody" = "无正文";
-"prefs.advancedIdeasJSON" = "高级提示 JSON";
-"prefs.showAdvancedIdeas" = "高级提示";
-"prefs.hideAdvancedIdeas" = "隐藏高级提示";
+"prefs.advancedIdeasJSON" = "原始提示 JSON";
+"prefs.showAdvancedIdeas" = "编辑原始提示 JSON";
+"prefs.hideAdvancedIdeas" = "隐藏原始提示 JSON";
+"prefs.advancedIdeasHelp" = "仅在批量编辑或导入导出时使用原始 JSON。上方提示列表才是常规编辑入口。";
 "prefs.localImagePath" = "活动休息图片";
 "prefs.chooseFile" = "选择...";
 "prefs.chooseBodyImageHelp" = "选择一张本地图片作为活动休息内容。";
@@ -294,6 +296,7 @@
 "prefs.preferencesMessage" = "偏好设置提示";
 "prefs.showAdminControls" = "管理员控制";
 "prefs.hideAdminControls" = "隐藏管理员控制";
+"prefs.adminControlsHelp" = "这些选项用于部署策略和支持诊断，不是日常休息行为设置。";
 "prefs.autosaveReady" = "自动保存已开启";
 "prefs.headerSubtitle" = "严格护眼休息，灵活活动休息，设置会自动保存。";
 "prefs.autosaveEditing" = "正在编辑...";
