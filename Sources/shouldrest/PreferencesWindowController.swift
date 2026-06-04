@@ -1970,9 +1970,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     private func setIconOnlyActionHelp(_ help: String, on button: NSButton) {
+        setIconOnlyActionHelp(label: help, help: help, on: button)
+    }
+
+    private func setIconOnlyActionHelp(label: String, help: String, on button: NSButton) {
         setHelp(help, on: button)
-        button.setAccessibilityLabel(help)
-        button.image?.accessibilityDescription = help
+        button.setAccessibilityLabel(label)
+        button.image?.accessibilityDescription = label
     }
 
     private func setTextButtonHelp(title: String, help: String, on button: NSButton) {
@@ -3759,7 +3763,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         editButton.image = NSImage(systemSymbolName: "pencil", accessibilityDescription: nil)
         editButton.imagePosition = .imageOnly
         editButton.contentTintColor = .secondaryLabelColor
-        setIconOnlyActionHelp(L10n.tr("prefs.editAppExclusionRuleHelp"), on: editButton)
+        setIconOnlyActionHelp(
+            label: L10n.tr("prefs.editAppExclusionRule"),
+            help: L10n.tr("prefs.editAppExclusionRuleHelp"),
+            on: editButton
+        )
         editButton.target = self
         editButton.action = #selector(editAppExclusionRulePressed(_:))
         editButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
@@ -3774,7 +3782,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         removeButton.image = NSImage(systemSymbolName: "trash", accessibilityDescription: nil)
         removeButton.imagePosition = .imageOnly
         removeButton.contentTintColor = .secondaryLabelColor
-        setIconOnlyActionHelp(L10n.tr("prefs.removeAppExclusionRuleHelp"), on: removeButton)
+        setIconOnlyActionHelp(
+            label: L10n.tr("prefs.removeAppExclusionRule"),
+            help: L10n.tr("prefs.removeAppExclusionRuleHelp"),
+            on: removeButton
+        )
         removeButton.target = self
         removeButton.action = #selector(removeAppExclusionRulePressed(_:))
         removeButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
@@ -4064,7 +4076,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         editButton.image = NSImage(systemSymbolName: "pencil", accessibilityDescription: nil)
         editButton.imagePosition = .imageOnly
         editButton.contentTintColor = .secondaryLabelColor
-        setIconOnlyActionHelp(L10n.tr("prefs.editCustomIdeaHelp"), on: editButton)
+        setIconOnlyActionHelp(
+            label: L10n.tr("prefs.editCustomIdea"),
+            help: L10n.tr("prefs.editCustomIdeaHelp"),
+            on: editButton
+        )
         editButton.target = self
         editButton.action = #selector(editCustomBodyIdeaPressed(_:))
         editButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
@@ -4079,7 +4095,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         removeButton.image = NSImage(systemSymbolName: "trash", accessibilityDescription: nil)
         removeButton.imagePosition = .imageOnly
         removeButton.contentTintColor = .secondaryLabelColor
-        setIconOnlyActionHelp(L10n.tr("prefs.removeCustomIdeaHelp"), on: removeButton)
+        setIconOnlyActionHelp(
+            label: L10n.tr("prefs.removeCustomIdea"),
+            help: L10n.tr("prefs.removeCustomIdeaHelp"),
+            on: removeButton
+        )
         removeButton.target = self
         removeButton.action = #selector(removeCustomBodyIdeaPressed(_:))
         removeButton.widthAnchor.constraint(equalToConstant: 24).isActive = true

@@ -281,8 +281,9 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         let removeButton = try XCTUnwrap(view(withIdentifier: "prefs.customBodyIdeaRemove.0", in: contentView) as? NSButton)
         XCTAssertNotNil(removeButton.image)
         XCTAssertEqual(removeButton.toolTip, L10n.tr("prefs.removeCustomIdeaHelp"))
-        XCTAssertEqual(removeButton.accessibilityLabel(), L10n.tr("prefs.removeCustomIdeaHelp"))
+        XCTAssertEqual(removeButton.accessibilityLabel(), L10n.tr("prefs.removeCustomIdea"))
         XCTAssertEqual(removeButton.accessibilityHelp(), L10n.tr("prefs.removeCustomIdeaHelp"))
+        XCTAssertEqual(removeButton.image?.accessibilityDescription, L10n.tr("prefs.removeCustomIdea"))
         XCTAssertTrue(jsonRow.isHidden)
         XCTAssertFalse(button.isEnabled)
     }
@@ -389,8 +390,9 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertEqual(cancelButton.accessibilityHelp(), L10n.tr("prefs.cancelCustomIdeaEditHelp"))
         XCTAssertEqual(cancelButton.image?.accessibilityDescription, L10n.tr("prefs.cancelCustomIdeaEdit"))
         XCTAssertEqual(editWalk.toolTip, L10n.tr("prefs.editCustomIdeaHelp"))
-        XCTAssertEqual(editWalk.accessibilityLabel(), L10n.tr("prefs.editCustomIdeaHelp"))
+        XCTAssertEqual(editWalk.accessibilityLabel(), L10n.tr("prefs.editCustomIdea"))
         XCTAssertEqual(editWalk.accessibilityHelp(), L10n.tr("prefs.editCustomIdeaHelp"))
+        XCTAssertEqual(editWalk.image?.accessibilityDescription, L10n.tr("prefs.editCustomIdea"))
 
         XCTAssertTrue(sendAction(from: editWalk))
 

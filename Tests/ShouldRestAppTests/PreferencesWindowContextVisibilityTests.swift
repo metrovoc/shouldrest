@@ -626,8 +626,9 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         let removeButton = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionRuleRemove.0", in: contentView) as? NSButton)
 
         XCTAssertEqual(removeButton.toolTip, L10n.tr("prefs.removeAppExclusionRuleHelp"))
-        XCTAssertEqual(removeButton.accessibilityLabel(), L10n.tr("prefs.removeAppExclusionRuleHelp"))
+        XCTAssertEqual(removeButton.accessibilityLabel(), L10n.tr("prefs.removeAppExclusionRule"))
         XCTAssertEqual(removeButton.accessibilityHelp(), L10n.tr("prefs.removeAppExclusionRuleHelp"))
+        XCTAssertEqual(removeButton.image?.accessibilityDescription, L10n.tr("prefs.removeAppExclusionRule"))
         XCTAssertTrue(sendAction(from: removeButton))
 
         waitUntilSavedSettingsArrive(savedSettings)
@@ -686,8 +687,9 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
             156
         )
         XCTAssertEqual(editCalls.toolTip, L10n.tr("prefs.editAppExclusionRuleHelp"))
-        XCTAssertEqual(editCalls.accessibilityLabel(), L10n.tr("prefs.editAppExclusionRuleHelp"))
+        XCTAssertEqual(editCalls.accessibilityLabel(), L10n.tr("prefs.editAppExclusionRule"))
         XCTAssertEqual(editCalls.accessibilityHelp(), L10n.tr("prefs.editAppExclusionRuleHelp"))
+        XCTAssertEqual(editCalls.image?.accessibilityDescription, L10n.tr("prefs.editAppExclusionRule"))
 
         XCTAssertTrue(sendAction(from: editCalls))
 
