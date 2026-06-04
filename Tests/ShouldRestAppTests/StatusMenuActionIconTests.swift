@@ -114,8 +114,10 @@ final class StatusMenuActionIconTests: XCTestCase {
         XCTAssertEqual(item.toolTip, L10n.tr("menu.emergencyOverlayOnlyHelp"))
         XCTAssertEqual(item.accessibilityHelp(), L10n.tr("menu.emergencyOverlayOnlyHelp"))
         XCTAssertTrue(item.toolTip?.contains("This menu cannot exit") ?? false)
-        XCTAssertTrue(item.toolTip?.contains("lower-right Emergency Exit twice") ?? false)
+        XCTAssertTrue(item.toolTip?.contains("Return to the overlay") ?? false)
+        XCTAssertTrue(item.toolTip?.contains("Emergency Exit twice") ?? false)
         XCTAssertTrue(item.toolTip?.contains("Esc twice") ?? false)
+        XCTAssertFalse(item.toolTip?.contains("lower-right") ?? true)
         XCTAssertNil(item.image)
     }
 

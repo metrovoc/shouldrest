@@ -787,10 +787,12 @@ final class LocalizationQualityTests: XCTestCase {
 
         L10n.languageOverride = "en"
         XCTAssertEqual(L10n.tr("menu.reset"), "Reset Schedule")
-        XCTAssertEqual(L10n.tr("menu.emergencyOverlayOnly"), "Use Emergency Exit in the overlay")
+        XCTAssertEqual(L10n.tr("menu.emergencyOverlayOnly"), "Return to overlay for Emergency Exit")
         XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("This menu cannot exit"))
-        XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("lower-right Emergency Exit twice"))
+        XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("Return to the overlay"))
+        XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("Emergency Exit twice"))
         XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("Esc twice"))
+        XCTAssertFalse(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("lower-right"))
         XCTAssertEqual(
             L10n.tr("status.eyeGateActiveGuidance"),
             "Click Emergency Exit twice in the overlay, or press Esc twice."
@@ -822,11 +824,12 @@ final class LocalizationQualityTests: XCTestCase {
 
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(L10n.tr("menu.reset"), "重置计划")
-        XCTAssertEqual(L10n.tr("menu.emergencyOverlayOnly"), "在覆盖层内使用紧急退出")
+        XCTAssertEqual(L10n.tr("menu.emergencyOverlayOnly"), "回到覆盖层使用紧急退出")
         XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("此菜单不能退出"))
-        XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("右下角"))
+        XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("请回到覆盖层"))
         XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("紧急退出两次"))
         XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("两次 Esc"))
+        XCTAssertFalse(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("右下角"))
         XCTAssertEqual(L10n.tr("status.eyeGateActiveGuidance"), "在覆盖层内点击紧急退出两次，或按两次 Esc。")
         XCTAssertEqual(L10n.tr("status.eyeGateActiveNoEmergencyGuidance"), "计时结束前，请继续看向屏幕外。")
         XCTAssertEqual(L10n.tr("status.eyeGateReadyGuidance"), "准备好后，从覆盖层内完成休息。")
