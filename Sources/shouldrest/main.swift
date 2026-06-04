@@ -2203,6 +2203,7 @@ final class RestOverlayView: NSView {
     private let imageView = NSImageView()
     private let emergencyPanel = NSView()
     private let emergencyButton = OverlayActionButton()
+    private let bodyActionPanel = NSView()
     private let bodyActionStack = NSStackView()
     private let bodyPostponeButton = OverlayActionButton()
     private let bodySkipButton = OverlayActionButton()
@@ -2266,6 +2267,7 @@ final class RestOverlayView: NSView {
             identifier: "overlay.bodyPostpone.button",
             title: L10n.tr("overlay.bodyPostpone"),
             symbolName: "clock.arrow.circlepath",
+            toolTip: L10n.tr("overlay.bodyPostponeHelp"),
             action: #selector(bodyPostponePressed)
         )
         configureBodyActionButton(
@@ -2273,6 +2275,7 @@ final class RestOverlayView: NSView {
             identifier: "overlay.bodySkip.button",
             title: L10n.tr("overlay.bodySkip"),
             symbolName: "forward.end",
+            toolTip: L10n.tr("overlay.bodySkipHelp"),
             action: #selector(bodySkipPressed)
         )
         configureBodyActionButton(
@@ -2280,8 +2283,19 @@ final class RestOverlayView: NSView {
             identifier: "overlay.bodyFinish.button",
             title: L10n.tr("overlay.bodyFinish"),
             symbolName: "checkmark.circle",
+            toolTip: L10n.tr("overlay.bodyFinishHelp"),
             action: #selector(bodyFinishPressed)
         )
+        bodyActionPanel.identifier = NSUserInterfaceItemIdentifier("overlay.bodyActions.panel")
+        bodyActionPanel.translatesAutoresizingMaskIntoConstraints = false
+        bodyActionPanel.wantsLayer = true
+        bodyActionPanel.layer?.cornerRadius = 8
+        bodyActionPanel.layer?.borderWidth = 1
+        bodyActionPanel.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.075).cgColor
+        bodyActionPanel.layer?.borderColor = NSColor.white.withAlphaComponent(0.15).cgColor
+        bodyActionPanel.isHidden = true
+        addSubview(bodyActionPanel)
+
         bodyActionStack.translatesAutoresizingMaskIntoConstraints = false
         bodyActionStack.orientation = .horizontal
         bodyActionStack.spacing = 12
@@ -2290,7 +2304,7 @@ final class RestOverlayView: NSView {
         bodyActionStack.addArrangedSubview(bodySkipButton)
         bodyActionStack.addArrangedSubview(bodyFinishButton)
         bodyActionStack.isHidden = true
-        addSubview(bodyActionStack)
+        bodyActionPanel.addSubview(bodyActionStack)
 
         let emergencyPanelWidthConstraint = emergencyPanel.widthAnchor.constraint(equalToConstant: 164)
         let emergencyPanelHeightConstraint = emergencyPanel.heightAnchor.constraint(equalToConstant: 44)
@@ -2318,8 +2332,12 @@ final class RestOverlayView: NSView {
             emergencyPanel.bottomAnchor.constraint(equalTo: emergencyButton.bottomAnchor, constant: 10),
             emergencyPanelWidthConstraint,
             emergencyPanelHeightConstraint,
-            bodyActionStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -28),
-            bodyActionStack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -24)
+            bodyActionPanel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -24),
+            bodyActionPanel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -20),
+            bodyActionStack.leadingAnchor.constraint(equalTo: bodyActionPanel.leadingAnchor, constant: 12),
+            bodyActionStack.trailingAnchor.constraint(equalTo: bodyActionPanel.trailingAnchor, constant: -12),
+            bodyActionStack.topAnchor.constraint(equalTo: bodyActionPanel.topAnchor, constant: 8),
+            bodyActionStack.bottomAnchor.constraint(equalTo: bodyActionPanel.bottomAnchor, constant: -8)
         ])
     }
 
@@ -2578,6 +2596,7 @@ final class RestOverlayView: NSView {
         identifier: String,
         title: String,
         symbolName: String,
+        toolTip: String,
         action: Selector
     ) {
         button.identifier = NSUserInterfaceItemIdentifier(identifier)
@@ -2587,15 +2606,18 @@ final class RestOverlayView: NSView {
         button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
         button.imagePosition = .imageLeading
         button.contentTintColor = NSColor.white.withAlphaComponent(0.72)
+        button.toolTip = toolTip
         button.target = self
         button.action = action
-        button.alphaValue = 0.64
-        button.widthAnchor.constraint(greaterThanOrEqualToConstant: 92).isActive = true
-        button.heightAnchor.constraint(equalToConstant: 28).isActive = true
+        button.alphaValue = 0.78
+        button.setContentHuggingPriority(.required, for: .horizontal)
+        button.setContentCompressionResistancePriority(.required, for: .horizontal)
+        button.widthAnchor.constraint(greaterThanOrEqualToConstant: 112).isActive = true
+        button.heightAnchor.constraint(equalToConstant: 34).isActive = true
         button.attributedTitle = NSAttributedString(
             string: title,
             attributes: [
-                .foregroundColor: NSColor.white.withAlphaComponent(0.74),
+                .foregroundColor: NSColor.white.withAlphaComponent(0.82),
                 .font: NSFont.systemFont(ofSize: 13, weight: .medium)
             ]
         )
@@ -2607,6 +2629,7 @@ final class RestOverlayView: NSView {
         bodySkipButton.isHidden = !(actions?.canSkip ?? false)
         bodyFinishButton.isHidden = !(actions?.canFinish ?? false)
         bodyActionStack.isHidden = bodyPostponeButton.isHidden && bodySkipButton.isHidden && bodyFinishButton.isHidden
+        bodyActionPanel.isHidden = bodyActionStack.isHidden
     }
 
     private func localBodyBreakImage(settings: RestSettings) -> NSImage? {

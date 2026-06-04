@@ -87,6 +87,9 @@
 "overlay.bodyPostpone" = "推迟";
 "overlay.bodySkip" = "跳过";
 "overlay.bodyFinish" = "完成";
+"overlay.bodyPostponeHelp" = "在允许推迟的窗口内，将这次身体休息延后。";
+"overlay.bodySkipHelp" = "推迟不再可用时，跳过这次身体休息。";
+"overlay.bodyFinishHelp" = "达到要求时长后，完成这次休息。";
 "preferences.title" = "ShouldRest 偏好设置";
 "debug.title" = "ShouldRest 调试";
 "debug.heading" = "诊断信息";

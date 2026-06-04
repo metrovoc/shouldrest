@@ -26,7 +26,44 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
         XCTAssertTrue(didSkip)
     }
 
-    func testUnavailableBodyOverlayActionsDoNotInvokeCallbacks() {
+    func testAvailableBodyOverlayActionsUseStableActionRailAffordances() throws {
+        let view = configuredBodyOverlay(
+            actions: BodyOverlayActions(
+                canPostpone: true,
+                canFinish: true,
+                canSkip: true,
+                postpone: nil,
+                finish: nil,
+                skip: nil
+            )
+        )
+
+        let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodyActions.panel"))
+        let postponeButton = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodyPostpone.button") as? NSButton)
+        let skipButton = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodySkip.button") as? NSButton)
+        let finishButton = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodyFinish.button") as? NSButton)
+
+        XCTAssertFalse(panel.isHidden)
+        XCTAssertGreaterThan(panel.layer?.backgroundColor?.alpha ?? 0, 0)
+        XCTAssertGreaterThan(panel.layer?.borderColor?.alpha ?? 0, 0)
+        assertBodyActionButton(
+            postponeButton,
+            title: L10n.tr("overlay.bodyPostpone"),
+            toolTip: L10n.tr("overlay.bodyPostponeHelp")
+        )
+        assertBodyActionButton(
+            skipButton,
+            title: L10n.tr("overlay.bodySkip"),
+            toolTip: L10n.tr("overlay.bodySkipHelp")
+        )
+        assertBodyActionButton(
+            finishButton,
+            title: L10n.tr("overlay.bodyFinish"),
+            toolTip: L10n.tr("overlay.bodyFinishHelp")
+        )
+    }
+
+    func testUnavailableBodyOverlayActionsDoNotInvokeCallbacks() throws {
         var invokedActions: [String] = []
         let view = configuredBodyOverlay(
             actions: BodyOverlayActions(
@@ -43,6 +80,8 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
         view.performBodyFinishAction()
         view.performBodySkipAction()
 
+        let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodyActions.panel"))
+        XCTAssertTrue(panel.isHidden)
         XCTAssertTrue(invokedActions.isEmpty)
     }
 
@@ -186,6 +225,30 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
         )
         return view
     }
+
+    private func assertBodyActionButton(
+        _ button: NSButton,
+        title: String,
+        toolTip: String,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        XCTAssertFalse(button.isHidden, file: file, line: line)
+        XCTAssertEqual(button.attributedTitle.string, title, file: file, line: line)
+        XCTAssertEqual(button.imagePosition, .imageLeading, file: file, line: line)
+        XCTAssertNotNil(button.image, file: file, line: line)
+        XCTAssertEqual(button.toolTip, toolTip, file: file, line: line)
+        XCTAssertTrue(
+            button.hasConstraint(attribute: .width, relation: .greaterThanOrEqual, constant: 112),
+            file: file,
+            line: line
+        )
+        XCTAssertTrue(
+            button.hasConstraint(attribute: .height, relation: .equal, constant: 34),
+            file: file,
+            line: line
+        )
+    }
 }
 
 private extension NSView {
@@ -199,5 +262,18 @@ private extension NSView {
             }
         }
         return nil
+    }
+
+    func hasConstraint(
+        attribute: NSLayoutConstraint.Attribute,
+        relation: NSLayoutConstraint.Relation,
+        constant: CGFloat
+    ) -> Bool {
+        constraints.contains { constraint in
+            constraint.firstItem === self &&
+                constraint.firstAttribute == attribute &&
+                constraint.relation == relation &&
+                abs(constraint.constant - constant) < 0.1
+        }
     }
 }
