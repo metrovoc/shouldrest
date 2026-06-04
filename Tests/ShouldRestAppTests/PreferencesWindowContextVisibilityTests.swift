@@ -285,6 +285,141 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertTrue(try view(withIdentifier: "prefs.appExclusionsJSONRow", in: contentView).isHidden)
     }
 
+    func testAppExclusionRuleListEditsExistingRuleAndAutosavesOnUpdateOnly() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "primary",
+                name: "Deep work",
+                matchTerms: ["xcode"],
+                mode: .resumeOnlyWhenMatched,
+                appliesTo: [.eyeGate, .bodyBreak],
+                isEnabled: true
+            ),
+            AppExclusionRule(
+                id: "secondary",
+                name: "Calls",
+                matchTerms: ["zoom"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+        let name = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionNameField", in: contentView) as? NSTextField)
+        let terms = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionTermsField", in: contentView) as? NSTokenField)
+        let mode = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionMode", in: contentView) as? NSPopUpButton)
+        let appliesEye = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionAppliesEye", in: contentView) as? NSButton)
+        let appliesBody = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionAppliesBody", in: contentView) as? NSButton)
+        let actionButton = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionAddRuleButton", in: contentView) as? NSButton)
+        let cancelButton = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionCancelEditButton", in: contentView) as? NSButton)
+        let editCalls = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionRuleEdit.1", in: contentView) as? NSButton)
+        let jsonRow = try view(withIdentifier: "prefs.appExclusionsJSONRow", in: contentView)
+
+        XCTAssertTrue(cancelButton.isHidden)
+        XCTAssertEqual(actionButton.title, L10n.tr("prefs.addAppExclusionRule"))
+        XCTAssertEqual(editCalls.toolTip, L10n.tr("prefs.editAppExclusionRuleHelp"))
+
+        XCTAssertTrue(sendAction(from: editCalls))
+
+        XCTAssertEqual(name.stringValue, "Calls")
+        XCTAssertEqual(terms.objectValue as? [String], ["zoom"])
+        XCTAssertEqual(mode.selectedItem?.representedObject as? String, AppExclusionRule.Mode.pauseWhenMatched.rawValue)
+        XCTAssertEqual(appliesEye.state, .off)
+        XCTAssertEqual(appliesBody.state, .on)
+        XCTAssertFalse(cancelButton.isHidden)
+        XCTAssertEqual(actionButton.title, L10n.tr("prefs.updateAppExclusionRule"))
+        XCTAssertEqual(actionButton.toolTip, L10n.tr("prefs.updateAppExclusionRuleHelp"))
+
+        name.stringValue = "Meetings"
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: name))
+        terms.objectValue = ["teams"]
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: terms))
+        selectPopup(mode, representedObject: AppExclusionRule.Mode.resumeOnlyWhenMatched.rawValue)
+        appliesEye.state = .on
+        XCTAssertTrue(sendAction(from: appliesEye))
+        appliesBody.state = .off
+        XCTAssertTrue(sendAction(from: appliesBody))
+
+        RunLoop.current.run(until: Date().addingTimeInterval(0.4))
+        XCTAssertNil(savedSettings.value)
+
+        XCTAssertTrue(sendAction(from: actionButton))
+
+        waitUntilSavedSettingsArrive(savedSettings)
+        let rules = try XCTUnwrap(savedSettings.value?.appExclusions)
+        XCTAssertEqual(rules.map(\.id), ["primary", "secondary"])
+        XCTAssertEqual(rules[1].name, "Meetings")
+        XCTAssertEqual(rules[1].matchTerms, ["teams"])
+        XCTAssertEqual(rules[1].mode, .resumeOnlyWhenMatched)
+        XCTAssertEqual(rules[1].appliesTo, Set([RestKind.eyeGate]))
+        XCTAssertEqual(name.stringValue, "")
+        XCTAssertEqual(terms.objectValue as? [String] ?? [], [])
+        XCTAssertTrue(cancelButton.isHidden)
+        XCTAssertEqual(actionButton.title, L10n.tr("prefs.addAppExclusionRule"))
+        XCTAssertEqual(
+            (try view(withIdentifier: "prefs.appExclusionRuleTitle.1", in: contentView) as? NSTextField)?.stringValue,
+            "Meetings"
+        )
+        XCTAssertTrue(jsonRow.isHidden)
+    }
+
+    func testAppExclusionRuleEditCancelClearsDraftWithoutAutosaving() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "primary",
+                name: "Deep work",
+                matchTerms: ["xcode"],
+                mode: .resumeOnlyWhenMatched,
+                appliesTo: [.eyeGate, .bodyBreak],
+                isEnabled: true
+            ),
+            AppExclusionRule(
+                id: "secondary",
+                name: "Calls",
+                matchTerms: ["zoom"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+        let name = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionNameField", in: contentView) as? NSTextField)
+        let terms = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionTermsField", in: contentView) as? NSTokenField)
+        let actionButton = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionAddRuleButton", in: contentView) as? NSButton)
+        let cancelButton = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionCancelEditButton", in: contentView) as? NSButton)
+        let editDeepWork = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionRuleEdit.0", in: contentView) as? NSButton)
+
+        XCTAssertTrue(sendAction(from: editDeepWork))
+
+        name.stringValue = "Changed"
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: name))
+        terms.objectValue = ["changed"]
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: terms))
+
+        XCTAssertTrue(sendAction(from: cancelButton))
+
+        RunLoop.current.run(until: Date().addingTimeInterval(0.4))
+        XCTAssertNil(savedSettings.value)
+        XCTAssertEqual(name.stringValue, "")
+        XCTAssertEqual(terms.objectValue as? [String] ?? [], [])
+        XCTAssertTrue(cancelButton.isHidden)
+        XCTAssertEqual(actionButton.title, L10n.tr("prefs.addAppExclusionRule"))
+        XCTAssertEqual(
+            (try view(withIdentifier: "prefs.appExclusionRuleTitle.0", in: contentView) as? NSTextField)?.stringValue,
+            "Deep work"
+        )
+    }
+
     func testDraftingAppExclusionRuleDoesNotAutosaveOverExistingRulesBeforeAdd() throws {
         var settings = RestSettings.defaults
         settings.appExclusions = [
@@ -451,6 +586,13 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
     private func sendAction(from control: NSControl) -> Bool {
         guard let action = control.action else { return false }
         return NSApplication.shared.sendAction(action, to: control.target, from: control)
+    }
+
+    private func selectPopup(_ popup: NSPopUpButton, representedObject: String) {
+        for index in 0..<popup.numberOfItems where popup.item(at: index)?.representedObject as? String == representedObject {
+            popup.selectItem(at: index)
+            return
+        }
     }
 
     private func waitUntilSavedSettingsArrive(_ settings: SavedSettingsBox) {

@@ -150,7 +150,12 @@
 "prefs.mode" = "模式";
 "prefs.addAppExclusionRule" = "添加规则";
 "prefs.addAppExclusionRuleHelp" = "把当前匹配词添加为规则。";
+"prefs.updateAppExclusionRule" = "更新规则";
+"prefs.updateAppExclusionRuleHelp" = "更新当前选中的应用排除规则。";
+"prefs.cancelAppExclusionRuleEdit" = "取消";
+"prefs.cancelAppExclusionRuleEditHelp" = "停止编辑当前选中的应用排除规则。";
 "prefs.appExclusionRules" = "当前规则";
+"prefs.editAppExclusionRuleHelp" = "编辑这条应用排除规则。";
 "prefs.removeAppExclusionRuleHelp" = "移除此条应用排除规则。";
 "prefs.appExclusionAppliesEyeBody" = "护眼休息和活动休息";
 "prefs.appExclusionAppliesEye" = "护眼休息";

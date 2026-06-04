@@ -150,7 +150,12 @@
 "prefs.mode" = "Mode";
 "prefs.addAppExclusionRule" = "Add Rule";
 "prefs.addAppExclusionRuleHelp" = "Add the current match terms as a rule.";
+"prefs.updateAppExclusionRule" = "Update Rule";
+"prefs.updateAppExclusionRuleHelp" = "Update the selected app exclusion rule.";
+"prefs.cancelAppExclusionRuleEdit" = "Cancel";
+"prefs.cancelAppExclusionRuleEditHelp" = "Stop editing the selected app exclusion rule.";
 "prefs.appExclusionRules" = "Current rules";
+"prefs.editAppExclusionRuleHelp" = "Edit this app exclusion rule.";
 "prefs.removeAppExclusionRuleHelp" = "Remove this app exclusion rule.";
 "prefs.appExclusionAppliesEyeBody" = "Eye Gate and Body Break";
 "prefs.appExclusionAppliesEye" = "Eye Gate";

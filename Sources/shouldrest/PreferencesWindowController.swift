@@ -437,6 +437,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let appExclusionTerms = NSTokenField()
     private let appExclusionAddRunningApp = NSButton()
     private let appExclusionAddRuleButton = NSButton()
+    private let appExclusionCancelEditButton = NSButton()
     private let appExclusionMode = NSPopUpButton()
     private let appExclusionAppliesEye = NSButton(checkboxWithTitle: L10n.tr("prefs.appliesEye"), target: nil, action: nil)
     private let appExclusionAppliesBody = NSButton(checkboxWithTitle: L10n.tr("prefs.appliesBody"), target: nil, action: nil)
@@ -451,6 +452,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private var appExclusionRulesListRow: NSView?
     private var appExclusionsJSONRow: NSView?
     private var appExclusionRuleRemoveControls: [(id: String, button: NSButton)] = []
+    private var appExclusionRuleEditControls: [(id: String, button: NSButton)] = []
+    private var editingAppExclusionRuleID: String?
 
     private let themeSource = NSPopUpButton()
     private let languageIdentifier = NSPopUpButton()
@@ -840,7 +843,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         contextStack.addArrangedSubview(appExclusionAppliesEye)
         appExclusionAppliesBody.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionAppliesBody")
         contextStack.addArrangedSubview(appExclusionAppliesBody)
-        let appExclusionAddRuleRow = indentedControlRow(appExclusionAddRuleButton)
+        let appExclusionAddRuleRow = indentedControlRow(appExclusionRuleActionRow())
         appExclusionAddRuleRow.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionAddRuleRow")
         self.appExclusionAddRuleRow = appExclusionAddRuleRow
         contextStack.addArrangedSubview(appExclusionAddRuleRow)
@@ -1362,14 +1365,23 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func configureAppExclusionAddRuleButton() {
         appExclusionAddRuleButton.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionAddRuleButton")
-        appExclusionAddRuleButton.title = L10n.tr("prefs.addAppExclusionRule")
-        appExclusionAddRuleButton.image = NSImage(systemSymbolName: "plus.circle", accessibilityDescription: nil)
         appExclusionAddRuleButton.imagePosition = .imageLeading
         appExclusionAddRuleButton.bezelStyle = .rounded
         appExclusionAddRuleButton.target = self
         appExclusionAddRuleButton.action = #selector(addAppExclusionRulePressed(_:))
-        appExclusionAddRuleButton.toolTip = L10n.tr("prefs.addAppExclusionRuleHelp")
         appExclusionAddRuleButton.widthAnchor.constraint(equalToConstant: 128).isActive = true
+
+        appExclusionCancelEditButton.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionCancelEditButton")
+        appExclusionCancelEditButton.title = L10n.tr("prefs.cancelAppExclusionRuleEdit")
+        appExclusionCancelEditButton.image = NSImage(systemSymbolName: "xmark.circle", accessibilityDescription: nil)
+        appExclusionCancelEditButton.imagePosition = .imageLeading
+        appExclusionCancelEditButton.bezelStyle = .rounded
+        appExclusionCancelEditButton.target = self
+        appExclusionCancelEditButton.action = #selector(cancelAppExclusionRuleEditPressed(_:))
+        appExclusionCancelEditButton.toolTip = L10n.tr("prefs.cancelAppExclusionRuleEditHelp")
+        appExclusionCancelEditButton.widthAnchor.constraint(equalToConstant: 104).isActive = true
+        appExclusionCancelEditButton.isHidden = true
+        updateAppExclusionActionButtonPresentation()
     }
 
     private func configureAppExclusionRulesList() {
@@ -1378,6 +1390,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         appExclusionRulesListStack.spacing = 6
         appExclusionRulesListStack.alignment = .leading
         appExclusionRulesListStack.widthAnchor.constraint(equalToConstant: 360).isActive = true
+    }
+
+    private func appExclusionRuleActionRow() -> NSStackView {
+        let stack = NSStackView(views: [appExclusionAddRuleButton, appExclusionCancelEditButton])
+        stack.orientation = .horizontal
+        stack.spacing = 8
+        stack.alignment = .centerY
+        return stack
     }
 
     private func configureCustomBodyAddIdeaButton() {
@@ -1636,6 +1656,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         let appExclusionsEnabled = settings.appExclusions.first?.isEnabled ?? false
         appExclusionEnabled.state = state(appExclusionsEnabled)
+        clearAppExclusionRuleEditState()
         appExclusionName.stringValue = ""
         appExclusionTerms.objectValue = []
         selectPopup(appExclusionMode, rawValue: AppExclusionRule.Mode.pauseWhenMatched.rawValue)
@@ -2267,8 +2288,31 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     @objc private func addAppExclusionRulePressed(_ sender: NSButton) {
-        guard let rule = currentAppExclusionRule(id: UUID().uuidString) else { return }
-        appendAppExclusionRule(rule)
+        let id = editingAppExclusionRuleID ?? UUID().uuidString
+        guard let rule = currentAppExclusionRule(id: id) else { return }
+        saveAppExclusionRule(rule, replacingID: editingAppExclusionRuleID)
+    }
+
+    @objc private func editAppExclusionRulePressed(_ sender: NSButton) {
+        guard let match = appExclusionRuleEditControls.first(where: { $0.button === sender }),
+              let rule = displayedAppExclusionRules().first(where: { $0.id == match.id }) else {
+            return
+        }
+        editingAppExclusionRuleID = rule.id
+        appExclusionName.stringValue = rule.name
+        appExclusionTerms.objectValue = rule.matchTerms
+        selectPopup(appExclusionMode, rawValue: rule.mode.rawValue)
+        appExclusionAppliesEye.state = state(rule.appliesTo.contains(.eyeGate))
+        appExclusionAppliesBody.state = state(rule.appliesTo.contains(.bodyBreak))
+        updateAppExclusionAddRuleButtonState()
+    }
+
+    @objc private func cancelAppExclusionRuleEditPressed(_ sender: NSButton) {
+        appExclusionName.stringValue = ""
+        appExclusionTerms.objectValue = []
+        setDefaultAppExclusionTargets()
+        clearAppExclusionRuleEditState()
+        updateAppExclusionAddRuleButtonState()
     }
 
     private func showNoRunningApplicationsMenu(from sender: NSButton) {
@@ -2355,6 +2399,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         do {
             var rules = try decodedAdvancedAppExclusions() ?? []
             rules.removeAll { $0.id == match.id }
+            clearAppExclusionRuleEditState()
             if rules.isEmpty {
                 appExclusionsJSONEditor.string = ""
                 appExclusionEnabled.state = .off
@@ -2706,14 +2751,24 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     private func appendAppExclusionRule(_ rule: AppExclusionRule) {
+        saveAppExclusionRule(rule, replacingID: nil)
+    }
+
+    private func saveAppExclusionRule(_ rule: AppExclusionRule, replacingID: String?) {
         do {
             var rules = try decodedAdvancedAppExclusions() ?? []
-            rules.append(rule)
+            if let replacingID,
+               let index = rules.firstIndex(where: { $0.id == replacingID }) {
+                rules[index] = rule
+            } else {
+                rules.append(rule)
+            }
             appExclusionsJSONEditor.string = encodedAppExclusionsForEditor(rules)
             setAdvancedDisclosure(row: appExclusionsJSONRow, button: appExclusionsAdvancedButton, expanded: false)
             appExclusionName.stringValue = ""
             appExclusionTerms.objectValue = []
             setDefaultAppExclusionTargets()
+            clearAppExclusionRuleEditState()
             refreshAppExclusionRuleList()
             updateDependentControlEnablement()
             updateAppExclusionAddRuleButtonState()
@@ -2748,6 +2803,26 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private func updateAppExclusionAddRuleButtonState() {
         appExclusionAddRuleButton.isEnabled = isOn(appExclusionEnabled) &&
             currentAppExclusionRule(id: "preview") != nil
+        appExclusionCancelEditButton.isEnabled = isOn(appExclusionEnabled)
+        updateAppExclusionActionButtonPresentation()
+    }
+
+    private func updateAppExclusionActionButtonPresentation() {
+        let isEditing = editingAppExclusionRuleID != nil
+        appExclusionAddRuleButton.title = isEditing ? L10n.tr("prefs.updateAppExclusionRule") : L10n.tr("prefs.addAppExclusionRule")
+        appExclusionAddRuleButton.image = NSImage(
+            systemSymbolName: isEditing ? "checkmark.circle" : "plus.circle",
+            accessibilityDescription: nil
+        )
+        appExclusionAddRuleButton.toolTip = isEditing ?
+            L10n.tr("prefs.updateAppExclusionRuleHelp") :
+            L10n.tr("prefs.addAppExclusionRuleHelp")
+        appExclusionCancelEditButton.isHidden = !isEditing
+    }
+
+    private func clearAppExclusionRuleEditState() {
+        editingAppExclusionRuleID = nil
+        updateAppExclusionActionButtonPresentation()
     }
 
     private var hasAppExclusionRuleList: Bool {
@@ -2757,6 +2832,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private func refreshAppExclusionRuleList() {
         let rules = displayedAppExclusionRules()
         appExclusionRuleRemoveControls.removeAll()
+        appExclusionRuleEditControls.removeAll()
         removeArrangedSubviews(from: appExclusionRulesListStack)
 
         for (index, rule) in rules.enumerated() {
@@ -2804,6 +2880,21 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         textStack.spacing = 2
         textStack.alignment = .leading
 
+        let editButton = NSButton()
+        editButton.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionRuleEdit.\(index)")
+        editButton.title = ""
+        editButton.bezelStyle = .inline
+        editButton.isBordered = false
+        editButton.image = NSImage(systemSymbolName: "pencil", accessibilityDescription: nil)
+        editButton.imagePosition = .imageOnly
+        editButton.contentTintColor = .secondaryLabelColor
+        editButton.toolTip = L10n.tr("prefs.editAppExclusionRuleHelp")
+        editButton.target = self
+        editButton.action = #selector(editAppExclusionRulePressed(_:))
+        editButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
+        editButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
+        appExclusionRuleEditControls.append((id: rule.id, button: editButton))
+
         let removeButton = NSButton()
         removeButton.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionRuleRemove.\(index)")
         removeButton.title = ""
@@ -2819,7 +2910,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         removeButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
         appExclusionRuleRemoveControls.append((id: rule.id, button: removeButton))
 
-        let row = NSStackView(views: [textStack, removeButton])
+        let actionStack = NSStackView(views: [editButton, removeButton])
+        actionStack.orientation = .horizontal
+        actionStack.spacing = 2
+        actionStack.alignment = .centerY
+
+        let row = NSStackView(views: [textStack, actionStack])
         row.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionRuleRow.\(index)")
         row.orientation = .horizontal
         row.spacing = 8
