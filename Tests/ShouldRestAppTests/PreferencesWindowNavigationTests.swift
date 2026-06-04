@@ -31,6 +31,7 @@ final class PreferencesWindowNavigationTests: XCTestCase {
     func testPreferenceSearchJumpsToMatchingSettingWithoutAutosave() throws {
         let savedSettings = SavedSettingsBox()
         let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let window = try XCTUnwrap(controller.window)
         let contentView = try XCTUnwrap(controller.window?.contentView)
         let tabView = try XCTUnwrap(view(withIdentifier: "prefs.tabView", in: contentView) as? NSTabView)
         let searchField = try XCTUnwrap(view(withIdentifier: "prefs.searchField", in: contentView) as? NSSearchField)
@@ -49,10 +50,31 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         XCTAssertTrue(searchStatus.stringValue.contains(L10n.tr("prefs.pause5hShortcut")))
 
         let pause5h = try XCTUnwrap(view(withIdentifier: "shortcut.pause5h", in: contentView))
+        let pause5hRecorder = try XCTUnwrap(pause5h as? ShortcutRecorderButton)
         let highlightedRow = try XCTUnwrap(pause5h.superview)
         XCTAssertEqual(highlightedRow.layer?.borderWidth, 1)
         XCTAssertNotNil(highlightedRow.layer?.backgroundColor)
+        XCTAssertTrue(isFirstResponder(pause5hRecorder, in: window))
+        XCTAssertNotEqual(pause5hRecorder.title, L10n.tr("shortcut.recording"))
         XCTAssertEqual(saveStatus.stringValue, L10n.tr("prefs.autosaveReady"))
+        XCTAssertNil(savedSettings.value)
+    }
+
+    func testPreferenceSearchFocusesMatchedTextFieldWithoutAutosave() throws {
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
+        let tabView = try XCTUnwrap(view(withIdentifier: "prefs.tabView", in: contentView) as? NSTabView)
+        let searchField = try XCTUnwrap(view(withIdentifier: "prefs.searchField", in: contentView) as? NSSearchField)
+
+        searchField.stringValue = L10n.tr("prefs.updateFeedURL")
+
+        XCTAssertTrue(sendAction(from: searchField))
+
+        let updateFeedURL = try XCTUnwrap(view(withIdentifier: "prefs.updateFeedURLField", in: contentView) as? NSTextField)
+        XCTAssertEqual(tabView.selectedTabViewItem?.identifier as? String, L10n.tr("prefs.tabAdvanced"))
+        XCTAssertTrue(isFirstResponder(updateFeedURL, in: window))
         XCTAssertNil(savedSettings.value)
     }
 

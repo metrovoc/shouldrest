@@ -2443,6 +2443,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         preferencesTabView?.selectTabViewItem(withIdentifier: target.tabIdentifier)
         target.view.scrollToVisible(target.view.bounds)
         highlightSearchTarget(target.view)
+        focusSearchTarget(target.view)
         searchStatusLabel.stringValue = L10n.format("prefs.searchMatched", target.tabIdentifier, target.title)
         searchStatusLabel.textColor = .secondaryLabelColor
         searchStatusLabel.isHidden = false
@@ -2493,6 +2494,57 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         view.layer?.cornerRadius = highlightedSearchTarget.cornerRadius
         view.wantsLayer = highlightedSearchTarget.wantsLayer
         self.highlightedSearchTarget = nil
+    }
+
+    private func focusSearchTarget(_ view: NSView) {
+        guard let focusView = firstFocusableSearchTarget(in: view) else { return }
+        window?.makeFirstResponder(focusView)
+        if let textField = focusView as? NSTextField, textField.isEditable {
+            textField.selectText(nil)
+        }
+    }
+
+    private func firstFocusableSearchTarget(in view: NSView) -> NSView? {
+        guard !view.isHidden else { return nil }
+
+        if let textView = view as? NSTextView,
+           textView.isEditable {
+            return textView
+        }
+
+        if let textField = view as? NSTextField,
+           textField.isEnabled,
+           textField.isEditable {
+            return textField
+        }
+
+        if let shortcutRecorder = view as? ShortcutRecorderButton,
+           shortcutRecorder.isEnabled {
+            return shortcutRecorder
+        }
+
+        if let popup = view as? NSPopUpButton,
+           popup.isEnabled {
+            return popup
+        }
+
+        if let colorWell = view as? NSColorWell,
+           colorWell.isEnabled {
+            return colorWell
+        }
+
+        if let button = view as? NSButton,
+           button.isEnabled,
+           button.action != nil {
+            return button
+        }
+
+        for subview in view.subviews {
+            if let focusTarget = firstFocusableSearchTarget(in: subview) {
+                return focusTarget
+            }
+        }
+        return nil
     }
 
     func focusPreferencesSearch() {
