@@ -2700,7 +2700,10 @@ final class RestOverlayView: NSView {
         imageView.isHidden = true
         imageView.image = nil
 
-        guard showsContent else { return }
+        guard showsContent else {
+            updateOverlayTextAccessibility()
+            return
+        }
 
         if manualAwaiting {
             switch session.kind {
@@ -2712,6 +2715,7 @@ final class RestOverlayView: NSView {
                 setDetailText(L10n.tr("overlay.bodyCompleteBody"), allowsRichText: false)
             }
             countdownLabel.stringValue = L10n.tr("overlay.ready")
+            updateOverlayTextAccessibility()
             return
         }
 
@@ -2736,6 +2740,7 @@ final class RestOverlayView: NSView {
         } else {
             countdownLabel.stringValue = remainingText
         }
+        updateOverlayTextAccessibility()
     }
 
     @objc private func emergencyOverridePressed() {
@@ -2941,6 +2946,19 @@ final class RestOverlayView: NSView {
             return nil
         }
         return NSImage(contentsOfFile: path)
+    }
+
+    private func updateOverlayTextAccessibility() {
+        [titleLabel, detailLabel, countdownLabel].forEach { label in
+            let text = label.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !label.isHidden, !text.isEmpty else {
+                label.toolTip = nil
+                label.setAccessibilityHelp(nil)
+                return
+            }
+            label.toolTip = text
+            label.setAccessibilityHelp(text)
+        }
     }
 
     private func setDetailText(_ text: String, allowsRichText: Bool) {

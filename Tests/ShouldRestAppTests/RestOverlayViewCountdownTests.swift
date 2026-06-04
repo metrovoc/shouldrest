@@ -65,9 +65,13 @@ final class RestOverlayViewCountdownTests: XCTestCase {
 
         let title = try XCTUnwrap(view.descendant(withIdentifier: "overlay.title.label") as? NSTextField)
         let detail = try XCTUnwrap(view.descendant(withIdentifier: "overlay.detail.label") as? NSTextField)
+        let countdown = try XCTUnwrap(view.descendant(withIdentifier: "overlay.countdown.label") as? NSTextField)
         XCTAssertEqual(title.stringValue, "Look far away")
         XCTAssertTrue(detail.stringValue.contains("Blink slowly"))
         XCTAssertTrue(detail.stringValue.contains("until the timer ends"))
+        assertOverlayLabelHelp(title)
+        assertOverlayLabelHelp(detail)
+        assertOverlayLabelHelp(countdown)
     }
 
     func testEyeGateOverlayDoesNotLeakBuiltInEnglishCopyInChinese() throws {
@@ -100,6 +104,9 @@ final class RestOverlayViewCountdownTests: XCTestCase {
         XCTAssertEqual(title.stringValue, "Eye Gate complete")
         XCTAssertEqual(detail.stringValue, "Finish when you are ready to look back at the screen.")
         XCTAssertEqual(countdown.stringValue, "ready")
+        assertOverlayLabelHelp(title)
+        assertOverlayLabelHelp(detail)
+        assertOverlayLabelHelp(countdown)
     }
 
     func testManualAwaitingBodyBreakOverlayUsesKindSpecificCompletionCopy() throws {
@@ -117,6 +124,56 @@ final class RestOverlayViewCountdownTests: XCTestCase {
         XCTAssertEqual(title.stringValue, "活动休息已完成")
         XCTAssertEqual(detail.stringValue, "准备好返回工作时再完成。")
         XCTAssertEqual(countdown.stringValue, "就绪")
+        assertOverlayLabelHelp(title)
+        assertOverlayLabelHelp(detail)
+        assertOverlayLabelHelp(countdown)
+    }
+
+    func testBodyBreakCurrentTimeCountdownExposesFullVisibleStatusAsHelp() throws {
+        var settings = RestSettings.defaults
+        settings.presentation.showCurrentTimeDuringBodyBreak = true
+        let view = configuredBodyOverlay(remainingSeconds: 75, settings: settings)
+
+        let countdown = try XCTUnwrap(view.descendant(withIdentifier: "overlay.countdown.label") as? NSTextField)
+        XCTAssertTrue(countdown.stringValue.hasPrefix("1:15 · "))
+        assertOverlayLabelHelp(countdown)
+    }
+
+    func testHiddenOverlayContentClearsTextHelp() throws {
+        let view = configuredEyeGateOverlay()
+        let title = try XCTUnwrap(view.descendant(withIdentifier: "overlay.title.label") as? NSTextField)
+        let detail = try XCTUnwrap(view.descendant(withIdentifier: "overlay.detail.label") as? NSTextField)
+        let countdown = try XCTUnwrap(view.descendant(withIdentifier: "overlay.countdown.label") as? NSTextField)
+        assertOverlayLabelHelp(title)
+        assertOverlayLabelHelp(detail)
+        assertOverlayLabelHelp(countdown)
+
+        let start = Date()
+        let session = RestSession(
+            kind: .eyeGate,
+            startedAt: start,
+            scheduledAt: start,
+            duration: 20,
+            manualFinishEnabled: false
+        )
+        view.configure(
+            session: session,
+            remainingSeconds: 20,
+            settings: .defaults,
+            showsContent: false,
+            manualAwaiting: false,
+            emergencyOverrideRemainingSeconds: 0
+        )
+
+        XCTAssertTrue(title.isHidden)
+        XCTAssertNil(title.toolTip)
+        XCTAssertNil(title.accessibilityHelp())
+        XCTAssertTrue(detail.isHidden)
+        XCTAssertNil(detail.toolTip)
+        XCTAssertNil(detail.accessibilityHelp())
+        XCTAssertTrue(countdown.isHidden)
+        XCTAssertNil(countdown.toolTip)
+        XCTAssertNil(countdown.accessibilityHelp())
     }
 
     func testBodyBreakOverlayLongCustomTextStaysWithinReadableLayout() throws {
@@ -202,6 +259,16 @@ final class RestOverlayViewCountdownTests: XCTestCase {
             emergencyOverrideRemainingSeconds: 0
         )
         return view
+    }
+
+    private func assertOverlayLabelHelp(
+        _ label: NSTextField,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        XCTAssertFalse(label.stringValue.isEmpty, file: file, line: line)
+        XCTAssertEqual(label.toolTip, label.stringValue, file: file, line: line)
+        XCTAssertEqual(label.accessibilityHelp(), label.stringValue, file: file, line: line)
     }
 }
 
