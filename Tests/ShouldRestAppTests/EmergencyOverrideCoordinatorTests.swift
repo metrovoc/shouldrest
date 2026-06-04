@@ -118,6 +118,30 @@ final class EmergencyOverrideCoordinatorTests: XCTestCase {
         XCTAssertTrue(coordinator.isArmed(for: session))
     }
 
+    func testExternalArmAfterOverlayRequestCannotActAsSecondConfirmation() {
+        let session = eyeGateSession()
+        let policy = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 1, minimumHoldDuration: 21)
+        var coordinator = EmergencyOverrideCoordinator()
+
+        XCTAssertEqual(
+            coordinator.request(session: session, policy: policy, now: start.addingTimeInterval(1)),
+            .armed
+        )
+        XCTAssertTrue(coordinator.isArmed(for: session))
+
+        XCTAssertEqual(
+            coordinator.arm(session: session, policy: policy, now: start.addingTimeInterval(30)),
+            .armed
+        )
+        XCTAssertTrue(coordinator.isArmed(for: session))
+
+        XCTAssertEqual(
+            coordinator.request(session: session, policy: policy, now: start.addingTimeInterval(31)),
+            .complete
+        )
+        XCTAssertFalse(coordinator.isArmed(for: session))
+    }
+
     func testElapsedLegacyHoldCannotCompleteWithoutSecondRequest() {
         let session = eyeGateSession()
         let policy = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 1, minimumHoldDuration: 21)
