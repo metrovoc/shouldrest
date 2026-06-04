@@ -120,6 +120,100 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertFalse(try view(withIdentifier: "prefs.bodyFinishSoundRow", in: contentView).isHidden)
     }
 
+    func testCustomBodyIdeaAddButtonCreatesRotationEntryAndAutosaves() throws {
+        var settings = RestSettings.defaults
+        settings.contentLibrary.customBodyBreakIdeas = []
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+        let title = try XCTUnwrap(view(withIdentifier: "prefs.customBodyTitleField", in: contentView) as? NSTextField)
+        let body = try XCTUnwrap(view(withIdentifier: "customBodyTextEditor", in: contentView) as? NSTextView)
+        let button = try XCTUnwrap(view(withIdentifier: "prefs.customBodyAddIdeaButton", in: contentView) as? NSButton)
+        let jsonRow = try view(withIdentifier: "prefs.customBodyIdeasJSONRow", in: contentView)
+
+        XCTAssertFalse(button.isHidden)
+        XCTAssertFalse(button.isEnabled)
+        XCTAssertEqual(button.title, L10n.tr("prefs.addCustomIdea"))
+        XCTAssertEqual(button.toolTip, L10n.tr("prefs.addCustomIdeaHelp"))
+        XCTAssertNotNil(button.image)
+
+        title.stringValue = "Loosen neck"
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: title))
+        body.string = "Roll shoulders and breathe."
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: body))
+
+        XCTAssertTrue(button.isEnabled)
+        XCTAssertTrue(sendAction(from: button))
+
+        waitUntilSavedSettingsArrive(savedSettings)
+        let ideas = try XCTUnwrap(savedSettings.value?.contentLibrary.customBodyBreakIdeas)
+        XCTAssertEqual(ideas.count, 1)
+        XCTAssertEqual(ideas[0].title, "Loosen neck")
+        XCTAssertEqual(ideas[0].body, "Roll shoulders and breathe.")
+        XCTAssertEqual(title.stringValue, "")
+        XCTAssertEqual(body.string, "")
+        XCTAssertFalse(jsonRow.isHidden)
+        XCTAssertFalse(button.isEnabled)
+    }
+
+    func testCustomBodyIdeaAddButtonAppendsToAdvancedIdeaRotation() throws {
+        var settings = RestSettings.defaults
+        settings.contentLibrary.customBodyBreakIdeas = [
+            RestIdea(id: "stretch", kind: .bodyBreak, title: "Stretch", body: "Open shoulders"),
+            RestIdea(id: "walk", kind: .bodyBreak, title: "Walk", body: "Walk around")
+        ]
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+        let title = try XCTUnwrap(view(withIdentifier: "prefs.customBodyTitleField", in: contentView) as? NSTextField)
+        let body = try XCTUnwrap(view(withIdentifier: "customBodyTextEditor", in: contentView) as? NSTextView)
+        let button = try XCTUnwrap(view(withIdentifier: "prefs.customBodyAddIdeaButton", in: contentView) as? NSButton)
+
+        title.stringValue = "Look outside"
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: title))
+        body.string = "Focus on a far object."
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: body))
+
+        XCTAssertTrue(sendAction(from: button))
+
+        waitUntilSavedSettingsArrive(savedSettings)
+        let ideas = try XCTUnwrap(savedSettings.value?.contentLibrary.customBodyBreakIdeas)
+        XCTAssertEqual(ideas.map(\.title), ["Stretch", "Walk", "Look outside"])
+        XCTAssertEqual(ideas[2].body, "Focus on a far object.")
+    }
+
+    func testEditingPrimaryCustomIdeaSyncsAdvancedIdeaJSON() throws {
+        var settings = RestSettings.defaults
+        settings.contentLibrary.customBodyBreakIdeas = [
+            RestIdea(id: "stretch", kind: .bodyBreak, title: "Stretch", body: "Open shoulders"),
+            RestIdea(id: "walk", kind: .bodyBreak, title: "Walk", body: "Walk around")
+        ]
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+        let title = try XCTUnwrap(view(withIdentifier: "prefs.customBodyTitleField", in: contentView) as? NSTextField)
+        let body = try XCTUnwrap(view(withIdentifier: "customBodyTextEditor", in: contentView) as? NSTextView)
+
+        title.stringValue = "Upper back"
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: title))
+        body.string = "Open shoulders and upper back."
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: body))
+
+        waitUntilSavedSettingsArrive(savedSettings)
+        let ideas = try XCTUnwrap(savedSettings.value?.contentLibrary.customBodyBreakIdeas)
+        XCTAssertEqual(ideas.count, 2)
+        XCTAssertEqual(ideas[0].id, "stretch")
+        XCTAssertEqual(ideas[0].title, "Upper back")
+        XCTAssertEqual(ideas[0].body, "Open shoulders and upper back.")
+        XCTAssertEqual(ideas[1], settings.contentLibrary.customBodyBreakIdeas[1])
+    }
+
     private func selectScheduleTab(in view: NSView) throws {
         let tabView = try XCTUnwrap(firstTabView(in: view))
         tabView.selectTabViewItem(withIdentifier: L10n.tr("prefs.tabSchedule"))

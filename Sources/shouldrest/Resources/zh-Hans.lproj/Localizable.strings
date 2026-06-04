@@ -182,6 +182,8 @@
 "prefs.useBuiltInIdeas" = "包含内置休息提示";
 "prefs.title" = "标题";
 "prefs.text" = "正文";
+"prefs.addCustomIdea" = "加入轮换";
+"prefs.addCustomIdeaHelp" = "将当前标题和正文加入活动休息提示轮换。";
 "prefs.advancedIdeasJSON" = "高级提示 JSON";
 "prefs.showAdvancedIdeas" = "高级提示";
 "prefs.hideAdvancedIdeas" = "隐藏高级提示";

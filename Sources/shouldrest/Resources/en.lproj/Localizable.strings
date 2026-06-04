@@ -182,6 +182,8 @@
 "prefs.useBuiltInIdeas" = "Include built-in rest ideas";
 "prefs.title" = "Title";
 "prefs.text" = "Body text";
+"prefs.addCustomIdea" = "Add to Rotation";
+"prefs.addCustomIdeaHelp" = "Add the current title and body text to the Body Break idea rotation.";
 "prefs.advancedIdeasJSON" = "Advanced ideas JSON";
 "prefs.showAdvancedIdeas" = "Advanced ideas";
 "prefs.hideAdvancedIdeas" = "Hide advanced ideas";
