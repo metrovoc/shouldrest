@@ -158,12 +158,12 @@
 "prefs.scheduleSummary.bodyOnly" = "Eye Gate is off. Body Break runs every %d min for %d min.";
 "prefs.scheduleSummary.none" = "At least one rest type must stay enabled.";
 "prefs.rhythmPresets" = "Rhythm presets";
-"prefs.rhythmPreset.recommended" = "Recommended";
-"prefs.rhythmPreset.recommendedHelp" = "20 min Eye Gate, 20 sec cover, and 5 min Body Break after 2 Eye Gates.";
-"prefs.rhythmPreset.frequentEye" = "Frequent Eyes";
-"prefs.rhythmPreset.frequentEyeHelp" = "10 min Eye Gate, 20 sec cover, and 5 min Body Break after 4 Eye Gates.";
+"prefs.rhythmPreset.recommended" = "Balanced";
+"prefs.rhythmPreset.recommendedHelp" = "Eye Gate every 20 min for 20 sec; Body Break after 2 Eye Gates for 5 min.";
+"prefs.rhythmPreset.frequentEye" = "More Eye Rests";
+"prefs.rhythmPreset.frequentEyeHelp" = "Eye Gate every 10 min for 20 sec; Body Break after 4 Eye Gates for 5 min.";
 "prefs.rhythmPreset.movement" = "More Movement";
-"prefs.rhythmPreset.movementHelp" = "20 min Eye Gate, 20 sec cover, and longer 8 min Body Breaks after 2 Eye Gates.";
+"prefs.rhythmPreset.movementHelp" = "Eye Gate every 20 min for 20 sec; Body Break after 2 Eye Gates for 8 min.";
 "prefs.everyMinutes" = "Repeat every";
 "prefs.durationSeconds" = "Cover screen for";
 "prefs.overlayColor" = "Overlay color";

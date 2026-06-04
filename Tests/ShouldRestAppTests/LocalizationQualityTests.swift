@@ -47,6 +47,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("danger score"))
         XCTAssertFalse(englishValues.contains("Eye Gate(s)"))
         XCTAssertFalse(englishValues.contains("%ds remaining"))
+        XCTAssertFalse(englishValues.contains("Frequent Eyes"))
         XCTAssertFalse(simplifiedChineseValues.contains("恢复小时"))
         XCTAssertFalse(simplifiedChineseValues.contains("危险值"))
 
@@ -58,10 +59,14 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(englishValues.contains("Pressure %d/10"))
         XCTAssertTrue(englishValues.contains("Next Body Break after %d Eye Gates"))
         XCTAssertTrue(englishValues.contains("%@ active, %@ remaining"))
+        XCTAssertTrue(englishValues.contains("Balanced"))
+        XCTAssertTrue(englishValues.contains("More Eye Rests"))
         XCTAssertTrue(simplifiedChineseValues.contains("暂停到早晨方式"))
         XCTAssertTrue(simplifiedChineseValues.contains("恢复时间"))
         XCTAssertTrue(simplifiedChineseValues.contains("显示休息压力指示器"))
         XCTAssertTrue(simplifiedChineseValues.contains("压力 %d/10"))
+        XCTAssertTrue(simplifiedChineseValues.contains("均衡"))
+        XCTAssertTrue(simplifiedChineseValues.contains("更多护眼"))
     }
 
     func testEmergencyCopyUsesInternalConfirmationWithoutCountdownOrExternalWindow() {

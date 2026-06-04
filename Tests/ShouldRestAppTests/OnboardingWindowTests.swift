@@ -88,6 +88,9 @@ final class OnboardingWindowTests: XCTestCase {
 
         XCTAssertEqual(control.segmentCount, RestRhythmPreset.allCases.count)
         XCTAssertEqual(control.selectedSegment, RestRhythmPreset.recommended.rawValue)
+        XCTAssertEqual(control.label(forSegment: RestRhythmPreset.recommended.rawValue), "Balanced")
+        XCTAssertEqual(control.label(forSegment: RestRhythmPreset.frequentEye.rawValue), "More Eye Rests")
+        XCTAssertEqual(control.label(forSegment: RestRhythmPreset.movement.rawValue), "More Movement")
         XCTAssertEqual(description.stringValue, RestRhythmPreset.recommended.help)
 
         control.selectedSegment = RestRhythmPreset.frequentEye.rawValue
