@@ -26,6 +26,18 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("overlay.bodyBody"), "Stand up, breathe, and move.")
     }
 
+    func testBodySkipHelpMatchesSkipAvailabilityInsteadOfPostponeState() {
+        defer { L10n.languageOverride = nil }
+
+        L10n.languageOverride = "en"
+        XCTAssertEqual(L10n.tr("overlay.bodySkipHelp"), "Skip this Body Break when skipping is allowed.")
+        XCTAssertFalse(L10n.tr("overlay.bodySkipHelp").localizedCaseInsensitiveContains("postpon"))
+
+        L10n.languageOverride = "zh-Hans"
+        XCTAssertEqual(L10n.tr("overlay.bodySkipHelp"), "在允许跳过时，跳过这次活动休息。")
+        XCTAssertFalse(L10n.tr("overlay.bodySkipHelp").contains("推迟"))
+    }
+
     func testSimplifiedChineseVisibleValuesAvoidUntranslatedCoreTerms() throws {
         let values = try simplifiedChineseLocalizedValues().joined(separator: "\n")
 

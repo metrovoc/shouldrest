@@ -136,7 +136,7 @@
 "overlay.bodySkip" = "跳过";
 "overlay.bodyFinish" = "完成";
 "overlay.bodyPostponeHelp" = "在允许推迟的窗口内，将这次活动休息延后。";
-"overlay.bodySkipHelp" = "推迟不再可用时，跳过这次活动休息。";
+"overlay.bodySkipHelp" = "在允许跳过时，跳过这次活动休息。";
 "overlay.bodyFinishHelp" = "达到要求时长后，完成这次休息。";
 "preferences.title" = "ShouldRest 偏好设置";
 "debug.title" = "ShouldRest 诊断";

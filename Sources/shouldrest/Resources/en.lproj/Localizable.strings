@@ -136,7 +136,7 @@
 "overlay.bodySkip" = "Skip";
 "overlay.bodyFinish" = "Finish";
 "overlay.bodyPostponeHelp" = "Postpone this Body Break while it is still inside the allowed postpone window.";
-"overlay.bodySkipHelp" = "Skip this Body Break when postponing is no longer available.";
+"overlay.bodySkipHelp" = "Skip this Body Break when skipping is allowed.";
 "overlay.bodyFinishHelp" = "Finish this rest after the required duration.";
 "preferences.title" = "ShouldRest Preferences";
 "debug.title" = "ShouldRest Diagnostics";
