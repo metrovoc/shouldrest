@@ -71,6 +71,9 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertEqual(appGuidance.stringValue, L10n.tr("prefs.advancedRulesGuidance"))
         XCTAssertEqual(appGuidance.toolTip, L10n.tr("prefs.advancedRulesGuidance"))
         XCTAssertEqual(appGuidance.accessibilityHelp(), L10n.tr("prefs.advancedRulesGuidance"))
+        XCTAssertFalse(appGuidance.stringValue.localizedCaseInsensitiveContains("json array"))
+        XCTAssertFalse(appGuidance.stringValue.localizedCaseInsensitiveContains("json editor"))
+        XCTAssertTrue(appGuidance.stringValue.localizedCaseInsensitiveContains("exported"))
 
         XCTAssertTrue(sendAction(from: appButton))
         XCTAssertFalse(appRow.isHidden)
@@ -84,6 +87,9 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertEqual(ideasGuidance.stringValue, L10n.tr("prefs.advancedIdeasGuidance"))
         XCTAssertEqual(ideasGuidance.toolTip, L10n.tr("prefs.advancedIdeasGuidance"))
         XCTAssertEqual(ideasGuidance.accessibilityHelp(), L10n.tr("prefs.advancedIdeasGuidance"))
+        XCTAssertFalse(ideasGuidance.stringValue.localizedCaseInsensitiveContains("json array"))
+        XCTAssertFalse(ideasGuidance.stringValue.localizedCaseInsensitiveContains("json editor"))
+        XCTAssertTrue(ideasGuidance.stringValue.localizedCaseInsensitiveContains("exported"))
 
         XCTAssertTrue(sendAction(from: ideasButton))
         XCTAssertFalse(ideasRow.isHidden)
