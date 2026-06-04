@@ -22,7 +22,7 @@
 "pause.indefiniteConfirmAction" = "无限期暂停";
 "pause.indefiniteConfirmCancel" = "取消";
 "reset.confirmTitle" = "重置计划？";
-"reset.confirmBody" = "这会清除当前计时、暂停状态、已延后的休息、危险值和一次性自动化任务。偏好设置不会改变。";
+"reset.confirmBody" = "这会清除当前计时、暂停状态、已延后的休息、休息压力和一次性自动化任务。偏好设置不会改变。";
 "reset.confirmAction" = "重置计划";
 "reset.confirmCancel" = "取消";
 "menu.preferences" = "偏好设置...";
@@ -63,8 +63,8 @@
 "status.readyCompact" = "完成";
 "status.deferredShort" = "已延后";
 "status.deferred" = "%@ 已延后：%@";
-"status.health" = "休息健康危险值：%d/10";
-"status.healthBadge" = "危险 %d/10";
+"status.health" = "休息压力：%d/10";
+"status.healthBadge" = "压力 %d/10";
 "status.tooltipHeader" = "ShouldRest - 休息提醒应用";
 "kind.eyeGate" = "护眼休息";
 "kind.eyeGateShort" = "眼";
@@ -136,7 +136,7 @@
 "prefs.appliesEye" = "适用于护眼休息";
 "prefs.appliesBody" = "适用于活动休息";
 "prefs.currentTimeBody" = "活动休息中显示当前时间";
-"prefs.breakHealth" = "使用休息健康 / 危险值";
+"prefs.breakHealth" = "显示休息压力指示器";
 "prefs.silentNotifications" = "静默通知";
 "prefs.openAtLogin" = "登录时打开";
 "prefs.checkUpdates" = "检查更新";

@@ -10,7 +10,7 @@ final class StatusMenuHeaderViewTests: XCTestCase {
                 title: "ShouldRest",
                 primary: "Next: Eye Gate at 8:00 PM",
                 secondary: "Next Body Break after 2 Eye Gate(s)",
-                healthBadge: "Danger 3/10",
+                healthBadge: "Pressure 3/10",
                 icon: .restGate
             )
         )
@@ -21,7 +21,7 @@ final class StatusMenuHeaderViewTests: XCTestCase {
         XCTAssertEqual(try textField("statusMenu.headerPrimary", in: view).stringValue, "Next: Eye Gate at 8:00 PM")
         XCTAssertEqual(try textField("statusMenu.headerSecondary", in: view).stringValue, "Next Body Break after 2 Eye Gate(s)")
         XCTAssertFalse(try textField("statusMenu.headerSecondary", in: view).isHidden)
-        XCTAssertEqual(try textField("statusMenu.headerBadge", in: view).stringValue, "Danger 3/10")
+        XCTAssertEqual(try textField("statusMenu.headerBadge", in: view).stringValue, "Pressure 3/10")
         XCTAssertFalse(try textField("statusMenu.headerBadge", in: view).isHidden)
     }
 

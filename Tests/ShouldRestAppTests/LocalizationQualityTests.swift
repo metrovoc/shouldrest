@@ -43,14 +43,21 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(englishValues.contains("Body finish sound"))
         XCTAssertFalse(englishValues.contains("Pause-until-morning mode"))
         XCTAssertFalse(englishValues.contains("Resume at hour"))
+        XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("danger indicator"))
+        XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("danger score"))
         XCTAssertFalse(simplifiedChineseValues.contains("恢复小时"))
+        XCTAssertFalse(simplifiedChineseValues.contains("危险值"))
 
         XCTAssertTrue(englishValues.contains("Body Break start sound"))
         XCTAssertTrue(englishValues.contains("Body Break finish sound"))
         XCTAssertTrue(englishValues.contains("Pause until morning"))
         XCTAssertTrue(englishValues.contains("Resume hour"))
+        XCTAssertTrue(englishValues.contains("Show rest pressure indicator"))
+        XCTAssertTrue(englishValues.contains("Pressure %d/10"))
         XCTAssertTrue(simplifiedChineseValues.contains("暂停到早晨方式"))
         XCTAssertTrue(simplifiedChineseValues.contains("恢复时间"))
+        XCTAssertTrue(simplifiedChineseValues.contains("显示休息压力指示器"))
+        XCTAssertTrue(simplifiedChineseValues.contains("压力 %d/10"))
     }
 
     func testEmergencyCopyUsesInternalConfirmationWithoutCountdownOrExternalWindow() {

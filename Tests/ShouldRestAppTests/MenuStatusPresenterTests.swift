@@ -48,7 +48,7 @@ final class MenuStatusPresenterTests: XCTestCase {
         XCTAssertEqual(content.title, "ShouldRest")
         XCTAssertTrue(content.primary.hasPrefix("Next: Eye Gate at "))
         XCTAssertEqual(content.secondary, "Next Body Break after 2 Eye Gate(s)")
-        XCTAssertEqual(content.healthBadge, "Danger 3/10")
+        XCTAssertEqual(content.healthBadge, "Pressure 3/10")
         XCTAssertEqual(content.icon, .restGate)
     }
 

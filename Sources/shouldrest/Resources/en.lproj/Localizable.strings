@@ -22,7 +22,7 @@
 "pause.indefiniteConfirmAction" = "Pause Indefinitely";
 "pause.indefiniteConfirmCancel" = "Cancel";
 "reset.confirmTitle" = "Reset Schedule?";
-"reset.confirmBody" = "This clears the current timers, pause state, deferred rest, danger score, and one-shot automation tasks. Preferences are not changed.";
+"reset.confirmBody" = "This clears the current timers, pause state, deferred rest, rest pressure, and one-shot automation tasks. Preferences are not changed.";
 "reset.confirmAction" = "Reset Schedule";
 "reset.confirmCancel" = "Cancel";
 "menu.preferences" = "Preferences...";
@@ -63,8 +63,8 @@
 "status.readyCompact" = "done";
 "status.deferredShort" = "Deferred";
 "status.deferred" = "%@ deferred: %@";
-"status.health" = "Break health danger: %d/10";
-"status.healthBadge" = "Danger %d/10";
+"status.health" = "Rest pressure: %d/10";
+"status.healthBadge" = "Pressure %d/10";
 "status.tooltipHeader" = "ShouldRest - The rest reminder app";
 "kind.eyeGate" = "Eye Gate";
 "kind.eyeGateShort" = "E";
@@ -136,7 +136,7 @@
 "prefs.appliesEye" = "Applies to Eye Gate";
 "prefs.appliesBody" = "Applies to Body Break";
 "prefs.currentTimeBody" = "Show current time during Body Break";
-"prefs.breakHealth" = "Use break health / danger indicator";
+"prefs.breakHealth" = "Show rest pressure indicator";
 "prefs.silentNotifications" = "Silent notifications";
 "prefs.openAtLogin" = "Open at login";
 "prefs.checkUpdates" = "Check for updates";
