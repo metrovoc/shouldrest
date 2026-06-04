@@ -1,3 +1,4 @@
+import AppKit
 import XCTest
 @testable import shouldrest
 
@@ -68,6 +69,36 @@ final class StatusMenuActionIconTests: XCTestCase {
         XCTAssertFalse(emergencyHelp.localizedCaseInsensitiveContains("shortcut again"))
     }
 
+    func testSettingsLocationMenuKeepsRawPathOutOfHoverText() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+        let target = StatusMenuActionTestTarget()
+        let item = StatusMenuSettingsLocationMenuItemFactory.make(
+            target: target,
+            showAction: #selector(StatusMenuActionTestTarget.showSettingsFile),
+            copyAction: #selector(StatusMenuActionTestTarget.copySettingsPath)
+        )
+        let submenu = try XCTUnwrap(item.submenu)
+        let showItem = try XCTUnwrap(submenu.items.first)
+        let copyItem = try XCTUnwrap(submenu.items.last)
+
+        XCTAssertEqual(item.title, L10n.tr("menu.settingsFile"))
+        XCTAssertEqual(item.toolTip, L10n.tr("menu.settingsFileHelp"))
+        XCTAssertEqual(item.accessibilityHelp(), L10n.tr("menu.settingsFileHelp"))
+        XCTAssertEqual(showItem.toolTip, L10n.tr("menu.showSettingsFileHelp"))
+        XCTAssertEqual(showItem.accessibilityHelp(), L10n.tr("menu.showSettingsFileHelp"))
+        XCTAssertEqual(copyItem.title, L10n.tr("menu.copySettingsPath"))
+        XCTAssertEqual(copyItem.toolTip, L10n.tr("menu.copySettingsPathHelp"))
+        XCTAssertEqual(copyItem.accessibilityHelp(), L10n.tr("menu.copySettingsPathHelp"))
+
+        for menuItem in [item, showItem, copyItem] {
+            XCTAssertFalse(menuItem.toolTip?.contains("\n") ?? true)
+            XCTAssertFalse(menuItem.toolTip?.contains("/") ?? true)
+            XCTAssertFalse(menuItem.accessibilityHelp()?.contains("/") ?? true)
+            XCTAssertFalse(menuItem.toolTip?.localizedCaseInsensitiveContains("settings.json") ?? true)
+        }
+    }
+
     func testUnknownMenuActionsDoNotClaimHelp() {
         XCTAssertNil(StatusMenuActionHelp.help(forActionName: "notARealMenuAction"))
     }
@@ -102,4 +133,9 @@ final class StatusMenuActionIconTests: XCTestCase {
         XCTAssertEqual(item.toolTip, L10n.tr("menu.emergencyOverlayOnlyHelp"))
         XCTAssertEqual(item.accessibilityHelp(), L10n.tr("menu.emergencyOverlayOnlyHelp"))
     }
+}
+
+private final class StatusMenuActionTestTarget: NSObject {
+    @objc func showSettingsFile() {}
+    @objc func copySettingsPath() {}
 }

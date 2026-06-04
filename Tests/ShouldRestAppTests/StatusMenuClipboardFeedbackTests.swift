@@ -34,6 +34,7 @@ final class StatusMenuClipboardFeedbackTests: XCTestCase {
 
         XCTAssertEqual(pasteboard.string(forType: .string), "/tmp/shouldrest/settings.json")
         XCTAssertEqual(feedback, L10n.tr("menu.copySettingsPathDone"))
-        XCTAssertEqual(feedback, "设置路径已复制到剪贴板。")
+        XCTAssertEqual(feedback, "设置位置已复制到剪贴板。")
+        XCTAssertFalse(feedback.contains("设置路径"))
     }
 }

@@ -393,6 +393,56 @@ enum StatusMenuClipboardFeedback {
     }
 }
 
+enum StatusMenuSettingsLocationMenuItemFactory {
+    static func make(
+        target: AnyObject?,
+        showAction: Selector,
+        copyAction: Selector,
+        imageProvider: (String) -> NSImage? = { _ in nil }
+    ) -> NSMenuItem {
+        let item = NSMenuItem(title: L10n.tr("menu.settingsFile"), action: nil, keyEquivalent: "")
+        item.image = imageProvider("folder")
+        setHelp(L10n.tr("menu.settingsFileHelp"), on: item)
+
+        let submenu = NSMenu()
+        submenu.addItem(actionItem(
+            title: L10n.tr("menu.showSettingsFile"),
+            action: showAction,
+            target: target,
+            imageProvider: imageProvider
+        ))
+        submenu.addItem(actionItem(
+            title: L10n.tr("menu.copySettingsPath"),
+            action: copyAction,
+            target: target,
+            imageProvider: imageProvider
+        ))
+
+        item.submenu = submenu
+        return item
+    }
+
+    private static func actionItem(
+        title: String,
+        action: Selector,
+        target: AnyObject?,
+        imageProvider: (String) -> NSImage?
+    ) -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
+        item.target = target
+        if let symbolName = StatusMenuActionIcon.symbolName(for: action) {
+            item.image = imageProvider(symbolName)
+        }
+        setHelp(StatusMenuActionHelp.help(for: action), on: item)
+        return item
+    }
+
+    private static func setHelp(_ help: String?, on item: NSMenuItem) {
+        item.toolTip = help
+        item.setAccessibilityHelp(help)
+    }
+}
+
 @MainActor
 final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private let settingsStore: SettingsStore
@@ -867,24 +917,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func settingsFileMenuItem() -> NSMenuItem {
-        let item = NSMenuItem(title: L10n.tr("menu.settingsFile"), action: nil, keyEquivalent: "")
-        item.image = menuItemImage("doc.text")
-        item.toolTip = settingsStore.fileURL.path
-        item.setAccessibilityHelp(L10n.tr("menu.settingsFileHelp"))
-
-        let submenu = NSMenu()
-        let showItem = actionItem(L10n.tr("menu.showSettingsFile"), #selector(showSettingsFile))
-        showItem.toolTip = "\(L10n.tr("menu.showSettingsFileHelp"))\n\(settingsStore.fileURL.path)"
-        showItem.setAccessibilityHelp(showItem.toolTip)
-        submenu.addItem(showItem)
-
-        let copyItem = actionItem(L10n.tr("menu.copySettingsPath"), #selector(copySettingsPath))
-        copyItem.toolTip = "\(L10n.tr("menu.copySettingsPathHelp"))\n\(settingsStore.fileURL.path)"
-        copyItem.setAccessibilityHelp(copyItem.toolTip)
-        submenu.addItem(copyItem)
-
-        item.submenu = submenu
-        return item
+        StatusMenuSettingsLocationMenuItemFactory.make(
+            target: self,
+            showAction: #selector(showSettingsFile),
+            copyAction: #selector(copySettingsPath),
+            imageProvider: menuItemImage
+        )
     }
 
     private func supportMenuItem() -> NSMenuItem {
