@@ -2601,6 +2601,7 @@ final class RestOverlayView: NSView {
     private var emergencyRemainingSeconds: Int?
     private var emergencyOverrideArmed = false
     private var emergencyOverrideRequestInFlight = false
+    private var emergencyOverrideEventCycleLocked = false
     private var emergencyMouseDownStartedInActivationFrame = false
     private var emergencySessionID: UUID?
     private var emergencyPanelWidthConstraint: NSLayoutConstraint?
@@ -2910,6 +2911,9 @@ final class RestOverlayView: NSView {
         guard let request = onEmergencyOverrideRequested else {
             return
         }
+        guard !emergencyOverrideEventCycleLocked else {
+            return
+        }
         guard !emergencyOverrideRequestInFlight else {
             return
         }
@@ -2918,6 +2922,10 @@ final class RestOverlayView: NSView {
             return
         }
 
+        emergencyOverrideEventCycleLocked = true
+        DispatchQueue.main.async { [weak self] in
+            self?.emergencyOverrideEventCycleLocked = false
+        }
         emergencyOverrideRequestInFlight = true
         let decision = request()
         emergencyOverrideRequestInFlight = false
@@ -2999,6 +3007,7 @@ final class RestOverlayView: NSView {
         emergencyRemainingSeconds = nil
         emergencyOverrideArmed = false
         emergencyOverrideRequestInFlight = false
+        emergencyOverrideEventCycleLocked = false
         emergencyPanel.isHidden = true
         emergencyButton.isHidden = true
     }
@@ -3012,6 +3021,7 @@ final class RestOverlayView: NSView {
         if !isSameEmergencySession {
             emergencySessionID = sessionID
             emergencyOverrideRequestInFlight = false
+            emergencyOverrideEventCycleLocked = false
             emergencyOverrideArmed = false
             emergencyMouseDownStartedInActivationFrame = false
         }
@@ -3020,6 +3030,7 @@ final class RestOverlayView: NSView {
             emergencyRemainingSeconds = nil
             emergencyOverrideArmed = false
             emergencyOverrideRequestInFlight = false
+            emergencyOverrideEventCycleLocked = false
             emergencyMouseDownStartedInActivationFrame = false
             emergencyPanel.isHidden = true
             emergencyButton.isHidden = true
