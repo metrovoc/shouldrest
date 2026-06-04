@@ -133,6 +133,10 @@ enum StatusMenuPolicy {
     static func showsOrdinaryControls(state: RestEngineState) -> Bool {
         state.activeSession?.kind != .eyeGate
     }
+
+    static func routesEmergencyExitThroughOverlay(state: RestEngineState) -> Bool {
+        state.activeSession?.kind == .eyeGate
+    }
 }
 
 enum StatusMenuActionIcon {
@@ -491,7 +495,14 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 addedEyeGateAction = true
             }
             if canEmergencyOverrideEyeGate(active, now: now) {
-                menu.addItem(actionItem(L10n.tr("menu.emergencyOverride"), #selector(emergencyOverrideEyeGate)))
+                if StatusMenuPolicy.routesEmergencyExitThroughOverlay(state: engine.state) {
+                    menu.addItem(disabledItem(
+                        L10n.tr("menu.emergencyOverlayOnly"),
+                        symbolName: "exclamationmark.triangle"
+                    ))
+                } else {
+                    menu.addItem(actionItem(L10n.tr("menu.emergencyOverride"), #selector(emergencyOverrideEyeGate)))
+                }
                 addedEyeGateAction = true
             }
             if addedEyeGateAction {
@@ -618,9 +629,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         return image
     }
 
-    private func disabledItem(_ title: String) -> NSMenuItem {
+    private func disabledItem(_ title: String, symbolName: String? = nil) -> NSMenuItem {
         let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
         item.isEnabled = false
+        if let symbolName {
+            item.image = menuItemImage(symbolName)
+        }
         return item
     }
 

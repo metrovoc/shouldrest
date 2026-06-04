@@ -10,6 +10,7 @@ final class StatusMenuPolicyTests: XCTestCase {
         let state = RestEngineState(activeSession: session(kind: .eyeGate))
 
         XCTAssertFalse(StatusMenuPolicy.showsOrdinaryControls(state: state))
+        XCTAssertTrue(StatusMenuPolicy.routesEmergencyExitThroughOverlay(state: state))
     }
 
     func testEyeGateManualFinishPhaseStillSuppressesOrdinaryMenuControls() {
@@ -22,11 +23,16 @@ final class StatusMenuPolicyTests: XCTestCase {
         ))
 
         XCTAssertFalse(StatusMenuPolicy.showsOrdinaryControls(state: state))
+        XCTAssertTrue(StatusMenuPolicy.routesEmergencyExitThroughOverlay(state: state))
     }
 
     func testBodyBreakAndIdleStatesShowOrdinaryMenuControls() {
         XCTAssertTrue(StatusMenuPolicy.showsOrdinaryControls(state: RestEngineState()))
+        XCTAssertFalse(StatusMenuPolicy.routesEmergencyExitThroughOverlay(state: RestEngineState()))
         XCTAssertTrue(StatusMenuPolicy.showsOrdinaryControls(
+            state: RestEngineState(activeSession: session(kind: .bodyBreak))
+        ))
+        XCTAssertFalse(StatusMenuPolicy.routesEmergencyExitThroughOverlay(
             state: RestEngineState(activeSession: session(kind: .bodyBreak))
         ))
     }

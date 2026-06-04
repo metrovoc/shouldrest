@@ -64,7 +64,7 @@ enum EmergencyAutomationSignal {
 }
 
 enum AppVersion {
-    private static let fallback = "0.1.126"
+    private static let fallback = "0.1.127"
 
     static var current: String {
         guard let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,

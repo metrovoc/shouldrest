@@ -192,6 +192,7 @@ final class LocalizationQualityTests: XCTestCase {
 
         L10n.languageOverride = "en"
         XCTAssertEqual(L10n.tr("menu.reset"), "Reset Schedule")
+        XCTAssertEqual(L10n.tr("menu.emergencyOverlayOnly"), "Emergency Exit: use overlay or Esc twice")
         XCTAssertEqual(L10n.tr("prefs.reset"), "Reset Schedule")
         XCTAssertEqual(L10n.format("notification.quitBlocked", "Eye Gate"), "Finish Eye Gate before quitting.")
         XCTAssertEqual(L10n.format("notification.resetBlocked", "Eye Gate"), "Finish Eye Gate before resetting the schedule.")
@@ -201,6 +202,7 @@ final class LocalizationQualityTests: XCTestCase {
 
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(L10n.tr("menu.reset"), "重置计划")
+        XCTAssertEqual(L10n.tr("menu.emergencyOverlayOnly"), "紧急退出：覆盖层内点击或按 Esc 两次")
         XCTAssertEqual(L10n.tr("prefs.reset"), "重置计划")
         XCTAssertEqual(L10n.format("notification.quitBlocked", "护眼休息"), "请先完成护眼休息，再退出。")
         XCTAssertEqual(L10n.format("notification.resetBlocked", "护眼休息"), "请先完成护眼休息，再重置计划。")
