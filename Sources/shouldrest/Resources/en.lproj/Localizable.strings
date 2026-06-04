@@ -272,7 +272,7 @@
 "prefs.imagePreviewUnavailable" = "%@ cannot be previewed";
 "prefs.imageDropHelp" = "Drop an image here, or choose a file.";
 "prefs.sectionShortcuts" = "Global Shortcuts";
-"prefs.pauseToggle" = "Pause toggle";
+"prefs.pauseToggle" = "Pause or resume";
 "prefs.pause30Shortcut" = "Pause 30 minutes";
 "prefs.pause1hShortcut" = "Pause 1 hour";
 "prefs.pause2hShortcut" = "Pause 2 hours";

@@ -64,7 +64,7 @@ enum EmergencyAutomationSignal {
 }
 
 enum AppVersion {
-    private static let fallback = "0.1.119"
+    private static let fallback = "0.1.120"
 
     static var current: String {
         guard let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
@@ -258,7 +258,7 @@ enum CommandLineAutomation {
         case "resume":
             return dispatchOrQueue(AutomationRequest(command: .resume), message: "Requested resume.")
         case "toggle":
-            return dispatchOrQueue(AutomationRequest(command: .toggle), message: "Requested pause toggle.")
+            return dispatchOrQueue(AutomationRequest(command: .toggle), message: "Requested pause or resume.")
         case "reset":
             return dispatchOrQueue(AutomationRequest(command: .reset), message: "Requested reset.")
         case "eye", "mini":

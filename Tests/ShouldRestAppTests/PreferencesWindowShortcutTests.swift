@@ -74,6 +74,18 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertTrue(visibleTexts.contains("⌘⌥E"))
     }
 
+    func testPauseShortcutUsesActionCopyInsteadOfImplementationTerm() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectShortcutsTab(in: contentView)
+        let visibleTexts = visibleTexts(in: contentView)
+
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.pauseToggle")))
+        XCTAssertEqual(L10n.tr("prefs.pauseToggle"), "Pause or resume")
+        XCTAssertFalse(visibleTexts.contains("Pause toggle"))
+    }
+
     func testDuplicateShortcutsShowVisibleConflictWarning() throws {
         var settings = RestSettings.defaults
         settings.shortcuts.takeEyeGateNow = "Cmd+1"

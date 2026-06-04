@@ -272,7 +272,7 @@
 "prefs.imagePreviewUnavailable" = "%@ 无法预览";
 "prefs.imageDropHelp" = "可将图片拖到这里，或选择文件。";
 "prefs.sectionShortcuts" = "全局快捷键";
-"prefs.pauseToggle" = "暂停切换";
+"prefs.pauseToggle" = "暂停或恢复";
 "prefs.pause30Shortcut" = "暂停 30 分钟";
 "prefs.pause1hShortcut" = "暂停 1 小时";
 "prefs.pause2hShortcut" = "暂停 2 小时";
