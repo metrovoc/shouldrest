@@ -83,7 +83,7 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(button.toolTip, L10n.tr("shortcut.requiredHelp"))
     }
 
-    func testUnsetShortcutsExposeAddActionWithoutLongRecordInstruction() throws {
+    func testUnsetShortcutsExposeSetShortcutActionWithoutLongRecordInstruction() throws {
         let settings = RestSettings.defaults
         let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)

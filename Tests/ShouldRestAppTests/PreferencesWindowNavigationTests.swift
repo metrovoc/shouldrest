@@ -136,7 +136,7 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         XCTAssertNil(savedSettings.value)
     }
 
-    func testPreferenceSearchFindsBulkEditorsByBulkEditQueryWithoutJSONTerminology() throws {
+    func testPreferenceSearchFindsImportEditorsByImportQueryWithoutJSONTerminology() throws {
         defer { L10n.languageOverride = nil }
         L10n.languageOverride = "en"
 

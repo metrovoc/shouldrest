@@ -539,7 +539,7 @@
 "prefs.restoreDefaultsCancel" = "Cancel";
 "prefs.invalidJSONTitle" = "Import text has an invalid format";
 "prefs.invalidJSONBody" = "%@: %@";
-"shortcut.add" = "Add";
+"shortcut.add" = "Set Shortcut";
 "shortcut.record" = "Record Shortcut";
 "shortcut.recording" = "Recording…";
 "shortcut.recordHelp" = "Click, then press a shortcut.";
