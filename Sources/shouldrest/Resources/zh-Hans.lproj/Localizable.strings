@@ -306,6 +306,7 @@
 "prefs.autosaveSaved" = "已保存";
 "prefs.autosaveRestored" = "已恢复默认";
 "prefs.autosaveInvalid" = "修复无效 JSON 后保存";
+"prefs.autosaveInvalidField" = "修复%@后保存";
 "prefs.searchPlaceholder" = "查找设置";
 "prefs.searchHelp" = "按 Command-F 查找设置。在搜索框内按 Esc 清空。";
 "prefs.searchMatched" = "%@ · %@";

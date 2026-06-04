@@ -377,6 +377,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private var hasPendingAutosave = false
     private var autosaveGeneration = 0
     private var autosaveTask: Task<Void, Never>?
+    private var saveStatusInvalidFieldName: String?
+    private var saveStatusInvalidDetail: String?
     private var numberInputs: [NumberInput] = []
     private weak var preferencesTabView: NSTabView?
     private var searchTargets: [PreferencesSearchTarget] = []
@@ -1857,9 +1859,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         } catch {
             if showAlerts {
                 showInvalidJSONAlert(error)
-            } else {
-                setSaveStatus(.invalid)
             }
+            setInvalidSaveStatus(error)
             return false
         }
 
@@ -2509,7 +2510,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             scheduleAutosave()
         } catch {
             showInvalidJSONAlert(error)
-            setSaveStatus(.invalid)
+            setInvalidSaveStatus(error)
         }
     }
 
@@ -2551,7 +2552,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             scheduleAutosave()
         } catch {
             showInvalidJSONAlert(error)
-            setSaveStatus(.invalid)
+            setInvalidSaveStatus(error)
         }
     }
 
@@ -2577,7 +2578,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             scheduleAutosave()
         } catch {
             showInvalidJSONAlert(error)
-            setSaveStatus(.invalid)
+            setInvalidSaveStatus(error)
         }
     }
 
@@ -2750,6 +2751,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     private func setSaveStatus(_ status: PreferencesSaveStatus) {
+        switch status {
+        case .invalid:
+            break
+        default:
+            saveStatusInvalidFieldName = nil
+            saveStatusInvalidDetail = nil
+        }
+
         let symbolName: String
         let color: NSColor
         let title: String
@@ -2778,13 +2787,34 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         case .invalid:
             symbolName = "exclamationmark.triangle.fill"
             color = .systemOrange
-            title = L10n.tr("prefs.autosaveInvalid")
+            if let saveStatusInvalidFieldName {
+                title = L10n.format("prefs.autosaveInvalidField", saveStatusInvalidFieldName)
+            } else {
+                title = L10n.tr("prefs.autosaveInvalid")
+            }
         }
 
         saveStatusIcon.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: title)
         saveStatusIcon.contentTintColor = color
         saveStatusLabel.stringValue = title
         saveStatusLabel.textColor = color == .secondaryLabelColor ? .secondaryLabelColor : color
+        let help = saveStatusInvalidDetail ?? title
+        saveStatusIcon.toolTip = help
+        saveStatusLabel.toolTip = help
+        saveStatusIcon.setAccessibilityLabel(title)
+        saveStatusIcon.setAccessibilityHelp(help)
+        saveStatusLabel.setAccessibilityHelp(help)
+    }
+
+    private func setInvalidSaveStatus(_ error: Error) {
+        if let invalid = error as? InvalidAdvancedJSON {
+            saveStatusInvalidFieldName = invalid.fieldName
+            saveStatusInvalidDetail = invalid.errorDescription
+        } else {
+            saveStatusInvalidFieldName = nil
+            saveStatusInvalidDetail = error.localizedDescription
+        }
+        setSaveStatus(.invalid)
     }
 
     @objc private func previewSound(_ sender: NSButton) {
@@ -2940,7 +2970,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             scheduleAutosave()
         } catch {
             showInvalidJSONAlert(error)
-            setSaveStatus(.invalid)
+            setInvalidSaveStatus(error)
         }
     }
 

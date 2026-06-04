@@ -306,6 +306,7 @@
 "prefs.autosaveSaved" = "Saved";
 "prefs.autosaveRestored" = "Defaults restored";
 "prefs.autosaveInvalid" = "Fix invalid JSON to save";
+"prefs.autosaveInvalidField" = "Fix %@ to save";
 "prefs.searchPlaceholder" = "Find a setting";
 "prefs.searchHelp" = "Press Command-F to find a setting. Press Esc in the search field to clear.";
 "prefs.searchMatched" = "%@ · %@";

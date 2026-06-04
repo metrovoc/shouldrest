@@ -173,6 +173,39 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertNil(savedSettings.value)
     }
 
+    func testInvalidAdvancedJSONStatusNamesBrokenEditor() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "alpha",
+                name: "Alpha",
+                matchTerms: ["alpha.app"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let editor = try XCTUnwrap(view(withIdentifier: "appExclusionsJSONEditor", in: contentView) as? NSTextView)
+        let statusIcon = try XCTUnwrap(view(withIdentifier: "autosaveStatusIcon", in: contentView) as? NSImageView)
+        let statusLabel = try XCTUnwrap(view(withIdentifier: "autosaveStatusLabel", in: contentView) as? NSTextField)
+
+        editor.string = "{ invalid json"
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: editor))
+
+        XCTAssertFalse(controller.flushPendingAutosave(showAlerts: false))
+
+        let expectedTitle = L10n.format("prefs.autosaveInvalidField", L10n.tr("prefs.advancedRulesJSON"))
+        XCTAssertEqual(statusLabel.stringValue, expectedTitle)
+        XCTAssertTrue(statusLabel.toolTip?.contains(L10n.tr("prefs.advancedRulesJSON")) ?? false)
+        XCTAssertNotEqual(statusLabel.toolTip, L10n.tr("prefs.autosaveInvalid"))
+        XCTAssertEqual(statusIcon.toolTip, statusLabel.toolTip)
+        XCTAssertEqual(statusIcon.accessibilityLabel(), expectedTitle)
+        XCTAssertEqual(statusIcon.accessibilityHelp(), statusLabel.toolTip)
+        XCTAssertEqual(statusLabel.accessibilityHelp(), statusLabel.toolTip)
+    }
+
     private func view(withIdentifier identifier: String, in view: NSView) -> NSView? {
         if view.identifier?.rawValue == identifier {
             return view
