@@ -219,6 +219,16 @@ enum StatusMenuPolicy {
     }
 }
 
+enum StrictRestStatusMenuPolicy {
+    static func showsSafeDiagnosticsCopy(state: RestEngineState) -> Bool {
+        state.activeSession?.kind == .eyeGate
+    }
+
+    static func showsDisabledQuitExplanation(state: RestEngineState, settings: RestSettings) -> Bool {
+        BlockedActionCopy.quitMessage(state: state, settings: settings) != nil
+    }
+}
+
 enum StatusMenuActionIcon {
     static func symbolName(forActionName actionName: String) -> String? {
         switch actionName.replacingOccurrences(of: ":", with: "") {
@@ -689,6 +699,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 menu.addItem(.separator())
             }
             if !showsOrdinaryControls {
+                appendStrictRestSupportItems(to: menu)
                 setStatusMenu(menu, on: item)
                 return
             }
@@ -749,6 +760,21 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(supportMenuItem())
 
         menu.addItem(.separator())
+        menu.addItem(quitMenuItem())
+        setStatusMenu(menu, on: item)
+    }
+
+    private func appendStrictRestSupportItems(to menu: NSMenu) {
+        if StrictRestStatusMenuPolicy.showsSafeDiagnosticsCopy(state: engine.state) {
+            menu.addItem(actionItem(L10n.tr("menu.copyDebug"), #selector(copyDebugInfo)))
+            menu.addItem(.separator())
+        }
+        if StrictRestStatusMenuPolicy.showsDisabledQuitExplanation(state: engine.state, settings: settings) {
+            menu.addItem(quitMenuItem())
+        }
+    }
+
+    private func quitMenuItem() -> NSMenuItem {
         let quitItem = NSMenuItem(title: L10n.tr("menu.quit"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         if let message = BlockedActionCopy.quitMessage(state: engine.state, settings: settings) {
             quitItem.isEnabled = false
@@ -759,8 +785,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
         quitItem.setAccessibilityHelp(quitItem.toolTip)
         quitItem.image = menuItemImage("power")
-        menu.addItem(quitItem)
-        setStatusMenu(menu, on: item)
+        return quitItem
     }
 
     private func setStatusMenu(_ menu: NSMenu, on item: NSStatusItem) {

@@ -14,6 +14,14 @@ final class StatusMenuPolicyTests: XCTestCase {
         XCTAssertTrue(StatusMenuPolicy.showsOverlayOnlyNotice(state: state, canEmergencyExit: true))
     }
 
+    func testActiveEyeGateKeepsSafeSupportActionsVisibleWithoutOrdinaryControls() {
+        let state = RestEngineState(activeSession: session(kind: .eyeGate))
+
+        XCTAssertTrue(StrictRestStatusMenuPolicy.showsSafeDiagnosticsCopy(state: state))
+        XCTAssertTrue(StrictRestStatusMenuPolicy.showsDisabledQuitExplanation(state: state, settings: .defaults))
+        XCTAssertFalse(StatusMenuPolicy.showsOrdinaryControls(state: state))
+    }
+
     func testEyeGateManualFinishPhaseStillSuppressesOrdinaryMenuControls() {
         let state = RestEngineState(activeSession: RestSession(
             kind: .eyeGate,
@@ -41,6 +49,15 @@ final class StatusMenuPolicyTests: XCTestCase {
         XCTAssertFalse(StatusMenuPolicy.showsOverlayOnlyNotice(
             state: RestEngineState(activeSession: session(kind: .bodyBreak)),
             canEmergencyExit: true
+        ))
+        XCTAssertFalse(StrictRestStatusMenuPolicy.showsSafeDiagnosticsCopy(state: RestEngineState()))
+        XCTAssertFalse(StrictRestStatusMenuPolicy.showsDisabledQuitExplanation(state: RestEngineState(), settings: .defaults))
+        XCTAssertFalse(StrictRestStatusMenuPolicy.showsSafeDiagnosticsCopy(
+            state: RestEngineState(activeSession: session(kind: .bodyBreak))
+        ))
+        XCTAssertFalse(StrictRestStatusMenuPolicy.showsDisabledQuitExplanation(
+            state: RestEngineState(activeSession: session(kind: .bodyBreak)),
+            settings: .defaults
         ))
     }
 
