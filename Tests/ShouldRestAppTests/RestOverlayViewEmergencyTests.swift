@@ -396,6 +396,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
     func testEmergencyAffordanceAccessibilityTracksConfirmationState() throws {
         let view = configuredEyeGateOverlay(remainingSeconds: 0)
+        view.onEmergencyOverrideRequested = {}
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
 
         XCTAssertEqual(button.accessibilityLabel(), L10n.tr("overlay.emergencyOverride"))
@@ -408,6 +409,17 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(button.accessibilityLabel(), L10n.tr("overlay.emergencyOverrideConfirm"))
         XCTAssertEqual(button.accessibilityHelp(), L10n.tr("overlay.emergencyOverrideHelp"))
         XCTAssertEqual(button.image?.accessibilityDescription, L10n.tr("overlay.emergencyOverrideConfirm"))
+    }
+
+    func testEmergencyClickWithoutHandlerDoesNotEnterFalseConfirmationState() throws {
+        let view = configuredEyeGateOverlay(remainingSeconds: 0)
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+
+        button.performClick(nil)
+        drainMainQueue()
+
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverride"))
+        XCTAssertEqual(button.accessibilityLabel(), L10n.tr("overlay.emergencyOverride"))
     }
 
     func testArmedEmergencyShowsInternalSecondClickConfirmation() throws {

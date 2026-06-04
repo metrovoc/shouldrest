@@ -2083,7 +2083,12 @@ final class OverlayController {
         let remaining = max(0, Int(session.duration - now.timeIntervalSince(session.startedAt)))
         let contentScreen = selectedContentScreen(for: session, settings: settings)
         let screens = coveredScreens(for: session, settings: settings, contentScreen: contentScreen)
-        let emergencyRemaining = emergencyOverrideRemainingSeconds(for: session, settings: settings, now: now)
+        let emergencyRemaining: Int?
+        if emergencyOverrideAction == nil {
+            emergencyRemaining = nil
+        } else {
+            emergencyRemaining = emergencyOverrideRemainingSeconds(for: session, settings: settings, now: now)
+        }
 
         for screen in screens {
             let id = screen.displayID
@@ -2668,17 +2673,20 @@ final class RestOverlayView: NSView {
     }
 
     private func requestEmergencyOverride() {
+        guard let request = onEmergencyOverrideRequested else {
+            return
+        }
+
         let confirmsAlreadyArmedEmergency = emergencyOverrideArmed
         if case .activated = activateEmergencyOverrideIfAvailable() {
             armEmergencyOverrideLocallyIfNeeded()
-            let request = onEmergencyOverrideRequested
             if confirmsAlreadyArmedEmergency {
                 // Let AppKit unwind the click/key event before the handler closes overlay windows.
                 DispatchQueue.main.async {
-                    request?()
+                    request()
                 }
             } else {
-                request?()
+                request()
             }
         }
     }
