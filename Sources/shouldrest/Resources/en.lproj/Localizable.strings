@@ -52,7 +52,7 @@
 "menu.downloadLatest" = "Download Latest Version";
 "menu.downloadLatestHelp" = "Open the latest ShouldRest release download page.";
 "menu.copyDebug" = "Copy Diagnostics";
-"menu.copyDebugHelp" = "Copy the current rest state, settings summary, and support paths.";
+"menu.copyDebugHelp" = "Copy the current rest state, settings summary, and support details.";
 "menu.copyDebugDone" = "Diagnostics copied to the clipboard.";
 "menu.debugPanel" = "Diagnostics…";
 "menu.debugPanelHelp" = "Open the diagnostics window.";
@@ -141,7 +141,7 @@
 "preferences.title" = "ShouldRest Preferences";
 "debug.title" = "ShouldRest Diagnostics";
 "debug.heading" = "Diagnostics";
-"debug.subtitle" = "Current rest state, app paths, and settings for troubleshooting.";
+"debug.subtitle" = "Current rest state, settings summary, and support details for troubleshooting.";
 "debug.textHelp" = "Selectable diagnostics text. Use Copy to place it on the clipboard.";
 "debug.searchPlaceholder" = "Find diagnostics";
 "debug.searchHelp" = "Find text in diagnostics. Press Return for the next match, or Esc to clear.";
@@ -151,11 +151,11 @@
 "debug.copyHelp" = "Copy the visible diagnostics";
 "debug.refresh" = "Refresh";
 "debug.refreshHelp" = "Refresh the visible diagnostics";
-"debug.openLog" = "Reveal Log";
-"debug.openLogHelp" = "Reveal the app log file in Finder";
-"debug.openSettings" = "Reveal Settings";
-"debug.openSettingsHelp" = "Reveal the settings file in Finder";
-"debug.pathHidden" = "Path access is hidden in Preferences";
+"debug.openLog" = "Show Log Location";
+"debug.openLogHelp" = "Show the ShouldRest log location in Finder.";
+"debug.openSettings" = "Show Settings Location";
+"debug.openSettingsHelp" = "Show the ShouldRest settings location in Finder.";
+"debug.pathHidden" = "Location access is hidden in Preferences.";
 "debug.statusLabel" = "Diagnostics status";
 "debug.ready" = "Ready";
 "debug.copied" = "Copied";
@@ -213,8 +213,8 @@
 "prefs.showOnboardingNextLaunchHelp" = "Show the welcome window the next time ShouldRest starts.";
 "prefs.adminHideUpdates" = "Hide update UI";
 "prefs.adminHideUpdatesHelp" = "Hide update checking controls and notifications from the normal UI.";
-"prefs.adminHideSettingsPath" = "Hide settings, log, support, and image paths";
-"prefs.adminHideSettingsPathHelp" = "Hide filesystem paths in Preferences, diagnostics, and CLI output.";
+"prefs.adminHideSettingsPath" = "Hide file locations";
+"prefs.adminHideSettingsPathHelp" = "Hide settings, logs, support, and image locations in Preferences, diagnostics, and CLI output.";
 "prefs.adminHideStrict" = "Hide strict preferences";
 "prefs.adminHideStrictHelp" = "Hide strict-rest controls from Preferences while preserving their stored values.";
 "prefs.tabSchedule" = "Schedule";

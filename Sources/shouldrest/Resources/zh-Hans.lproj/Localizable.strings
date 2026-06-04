@@ -52,7 +52,7 @@
 "menu.downloadLatest" = "下载最新版本";
 "menu.downloadLatestHelp" = "打开最新 ShouldRest 版本下载页面。";
 "menu.copyDebug" = "复制诊断信息";
-"menu.copyDebugHelp" = "复制当前休息状态、设置摘要和支持路径。";
+"menu.copyDebugHelp" = "复制当前休息状态、设置摘要和支持信息。";
 "menu.copyDebugDone" = "诊断信息已复制到剪贴板。";
 "menu.debugPanel" = "诊断…";
 "menu.debugPanelHelp" = "打开诊断窗口。";
@@ -141,7 +141,7 @@
 "preferences.title" = "ShouldRest 偏好设置";
 "debug.title" = "ShouldRest 诊断";
 "debug.heading" = "诊断信息";
-"debug.subtitle" = "当前休息状态、应用路径和设置，用于排查问题。";
+"debug.subtitle" = "当前休息状态、设置摘要和支持信息，用于排查问题。";
 "debug.textHelp" = "可选择的诊断文本。使用复制按钮可放入剪贴板。";
 "debug.searchPlaceholder" = "查找诊断信息";
 "debug.searchHelp" = "在诊断文本中查找。按 Return 跳到下一个结果，按 Esc 清空。";
@@ -151,11 +151,11 @@
 "debug.copyHelp" = "复制当前可见的诊断信息";
 "debug.refresh" = "刷新";
 "debug.refreshHelp" = "刷新当前可见的诊断信息";
-"debug.openLog" = "显示日志";
-"debug.openLogHelp" = "在 Finder 中显示应用日志文件";
-"debug.openSettings" = "显示设置文件";
-"debug.openSettingsHelp" = "在 Finder 中显示设置文件";
-"debug.pathHidden" = "路径访问已在偏好设置中隐藏";
+"debug.openLog" = "显示日志位置";
+"debug.openLogHelp" = "在 Finder 中显示 ShouldRest 日志位置。";
+"debug.openSettings" = "显示设置位置";
+"debug.openSettingsHelp" = "在 Finder 中显示 ShouldRest 设置位置。";
+"debug.pathHidden" = "位置访问已在偏好设置中隐藏。";
 "debug.statusLabel" = "诊断状态";
 "debug.ready" = "就绪";
 "debug.copied" = "已复制";
@@ -213,8 +213,8 @@
 "prefs.showOnboardingNextLaunchHelp" = "下次启动 ShouldRest 时再次显示欢迎窗口。";
 "prefs.adminHideUpdates" = "隐藏更新界面";
 "prefs.adminHideUpdatesHelp" = "在常规界面中隐藏更新检查控件和更新通知。";
-"prefs.adminHideSettingsPath" = "隐藏设置、日志、支持与图片路径";
-"prefs.adminHideSettingsPathHelp" = "在偏好设置、诊断和命令行输出中隐藏文件路径。";
+"prefs.adminHideSettingsPath" = "隐藏文件位置";
+"prefs.adminHideSettingsPathHelp" = "在偏好设置、诊断和命令行输出中隐藏设置、日志、支持与图片位置。";
 "prefs.adminHideStrict" = "隐藏严格模式偏好";
 "prefs.adminHideStrictHelp" = "从偏好设置中隐藏严格休息控件，同时保留已保存的值。";
 "prefs.tabSchedule" = "日程";
