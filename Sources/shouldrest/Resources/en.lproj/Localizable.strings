@@ -86,8 +86,8 @@
 "deferral.outsideWorkingHours" = "outside working hours";
 "deferral.focusMode" = "Focus / Do Not Disturb";
 "deferral.appExclusion" = "app exclusion: %@";
-"overlay.eyeTitle" = "Look away";
-"overlay.eyeBody" = "Rest your eyes";
+"overlay.eyeTitle" = "Look far away";
+"overlay.eyeBody" = "Relax your focus. Blink slowly and keep your eyes off the screen until the timer ends.";
 "overlay.bodyTitle" = "Body Break";
 "overlay.bodyBody" = "Stand up, breathe, and move";
 "overlay.completeTitle" = "Break complete";

@@ -21,8 +21,8 @@ public enum BuiltInRestIdeas {
         RestIdea(
             id: "eye-gate-look-away",
             kind: .eyeGate,
-            title: "Look away",
-            body: "Rest your eyes"
+            title: "Look far away",
+            body: "Relax your focus. Blink slowly and keep your eyes off the screen until the timer ends."
         )
     ]
 

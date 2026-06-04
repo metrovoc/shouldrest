@@ -57,6 +57,33 @@ final class RestOverlayViewCountdownTests: XCTestCase {
         XCTAssertEqual(countdown.stringValue, "20s")
     }
 
+    func testEyeGateOverlayUsesActionableLocalizedCopy() throws {
+        L10n.languageOverride = "en"
+        defer { L10n.languageOverride = nil }
+
+        let view = configuredEyeGateOverlay()
+
+        let title = try XCTUnwrap(view.descendant(withIdentifier: "overlay.title.label") as? NSTextField)
+        let detail = try XCTUnwrap(view.descendant(withIdentifier: "overlay.detail.label") as? NSTextField)
+        XCTAssertEqual(title.stringValue, "Look far away")
+        XCTAssertTrue(detail.stringValue.contains("Blink slowly"))
+        XCTAssertTrue(detail.stringValue.contains("until the timer ends"))
+    }
+
+    func testEyeGateOverlayDoesNotLeakBuiltInEnglishCopyInChinese() throws {
+        L10n.languageOverride = "zh-Hans"
+        defer { L10n.languageOverride = nil }
+
+        let view = configuredEyeGateOverlay()
+
+        let title = try XCTUnwrap(view.descendant(withIdentifier: "overlay.title.label") as? NSTextField)
+        let detail = try XCTUnwrap(view.descendant(withIdentifier: "overlay.detail.label") as? NSTextField)
+        XCTAssertEqual(title.stringValue, "看向远处")
+        XCTAssertTrue(detail.stringValue.contains("慢慢眨眼"))
+        XCTAssertFalse(detail.stringValue.contains("Rest your eyes"))
+        XCTAssertFalse(title.stringValue.contains("Look"))
+    }
+
     func testBodyBreakOverlayLongCustomTextStaysWithinReadableLayout() throws {
         let longWord = String(repeating: "ShouldRestNeedsUnbrokenCustomContentToWrap", count: 6)
         var settings = RestSettings.defaults
@@ -111,6 +138,27 @@ final class RestOverlayViewCountdownTests: XCTestCase {
             showsContent: true,
             manualAwaiting: false,
             emergencyOverrideRemainingSeconds: nil
+        )
+        return view
+    }
+
+    private func configuredEyeGateOverlay(settings: RestSettings = .defaults) -> RestOverlayView {
+        let start = Date()
+        let session = RestSession(
+            kind: .eyeGate,
+            startedAt: start,
+            scheduledAt: start,
+            duration: 20,
+            manualFinishEnabled: false
+        )
+        let view = RestOverlayView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
+        view.configure(
+            session: session,
+            remainingSeconds: 20,
+            settings: settings,
+            showsContent: true,
+            manualAwaiting: false,
+            emergencyOverrideRemainingSeconds: 0
         )
         return view
     }

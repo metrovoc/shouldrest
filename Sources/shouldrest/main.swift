@@ -2599,9 +2599,8 @@ final class RestOverlayView: NSView {
 
         switch session.kind {
         case .eyeGate:
-            let idea = settings.contentLibrary.ideas(for: .eyeGate).first
-            titleLabel.stringValue = idea?.title ?? L10n.tr("overlay.eyeTitle")
-            setDetailText(idea?.body ?? L10n.tr("overlay.eyeBody"), allowsRichText: false)
+            titleLabel.stringValue = L10n.tr("overlay.eyeTitle")
+            setDetailText(L10n.tr("overlay.eyeBody"), allowsRichText: false)
         case .bodyBreak:
             let ideas = settings.contentLibrary.ideas(for: .bodyBreak)
             let index = Int(session.startedAt.timeIntervalSinceReferenceDate) % max(1, ideas.count)

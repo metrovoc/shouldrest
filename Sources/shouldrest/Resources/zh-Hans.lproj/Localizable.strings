@@ -87,7 +87,7 @@
 "deferral.focusMode" = "专注 / 勿扰模式";
 "deferral.appExclusion" = "应用排除：%@";
 "overlay.eyeTitle" = "看向远处";
-"overlay.eyeBody" = "让眼睛休息";
+"overlay.eyeBody" = "放松对焦，慢慢眨眼，计时结束前不要看屏幕。";
 "overlay.bodyTitle" = "身体休息";
 "overlay.bodyBody" = "站起来，呼吸，活动一下";
 "overlay.completeTitle" = "休息完成";
