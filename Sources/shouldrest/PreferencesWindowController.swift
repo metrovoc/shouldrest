@@ -10,6 +10,113 @@ final class FlippedView: NSView {
     }
 }
 
+@MainActor
+final class LocalImagePreviewView: NSImageView {
+    var onImageURLDropped: ((URL) -> Void)?
+    var isDropEnabled = true {
+        didSet {
+            updateDropRegistration()
+        }
+    }
+    private var isDropHighlighted = false
+    private var restingBorderColor: CGColor?
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        updateDropRegistration()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        updateDropRegistration()
+    }
+
+    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        guard isDropEnabled,
+              Self.imageFileURL(from: sender.draggingPasteboard) != nil else {
+            return []
+        }
+        setDropHighlighted(true)
+        return .copy
+    }
+
+    override func draggingUpdated(_ sender: NSDraggingInfo) -> NSDragOperation {
+        guard isDropEnabled,
+              Self.imageFileURL(from: sender.draggingPasteboard) != nil else {
+            setDropHighlighted(false)
+            return []
+        }
+        setDropHighlighted(true)
+        return .copy
+    }
+
+    override func draggingExited(_ sender: NSDraggingInfo?) {
+        setDropHighlighted(false)
+    }
+
+    override func draggingEnded(_ sender: NSDraggingInfo) {
+        setDropHighlighted(false)
+    }
+
+    override func prepareForDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        isDropEnabled && Self.imageFileURL(from: sender.draggingPasteboard) != nil
+    }
+
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        defer { setDropHighlighted(false) }
+        guard let url = Self.imageFileURL(from: sender.draggingPasteboard) else { return false }
+        onImageURLDropped?(url)
+        return true
+    }
+
+    @discardableResult
+    func acceptImageDrop(url: URL) -> Bool {
+        guard isDropEnabled,
+              Self.isImageFileURL(url) else {
+            return false
+        }
+        onImageURLDropped?(url.standardizedFileURL)
+        return true
+    }
+
+    static func imageFileURL(from pasteboard: NSPasteboard) -> URL? {
+        let urls = pasteboard.readObjects(
+            forClasses: [NSURL.self],
+            options: [.urlReadingFileURLsOnly: true]
+        ) as? [URL] ?? []
+        return urls.first(where: isImageFileURL)?.standardizedFileURL
+    }
+
+    static func isImageFileURL(_ url: URL) -> Bool {
+        guard url.isFileURL else { return false }
+        if let contentType = try? url.resourceValues(forKeys: [.contentTypeKey]).contentType {
+            return contentType.conforms(to: .image)
+        }
+        return NSImage(contentsOf: url) != nil
+    }
+
+    private func updateDropRegistration() {
+        if isDropEnabled {
+            registerForDraggedTypes([.fileURL])
+        } else {
+            unregisterDraggedTypes()
+            setDropHighlighted(false)
+        }
+    }
+
+    private func setDropHighlighted(_ highlighted: Bool) {
+        guard highlighted != isDropHighlighted else { return }
+        isDropHighlighted = highlighted
+        if highlighted {
+            restingBorderColor = layer?.borderColor
+            layer?.borderColor = NSColor.controlAccentColor.withAlphaComponent(0.66).cgColor
+        } else {
+            layer?.borderColor = restingBorderColor ?? NSColor.separatorColor.cgColor
+            restingBorderColor = nil
+        }
+    }
+}
+
 private struct NumberInput {
     var field: NSTextField
     var stepper: NSStepper
@@ -204,7 +311,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let localImagePath = NSTextField()
     private let localImageChooseButton = NSButton()
     private let localImageClearButton = NSButton()
-    private let localImagePreview = NSImageView()
+    private let localImagePreview = LocalImagePreviewView()
     private let localImagePreviewLabel = NSTextField(labelWithString: "")
     private let useBuiltInIdeas = NSButton(checkboxWithTitle: L10n.tr("prefs.useBuiltInIdeas"), target: nil, action: nil)
 
@@ -1076,6 +1183,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         localImagePreview.layer?.borderWidth = 1
         localImagePreview.layer?.borderColor = NSColor.separatorColor.cgColor
         localImagePreview.layer?.backgroundColor = NSColor.textBackgroundColor.withAlphaComponent(0.45).cgColor
+        localImagePreview.toolTip = L10n.tr("prefs.imageDropHelp")
+        localImagePreview.setAccessibilityLabel(L10n.tr("prefs.localImagePath"))
+        localImagePreview.setAccessibilityHelp(L10n.tr("prefs.imageDropHelp"))
+        localImagePreview.onImageURLDropped = { [weak self] url in
+            self?.applyLocalImageURL(url)
+        }
         localImagePreview.widthAnchor.constraint(equalToConstant: 92).isActive = true
         localImagePreview.heightAnchor.constraint(equalToConstant: 62).isActive = true
 
@@ -1716,6 +1829,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         localImageChooseButton.isEnabled = bodyBreakEnabled
         localImageClearButton.isEnabled = bodyBreakEnabled &&
             !localImagePath.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        localImagePreview.isDropEnabled = bodyBreakEnabled
     }
 
     private func setNumberInputEnabled(_ field: NSTextField, _ enabled: Bool) {
@@ -1950,15 +2064,19 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         panel.prompt = L10n.tr("prefs.chooseFile")
 
         if panel.runModal() == .OK, let url = panel.url {
-            localImagePath.stringValue = url.path
-            updateLocalImagePreview()
-            updateDependentControlEnablement()
-            scheduleAutosave()
+            applyLocalImageURL(url)
         }
     }
 
     @objc private func clearLocalImagePressed() {
         localImagePath.stringValue = ""
+        updateLocalImagePreview()
+        updateDependentControlEnablement()
+        scheduleAutosave()
+    }
+
+    private func applyLocalImageURL(_ url: URL) {
+        localImagePath.stringValue = url.standardizedFileURL.path
         updateLocalImagePreview()
         updateDependentControlEnablement()
         scheduleAutosave()

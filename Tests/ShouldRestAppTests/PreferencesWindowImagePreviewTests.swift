@@ -11,7 +11,9 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
 
         try selectAppearanceTab(in: contentView)
 
+        let preview = try XCTUnwrap(view(withIdentifier: "localImagePreview", in: contentView) as? LocalImagePreviewView)
         let label = try XCTUnwrap(view(withIdentifier: "localImagePreviewLabel", in: contentView) as? NSTextField)
+        XCTAssertEqual(preview.toolTip, L10n.tr("prefs.imageDropHelp"))
         XCTAssertEqual(label.stringValue, L10n.tr("prefs.imagePreviewEmpty"))
     }
 
@@ -45,6 +47,55 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
         XCTAssertEqual(label.stringValue, L10n.format("prefs.imagePreviewUnavailable", missingURL.lastPathComponent))
     }
 
+    func testDroppingImageIntoPreviewUpdatesPathPreviewAndAutosaves() throws {
+        let imageURL = try makeTemporaryPNG(named: "dropped-body-preview.png")
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+        let preview = try XCTUnwrap(view(withIdentifier: "localImagePreview", in: contentView) as? LocalImagePreviewView)
+        let label = try XCTUnwrap(view(withIdentifier: "localImagePreviewLabel", in: contentView) as? NSTextField)
+        let clearButton = try XCTUnwrap(button(withTitle: L10n.tr("prefs.clear"), in: contentView))
+
+        XCTAssertTrue(preview.acceptImageDrop(url: imageURL))
+        waitUntilSavedSettingsArrive(savedSettings)
+
+        XCTAssertEqual(label.stringValue, "dropped-body-preview.png")
+        XCTAssertEqual(savedSettings.value?.contentLibrary.localImagePaths, [imageURL.standardizedFileURL.path])
+        XCTAssertEqual(savedSettings.value?.bodyBreak.content, .localImage)
+        XCTAssertTrue(clearButton.isEnabled)
+    }
+
+    func testDroppingNonImageIntoPreviewIsIgnored() throws {
+        let textURL = try makeTemporaryTextFile(named: "not-an-image.txt")
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+        let preview = try XCTUnwrap(view(withIdentifier: "localImagePreview", in: contentView) as? LocalImagePreviewView)
+        let label = try XCTUnwrap(view(withIdentifier: "localImagePreviewLabel", in: contentView) as? NSTextField)
+
+        XCTAssertFalse(preview.acceptImageDrop(url: textURL))
+        RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+
+        XCTAssertNil(savedSettings.value)
+        XCTAssertEqual(label.stringValue, L10n.tr("prefs.imagePreviewEmpty"))
+    }
+
+    func testImagePreviewReadsImageFileURLFromDragPasteboard() throws {
+        let imageURL = try makeTemporaryPNG(named: "pasteboard-body-preview.png")
+        let pasteboard = NSPasteboard(name: NSPasteboard.Name(UUID().uuidString))
+        pasteboard.clearContents()
+        XCTAssertTrue(pasteboard.writeObjects([imageURL as NSURL]))
+
+        XCTAssertEqual(
+            LocalImagePreviewView.imageFileURL(from: pasteboard)?.path,
+            imageURL.standardizedFileURL.path
+        )
+    }
+
     private func selectAppearanceTab(in view: NSView) throws {
         let tabView = try XCTUnwrap(firstTabView(in: view))
         tabView.selectTabViewItem(withIdentifier: L10n.tr("prefs.tabAppearance"))
@@ -72,6 +123,25 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
             }
         }
         return nil
+    }
+
+    private func button(withTitle title: String, in view: NSView) -> NSButton? {
+        if let button = view as? NSButton, button.title == title {
+            return button
+        }
+        for subview in view.subviews {
+            if let found = button(withTitle: title, in: subview) {
+                return found
+            }
+        }
+        return nil
+    }
+
+    private func waitUntilSavedSettingsArrive(_ settings: SavedSettingsBox) {
+        let deadline = Date().addingTimeInterval(2)
+        while settings.value == nil && Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.05))
+        }
     }
 
     private func makeTemporaryPNG(named filename: String) throws -> URL {
@@ -107,4 +177,20 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
         try data.write(to: url)
         return url
     }
+
+    private func makeTemporaryTextFile(named filename: String) throws -> URL {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString, isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        addTeardownBlock {
+            try? FileManager.default.removeItem(at: directory)
+        }
+
+        let url = directory.appendingPathComponent(filename)
+        try "not an image".write(to: url, atomically: true, encoding: .utf8)
+        return url
+    }
+}
+
+private final class SavedSettingsBox {
+    var value: RestSettings?
 }
