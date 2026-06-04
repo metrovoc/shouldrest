@@ -12,11 +12,13 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         try selectAdvancedTab(in: contentView)
 
         XCTAssertFalse(try view(withIdentifier: "prefs.notifyNewVersion", in: contentView).isHidden)
-        XCTAssertFalse(try view(withIdentifier: "prefs.updateFeedURLRow", in: contentView).isHidden)
+        XCTAssertFalse(try view(withIdentifier: "updateSource", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.updateFeedURLRow", in: contentView).isHidden)
 
         let visibleTexts = visibleTexts(in: contentView)
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.notifyNewVersion")))
-        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.updateFeedURL")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.showUpdateSource")))
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.updateFeedURL")))
     }
 
     func testDisabledUpdateCheckingHidesDependentPreferences() throws {
@@ -29,12 +31,34 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
 
         XCTAssertFalse(try view(withIdentifier: "prefs.checkUpdates", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.notifyNewVersion", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "updateSource", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.updateFeedURLRow", in: contentView).isHidden)
 
         let visibleTexts = visibleTexts(in: contentView)
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.checkUpdates")))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.notifyNewVersion")))
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.showUpdateSource")))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.updateFeedURL")))
+    }
+
+    func testUpdateSourceDisclosureRevealsURLOnlyOnDemand() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAdvancedTab(in: contentView)
+
+        let disclosure = try XCTUnwrap(view(withIdentifier: "updateSource", in: contentView) as? NSButton)
+        let row = try view(withIdentifier: "prefs.updateFeedURLRow", in: contentView)
+
+        XCTAssertEqual(disclosure.title, L10n.tr("prefs.showUpdateSource"))
+        XCTAssertEqual(disclosure.toolTip, L10n.tr("prefs.updateSourceDisclosureHelp"))
+        XCTAssertEqual(disclosure.accessibilityHelp(), L10n.tr("prefs.updateSourceDisclosureHelp"))
+        XCTAssertTrue(row.isHidden)
+
+        XCTAssertTrue(sendAction(from: disclosure))
+
+        XCTAssertEqual(disclosure.title, L10n.tr("prefs.hideUpdateSource"))
+        XCTAssertFalse(row.isHidden)
     }
 
     func testAdministrativeControlsDoNotRepeatAdminPrefix() throws {
@@ -84,6 +108,7 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
             ("prefs.pauseUntilMorningMode", "prefs.pauseUntilMorningModeHelp"),
             ("prefs.pauseUntilMorningLocation", "prefs.pauseUntilMorningLocationHelp"),
             ("prefs.pauseForSuspendOrLock", "prefs.pauseForSuspendOrLockHelp"),
+            ("updateSource", "prefs.updateSourceDisclosureHelp"),
             ("prefs.updateFeedURLField", "prefs.updateFeedURLHelp"),
             ("prefs.restoreUpdateSourceButton", "prefs.restoreUpdateSourceDisabledUpdatesOffHelp"),
             ("prefs.adminHideUpdates", "prefs.adminHideUpdatesHelp"),

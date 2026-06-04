@@ -596,6 +596,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let pauseForSuspendOrLock = NSButton(checkboxWithTitle: L10n.tr("prefs.pauseForSuspendOrLock"), target: nil, action: nil)
     private let updateFeedURL = NSTextField()
     private let restoreUpdateSourceButton = NSButton()
+    private let updateSourceAdvancedButton = NSButton()
     private var updateFeedURLRow: NSView?
     private let disableUpdateFeatures = NSButton(checkboxWithTitle: L10n.tr("prefs.adminHideUpdates"), target: nil, action: nil)
     private let hideSettingsPath = NSButton(checkboxWithTitle: L10n.tr("prefs.adminHideSettingsPath"), target: nil, action: nil)
@@ -1167,6 +1168,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         advancedStack.addArrangedSubview(indentedControlRow(pauseUntilMorningSummaryLabel))
         pauseForSuspendOrLock.identifier = NSUserInterfaceItemIdentifier("prefs.pauseForSuspendOrLock")
         advancedStack.addArrangedSubview(pauseForSuspendOrLock)
+        advancedStack.addArrangedSubview(updateSourceAdvancedButton)
         let updateFeedURLRow = row(L10n.tr("prefs.updateFeedURL"), updateSourceRow())
         updateFeedURL.identifier = NSUserInterfaceItemIdentifier("prefs.updateFeedURLField")
         updateFeedURLRow.identifier = NSUserInterfaceItemIdentifier("prefs.updateFeedURLRow")
@@ -1492,6 +1494,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         configureDisclosureButton(
             adminControlsAdvancedButton,
             identifier: "adminControls",
+            expanded: false
+        )
+        configureDisclosureButton(
+            updateSourceAdvancedButton,
+            identifier: "updateSource",
             expanded: false
         )
     }
@@ -1874,6 +1881,9 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         case "adminControls":
             title = expanded ? L10n.tr("prefs.hideAdminControls") : L10n.tr("prefs.showAdminControls")
             help = L10n.tr("prefs.adminControlsHelp")
+        case "updateSource":
+            title = expanded ? L10n.tr("prefs.hideUpdateSource") : L10n.tr("prefs.showUpdateSource")
+            help = L10n.tr("prefs.updateSourceDisclosureHelp")
         default:
             title = expanded ? L10n.tr("prefs.hideAdvancedRules") : L10n.tr("prefs.showAdvancedRules")
             help = L10n.tr("prefs.advancedRulesHelp")
@@ -2325,6 +2335,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         selectSunriseLocationForCurrentSettings()
         pauseForSuspendOrLock.state = state(settings.operations.resolvedPauseForSuspendOrLock)
         updateFeedURL.stringValue = settings.operations.updateFeedURL
+        setAdvancedDisclosure(
+            row: updateFeedURLRow,
+            button: updateSourceAdvancedButton,
+            expanded: false
+        )
         disableUpdateFeatures.state = state(settings.admin.disableAppUpdateFeatures)
         hideSettingsPath.state = state(settings.admin.hideSettingsFileLocation)
         hideStrictPreferences.state = state(settings.admin.hideStrictPreferences)
@@ -2499,7 +2514,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         checkUpdates.isHidden = hideUpdateControls
         notifyNewVersion.isHidden = !showUpdateDependents
         notifyNewVersion.isEnabled = showUpdateDependents
-        updateFeedURLRow?.isHidden = !showUpdateDependents
+        updateSourceAdvancedButton.isHidden = !showUpdateDependents
+        if !showUpdateDependents {
+            setAdvancedDisclosure(
+                row: updateFeedURLRow,
+                button: updateSourceAdvancedButton,
+                expanded: false
+            )
+        }
         updateFeedURL.isEnabled = showUpdateDependents
         updateUpdateSourceRestoreButtonState()
     }
@@ -3422,6 +3444,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                 row: adminControlsStack,
                 button: adminControlsAdvancedButton,
                 expanded: adminControlsStack.isHidden
+            )
+        case "updateSource":
+            setAdvancedDisclosure(
+                row: updateFeedURLRow,
+                button: updateSourceAdvancedButton,
+                expanded: updateFeedURLRow?.isHidden ?? true
             )
         default:
             break
@@ -5255,6 +5283,17 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             return adminControlsStack
         }
 
+        if view === updateSourceAdvancedButton,
+           updateFeedURLRow?.isHidden == true,
+           !updateSourceAdvancedButton.isHidden {
+            setAdvancedDisclosure(
+                row: updateFeedURLRow,
+                button: updateSourceAdvancedButton,
+                expanded: true
+            )
+            return updateFeedURLRow
+        }
+
         return nil
     }
 
@@ -5284,6 +5323,16 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             setAdvancedDisclosure(
                 row: adminControlsStack,
                 button: adminControlsAdvancedButton,
+                expanded: true
+            )
+            return true
+        }
+
+        if viewIsDescendantOrEqual(view, of: updateFeedURLRow),
+           !updateSourceAdvancedButton.isHidden {
+            setAdvancedDisclosure(
+                row: updateFeedURLRow,
+                button: updateSourceAdvancedButton,
                 expanded: true
             )
             return true

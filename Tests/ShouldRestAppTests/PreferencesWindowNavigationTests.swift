@@ -264,6 +264,33 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         XCTAssertNil(savedSettings.value)
     }
 
+    func testPreferenceSearchExpandsCustomUpdateSource() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
+        let tabView = try XCTUnwrap(view(withIdentifier: "prefs.tabView", in: contentView) as? NSTabView)
+        let searchField = try XCTUnwrap(view(withIdentifier: "prefs.searchField", in: contentView) as? NSSearchField)
+        let searchStatus = try XCTUnwrap(view(withIdentifier: "prefs.searchStatusLabel", in: contentView) as? NSTextField)
+
+        searchField.stringValue = "release location"
+
+        XCTAssertTrue(sendAction(from: searchField))
+
+        let disclosure = try XCTUnwrap(view(withIdentifier: "updateSource", in: contentView) as? NSButton)
+        let row = try XCTUnwrap(view(withIdentifier: "prefs.updateFeedURLRow", in: contentView))
+        XCTAssertEqual(tabView.selectedTabViewItem?.identifier as? String, L10n.tr("prefs.tabAdvanced"))
+        XCTAssertFalse(row.isHidden)
+        XCTAssertEqual(disclosure.title, L10n.tr("prefs.hideUpdateSource"))
+        XCTAssertTrue(searchStatus.stringValue.contains(L10n.tr("prefs.updateFeedURL")))
+        XCTAssertTrue(isFirstResponder(searchField, in: window))
+        XCTAssertFalse(isFirstResponder(disclosure, in: window))
+        XCTAssertNil(savedSettings.value)
+    }
+
     func testReturnInPreferenceSearchCyclesToNextVisibleMatchWithoutAutosave() throws {
         defer { L10n.languageOverride = nil }
         L10n.languageOverride = "en"

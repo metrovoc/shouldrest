@@ -487,6 +487,9 @@
 "prefs.pauseForSuspendOrLockHelp" = "Mac 睡眠或锁屏期间暂停后续休息，回来后继续。";
 "prefs.updateFeedURL" = "更新来源";
 "prefs.updateFeedURLHelp" = "ShouldRest 查找新版本的位置；如果自行管理更新，可以留空。";
+"prefs.showUpdateSource" = "自定义更新来源";
+"prefs.hideUpdateSource" = "隐藏自定义更新来源";
+"prefs.updateSourceDisclosureHelp" = "只在需要自定义更新来源时显示更新位置。";
 "prefs.restoreUpdateSource" = "恢复默认来源";
 "prefs.restoreUpdateSourceHelp" = "恢复默认 GitHub 发布来源。";
 "prefs.restoreUpdateSourceDisabledDefaultHelp" = "当前已使用默认更新来源。";

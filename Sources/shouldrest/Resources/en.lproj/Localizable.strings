@@ -487,6 +487,9 @@
 "prefs.pauseForSuspendOrLockHelp" = "Pause upcoming rests while your Mac sleeps or is locked, then resume when you return.";
 "prefs.updateFeedURL" = "Update source";
 "prefs.updateFeedURLHelp" = "Where ShouldRest looks for new releases. Leave blank if you manage updates yourself.";
+"prefs.showUpdateSource" = "Custom update source";
+"prefs.hideUpdateSource" = "Hide custom update source";
+"prefs.updateSourceDisclosureHelp" = "Show the release location only when you need a custom update source.";
 "prefs.restoreUpdateSource" = "Restore Default Source";
 "prefs.restoreUpdateSourceHelp" = "Restore the default GitHub release source.";
 "prefs.restoreUpdateSourceDisabledDefaultHelp" = "The default update source is already selected.";
