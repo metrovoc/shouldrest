@@ -12,13 +12,22 @@ final class PreferencesWindowMorningPauseTests: XCTestCase {
         var settings = RestSettings.defaults
         settings.operations.pauseUntilMorningMode = .hour
         settings.operations.pauseUntilMorningHour = 9
-        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let now = try fixedNow()
+        let controller = PreferencesWindowController(settings: settings, nowProvider: { now }, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
 
         try selectAdvancedTab(in: contentView)
         let summary = try XCTUnwrap(view(withIdentifier: "prefs.pauseUntilMorningSummaryLabel", in: contentView) as? NSTextField)
 
-        XCTAssertEqual(summary.stringValue, L10n.format("prefs.morningSummary.hour", "09:00"))
+        XCTAssertEqual(
+            summary.stringValue,
+            expectedMorningSummary(
+                ruleSummary: L10n.format("prefs.morningSummary.hour", "09:00"),
+                now: now,
+                hour: 9,
+                mode: .hour
+            )
+        )
         XCTAssertTrue(visibleTexts(in: contentView).contains(summary.stringValue))
     }
 
@@ -78,7 +87,8 @@ final class PreferencesWindowMorningPauseTests: XCTestCase {
         settings.operations.pauseUntilMorningMode = .sunrise
         settings.operations.pauseUntilMorningLatitude = 12.34
         settings.operations.pauseUntilMorningLongitude = 56.78
-        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let now = try fixedNow()
+        let controller = PreferencesWindowController(settings: settings, nowProvider: { now }, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
 
         try selectAdvancedTab(in: contentView)
@@ -90,7 +100,16 @@ final class PreferencesWindowMorningPauseTests: XCTestCase {
         let summary = try XCTUnwrap(view(withIdentifier: "prefs.pauseUntilMorningSummaryLabel", in: contentView) as? NSTextField)
         XCTAssertEqual(
             summary.stringValue,
-            L10n.format("prefs.morningSummary.sunrisePreset", L10n.tr("prefs.sunriseLocation.tokyo"))
+            expectedMorningSummary(
+                ruleSummary: L10n.format(
+                    "prefs.morningSummary.sunrisePreset",
+                    L10n.tr("prefs.sunriseLocation.tokyo")
+                ),
+                now: now,
+                mode: .sunrise,
+                latitude: 35.6762,
+                longitude: 139.6503
+            )
         )
     }
 
@@ -99,7 +118,8 @@ final class PreferencesWindowMorningPauseTests: XCTestCase {
         settings.operations.pauseUntilMorningMode = .sunrise
         settings.operations.pauseUntilMorningLatitude = 12.34
         settings.operations.pauseUntilMorningLongitude = 56.78
-        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let now = try fixedNow()
+        let controller = PreferencesWindowController(settings: settings, nowProvider: { now }, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
 
         try selectAdvancedTab(in: contentView)
@@ -121,7 +141,8 @@ final class PreferencesWindowMorningPauseTests: XCTestCase {
         settings.operations.pauseUntilMorningMode = .sunrise
         settings.operations.pauseUntilMorningLatitude = 12.34
         settings.operations.pauseUntilMorningLongitude = 56.78
-        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let now = try fixedNow()
+        let controller = PreferencesWindowController(settings: settings, nowProvider: { now }, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
 
         try selectAdvancedTab(in: contentView)
@@ -131,7 +152,13 @@ final class PreferencesWindowMorningPauseTests: XCTestCase {
 
         XCTAssertEqual(
             summary.stringValue,
-            L10n.format("prefs.morningSummary.sunriseCustom", "12.3400", "56.7800")
+            expectedMorningSummary(
+                ruleSummary: L10n.format("prefs.morningSummary.sunriseCustom", "12.3400", "56.7800"),
+                now: now,
+                mode: .sunrise,
+                latitude: 12.34,
+                longitude: 56.78
+            )
         )
 
         latitudeField.stringValue = "-33.8688"
@@ -141,7 +168,39 @@ final class PreferencesWindowMorningPauseTests: XCTestCase {
 
         XCTAssertEqual(
             summary.stringValue,
-            L10n.format("prefs.morningSummary.sunriseCustom", "-33.8688", "151.2093")
+            expectedMorningSummary(
+                ruleSummary: L10n.format("prefs.morningSummary.sunriseCustom", "-33.8688", "151.2093"),
+                now: now,
+                mode: .sunrise,
+                latitude: -33.8688,
+                longitude: 151.2093
+            )
+        )
+    }
+
+    private func fixedNow() throws -> Date {
+        try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-06-04T15:30:00+09:00"))
+    }
+
+    private func expectedMorningSummary(
+        ruleSummary: String,
+        now: Date,
+        hour: Int = OperationsSettings.defaultPauseUntilMorningHour,
+        mode: MorningPauseMode,
+        latitude: Double? = nil,
+        longitude: Double? = nil
+    ) -> String {
+        let target = now.addingTimeInterval(OperationsSettings.secondsUntilMorning(
+            from: now,
+            morningHour: hour,
+            mode: mode,
+            latitude: latitude,
+            longitude: longitude
+        ))
+        return L10n.format(
+            "prefs.morningSummary.withEstimate",
+            ruleSummary,
+            target.formatted(date: .abbreviated, time: .shortened)
         )
     }
 

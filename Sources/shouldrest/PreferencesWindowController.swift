@@ -572,10 +572,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
     private let adminControlsAdvancedButton = NSButton()
     private let adminControlsStack = NSStackView()
+    private let nowProvider: () -> Date
 
-    init(settings: RestSettings, onSave: @escaping (RestSettings) -> Void) {
+    init(settings: RestSettings, nowProvider: @escaping () -> Date = Date.init, onSave: @escaping (RestSettings) -> Void) {
         self.settings = settings
         self.onSave = onSave
+        self.nowProvider = nowProvider
 
         let window = PreferencesWindow(
             contentRect: NSRect(x: 0, y: 0, width: 820, height: 760),
@@ -4237,25 +4239,57 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     private func updateMorningPauseSummary() {
-        let summary: String
+        let ruleSummary: String
         switch selected(MorningPauseMode.self, from: pauseUntilMorningMode, fallback: .hour) {
         case .hour:
             let hour = min(23, max(0, intValue(pauseUntilMorningHour)))
-            summary = L10n.format("prefs.morningSummary.hour", formattedMorningHour(hour))
+            ruleSummary = L10n.format("prefs.morningSummary.hour", formattedMorningHour(hour))
         case .sunrise:
             if let preset = selectedSunriseLocationPreset() {
-                summary = L10n.format("prefs.morningSummary.sunrisePreset", preset.title)
+                ruleSummary = L10n.format("prefs.morningSummary.sunrisePreset", preset.title)
             } else {
-                summary = L10n.format(
+                ruleSummary = L10n.format(
                     "prefs.morningSummary.sunriseCustom",
                     formattedCoordinate(min(89.8, max(-89.8, doubleValue(pauseUntilMorningLatitude, fallback: 0)))),
                     formattedCoordinate(normalizedLongitude(doubleValue(pauseUntilMorningLongitude, fallback: 0)))
                 )
             }
         }
+        let summary = L10n.format(
+            "prefs.morningSummary.withEstimate",
+            ruleSummary,
+            formattedMorningPauseTarget(pauseUntilMorningTargetDate())
+        )
         pauseUntilMorningSummaryLabel.stringValue = summary
         pauseUntilMorningSummaryLabel.toolTip = summary
         pauseUntilMorningSummaryLabel.setAccessibilityHelp(summary)
+    }
+
+    private func pauseUntilMorningTargetDate() -> Date {
+        let now = nowProvider()
+        let mode = selected(MorningPauseMode.self, from: pauseUntilMorningMode, fallback: .hour)
+        let hour = min(23, max(0, intValue(pauseUntilMorningHour)))
+        let latitude: Double?
+        let longitude: Double?
+        if let preset = selectedSunriseLocationPreset() {
+            latitude = preset.latitude
+            longitude = preset.longitude
+        } else {
+            latitude = min(89.8, max(-89.8, doubleValue(pauseUntilMorningLatitude, fallback: 0)))
+            longitude = normalizedLongitude(doubleValue(pauseUntilMorningLongitude, fallback: 0))
+        }
+        let interval = OperationsSettings.secondsUntilMorning(
+            from: now,
+            morningHour: hour,
+            mode: mode,
+            latitude: latitude,
+            longitude: longitude
+        )
+        return now.addingTimeInterval(interval)
+    }
+
+    private func formattedMorningPauseTarget(_ date: Date) -> String {
+        date.formatted(date: .abbreviated, time: .shortened)
     }
 
     private func updateBodyDisplaySummary(
