@@ -144,6 +144,32 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         XCTAssertEqual(searchStatus.textColor, .systemOrange)
     }
 
+    func testPreferenceSearchIgnoresCurrentlyHiddenSettings() throws {
+        var settings = RestSettings.defaults
+        settings.bodyBreak.isEnabled = false
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let tabView = try XCTUnwrap(view(withIdentifier: "prefs.tabView", in: contentView) as? NSTabView)
+        let searchField = try XCTUnwrap(view(withIdentifier: "prefs.searchField", in: contentView) as? NSSearchField)
+        let searchStatus = try XCTUnwrap(view(withIdentifier: "prefs.searchStatusLabel", in: contentView) as? NSTextField)
+        let hiddenRow = try XCTUnwrap(view(withIdentifier: "prefs.bodyPostponeLimitRow", in: contentView))
+
+        tabView.selectTabViewItem(withIdentifier: L10n.tr("prefs.tabAppearance"))
+        let originalSelection = tabView.selectedTabViewItem?.identifier as? String
+        XCTAssertTrue(hiddenRow.isHidden)
+
+        searchField.stringValue = L10n.tr("prefs.maxPostpones")
+
+        XCTAssertTrue(sendAction(from: searchField))
+
+        XCTAssertEqual(tabView.selectedTabViewItem?.identifier as? String, originalSelection)
+        XCTAssertFalse(searchStatus.isHidden)
+        XCTAssertEqual(searchStatus.stringValue, L10n.tr("prefs.searchNoResults"))
+        XCTAssertEqual(searchStatus.textColor, .systemOrange)
+        XCTAssertNil(savedSettings.value)
+    }
+
     func testCommandFFocusesPreferenceSearch() throws {
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
         let window = try XCTUnwrap(controller.window)
