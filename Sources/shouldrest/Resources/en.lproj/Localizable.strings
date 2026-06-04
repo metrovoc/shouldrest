@@ -257,7 +257,7 @@
 "prefs.advancedRulesJSON" = "App rules bulk editor";
 "prefs.showAdvancedRules" = "Bulk Edit App Rules";
 "prefs.hideAdvancedRules" = "Hide Bulk Editor";
-"prefs.advancedRulesHelp" = "Use this JSON editor only for import, export, or pasting many app rules. The saved app rules list is the normal editor.";
+"prefs.advancedRulesHelp" = "Use this only for importing, exporting, or pasting many app rules. The saved app rules list is the normal editor.";
 "prefs.exclusionMode.pauseWhenMatched" = "Pause while matched";
 "prefs.exclusionMode.resumeOnlyWhenMatched" = "Run only while matched";
 "prefs.sectionPresentation" = "Presentation and Sound";
@@ -309,7 +309,7 @@
 "prefs.advancedIdeasJSON" = "Ideas bulk editor";
 "prefs.showAdvancedIdeas" = "Bulk Edit Ideas";
 "prefs.hideAdvancedIdeas" = "Hide Bulk Editor";
-"prefs.advancedIdeasHelp" = "Use this JSON editor only for import, export, or pasting many ideas. The custom ideas list is the normal editor.";
+"prefs.advancedIdeasHelp" = "Use this only for importing, exporting, or pasting many ideas. The custom ideas list is the normal editor.";
 "prefs.localImagePath" = "Body Break image";
 "prefs.chooseFile" = "Choose...";
 "prefs.chooseBodyImageHelp" = "Choose a local image for Body Break content.";
@@ -399,7 +399,7 @@
 "prefs.restoreDefaultsWarning" = "This will replace your current preferences with app defaults. The welcome window will stay completed.";
 "prefs.restoreDefaultsContinue" = "Restore Defaults";
 "prefs.restoreDefaultsCancel" = "Cancel";
-"prefs.invalidJSONTitle" = "Bulk editor needs valid JSON";
+"prefs.invalidJSONTitle" = "Bulk editor content has an invalid format";
 "prefs.invalidJSONBody" = "%@: %@";
 "shortcut.notSet" = "Not set";
 "shortcut.record" = "Record Shortcut";

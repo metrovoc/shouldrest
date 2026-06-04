@@ -32,6 +32,7 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertEqual(appButton.accessibilityLabel(), L10n.tr("prefs.showAdvancedRules"))
         XCTAssertEqual(appButton.accessibilityHelp(), L10n.tr("prefs.advancedRulesHelp"))
         XCTAssertEqual(appButton.image?.accessibilityDescription, L10n.tr("prefs.showAdvancedRules"))
+        XCTAssertFalse((appButton.toolTip ?? "").localizedCaseInsensitiveContains("json editor"))
 
         XCTAssertTrue(sendAction(from: appButton))
         XCTAssertFalse(appRow.isHidden)
@@ -48,6 +49,7 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertEqual(ideasButton.toolTip, L10n.tr("prefs.advancedIdeasHelp"))
         XCTAssertEqual(ideasButton.accessibilityLabel(), L10n.tr("prefs.showAdvancedIdeas"))
         XCTAssertEqual(ideasButton.accessibilityHelp(), L10n.tr("prefs.advancedIdeasHelp"))
+        XCTAssertFalse((ideasButton.toolTip ?? "").localizedCaseInsensitiveContains("json editor"))
 
         XCTAssertTrue(sendAction(from: ideasButton))
         XCTAssertFalse(ideasRow.isHidden)

@@ -126,7 +126,7 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         XCTAssertNil(savedSettings.value)
     }
 
-    func testPreferenceSearchFindsBulkEditorsOnlyByExplicitJSONQuery() throws {
+    func testPreferenceSearchFindsBulkEditorsByBulkEditQueryWithoutJSONTerminology() throws {
         defer { L10n.languageOverride = nil }
         L10n.languageOverride = "en"
 
@@ -149,7 +149,7 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         let searchField = try XCTUnwrap(view(withIdentifier: "prefs.searchField", in: contentView) as? NSSearchField)
         let searchStatus = try XCTUnwrap(view(withIdentifier: "prefs.searchStatusLabel", in: contentView) as? NSTextField)
 
-        searchField.stringValue = "json"
+        searchField.stringValue = "bulk edit app rules"
 
         XCTAssertTrue(sendAction(from: searchField))
 
@@ -158,6 +158,12 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         XCTAssertEqual(bulkRules.title, L10n.tr("prefs.showAdvancedRules"))
         XCTAssertTrue(searchStatus.stringValue.contains(L10n.tr("prefs.showAdvancedRules")))
         XCTAssertTrue(isFirstResponder(bulkRules, in: window))
+        XCTAssertNil(savedSettings.value)
+
+        searchField.stringValue = "json"
+
+        XCTAssertTrue(sendAction(from: searchField))
+        XCTAssertEqual(searchStatus.stringValue, L10n.tr("prefs.searchNoResults"))
         XCTAssertNil(savedSettings.value)
     }
 
