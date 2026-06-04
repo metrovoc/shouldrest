@@ -262,7 +262,7 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         XCTAssertFalse(searchStatus.isHidden)
         XCTAssertEqual(
             searchStatus.stringValue,
-            L10n.format("prefs.searchNoResults", L10n.tr("prefs.maxPostpones"))
+            L10n.format("prefs.searchHiddenResults", L10n.tr("prefs.maxPostpones"))
         )
         XCTAssertEqual(searchStatus.textColor, .systemOrange)
         XCTAssertEqual(searchStatus.toolTip, searchStatus.stringValue)

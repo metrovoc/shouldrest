@@ -5004,17 +5004,21 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             return
         }
 
-        let matches = searchTargets.filter {
-            isSearchTargetVisible($0.view) && $0.normalizedText.contains(normalizedQuery)
+        let allMatches = searchTargets.filter {
+            $0.normalizedText.contains(normalizedQuery)
+        }
+        let matches = allMatches.filter {
+            isSearchTargetVisible($0.view)
         }
 
         guard !matches.isEmpty else {
             currentSearchQuery = normalizedQuery
             currentSearchMatchIndex = nil
             currentSearchTargetView = nil
+            let statusKey = allMatches.isEmpty ? "prefs.searchNoResults" : "prefs.searchHiddenResults"
             setSearchStatus(
                 L10n.format(
-                    "prefs.searchNoResults",
+                    statusKey,
                     query.trimmingCharacters(in: .whitespacesAndNewlines)
                 ),
                 color: .systemOrange
