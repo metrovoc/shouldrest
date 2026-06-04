@@ -64,7 +64,7 @@ enum EmergencyAutomationSignal {
 }
 
 enum AppVersion {
-    private static let fallback = "0.1.129"
+    private static let fallback = "0.1.130"
 
     static var current: String {
         guard let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
@@ -223,12 +223,12 @@ enum CommandLineAutomation {
         case "debug":
             return dispatchOrQueue(
                 AutomationRequest(command: .debug),
-                message: "Requested debug info from running ShouldRest."
+                message: "Requested diagnostics from running ShouldRest."
             )
         case "debug-panel", "debugPanel":
             return dispatchOrQueue(
                 AutomationRequest(command: .debugPanel),
-                message: "Requested debug panel from running ShouldRest."
+                message: "Requested diagnostics window from running ShouldRest."
             )
         case "about":
             return dispatchOrQueue(

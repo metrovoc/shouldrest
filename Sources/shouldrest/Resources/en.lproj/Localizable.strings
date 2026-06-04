@@ -32,8 +32,8 @@
 "menu.support" = "Help & Support";
 "menu.checkUpdates" = "Check for Updates";
 "menu.downloadLatest" = "Download Latest Version";
-"menu.copyDebug" = "Copy Debug Info";
-"menu.debugPanel" = "Debug Panel...";
+"menu.copyDebug" = "Copy Diagnostics";
+"menu.debugPanel" = "Diagnostics...";
 "menu.about" = "About ShouldRest...";
 "menu.settingsFile" = "Settings File";
 "menu.showSettingsFile" = "Show in Finder";
@@ -96,7 +96,7 @@
 "overlay.bodySkipHelp" = "Skip this Body Break when postponing is no longer available.";
 "overlay.bodyFinishHelp" = "Finish this rest after the required duration.";
 "preferences.title" = "ShouldRest Preferences";
-"debug.title" = "ShouldRest Debug";
+"debug.title" = "ShouldRest Diagnostics";
 "debug.heading" = "Diagnostics";
 "debug.subtitle" = "A current snapshot of scheduler state, paths, and runtime flags for support.";
 "debug.copy" = "Copy";
@@ -353,7 +353,7 @@
 "shortcut.requiredRecordingHelp" = "Press Command, Control, or Option with a key. Esc cancels; Delete restores the default.";
 "shortcut.clearButtonHelp" = "Clear this shortcut.";
 "shortcut.restoreDefaultButtonHelp" = "Restore the default shortcut.";
-"cli.help" = "Usage: shouldrest <command> [options]\n\nCommands:\n  help                         Show this help.\n  version                      Show version.\n  settings                     Print settings path unless hidden by admin.\n  logs                         Print log path.\n  pause [-d duration]          Pause breaks. Duration: indefinitely, until-morning, 60, 1h, 1h20m.\n  resume                       Resume breaks.\n  toggle                       Pause or resume breaks.\n  reset                        Reset schedule and health.\n  eye|mini [-w wait] [-n]      Start Eye Gate now or after wait; readable content is not customizable.\n  body|long [-T title] [-t text] [-w wait] [-n]  Start or customize Body Break.\n  emergency                    Emergency Exit for an active Eye Gate.\n  preferences                  Open preferences in the running app.\n  debug                        Copy debug info in the running app.\n  debug-panel                  Open the debug panel in the running app.\n  about                        Open the about window in the running app.\n  url shouldrest://<command>    Send URL-style automation.";
+"cli.help" = "Usage: shouldrest <command> [options]\n\nCommands:\n  help                         Show this help.\n  version                      Show version.\n  settings                     Print settings path unless hidden by admin.\n  logs                         Print log path.\n  pause [-d duration]          Pause breaks. Duration: indefinitely, until-morning, 60, 1h, 1h20m.\n  resume                       Resume breaks.\n  toggle                       Pause or resume breaks.\n  reset                        Reset schedule and health.\n  eye|mini [-w wait] [-n]      Start Eye Gate now or after wait; readable content is not customizable.\n  body|long [-T title] [-t text] [-w wait] [-n]  Start or customize Body Break.\n  emergency                    Emergency Exit for an active Eye Gate.\n  preferences                  Open preferences in the running app.\n  debug                        Copy diagnostics from the running app.\n  debug-panel                  Open the diagnostics window in the running app.\n  about                        Open the about window in the running app.\n  url shouldrest://<command>    Send URL-style automation.";
 "onboarding.title" = "Welcome to ShouldRest";
 "onboarding.heading" = "Start with a stricter rest rhythm";
 "onboarding.subtitle" = "Short eye rests first. Movement breaks stay flexible.";
@@ -372,7 +372,7 @@
 "onboarding.preferences" = "Open Preferences";
 "onboarding.preferencesHelp" = "Apply the selected rhythm and open Preferences to customize it before continuing.";
 "about.title" = "About ShouldRest";
-"about.body" = "ShouldRest %@\n\nShouldRest is a Mac-first rest reminder built around short, frequent, hard-to-ignore Eye Gates and configurable Body Breaks.\n\nIt keeps Stretchly-compatible scheduling, automation, update, debug, and preference capabilities where they support the product goal, while intentionally replacing weak 20-second skip/postpone behavior with stricter eye-rest enforcement.";
+"about.body" = "ShouldRest %@\n\nShouldRest is a Mac-first rest reminder built around short, frequent, hard-to-ignore Eye Gates and configurable Body Breaks.\n\nIt keeps Stretchly-compatible scheduling, automation, update, diagnostics, and preference capabilities where they support the product goal, while intentionally replacing weak 20-second skip/postpone behavior with stricter eye-rest enforcement.";
 "about.version" = "Version %@";
 "about.tagline" = "Mac-first rest reminders built around strict eye rests and configurable movement breaks.";
 "about.eyeGateTitle" = "Short, frequent Eye Gates";
@@ -382,7 +382,7 @@
 "about.compatibilityTitle" = "Stretchly-compatible where it helps";
 "about.compatibilityBody" = "Scheduling, automation, updates, diagnostics, and preferences stay available.";
 "about.ok" = "OK";
-"about.debug" = "Debug Info";
+"about.debug" = "Diagnostics";
 "about.debugHelp" = "Open the diagnostics window";
 "about.project" = "Project Page";
 "about.projectHelp" = "Open the public GitHub project";

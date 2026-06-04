@@ -41,6 +41,7 @@ final class AboutWindowTests: XCTestCase {
         XCTAssertTrue(texts.contains(L10n.tr("about.eyeGateTitle")))
         XCTAssertTrue(texts.contains(L10n.tr("about.bodyBreakTitle")))
         XCTAssertTrue(texts.contains(L10n.tr("about.compatibilityTitle")))
+        XCTAssertFalse(texts.joined(separator: "\n").contains("debug, and preference"))
     }
 
     func testAboutButtonsUseIconsAndInvokeActions() throws {
@@ -65,6 +66,9 @@ final class AboutWindowTests: XCTestCase {
             XCTAssertEqual(button.imagePosition, .imageLeading)
             XCTAssertFalse(button.toolTip?.isEmpty ?? true)
         }
+        XCTAssertEqual(buttons.debug.title, L10n.tr("about.debug"))
+        XCTAssertEqual(buttons.debug.title, "Diagnostics")
+        XCTAssertNotEqual(buttons.debug.title, "Debug Info")
         XCTAssertEqual(buttons.close.keyEquivalent, "\r")
 
         buttons.debug.sendAction(buttons.debug.action, to: buttons.debug.target)

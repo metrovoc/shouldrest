@@ -136,9 +136,9 @@ for ((attempt = 1; attempt <= attempts; attempt++)); do
   fi
 
   windows="$(swift scripts/list_windows.swift || true)"
-  if grep -Eq 'name=(ShouldRest Debug|ShouldRest 调试)' <<< "$windows"; then
+  if grep -Eq 'name=(ShouldRest Diagnostics|ShouldRest 诊断)' <<< "$windows"; then
     if ! grep -Eq "Handled (automation|launch automation) command debugPanel" "$support_dir/logs/shouldrest.log" 2>/dev/null; then
-      echo "Debug panel appeared, but smoke log did not confirm debug-panel automation." >&2
+      echo "Diagnostics window appeared, but smoke log did not confirm debug-panel automation." >&2
       cat "$support_dir/logs/shouldrest.log" >&2 || true
       exit 1
     fi
@@ -150,7 +150,7 @@ for ((attempt = 1; attempt <= attempts; attempt++)); do
 done
 
 if [[ "$debug_seen" != "1" ]]; then
-  echo "Timed out waiting for debug panel." >&2
+  echo "Timed out waiting for diagnostics window." >&2
   echo "Observed ShouldRest windows:" >&2
   swift scripts/list_windows.swift >&2 || true
   echo "stdout:" >&2
@@ -197,4 +197,4 @@ if [[ "$about_seen" != "1" ]]; then
   exit 1
 fi
 
-echo "GUI smoke OK: first-run welcome, preferences, debug, and about windows appeared with temporary support directory."
+echo "GUI smoke OK: first-run welcome, preferences, diagnostics, and about windows appeared with temporary support directory."

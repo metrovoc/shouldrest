@@ -32,8 +32,8 @@
 "menu.support" = "帮助与支持";
 "menu.checkUpdates" = "检查更新";
 "menu.downloadLatest" = "下载最新版本";
-"menu.copyDebug" = "复制调试信息";
-"menu.debugPanel" = "调试面板...";
+"menu.copyDebug" = "复制诊断信息";
+"menu.debugPanel" = "诊断...";
 "menu.about" = "关于 ShouldRest...";
 "menu.settingsFile" = "设置文件";
 "menu.showSettingsFile" = "在 Finder 中显示";
@@ -96,7 +96,7 @@
 "overlay.bodySkipHelp" = "推迟不再可用时，跳过这次身体休息。";
 "overlay.bodyFinishHelp" = "达到要求时长后，完成这次休息。";
 "preferences.title" = "ShouldRest 偏好设置";
-"debug.title" = "ShouldRest 调试";
+"debug.title" = "ShouldRest 诊断";
 "debug.heading" = "诊断信息";
 "debug.subtitle" = "当前调度状态、路径和运行时标记的快照，用于排查问题。";
 "debug.copy" = "复制";
@@ -353,7 +353,7 @@
 "shortcut.requiredRecordingHelp" = "按 Command、Control 或 Option 加一个按键。Esc 取消；Delete 恢复默认。";
 "shortcut.clearButtonHelp" = "清空这个快捷键。";
 "shortcut.restoreDefaultButtonHelp" = "恢复默认快捷键。";
-"cli.help" = "用法：shouldrest <命令> [选项]\n\n命令：\n  help                         显示帮助。\n  version                      显示版本。\n  settings                     输出设置文件路径，除非管理员隐藏。\n  logs                         输出日志路径。\n  pause [-d duration]          暂停休息。时长：indefinitely、until-morning、60、1h、1h20m。\n  resume                       恢复休息。\n  toggle                       暂停或恢复休息。\n  reset                        重置计划和健康值。\n  eye|mini [-w wait] [-n]      立即或延迟开始护眼休息；不支持自定义可阅读内容。\n  body|long [-T title] [-t text] [-w wait] [-n]  立即开始或自定义活动休息。\n  emergency                    对当前护眼休息执行紧急退出。\n  preferences                  打开运行中 app 的偏好设置。\n  debug                        复制运行中 app 的调试信息。\n  debug-panel                  打开运行中 app 的调试面板。\n  about                        打开运行中 app 的关于窗口。\n  url shouldrest://<command>    发送 URL 风格自动化命令。";
+"cli.help" = "用法：shouldrest <命令> [选项]\n\n命令：\n  help                         显示帮助。\n  version                      显示版本。\n  settings                     输出设置文件路径，除非管理员隐藏。\n  logs                         输出日志路径。\n  pause [-d duration]          暂停休息。时长：indefinitely、until-morning、60、1h、1h20m。\n  resume                       恢复休息。\n  toggle                       暂停或恢复休息。\n  reset                        重置计划和健康值。\n  eye|mini [-w wait] [-n]      立即或延迟开始护眼休息；不支持自定义可阅读内容。\n  body|long [-T title] [-t text] [-w wait] [-n]  立即开始或自定义活动休息。\n  emergency                    对当前护眼休息执行紧急退出。\n  preferences                  打开运行中 app 的偏好设置。\n  debug                        复制运行中 app 的诊断信息。\n  debug-panel                  打开运行中 app 的诊断窗口。\n  about                        打开运行中 app 的关于窗口。\n  url shouldrest://<command>    发送 URL 风格自动化命令。";
 "onboarding.title" = "欢迎使用 ShouldRest";
 "onboarding.heading" = "从更严格的休息节奏开始";
 "onboarding.subtitle" = "先保护眼睛，活动休息保持灵活。";
@@ -372,7 +372,7 @@
 "onboarding.preferences" = "打开偏好设置";
 "onboarding.preferencesHelp" = "应用当前选择的节奏，并打开偏好设置继续自定义。";
 "about.title" = "关于 ShouldRest";
-"about.body" = "ShouldRest %@\n\nShouldRest 是一个面向 Mac 的休息提醒应用，围绕短、频繁、难以忽视的护眼休息和可配置的活动休息构建。\n\n在符合产品目标的地方，它保留 Stretchly 兼容的调度、自动化、更新、调试和偏好能力；同时有意用更严格的眼睛休息约束替代薄弱的 20 秒跳过/推迟行为。";
+"about.body" = "ShouldRest %@\n\nShouldRest 是一个面向 Mac 的休息提醒应用，围绕短、频繁、难以忽视的护眼休息和可配置的活动休息构建。\n\n在符合产品目标的地方，它保留 Stretchly 兼容的调度、自动化、更新、诊断和偏好能力；同时有意用更严格的眼睛休息约束替代薄弱的 20 秒跳过/推迟行为。";
 "about.version" = "版本 %@";
 "about.tagline" = "面向 Mac 的休息提醒，围绕严格护眼休息和可配置活动休息构建。";
 "about.eyeGateTitle" = "短而频繁的护眼休息";
@@ -382,7 +382,7 @@
 "about.compatibilityTitle" = "在有帮助处兼容 Stretchly";
 "about.compatibilityBody" = "调度、自动化、更新、诊断和偏好设置仍然可用。";
 "about.ok" = "好";
-"about.debug" = "调试信息";
+"about.debug" = "诊断";
 "about.debugHelp" = "打开诊断窗口";
 "about.project" = "项目页面";
 "about.projectHelp" = "打开公开 GitHub 项目";

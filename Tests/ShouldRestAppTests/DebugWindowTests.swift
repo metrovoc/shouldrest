@@ -15,6 +15,8 @@ final class DebugWindowTests: XCTestCase {
         let window = try XCTUnwrap(controller.window)
         let contentView = try XCTUnwrap(window.contentView)
 
+        XCTAssertEqual(window.title, L10n.tr("debug.title"))
+        XCTAssertEqual(L10n.tr("debug.title"), "ShouldRest Diagnostics")
         XCTAssertGreaterThanOrEqual(window.frame.width, 740)
         XCTAssertGreaterThanOrEqual(window.frame.height, 540)
         XCTAssertNotNil(contentView.descendant(withIdentifier: "debug.headerIcon"))
