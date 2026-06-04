@@ -294,6 +294,37 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertTrue(didRequestEmergency)
     }
 
+    func testOverlayWindowConsumesEscapeRepeatWithoutConfirmingEmergency() throws {
+        let screen = try XCTUnwrap(NSScreen.main)
+        let session = eyeGateSession()
+        let window = OverlayWindow(screen: screen, session: session, settings: .defaults)
+        defer { window.close() }
+        var requestCount = 0
+        window.overlayView.onEmergencyOverrideRequested = {
+            requestCount += 1
+            return requestCount == 1 ? .armed : .complete
+        }
+        window.overlayView.configure(
+            session: session,
+            remainingSeconds: 60,
+            settings: .defaults,
+            showsContent: true,
+            manualAwaiting: false,
+            emergencyOverrideRemainingSeconds: 0
+        )
+        let button = try XCTUnwrap(window.overlayView.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+
+        window.keyDown(with: try escapeKeyEvent(windowNumber: window.windowNumber))
+
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+
+        window.keyDown(with: try escapeKeyEvent(isRepeat: true, windowNumber: window.windowNumber))
+        drainMainQueue()
+
+        XCTAssertEqual(requestCount, 1)
+    }
+
     func testOverlayWindowKeepsOverlayViewInWindowLocalCoordinates() throws {
         let screen = try XCTUnwrap(NSScreen.main)
         let window = OverlayWindow(screen: screen, session: eyeGateSession(), settings: .defaults)
@@ -375,6 +406,31 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         view.keyDown(with: event)
 
         drainMainQueue()
+        XCTAssertEqual(requestCount, 2)
+    }
+
+    func testHoldingEscapeDoesNotConfirmEmergencyThroughKeyRepeat() throws {
+        let view = configuredEyeGateOverlay()
+        var requestCount = 0
+        view.onEmergencyOverrideRequested = {
+            requestCount += 1
+            return requestCount == 1 ? .armed : .complete
+        }
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+
+        view.keyDown(with: try escapeKeyEvent())
+
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+
+        view.keyDown(with: try escapeKeyEvent(isRepeat: true))
+        drainMainQueue()
+
+        XCTAssertEqual(requestCount, 1)
+
+        view.keyDown(with: try escapeKeyEvent())
+        drainMainQueue()
+
         XCTAssertEqual(requestCount, 2)
     }
 
@@ -877,6 +933,21 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             eventNumber: 0,
             clickCount: clickCount,
             pressure: 1
+        ))
+    }
+
+    private func escapeKeyEvent(isRepeat: Bool = false, windowNumber: Int = 0) throws -> NSEvent {
+        try XCTUnwrap(NSEvent.keyEvent(
+            with: .keyDown,
+            location: .zero,
+            modifierFlags: [],
+            timestamp: 0,
+            windowNumber: windowNumber,
+            context: nil,
+            characters: "\u{1B}",
+            charactersIgnoringModifiers: "\u{1B}",
+            isARepeat: isRepeat,
+            keyCode: UInt16(kVK_Escape)
         ))
     }
 }

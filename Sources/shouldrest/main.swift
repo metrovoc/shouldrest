@@ -2186,6 +2186,17 @@ private func isEmergencyOverrideKey(_ event: NSEvent) -> Bool {
     }
 }
 
+private enum EmergencyOverrideKeyHandling {
+    case trigger
+    case consumeRepeat
+    case passThrough
+}
+
+private func emergencyOverrideKeyHandling(for event: NSEvent) -> EmergencyOverrideKeyHandling {
+    guard isEmergencyOverrideKey(event) else { return .passThrough }
+    return event.isARepeat ? .consumeRepeat : .trigger
+}
+
 @MainActor
 final class OverlayController {
     private var windows: [CGDirectDisplayID: OverlayWindow] = [:]
@@ -2441,9 +2452,12 @@ final class OverlayWindow: NSWindow {
     }
 
     override func keyDown(with event: NSEvent) {
-        if isEmergencyOverrideKey(event) {
+        switch emergencyOverrideKeyHandling(for: event) {
+        case .trigger:
             overlayView.performEmergencyOverrideKeyCommand()
-        } else {
+        case .consumeRepeat:
+            break
+        case .passThrough:
             super.keyDown(with: event)
         }
     }
@@ -2727,9 +2741,12 @@ final class RestOverlayView: NSView {
     }
 
     override func keyDown(with event: NSEvent) {
-        if isEmergencyOverrideKey(event) {
+        switch emergencyOverrideKeyHandling(for: event) {
+        case .trigger:
             performEmergencyOverrideKeyCommand()
-        } else {
+        case .consumeRepeat:
+            break
+        case .passThrough:
             super.keyDown(with: event)
         }
     }
