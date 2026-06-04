@@ -17,8 +17,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         )
         let policy = EmergencyOverridePolicy(
             isEnabled: true,
-            confirmationSteps: 99,
-            minimumHoldDuration: 30
+            confirmationSteps: 99
         )
         var coordinator = EmergencyOverrideCoordinator()
         let requestTime = start.addingTimeInterval(1)
@@ -110,8 +109,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         settings.eyeGate.duration = 60
         settings.eyeGate.emergencyOverride = EmergencyOverridePolicy(
             isEnabled: true,
-            confirmationSteps: 1,
-            minimumHoldDuration: 30
+            confirmationSteps: 1
         )
         var engine = RestEngine(settings: settings, now: start)
         guard case .started(let session) = engine.takeNow(.eyeGate, now: start) else {
@@ -165,8 +163,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         var settings = RestSettings.defaults
         settings.eyeGate.emergencyOverride = EmergencyOverridePolicy(
             isEnabled: true,
-            confirmationSteps: 0,
-            minimumHoldDuration: 30
+            confirmationSteps: 0
         )
         var engine = RestEngine(settings: settings, now: start)
         guard case .started(let session) = engine.takeNow(.eyeGate, now: start) else {
@@ -734,7 +731,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             duration: 60,
             manualFinishEnabled: false
         )
-        let policy = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 1, minimumHoldDuration: 30)
+        let policy = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 1)
         var coordinator = EmergencyOverrideCoordinator()
         let view = RestOverlayView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
         view.configure(
@@ -925,8 +922,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         var settings = RestSettings.defaults
         settings.eyeGate.emergencyOverride = EmergencyOverridePolicy(
             isEnabled: true,
-            confirmationSteps: 1,
-            minimumHoldDuration: 30
+            confirmationSteps: 1
         )
         var engine = RestEngine(settings: settings, now: start)
         guard case .started(let session) = engine.takeNow(.eyeGate, now: start) else {
@@ -980,8 +976,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         settings.eyeGate.duration = 60
         settings.eyeGate.emergencyOverride = EmergencyOverridePolicy(
             isEnabled: true,
-            confirmationSteps: 1,
-            minimumHoldDuration: 30
+            confirmationSteps: 1
         )
         var engine = RestEngine(settings: settings, now: start)
         guard case .started(let session) = engine.takeNow(.eyeGate, now: start) else {

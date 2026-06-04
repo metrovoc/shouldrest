@@ -2350,8 +2350,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         next.eyeGate.manualFinishEnabled = isOn(eyeManualFinish)
         next.eyeGate.emergencyOverride = EmergencyOverridePolicy(
             isEnabled: isOn(eyeEmergencyOverride),
-            confirmationSteps: EmergencyOverridePolicy.defaults.confirmationSteps,
-            minimumHoldDuration: 0
+            confirmationSteps: EmergencyOverridePolicy.defaults.confirmationSteps
         )
 
         next.bodyBreak.isEnabled = isOn(bodyEnabled)

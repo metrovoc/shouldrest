@@ -203,13 +203,8 @@ public struct EmergencyOverridePolicy: Codable, Equatable, Sendable {
 
     public var isEnabled: Bool
     public var confirmationSteps: Int
-    // Compatibility only. Long-press confirmation is not part of the current design.
-    public var minimumHoldDuration: TimeInterval {
-        get { 0 }
-        set {}
-    }
 
-    public init(isEnabled: Bool, confirmationSteps: Int, minimumHoldDuration: TimeInterval) {
+    public init(isEnabled: Bool, confirmationSteps: Int) {
         self.isEnabled = isEnabled
         self.confirmationSteps = max(0, confirmationSteps)
     }
@@ -220,14 +215,12 @@ public struct EmergencyOverridePolicy: Codable, Equatable, Sendable {
 
     public static let defaults = EmergencyOverridePolicy(
         isEnabled: true,
-        confirmationSteps: currentDesignConfirmationSteps,
-        minimumHoldDuration: 0
+        confirmationSteps: currentDesignConfirmationSteps
     )
 
     public static let disabled = EmergencyOverridePolicy(
         isEnabled: false,
-        confirmationSteps: 0,
-        minimumHoldDuration: 0
+        confirmationSteps: 0
     )
 }
 

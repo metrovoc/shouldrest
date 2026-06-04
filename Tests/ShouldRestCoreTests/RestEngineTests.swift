@@ -120,8 +120,7 @@ final class RestEngineTests: XCTestCase {
         var settings = RestSettings.defaults
         settings.eyeGate.emergencyOverride = EmergencyOverridePolicy(
             isEnabled: true,
-            confirmationSteps: 2,
-            minimumHoldDuration: 3
+            confirmationSteps: 2
         )
         var engine = RestEngine(settings: settings, now: start)
         _ = engine.takeNow(.eyeGate, now: start)
@@ -587,13 +586,11 @@ final class RestEngineTests: XCTestCase {
         var legacy = RestSettings.defaults
         legacy.eyeGate.emergencyOverride = EmergencyOverridePolicy(
             isEnabled: true,
-            confirmationSteps: 3,
-            minimumHoldDuration: 3
+            confirmationSteps: 3
         )
         legacy.bodyBreak.emergencyOverride = EmergencyOverridePolicy(
             isEnabled: true,
-            confirmationSteps: 2,
-            minimumHoldDuration: 0
+            confirmationSteps: 2
         )
 
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -610,16 +607,12 @@ final class RestEngineTests: XCTestCase {
         XCTAssertTrue(loaded.eyeGate.emergencyOverride.isEnabled)
         XCTAssertEqual(loaded.bodyBreak.emergencyOverride.confirmationSteps, 0)
         XCTAssertFalse(loaded.bodyBreak.emergencyOverride.isEnabled)
-        XCTAssertEqual(loaded.eyeGate.emergencyOverride.minimumHoldDuration, 0)
-        XCTAssertEqual(loaded.bodyBreak.emergencyOverride.minimumHoldDuration, 0)
         let migratedData = try Data(contentsOf: url)
         let migratedRaw = try JSONDecoder().decode(RestSettings.self, from: migratedData)
         XCTAssertEqual(migratedRaw.eyeGate.emergencyOverride.confirmationSteps, 1)
         XCTAssertTrue(migratedRaw.eyeGate.emergencyOverride.isEnabled)
         XCTAssertEqual(migratedRaw.bodyBreak.emergencyOverride.confirmationSteps, 0)
         XCTAssertFalse(migratedRaw.bodyBreak.emergencyOverride.isEnabled)
-        XCTAssertEqual(migratedRaw.eyeGate.emergencyOverride.minimumHoldDuration, 0)
-        XCTAssertEqual(migratedRaw.bodyBreak.emergencyOverride.minimumHoldDuration, 0)
         XCTAssertFalse(String(data: migratedData, encoding: .utf8)?.contains("minimumHoldDuration") ?? true)
 
         try store.save(legacy)
@@ -630,8 +623,6 @@ final class RestEngineTests: XCTestCase {
         XCTAssertTrue(savedRaw.eyeGate.emergencyOverride.isEnabled)
         XCTAssertEqual(savedRaw.bodyBreak.emergencyOverride.confirmationSteps, 0)
         XCTAssertFalse(savedRaw.bodyBreak.emergencyOverride.isEnabled)
-        XCTAssertEqual(savedRaw.eyeGate.emergencyOverride.minimumHoldDuration, 0)
-        XCTAssertEqual(savedRaw.bodyBreak.emergencyOverride.minimumHoldDuration, 0)
         XCTAssertFalse(String(data: savedData, encoding: .utf8)?.contains("minimumHoldDuration") ?? true)
     }
 
@@ -643,8 +634,7 @@ final class RestEngineTests: XCTestCase {
         var legacy = RestSettings.defaults
         legacy.eyeGate.emergencyOverride = EmergencyOverridePolicy(
             isEnabled: false,
-            confirmationSteps: 3,
-            minimumHoldDuration: 30
+            confirmationSteps: 3
         )
 
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -654,12 +644,10 @@ final class RestEngineTests: XCTestCase {
 
         XCTAssertFalse(loaded.eyeGate.emergencyOverride.isEnabled)
         XCTAssertEqual(loaded.eyeGate.emergencyOverride.confirmationSteps, 0)
-        XCTAssertEqual(loaded.eyeGate.emergencyOverride.minimumHoldDuration, 0)
         let migratedData = try Data(contentsOf: url)
         let migratedRaw = try JSONDecoder().decode(RestSettings.self, from: migratedData)
         XCTAssertFalse(migratedRaw.eyeGate.emergencyOverride.isEnabled)
         XCTAssertEqual(migratedRaw.eyeGate.emergencyOverride.confirmationSteps, 0)
-        XCTAssertEqual(migratedRaw.eyeGate.emergencyOverride.minimumHoldDuration, 0)
         XCTAssertFalse(String(data: migratedData, encoding: .utf8)?.contains("minimumHoldDuration") ?? true)
     }
 
@@ -680,8 +668,8 @@ final class RestEngineTests: XCTestCase {
         let loaded = try store.load()
         let savedData = try Data(contentsOf: url)
 
-        XCTAssertEqual(loaded.eyeGate.emergencyOverride.minimumHoldDuration, 0)
-        XCTAssertEqual(loaded.bodyBreak.emergencyOverride.minimumHoldDuration, 0)
+        XCTAssertEqual(loaded.eyeGate.emergencyOverride.confirmationSteps, EmergencyOverridePolicy.defaults.confirmationSteps)
+        XCTAssertEqual(loaded.bodyBreak.emergencyOverride, .disabled)
         XCTAssertFalse(String(data: savedData, encoding: .utf8)?.contains("minimumHoldDuration") ?? true)
     }
 
