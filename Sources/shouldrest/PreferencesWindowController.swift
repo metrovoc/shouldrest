@@ -334,16 +334,21 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let appExclusionName = NSTextField()
     private let appExclusionTerms = NSTokenField()
     private let appExclusionAddRunningApp = NSButton()
+    private let appExclusionAddRuleButton = NSButton()
     private let appExclusionMode = NSPopUpButton()
     private let appExclusionAppliesEye = NSButton(checkboxWithTitle: L10n.tr("prefs.appliesEye"), target: nil, action: nil)
     private let appExclusionAppliesBody = NSButton(checkboxWithTitle: L10n.tr("prefs.appliesBody"), target: nil, action: nil)
     private var appExclusionNameRow: NSView?
     private var appExclusionTermsRow: NSView?
     private var appExclusionModeRow: NSView?
+    private var appExclusionAddRuleRow: NSView?
+    private let appExclusionRulesListStack = NSStackView()
     private let appExclusionsJSONEditor = NSTextView()
     private let appExclusionsJSONScrollView = NSScrollView()
     private let appExclusionsAdvancedButton = NSButton()
+    private var appExclusionRulesListRow: NSView?
     private var appExclusionsJSONRow: NSView?
+    private var appExclusionRuleRemoveControls: [(id: String, button: NSButton)] = []
 
     private let themeSource = NSPopUpButton()
     private let languageIdentifier = NSPopUpButton()
@@ -482,6 +487,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         configureCustomBodyTextEditor()
         configureAppExclusionTokenField()
         configureAppExclusionRunningAppButton()
+        configureAppExclusionAddRuleButton()
+        configureAppExclusionRulesList()
         configureCustomBodyAddIdeaButton()
         configureCustomBodyIdeasList()
         configureSoundPreviewButtons()
@@ -726,6 +733,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         contextStack.addArrangedSubview(appExclusionAppliesEye)
         appExclusionAppliesBody.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionAppliesBody")
         contextStack.addArrangedSubview(appExclusionAppliesBody)
+        let appExclusionAddRuleRow = indentedControlRow(appExclusionAddRuleButton)
+        appExclusionAddRuleRow.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionAddRuleRow")
+        self.appExclusionAddRuleRow = appExclusionAddRuleRow
+        contextStack.addArrangedSubview(appExclusionAddRuleRow)
+        let appExclusionRulesListRow = multilineRow(L10n.tr("prefs.appExclusionRules"), appExclusionRulesListStack)
+        appExclusionRulesListRow.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionRulesListRow")
+        self.appExclusionRulesListRow = appExclusionRulesListRow
+        contextStack.addArrangedSubview(appExclusionRulesListRow)
         contextStack.addArrangedSubview(appExclusionsAdvancedButton)
         let appExclusionsJSONRow = multilineRow(L10n.tr("prefs.advancedRulesJSON"), appExclusionsJSONScrollView)
         appExclusionsJSONRow.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionsJSONRow")
@@ -1232,6 +1247,26 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         appExclusionAddRunningApp.widthAnchor.constraint(equalToConstant: 168).isActive = true
     }
 
+    private func configureAppExclusionAddRuleButton() {
+        appExclusionAddRuleButton.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionAddRuleButton")
+        appExclusionAddRuleButton.title = L10n.tr("prefs.addAppExclusionRule")
+        appExclusionAddRuleButton.image = NSImage(systemSymbolName: "plus.circle", accessibilityDescription: nil)
+        appExclusionAddRuleButton.imagePosition = .imageLeading
+        appExclusionAddRuleButton.bezelStyle = .rounded
+        appExclusionAddRuleButton.target = self
+        appExclusionAddRuleButton.action = #selector(addAppExclusionRulePressed(_:))
+        appExclusionAddRuleButton.toolTip = L10n.tr("prefs.addAppExclusionRuleHelp")
+        appExclusionAddRuleButton.widthAnchor.constraint(equalToConstant: 128).isActive = true
+    }
+
+    private func configureAppExclusionRulesList() {
+        appExclusionRulesListStack.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionRulesList")
+        appExclusionRulesListStack.orientation = .vertical
+        appExclusionRulesListStack.spacing = 6
+        appExclusionRulesListStack.alignment = .leading
+        appExclusionRulesListStack.widthAnchor.constraint(equalToConstant: 360).isActive = true
+    }
+
     private func configureCustomBodyAddIdeaButton() {
         customBodyAddIdeaButton.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyAddIdeaButton")
         customBodyAddIdeaButton.title = L10n.tr("prefs.addCustomIdea")
@@ -1469,18 +1504,17 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         workingStartPicker.dateValue = Self.dateForTimePicker(minutes: settings.workingHours.startMinuteOfDay)
         workingEndPicker.dateValue = Self.dateForTimePicker(minutes: settings.workingHours.endMinuteOfDay)
 
-        let exclusion = settings.appExclusions.first
-        appExclusionEnabled.state = state(exclusion?.isEnabled ?? false)
-        appExclusionName.stringValue = exclusion?.name ?? ""
-        appExclusionTerms.objectValue = exclusion?.matchTerms ?? []
-        selectPopup(appExclusionMode, rawValue: (exclusion?.mode ?? .pauseWhenMatched).rawValue)
-        appExclusionAppliesEye.state = state(exclusion?.appliesTo.contains(.eyeGate) ?? false)
-        appExclusionAppliesBody.state = state(exclusion?.appliesTo.contains(.bodyBreak) ?? true)
-        appExclusionsJSONEditor.string = encodedAppExclusions(settings.appExclusions)
+        let appExclusionsEnabled = settings.appExclusions.first?.isEnabled ?? false
+        appExclusionEnabled.state = state(appExclusionsEnabled)
+        appExclusionName.stringValue = ""
+        appExclusionTerms.objectValue = []
+        selectPopup(appExclusionMode, rawValue: AppExclusionRule.Mode.pauseWhenMatched.rawValue)
+        setDefaultAppExclusionTargets()
+        appExclusionsJSONEditor.string = appExclusionsEnabled ? encodedAppExclusionsForEditor(settings.appExclusions) : ""
         setAdvancedDisclosure(
             row: appExclusionsJSONRow,
             button: appExclusionsAdvancedButton,
-            expanded: !appExclusionsJSONEditor.string.isEmpty
+            expanded: false
         )
 
         selectPopup(themeSource, rawValue: settings.presentation.themeSource.rawValue)
@@ -1546,6 +1580,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         )
         syncNumberControlsFromFields()
         updateDependentControlEnablement()
+        refreshAppExclusionRuleList()
+        updateAppExclusionAddRuleButtonState()
         applyAdminVisibility()
         updateShortcutClearButtons()
     }
@@ -1873,7 +1909,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         let exclusionEnabled = isOn(appExclusionEnabled)
         [
-            appExclusionNameRow, appExclusionTermsRow, appExclusionModeRow
+            appExclusionNameRow, appExclusionTermsRow, appExclusionModeRow, appExclusionAddRuleRow
         ].forEach { $0?.isHidden = !exclusionEnabled }
         [
             appExclusionsAdvancedButton
@@ -1901,6 +1937,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         appExclusionAddRunningApp.isEnabled = exclusionEnabled
         appExclusionAppliesEye.isEnabled = appExclusionAppliesEyeVisible
         appExclusionAppliesBody.isEnabled = appExclusionAppliesBodyVisible
+        refreshAppExclusionRuleList()
+        updateAppExclusionAddRuleButtonState()
 
         updateUpdatePreferencesVisibility()
 
@@ -2037,6 +2075,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             soundPreviewStatusLabel.stringValue = ""
         }
         updateDependentControlEnablement()
+        if isAppExclusionDraftControl(sender), hasAppExclusionRuleList {
+            updateAppExclusionAddRuleButtonState()
+            return
+        }
         scheduleAutosave()
     }
 
@@ -2075,6 +2117,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     @objc private func addRunningAppExclusionMenuItemSelected(_ sender: NSMenuItem) {
         guard let box = sender.representedObject as? AppExclusionApplicationCandidateBox else { return }
         addAppExclusionApplicationCandidate(box.candidate)
+    }
+
+    @objc private func addAppExclusionRulePressed(_ sender: NSButton) {
+        guard let rule = currentAppExclusionRule(id: UUID().uuidString) else { return }
+        appendAppExclusionRule(rule)
     }
 
     private func showNoRunningApplicationsMenu(from sender: NSButton) {
@@ -2130,6 +2177,31 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
     }
 
+    @objc private func removeAppExclusionRulePressed(_ sender: NSButton) {
+        guard let match = appExclusionRuleRemoveControls.first(where: { $0.button === sender }) else { return }
+        do {
+            var rules = try decodedAdvancedAppExclusions() ?? []
+            rules.removeAll { $0.id == match.id }
+            if rules.isEmpty {
+                appExclusionsJSONEditor.string = ""
+                appExclusionEnabled.state = .off
+            } else {
+                appExclusionsJSONEditor.string = encodedAppExclusionsForEditor(rules)
+            }
+            appExclusionName.stringValue = ""
+            appExclusionTerms.objectValue = []
+            setDefaultAppExclusionTargets()
+            setAdvancedDisclosure(row: appExclusionsJSONRow, button: appExclusionsAdvancedButton, expanded: false)
+            refreshAppExclusionRuleList()
+            updateDependentControlEnablement()
+            updateAppExclusionAddRuleButtonState()
+            scheduleAutosave()
+        } catch {
+            showInvalidJSONAlert(error)
+            setSaveStatus(.invalid)
+        }
+    }
+
     @objc private func shortcutClearPressed(_ sender: NSButton) {
         guard let pair = shortcutClearControls.first(where: { $0.button === sender }) else { return }
         let nextValue = pair.recorder.requiredFallbackShortcutValue ?? ""
@@ -2177,6 +2249,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             return
         }
         guard !isLoadingSettings else { return }
+        if let field = obj.object as? NSTextField, isAppExclusionDraftControl(field) {
+            updateAppExclusionAddRuleButtonState()
+            if hasAppExclusionRuleList {
+                return
+            }
+        }
         if let field = obj.object as? NSTextField, field === customBodyTitle {
             updateCustomBodyAddIdeaButtonState()
             if hasCustomBodyIdeaRotation {
@@ -2194,6 +2272,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
         if let field = obj.object as? NSTextField {
             syncNumberControls(for: field)
+            if isAppExclusionDraftControl(field), hasAppExclusionRuleList {
+                updateDependentControlEnablement()
+                updateAppExclusionAddRuleButtonState()
+                return
+            }
             if field === customBodyTitle, hasCustomBodyIdeaRotation {
                 return
             }
@@ -2213,6 +2296,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
         if let editor = notification.object as? NSTextView, editor === customBodyIdeasJSONEditor {
             refreshCustomBodyIdeaList()
+        }
+        if let editor = notification.object as? NSTextView, editor === appExclusionsJSONEditor {
+            refreshAppExclusionRuleList()
+            updateAppExclusionAddRuleButtonState()
         }
         setSaveStatus(.editing)
         scheduleAutosave()
@@ -2382,9 +2469,29 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     private func savedAppExclusions() -> [AppExclusionRule] {
-        let terms = appExclusionMatchTerms()
-        guard isOn(appExclusionEnabled), !terms.isEmpty else { return [] }
+        guard let rule = currentAppExclusionRule(id: settings.appExclusions.first?.id ?? UUID().uuidString) else {
+            return []
+        }
+        return [rule]
+    }
 
+    private func currentAppExclusionRule(id: String) -> AppExclusionRule? {
+        let terms = appExclusionMatchTerms()
+        guard isOn(appExclusionEnabled), !terms.isEmpty else { return nil }
+
+        let mode = selected(AppExclusionRule.Mode.self, from: appExclusionMode, fallback: .pauseWhenMatched)
+        let name = appExclusionName.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        return AppExclusionRule(
+            id: id,
+            name: name.isEmpty ? "App Exclusion" : name,
+            matchTerms: terms,
+            mode: mode,
+            appliesTo: appExclusionAppliesToSelection(),
+            isEnabled: true
+        )
+    }
+
+    private func appExclusionAppliesToSelection() -> Set<RestKind> {
         var appliesTo: Set<RestKind> = []
         let eyeGateEnabled = isOn(eyeEnabled)
         let bodyBreakEnabled = isOn(bodyEnabled)
@@ -2401,34 +2508,47 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                 appliesTo.insert(.eyeGate)
             }
         }
+        return appliesTo
+    }
 
-        let mode = selected(AppExclusionRule.Mode.self, from: appExclusionMode, fallback: .pauseWhenMatched)
-        return [
-            AppExclusionRule(
-                id: settings.appExclusions.first?.id ?? UUID().uuidString,
-                name: appExclusionName.stringValue.isEmpty ? "Primary Exclusion" : appExclusionName.stringValue,
-                matchTerms: terms,
-                mode: mode,
-                appliesTo: appliesTo,
-                isEnabled: true
-            )
-        ]
+    private func setDefaultAppExclusionTargets() {
+        let eyeGateEnabled = isOn(eyeEnabled)
+        let bodyBreakEnabled = isOn(bodyEnabled)
+        appExclusionAppliesEye.state = state(eyeGateEnabled && !bodyBreakEnabled)
+        appExclusionAppliesBody.state = state(bodyBreakEnabled)
     }
 
     private func addAppExclusionApplicationCandidate(_ candidate: AppExclusionApplicationCandidate) {
         guard isOn(appExclusionEnabled) else { return }
-        let existingTerms = appExclusionMatchTerms()
-        let nextTerms = AppExclusionApplicationCandidate.uniqueNonemptyTerms(
-            existingTerms.map { Optional($0) } + candidate.terms.map { Optional($0) }
-        )
-        appExclusionTerms.objectValue = nextTerms
-        let trimmedName = appExclusionName.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmedName.isEmpty, !candidate.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            appExclusionName.stringValue = candidate.name
+        let terms = AppExclusionApplicationCandidate.uniqueNonemptyTerms(candidate.terms.map { Optional($0) })
+        guard !terms.isEmpty else { return }
+        appendAppExclusionRule(AppExclusionRule(
+            id: UUID().uuidString,
+            name: candidate.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "App Exclusion" : candidate.name,
+            matchTerms: terms,
+            mode: selected(AppExclusionRule.Mode.self, from: appExclusionMode, fallback: .pauseWhenMatched),
+            appliesTo: appExclusionAppliesToSelection(),
+            isEnabled: true
+        ))
+    }
+
+    private func appendAppExclusionRule(_ rule: AppExclusionRule) {
+        do {
+            var rules = try decodedAdvancedAppExclusions() ?? []
+            rules.append(rule)
+            appExclusionsJSONEditor.string = encodedAppExclusionsForEditor(rules)
+            setAdvancedDisclosure(row: appExclusionsJSONRow, button: appExclusionsAdvancedButton, expanded: false)
+            appExclusionName.stringValue = ""
+            appExclusionTerms.objectValue = []
+            setDefaultAppExclusionTargets()
+            refreshAppExclusionRuleList()
+            updateDependentControlEnablement()
+            updateAppExclusionAddRuleButtonState()
+            scheduleAutosave()
+        } catch {
+            showInvalidJSONAlert(error)
+            setSaveStatus(.invalid)
         }
-        syncPrimaryAppExclusionIntoAdvancedJSONIfNeeded()
-        updateDependentControlEnablement()
-        scheduleAutosave()
     }
 
     private func appExclusionMatchTerms() -> [String] {
@@ -2439,25 +2559,123 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         )
     }
 
-    private func syncPrimaryAppExclusionIntoAdvancedJSONIfNeeded() {
+    private func isAppExclusionDraftControl(_ sender: Any) -> Bool {
+        if let field = sender as? NSTextField {
+            return field === appExclusionName || field === appExclusionTerms
+        }
+        if let popup = sender as? NSPopUpButton {
+            return popup === appExclusionMode
+        }
+        if let button = sender as? NSButton {
+            return button === appExclusionAppliesEye || button === appExclusionAppliesBody
+        }
+        return false
+    }
+
+    private func updateAppExclusionAddRuleButtonState() {
+        appExclusionAddRuleButton.isEnabled = isOn(appExclusionEnabled) &&
+            currentAppExclusionRule(id: "preview") != nil
+    }
+
+    private var hasAppExclusionRuleList: Bool {
+        !displayedAppExclusionRules().isEmpty
+    }
+
+    private func refreshAppExclusionRuleList() {
+        let rules = displayedAppExclusionRules()
+        appExclusionRuleRemoveControls.removeAll()
+        removeArrangedSubviews(from: appExclusionRulesListStack)
+
+        for (index, rule) in rules.enumerated() {
+            appExclusionRulesListStack.addArrangedSubview(appExclusionRuleListItem(rule: rule, index: index))
+        }
+
+        appExclusionRulesListRow?.isHidden = !isOn(appExclusionEnabled) || rules.isEmpty
+    }
+
+    private func displayedAppExclusionRules() -> [AppExclusionRule] {
         let raw = appExclusionsJSONEditor.string.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !raw.isEmpty,
               let data = raw.data(using: .utf8),
-              var rules = try? JSONDecoder().decode([AppExclusionRule].self, from: data),
-              !rules.isEmpty,
-              let primary = savedAppExclusions().first else {
-            return
+              let decoded = try? JSONDecoder().decode([AppExclusionRule].self, from: data) else {
+            return []
         }
+        return decoded.map {
+            AppExclusionRule(
+                id: $0.id.isEmpty ? UUID().uuidString : $0.id,
+                name: $0.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "App Exclusion" : $0.name,
+                matchTerms: AppExclusionApplicationCandidate.uniqueNonemptyTerms($0.matchTerms.map { Optional($0) }),
+                mode: $0.mode,
+                appliesTo: $0.appliesTo,
+                isEnabled: $0.isEnabled
+            )
+        }.filter { $0.isEnabled && !$0.matchTerms.isEmpty }
+    }
 
-        rules[0] = AppExclusionRule(
-            id: rules[0].id,
-            name: primary.name,
-            matchTerms: primary.matchTerms,
-            mode: primary.mode,
-            appliesTo: primary.appliesTo,
-            isEnabled: primary.isEnabled
-        )
-        appExclusionsJSONEditor.string = encodedAppExclusions(rules)
+    private func appExclusionRuleListItem(rule: AppExclusionRule, index: Int) -> NSView {
+        let title = NSTextField(labelWithString: rule.name)
+        title.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionRuleTitle.\(index)")
+        title.font = .systemFont(ofSize: 12, weight: .medium)
+        title.lineBreakMode = .byTruncatingTail
+        title.widthAnchor.constraint(equalToConstant: 300).isActive = true
+
+        let body = NSTextField(labelWithString: appExclusionRuleSummary(rule))
+        body.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionRuleBody.\(index)")
+        body.font = .systemFont(ofSize: 11)
+        body.textColor = .secondaryLabelColor
+        body.lineBreakMode = .byTruncatingTail
+        body.widthAnchor.constraint(equalToConstant: 300).isActive = true
+
+        let textStack = NSStackView(views: [title, body])
+        textStack.orientation = .vertical
+        textStack.spacing = 2
+        textStack.alignment = .leading
+
+        let removeButton = NSButton()
+        removeButton.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionRuleRemove.\(index)")
+        removeButton.title = ""
+        removeButton.bezelStyle = .inline
+        removeButton.isBordered = false
+        removeButton.image = NSImage(systemSymbolName: "trash", accessibilityDescription: nil)
+        removeButton.imagePosition = .imageOnly
+        removeButton.contentTintColor = .secondaryLabelColor
+        removeButton.toolTip = L10n.tr("prefs.removeAppExclusionRuleHelp")
+        removeButton.target = self
+        removeButton.action = #selector(removeAppExclusionRulePressed(_:))
+        removeButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
+        removeButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
+        appExclusionRuleRemoveControls.append((id: rule.id, button: removeButton))
+
+        let row = NSStackView(views: [textStack, removeButton])
+        row.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionRuleRow.\(index)")
+        row.orientation = .horizontal
+        row.spacing = 8
+        row.alignment = .centerY
+        return row
+    }
+
+    private func appExclusionRuleSummary(_ rule: AppExclusionRule) -> String {
+        let terms = rule.matchTerms.isEmpty ? L10n.tr("prefs.appExclusionNoTerms") : rule.matchTerms.joined(separator: ", ")
+        let mode: String
+        switch rule.mode {
+        case .pauseWhenMatched:
+            mode = L10n.tr("prefs.exclusionMode.pauseWhenMatched")
+        case .resumeOnlyWhenMatched:
+            mode = L10n.tr("prefs.exclusionMode.resumeOnlyWhenMatched")
+        }
+        let applies: String
+        if rule.appliesTo.contains(.eyeGate), rule.appliesTo.contains(.bodyBreak) {
+            applies = L10n.tr("prefs.appExclusionAppliesEyeBody")
+        } else if rule.appliesTo.contains(.eyeGate) {
+            applies = L10n.tr("prefs.appExclusionAppliesEye")
+        } else if rule.appliesTo.contains(.bodyBreak) {
+            applies = L10n.tr("prefs.appExclusionAppliesBody")
+        } else {
+            applies = L10n.tr("prefs.appExclusionAppliesNone")
+        }
+        let summary = "\(terms) - \(mode) - \(applies)"
+        guard summary.count > 96 else { return summary }
+        return "\(summary.prefix(93))..."
     }
 
     private struct InvalidAdvancedJSON: LocalizedError {
@@ -2487,9 +2705,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
     }
 
-    private func encodedAppExclusions(_ rules: [AppExclusionRule]) -> String {
-        guard rules.count > 1,
-              let data = try? prettyJSONEncoder().encode(rules),
+    private func encodedAppExclusionsForEditor(_ rules: [AppExclusionRule]) -> String {
+        let visibleRules = rules.filter { $0.isEnabled && !$0.matchTerms.isEmpty }
+        guard !visibleRules.isEmpty,
+              let data = try? prettyJSONEncoder().encode(visibleRules),
               let string = String(data: data, encoding: .utf8) else {
             return ""
         }

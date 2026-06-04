@@ -109,7 +109,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertEqual(savedSettings.value?.workingHours.isEnabled, true)
     }
 
-    func testEnabledAppExclusionShowsDetailRowsAndAdvancedRules() throws {
+    func testEnabledAppExclusionShowsDetailRowsAndNativeRuleList() throws {
         var settings = RestSettings.defaults
         settings.appExclusions = [
             AppExclusionRule(
@@ -140,11 +140,16 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertFalse(try view(withIdentifier: "prefs.appExclusionAppliesEye", in: contentView).isHidden)
         XCTAssertFalse(try view(withIdentifier: "prefs.appExclusionAppliesBody", in: contentView).isHidden)
         XCTAssertFalse(try view(withIdentifier: "appExclusions", in: contentView).isHidden)
-        XCTAssertFalse(try view(withIdentifier: "prefs.appExclusionsJSONRow", in: contentView).isHidden)
+        XCTAssertFalse(try view(withIdentifier: "prefs.appExclusionAddRuleRow", in: contentView).isHidden)
+        XCTAssertFalse(try view(withIdentifier: "prefs.appExclusionRulesListRow", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.appExclusionsJSONRow", in: contentView).isHidden)
 
         let visibleTexts = visibleTexts(in: contentView)
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.matchTerms")))
-        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.advancedRulesJSON")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.appExclusionRules")))
+        XCTAssertTrue(visibleTexts.contains("Deep work"))
+        XCTAssertTrue(visibleTexts.contains("Calls"))
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.advancedRulesJSON")))
     }
 
     func testEnabledAppExclusionOffersRunningAppPicker() throws {
@@ -202,7 +207,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertEqual(rule.matchTerms, ["Zoom", "us.zoom.xos"])
     }
 
-    func testRunningAppPickerSyncsPrimaryAdvancedRuleWhenJSONIsActive() throws {
+    func testRunningAppPickerAppendsRuleWhenRuleListIsActive() throws {
         var settings = RestSettings.defaults
         settings.appExclusions = [
             AppExclusionRule(
@@ -236,11 +241,98 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
 
         waitUntilSavedSettingsArrive(savedSettings)
         let rules = try XCTUnwrap(savedSettings.value?.appExclusions)
-        XCTAssertEqual(rules.count, 2)
-        XCTAssertEqual(rules[0].id, "primary")
-        XCTAssertEqual(rules[0].name, "Old")
-        XCTAssertEqual(rules[0].matchTerms, ["old", "Keynote", "com.apple.iWork.Keynote"])
+        XCTAssertEqual(rules.count, 3)
+        XCTAssertEqual(rules[0], settings.appExclusions[0])
         XCTAssertEqual(rules[1], settings.appExclusions[1])
+        XCTAssertEqual(rules[2].name, "Keynote")
+        XCTAssertEqual(rules[2].matchTerms, ["Keynote", "com.apple.iWork.Keynote"])
+        XCTAssertEqual(rules[2].appliesTo, Set([RestKind.bodyBreak]))
+    }
+
+    func testAppExclusionRuleListRemovesRuleAndAutosaves() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "primary",
+                name: "Deep work",
+                matchTerms: ["xcode"],
+                mode: .resumeOnlyWhenMatched,
+                appliesTo: [.eyeGate, .bodyBreak],
+                isEnabled: true
+            ),
+            AppExclusionRule(
+                id: "secondary",
+                name: "Calls",
+                matchTerms: ["zoom"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+        let removeButton = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionRuleRemove.0", in: contentView) as? NSButton)
+
+        XCTAssertTrue(sendAction(from: removeButton))
+
+        waitUntilSavedSettingsArrive(savedSettings)
+        let rules = try XCTUnwrap(savedSettings.value?.appExclusions)
+        XCTAssertEqual(rules.count, 1)
+        XCTAssertEqual(rules.first?.id, "secondary")
+        XCTAssertTrue(try view(withIdentifier: "prefs.appExclusionsJSONRow", in: contentView).isHidden)
+    }
+
+    func testDraftingAppExclusionRuleDoesNotAutosaveOverExistingRulesBeforeAdd() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "primary",
+                name: "Deep work",
+                matchTerms: ["xcode"],
+                mode: .resumeOnlyWhenMatched,
+                appliesTo: [.eyeGate, .bodyBreak],
+                isEnabled: true
+            ),
+            AppExclusionRule(
+                id: "secondary",
+                name: "Calls",
+                matchTerms: ["zoom"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+        let name = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionNameField", in: contentView) as? NSTextField)
+        let terms = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionTermsField", in: contentView) as? NSTokenField)
+        let addButton = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionAddRuleButton", in: contentView) as? NSButton)
+
+        name.stringValue = "Presentation"
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: name))
+        terms.objectValue = ["keynote"]
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: terms))
+        controller.controlTextDidEndEditing(Notification(name: NSControl.textDidEndEditingNotification, object: terms))
+
+        RunLoop.current.run(until: Date().addingTimeInterval(0.4))
+        XCTAssertNil(savedSettings.value)
+        XCTAssertTrue(addButton.isEnabled)
+
+        XCTAssertTrue(sendAction(from: addButton))
+
+        waitUntilSavedSettingsArrive(savedSettings)
+        let rules = try XCTUnwrap(savedSettings.value?.appExclusions)
+        XCTAssertEqual(rules.count, 3)
+        XCTAssertEqual(rules[0], settings.appExclusions[0])
+        XCTAssertEqual(rules[1], settings.appExclusions[1])
+        XCTAssertEqual(rules[2].name, "Presentation")
+        XCTAssertEqual(rules[2].matchTerms, ["keynote"])
     }
 
     func testEyeOnlyModeHidesBodyAppExclusionTarget() throws {
