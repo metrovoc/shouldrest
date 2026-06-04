@@ -383,6 +383,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private weak var preferencesTabView: NSTabView?
     private var searchTargets: [PreferencesSearchTarget] = []
     private var highlightedSearchTarget: PreferencesHighlightSnapshot?
+    private var currentSearchQuery = ""
+    private weak var currentSearchTargetView: NSView?
 
     private let eyeEnabled = NSButton(checkboxWithTitle: L10n.tr("prefs.enableEyeGate"), target: nil, action: nil)
     private let eyeInterval = NSTextField()
@@ -2670,6 +2672,15 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         scheduleAutosave()
     }
 
+    func control(_ control: NSControl, textView _: NSTextView, doCommandBy commandSelector: Selector) -> Bool {
+        guard control === searchField,
+              commandSelector == #selector(NSResponder.insertNewline(_:)) else {
+            return false
+        }
+        performPreferencesSearch(searchField.stringValue, advances: true)
+        return true
+    }
+
     func textDidChange(_ notification: Notification) {
         guard !isLoadingSettings else { return }
         if let editor = notification.object as? NSTextView, editor === customBodyTextEditor {
@@ -3630,31 +3641,63 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         performPreferencesSearch(sender.stringValue)
     }
 
-    private func performPreferencesSearch(_ query: String) {
+    private func performPreferencesSearch(_ query: String, advances: Bool = false) {
         let normalizedQuery = Self.normalizedSearchText(query)
+        let previousQuery = currentSearchQuery
+        let previousTargetView = currentSearchTargetView
         clearHighlightedSearchTarget()
         guard !normalizedQuery.isEmpty else {
+            currentSearchQuery = ""
+            currentSearchTargetView = nil
             searchStatusLabel.stringValue = ""
             searchStatusLabel.isHidden = true
             return
         }
 
-        guard let target = searchTargets.first(where: {
+        let matches = searchTargets.filter {
             isSearchTargetVisible($0.view) && $0.normalizedText.contains(normalizedQuery)
-        }) else {
+        }
+
+        guard !matches.isEmpty else {
+            currentSearchQuery = normalizedQuery
+            currentSearchTargetView = nil
             searchStatusLabel.stringValue = L10n.tr("prefs.searchNoResults")
             searchStatusLabel.textColor = .systemOrange
             searchStatusLabel.isHidden = false
             return
         }
 
+        let targetIndex: Int
+        if advances,
+           normalizedQuery == previousQuery,
+           let previousTargetView,
+           let previousIndex = matches.firstIndex(where: { $0.view === previousTargetView }) {
+            targetIndex = (previousIndex + 1) % matches.count
+        } else {
+            targetIndex = 0
+        }
+        let target = matches[targetIndex]
+        currentSearchQuery = normalizedQuery
+        currentSearchTargetView = target.view
+
         preferencesTabView?.selectTabViewItem(withIdentifier: target.tabIdentifier)
         target.view.scrollToVisible(target.view.bounds)
         highlightSearchTarget(target.view)
         focusSearchTarget(target.view)
-        searchStatusLabel.stringValue = L10n.format("prefs.searchMatched", target.tabIdentifier, target.title)
+        searchStatusLabel.stringValue = searchStatusText(
+            target: target,
+            index: targetIndex,
+            count: matches.count
+        )
         searchStatusLabel.textColor = .secondaryLabelColor
         searchStatusLabel.isHidden = false
+    }
+
+    private func searchStatusText(target: PreferencesSearchTarget, index: Int, count: Int) -> String {
+        guard count > 1 else {
+            return L10n.format("prefs.searchMatched", target.tabIdentifier, target.title)
+        }
+        return L10n.format("prefs.searchMatchedIndexed", index + 1, count, target.tabIdentifier, target.title)
     }
 
     private static func normalizedSearchText(_ value: String) -> String {

@@ -126,6 +126,41 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         XCTAssertNil(savedSettings.value)
     }
 
+    func testReturnInPreferenceSearchCyclesToNextVisibleMatchWithoutAutosave() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let tabView = try XCTUnwrap(view(withIdentifier: "prefs.tabView", in: contentView) as? NSTabView)
+        let searchField = try XCTUnwrap(view(withIdentifier: "prefs.searchField", in: contentView) as? NSSearchField)
+        let searchStatus = try XCTUnwrap(view(withIdentifier: "prefs.searchStatusLabel", in: contentView) as? NSTextField)
+
+        searchField.stringValue = "start sound"
+
+        XCTAssertTrue(sendAction(from: searchField))
+
+        XCTAssertEqual(tabView.selectedTabViewItem?.identifier as? String, L10n.tr("prefs.tabAppearance"))
+        let firstRow = try XCTUnwrap(view(withIdentifier: "prefs.eyeStartSoundRow", in: contentView))
+        let secondRow = try XCTUnwrap(view(withIdentifier: "prefs.bodyStartSoundRow", in: contentView))
+        XCTAssertEqual(firstRow.layer?.borderWidth, 1)
+        XCTAssertTrue(searchStatus.stringValue.hasPrefix("1/2"))
+        XCTAssertTrue(searchStatus.stringValue.contains(L10n.tr("prefs.eyeStartSound")))
+
+        XCTAssertTrue(controller.control(
+            searchField,
+            textView: NSTextView(),
+            doCommandBy: #selector(NSResponder.insertNewline(_:))
+        ))
+
+        XCTAssertEqual(secondRow.layer?.borderWidth, 1)
+        XCTAssertNotEqual(firstRow.layer?.borderWidth, 1)
+        XCTAssertTrue(searchStatus.stringValue.hasPrefix("2/2"))
+        XCTAssertTrue(searchStatus.stringValue.contains(L10n.tr("prefs.bodyStartSound")))
+        XCTAssertNil(savedSettings.value)
+    }
+
     func testPreferenceSearchShowsNoResultWithoutChangingSelection() throws {
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)

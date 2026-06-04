@@ -308,8 +308,9 @@
 "prefs.autosaveInvalid" = "Fix invalid JSON to save";
 "prefs.autosaveInvalidField" = "Fix %@ to save";
 "prefs.searchPlaceholder" = "Find a setting";
-"prefs.searchHelp" = "Press Command-F to find a setting. Press Esc in the search field to clear.";
+"prefs.searchHelp" = "Press Command-F to find a setting. Press Return for the next match, or Esc to clear.";
 "prefs.searchMatched" = "%@ · %@";
+"prefs.searchMatchedIndexed" = "%d/%d · %@ · %@";
 "prefs.searchNoResults" = "No matching setting";
 "prefs.shortcutConflict" = "Shortcut conflict: %@ is assigned to %@.";
 "prefs.shortcutUnsupported" = "Unsupported shortcut: %@ for %@.";
