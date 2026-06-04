@@ -16,6 +16,7 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
         let chooseButton = try XCTUnwrap(button(withTitle: L10n.tr("prefs.chooseFile"), in: contentView))
         let clearButton = try XCTUnwrap(button(withTitle: L10n.tr("prefs.clear"), in: contentView))
 
+        XCTAssertNil(view(withIdentifier: "localImagePathField", in: contentView))
         XCTAssertEqual(preview.toolTip, L10n.tr("prefs.imageDropHelp"))
         XCTAssertEqual(label.stringValue, L10n.tr("prefs.imagePreviewEmpty"))
         XCTAssertEqual(chooseButton.toolTip, L10n.tr("prefs.chooseBodyImageHelp"))
@@ -38,6 +39,7 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
         let label = try XCTUnwrap(view(withIdentifier: "localImagePreviewLabel", in: contentView) as? NSTextField)
         XCTAssertNotNil(imageView.image)
         XCTAssertEqual(label.stringValue, "body-preview.png")
+        XCTAssertFalse(visibleTexts(in: contentView).contains(imageURL.path))
     }
 
     func testImagePreviewShowsUnavailableStateForMissingImage() throws {
@@ -73,6 +75,31 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
         XCTAssertEqual(savedSettings.value?.contentLibrary.localImagePaths, [imageURL.standardizedFileURL.path])
         XCTAssertEqual(savedSettings.value?.bodyBreak.content, .localImage)
         XCTAssertTrue(clearButton.isEnabled)
+    }
+
+    func testClearingSelectedImageReturnsToEmptyPreviewAndAutosaves() throws {
+        let imageURL = try makeTemporaryPNG(named: "clearable-body-preview.png")
+        var settings = RestSettings.defaults
+        settings.contentLibrary.localImagePaths = [imageURL.path]
+        settings.bodyBreak.content = .localImage
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+        let label = try XCTUnwrap(view(withIdentifier: "localImagePreviewLabel", in: contentView) as? NSTextField)
+        let clearButton = try XCTUnwrap(button(withTitle: L10n.tr("prefs.clear"), in: contentView))
+
+        XCTAssertEqual(label.stringValue, "clearable-body-preview.png")
+        XCTAssertTrue(clearButton.isEnabled)
+
+        XCTAssertTrue(sendAction(from: clearButton))
+
+        waitUntilSavedSettingsArrive(savedSettings)
+        XCTAssertEqual(label.stringValue, L10n.tr("prefs.imagePreviewEmpty"))
+        XCTAssertFalse(clearButton.isEnabled)
+        XCTAssertEqual(savedSettings.value?.contentLibrary.localImagePaths, [])
+        XCTAssertEqual(savedSettings.value?.bodyBreak.content, .richRestIdea)
     }
 
     func testDroppingNonImageIntoPreviewIsIgnored() throws {
@@ -145,11 +172,34 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
         return nil
     }
 
+    private func sendAction(from control: NSControl) -> Bool {
+        guard let action = control.action else { return false }
+        return NSApplication.shared.sendAction(action, to: control.target, from: control)
+    }
+
     private func waitUntilSavedSettingsArrive(_ settings: SavedSettingsBox) {
         let deadline = Date().addingTimeInterval(2)
         while settings.value == nil && Date() < deadline {
             RunLoop.current.run(until: Date().addingTimeInterval(0.05))
         }
+    }
+
+    private func visibleTexts(in view: NSView, ancestorHidden: Bool = false) -> [String] {
+        let hidden = ancestorHidden || view.isHidden
+        var texts: [String] = []
+        if !hidden {
+            if let popup = view as? NSPopUpButton, !popup.title.isEmpty {
+                texts.append(popup.title)
+            } else if let button = view as? NSButton, !button.title.isEmpty {
+                texts.append(button.title)
+            } else if let textField = view as? NSTextField, !textField.stringValue.isEmpty {
+                texts.append(textField.stringValue)
+            }
+        }
+        for subview in view.subviews {
+            texts.append(contentsOf: visibleTexts(in: subview, ancestorHidden: hidden))
+        }
+        return texts
     }
 
     private func makeTemporaryPNG(named filename: String) throws -> URL {

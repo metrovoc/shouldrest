@@ -1569,6 +1569,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     private func configureImagePickerControls() {
+        localImagePath.identifier = NSUserInterfaceItemIdentifier("localImagePathField")
         localImagePath.isEditable = false
         localImagePath.isSelectable = true
         localImagePath.cell?.lineBreakMode = .byTruncatingMiddle
@@ -3924,7 +3925,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     private func localImagePickerRow() -> NSStackView {
-        let controls = NSStackView(views: [localImagePath, localImageChooseButton, localImageClearButton])
+        let controls = NSStackView(views: [localImageChooseButton, localImageClearButton])
         controls.orientation = .horizontal
         controls.spacing = 8
         controls.alignment = .centerY
@@ -3934,7 +3935,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         preview.spacing = 10
         preview.alignment = .centerY
 
-        let stack = NSStackView(views: [controls, preview])
+        let stack = NSStackView(views: [preview, controls])
         stack.orientation = .vertical
         stack.spacing = 8
         stack.alignment = .leading
