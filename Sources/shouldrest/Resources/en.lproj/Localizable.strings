@@ -2,6 +2,7 @@
 "menu.takeEyeGateNow" = "Take Eye Gate Now";
 "menu.takeBodyBreakNow" = "Take Body Break Now";
 "menu.takeNextScheduledRestNow" = "Take Next Scheduled Rest Now";
+"menu.takeNextScheduledRestNowWithKind" = "Start Next %@ Now";
 "menu.postponeBodyBreak" = "Postpone Body Break";
 "menu.finishBodyBreak" = "Finish Body Break";
 "menu.finishEyeGate" = "Finish Eye Gate";

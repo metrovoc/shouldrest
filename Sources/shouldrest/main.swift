@@ -123,6 +123,12 @@ enum PauseMenuCopy {
     }
 }
 
+enum StatusMenuActionCopy {
+    static func nextScheduledRestTitle(kind: RestKind) -> String {
+        L10n.format("menu.takeNextScheduledRestNowWithKind", MenuStatusPresenter.restKindName(kind))
+    }
+}
+
 enum StatusMenuPolicy {
     static func showsOrdinaryControls(state: RestEngineState) -> Bool {
         state.activeSession?.kind != .eyeGate
@@ -466,8 +472,11 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 menu.addItem(actionItem(L10n.tr("menu.takeBodyBreakNow"), #selector(takeBodyBreakNow)))
                 addedManualRestAction = true
             }
-            if engine.state.scheduled != nil {
-                menu.addItem(actionItem(L10n.tr("menu.takeNextScheduledRestNow"), #selector(takeNextScheduledRestNow)))
+            if let scheduled = engine.state.scheduled {
+                menu.addItem(actionItem(
+                    StatusMenuActionCopy.nextScheduledRestTitle(kind: scheduled.kind),
+                    #selector(takeNextScheduledRestNow)
+                ))
                 addedManualRestAction = true
             }
             if addedManualRestAction {

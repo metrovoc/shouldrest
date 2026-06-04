@@ -36,6 +36,32 @@ final class MenuStatusPresenterTests: XCTestCase {
         XCTAssertTrue(tooltip.contains("Next Body Break after 2 Eye Gates"))
     }
 
+    func testNextScheduledRestMenuActionNamesConcreteRestKind() {
+        XCTAssertEqual(
+            StatusMenuActionCopy.nextScheduledRestTitle(kind: .eyeGate),
+            "Start Next Eye Gate Now"
+        )
+        XCTAssertEqual(
+            StatusMenuActionCopy.nextScheduledRestTitle(kind: .bodyBreak),
+            "Start Next Body Break Now"
+        )
+        XCTAssertNotEqual(
+            StatusMenuActionCopy.nextScheduledRestTitle(kind: .eyeGate),
+            L10n.tr("menu.takeNextScheduledRestNow")
+        )
+
+        L10n.languageOverride = "zh-Hans"
+        XCTAssertEqual(
+            StatusMenuActionCopy.nextScheduledRestTitle(kind: .eyeGate),
+            "立即开始下一项护眼休息"
+        )
+        XCTAssertEqual(
+            StatusMenuActionCopy.nextScheduledRestTitle(kind: .bodyBreak),
+            "立即开始下一项活动休息"
+        )
+        L10n.languageOverride = "en"
+    }
+
     func testHeaderContentPromotesStatusLinesAndHealthBadge() {
         let settings = RestSettings.defaults
         let state = RestEngineState(

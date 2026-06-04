@@ -2,6 +2,7 @@
 "menu.takeEyeGateNow" = "立即护眼休息";
 "menu.takeBodyBreakNow" = "立即活动休息";
 "menu.takeNextScheduledRestNow" = "立即开始下一项休息";
+"menu.takeNextScheduledRestNowWithKind" = "立即开始下一项%@";
 "menu.postponeBodyBreak" = "推迟活动休息";
 "menu.finishBodyBreak" = "完成活动休息";
 "menu.finishEyeGate" = "完成护眼休息";
