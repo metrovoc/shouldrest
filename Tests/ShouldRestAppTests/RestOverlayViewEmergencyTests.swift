@@ -836,11 +836,12 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             requestCount += 1
             return .complete
         }
+        let point = try emergencyClickPoint(in: view)
 
-        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        view.mouseDown(with: try mouseEvent(at: point, clickCount: 1))
 
         XCTAssertEqual(requestCount, 0)
-        view.mouseUp(with: try mouseUpEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        view.mouseUp(with: try mouseUpEvent(at: point, clickCount: 1))
         XCTAssertEqual(requestCount, 1)
     }
 
@@ -853,8 +854,9 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             return .armed
         }
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        let point = try emergencyClickPoint(in: view)
 
-        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        view.mouseDown(with: try mouseEvent(at: point, clickCount: 1))
 
         XCTAssertEqual(requestCount, 0)
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverride"))
@@ -863,7 +865,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         drainMainQueue()
         XCTAssertEqual(requestCount, 0)
 
-        view.mouseUp(with: try mouseUpEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        view.mouseUp(with: try mouseUpEvent(at: point, clickCount: 1))
 
         XCTAssertEqual(requestCount, 1)
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
@@ -878,9 +880,10 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             return requestCount == 1 ? .armed : .complete
         }
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        let point = try emergencyClickPoint(in: view)
 
-        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
-        view.mouseUp(with: try mouseUpEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        view.mouseDown(with: try mouseEvent(at: point, clickCount: 1))
+        view.mouseUp(with: try mouseUpEvent(at: point, clickCount: 1))
         drainMainQueue()
 
         XCTAssertEqual(requestCount, 1)
@@ -897,8 +900,9 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             return requestCount == 1 ? .armed : .complete
         }
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        let point = try emergencyClickPoint(in: view)
 
-        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+        view.mouseDown(with: try mouseEvent(at: point, clickCount: 1))
         view.mouseDragged(with: try mouseDraggedEvent(at: NSPoint(x: 100, y: 100), clickCount: 1))
         view.mouseUp(with: try mouseUpEvent(at: NSPoint(x: 100, y: 100), clickCount: 1))
         drainMainQueue()
@@ -1077,20 +1081,40 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertTrue(view.hitTest(NSPoint(x: 710, y: 38)) === view)
     }
 
-    func testEmergencyBottomRightSafetyAreaRoutesToOverlayView() {
+    func testInvisibleBottomRightAreaDoesNotRouteToEmergency() throws {
         let view = configuredEyeGateOverlay()
-
         view.layoutSubtreeIfNeeded()
+        var requestCount = 0
+        view.onEmergencyOverrideRequested = {
+            requestCount += 1
+            return .armed
+        }
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        let hiddenCornerPoint = NSPoint(x: 798, y: 2)
 
-        XCTAssertTrue(view.hitTest(NSPoint(x: 790, y: 12)) === view)
+        view.mouseDown(with: try mouseEvent(at: hiddenCornerPoint, clickCount: 1))
+        view.mouseUp(with: try mouseUpEvent(at: hiddenCornerPoint, clickCount: 1))
+
+        XCTAssertEqual(requestCount, 0)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverride"))
     }
 
-    func testEmergencyCornerEscapeZoneExtendsBeyondVisibleButton() {
+    func testInvisibleCornerEscapeZoneDoesNotRouteToEmergency() throws {
         let view = configuredEyeGateOverlay()
-
         view.layoutSubtreeIfNeeded()
+        var requestCount = 0
+        view.onEmergencyOverrideRequested = {
+            requestCount += 1
+            return .armed
+        }
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        let hiddenEscapeZonePoint = NSPoint(x: 460, y: 132)
 
-        XCTAssertTrue(view.hitTest(NSPoint(x: 460, y: 132)) === view)
+        view.mouseDown(with: try mouseEvent(at: hiddenEscapeZonePoint, clickCount: 1))
+        view.mouseUp(with: try mouseUpEvent(at: hiddenEscapeZonePoint, clickCount: 1))
+
+        XCTAssertEqual(requestCount, 0)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverride"))
     }
 
     func testOverlayAcceptsFirstMouseForInactiveWindowEmergencyClicks() {
@@ -1171,11 +1195,22 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
     private func performEmergencyClick(
         on view: RestOverlayView,
-        at point: NSPoint = NSPoint(x: 790, y: 12),
+        at point: NSPoint? = nil,
         clickCount: Int
     ) throws {
-        view.mouseDown(with: try mouseEvent(at: point, clickCount: clickCount))
-        view.mouseUp(with: try mouseUpEvent(at: point, clickCount: clickCount))
+        let clickPoint: NSPoint
+        if let point {
+            clickPoint = point
+        } else {
+            clickPoint = try emergencyClickPoint(in: view)
+        }
+        view.mouseDown(with: try mouseEvent(at: clickPoint, clickCount: clickCount))
+        view.mouseUp(with: try mouseUpEvent(at: clickPoint, clickCount: clickCount))
+    }
+
+    private func emergencyClickPoint(in view: RestOverlayView) throws -> NSPoint {
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        return NSPoint(x: button.frame.midX, y: button.frame.midY)
     }
 
     private func mouseEvent(at point: NSPoint, clickCount: Int) throws -> NSEvent {

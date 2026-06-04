@@ -1241,13 +1241,18 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             logger.log("Emergency override armed for \(session.kind.rawValue), awaiting second overlay confirmation")
             rebuildMenu()
         case .complete:
-            // RestOverlayView defers the second in-overlay confirmation until the
-            // click/key event returns, so the app can complete immediately here.
-            completeEmergencyOverrideEyeGate(
-                session: session,
-                now: now,
-                playSound: true
-            )
+            logger.log("Emergency override confirmed for \(session.kind.rawValue), completing after current overlay event")
+            Task { @MainActor [weak self] in
+                guard let self,
+                      self.engine.state.activeSession?.id == session.id else {
+                    return
+                }
+                self.completeEmergencyOverrideEyeGate(
+                    session: session,
+                    now: now,
+                    playSound: true
+                )
+            }
         case .unavailable:
             overlayController.update(
                 session: session,
@@ -2816,17 +2821,11 @@ final class RestOverlayView: NSView {
     }
 
     private func emergencyActivationFrame() -> NSRect {
-        var buttonFrame = emergencyButton.frame.insetBy(dx: -24, dy: -16)
+        var buttonFrame = emergencyButton.frame.insetBy(dx: -18, dy: -12)
         if !emergencyPanel.isHidden {
-            buttonFrame = buttonFrame.union(emergencyPanel.frame.insetBy(dx: -10, dy: -10))
+            buttonFrame = buttonFrame.union(emergencyPanel.frame.insetBy(dx: -8, dy: -8))
         }
-        let safetyFrame = NSRect(
-            x: max(bounds.minX, bounds.maxX - 360),
-            y: bounds.minY,
-            width: min(360, bounds.width),
-            height: min(140, bounds.height)
-        )
-        return buttonFrame.union(safetyFrame)
+        return buttonFrame
     }
 
     func configure(
