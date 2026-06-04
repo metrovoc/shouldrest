@@ -3796,15 +3796,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func appExclusionRuleSummary(_ rule: AppExclusionRule) -> String {
         let terms = rule.matchTerms.isEmpty ? L10n.tr("prefs.appExclusionNoTerms") : rule.matchTerms.joined(separator: ", ")
-        let mode: String
+        let applies = appExclusionTargetSummary(rule.appliesTo)
+        let summary: String
         switch rule.mode {
         case .pauseWhenMatched:
-            mode = L10n.tr("prefs.exclusionMode.pauseWhenMatched")
+            summary = L10n.format("prefs.appExclusionPreviewPause", terms, applies)
         case .resumeOnlyWhenMatched:
-            mode = L10n.tr("prefs.exclusionMode.resumeOnlyWhenMatched")
+            summary = L10n.format("prefs.appExclusionPreviewResumeOnly", terms, applies)
         }
-        let applies = appExclusionTargetSummary(rule.appliesTo)
-        let summary = "\(terms) - \(mode) - \(applies)"
         guard summary.count > 96 else { return summary }
         return "\(summary.prefix(93))..."
     }

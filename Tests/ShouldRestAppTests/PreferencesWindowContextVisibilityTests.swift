@@ -408,6 +408,9 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
     }
 
     func testLegacyTargetlessAppExclusionGetsVisibleDefaultTarget() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
         var settings = RestSettings.defaults
         settings.appExclusions = [
             AppExclusionRule(
@@ -431,6 +434,15 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
 
         XCTAssertTrue(body.stringValue.contains(L10n.tr("prefs.appExclusionAppliesBody")))
         XCTAssertFalse(body.stringValue.contains(L10n.tr("prefs.appExclusionAppliesNone")))
+        XCTAssertEqual(
+            body.stringValue,
+            L10n.format(
+                "prefs.appExclusionPreviewPause",
+                "zoom",
+                L10n.tr("prefs.appExclusionAppliesBody")
+            )
+        )
+        XCTAssertFalse(body.stringValue.contains(" - "))
         XCTAssertTrue(editor.string.contains(RestKind.bodyBreak.rawValue))
         XCTAssertFalse(editor.string.contains(#""appliesTo" : []"#))
 
@@ -440,6 +452,31 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertEqual(appliesBody.state, .on)
         XCTAssertTrue(appliesEye.isEnabled)
         XCTAssertFalse(appliesBody.isEnabled)
+    }
+
+    func testAppExclusionRuleListSummaryUsesLocalizedSentence() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "zh-Hans"
+
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "calls",
+                name: "会议",
+                matchTerms: ["zoom"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+        let body = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionRuleBody.0", in: contentView) as? NSTextField)
+
+        XCTAssertEqual(body.stringValue, "匹配 zoom。匹配时暂停活动休息。")
+        XCTAssertFalse(body.stringValue.contains(" - "))
     }
 
     func testLastAppExclusionTargetCannotBeClearedFromUI() throws {
