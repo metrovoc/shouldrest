@@ -3540,15 +3540,39 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         var texts: [String] = []
         if let button = view as? NSButton, !button.title.isEmpty {
             texts.append(button.title)
-        } else if let popup = view as? NSPopUpButton, !popup.title.isEmpty {
-            texts.append(popup.title)
+        }
+        if let popup = view as? NSPopUpButton {
+            texts.append(contentsOf: popup.itemArray.map(\.title))
         } else if let label = view as? NSTextField, !label.stringValue.isEmpty {
             texts.append(label.stringValue)
+        }
+        if let textField = view as? NSTextField,
+           let placeholder = textField.placeholderString,
+           !placeholder.isEmpty {
+            texts.append(placeholder)
+        }
+        if let tooltip = view.toolTip, !tooltip.isEmpty {
+            texts.append(tooltip)
+        }
+        if let help = view.accessibilityHelp(), !help.isEmpty {
+            texts.append(help)
         }
         for subview in view.subviews {
             texts.append(contentsOf: searchableText(in: subview))
         }
-        return texts
+        return Self.uniqueSearchTexts(texts)
+    }
+
+    private static func uniqueSearchTexts(_ values: [String]) -> [String] {
+        var seen: Set<String> = []
+        var result: [String] = []
+        for value in values {
+            let normalized = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !normalized.isEmpty, !seen.contains(normalized) else { continue }
+            seen.insert(normalized)
+            result.append(normalized)
+        }
+        return result
     }
 
     private func bestSearchTargetTitle(in view: NSView, fallback: String) -> String {

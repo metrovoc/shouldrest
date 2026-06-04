@@ -78,6 +78,54 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         XCTAssertNil(savedSettings.value)
     }
 
+    func testPreferenceSearchMatchesHelpTextForEmergencyExit() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
+        let tabView = try XCTUnwrap(view(withIdentifier: "prefs.tabView", in: contentView) as? NSTabView)
+        let searchField = try XCTUnwrap(view(withIdentifier: "prefs.searchField", in: contentView) as? NSSearchField)
+        let searchStatus = try XCTUnwrap(view(withIdentifier: "prefs.searchStatusLabel", in: contentView) as? NSTextField)
+
+        searchField.stringValue = "second click"
+
+        XCTAssertTrue(sendAction(from: searchField))
+
+        let emergency = try XCTUnwrap(view(withIdentifier: "prefs.eyeEmergencyOverride", in: contentView) as? NSButton)
+        XCTAssertEqual(tabView.selectedTabViewItem?.identifier as? String, L10n.tr("prefs.tabSchedule"))
+        XCTAssertTrue(searchStatus.stringValue.contains(L10n.tr("prefs.eyeEmergencyOverride")))
+        XCTAssertEqual(emergency.layer?.borderWidth, 1)
+        XCTAssertTrue(isFirstResponder(emergency, in: window))
+        XCTAssertNil(savedSettings.value)
+    }
+
+    func testPreferenceSearchMatchesPopupMenuOptionsThatAreNotSelected() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
+        let tabView = try XCTUnwrap(view(withIdentifier: "prefs.tabView", in: contentView) as? NSTabView)
+        let searchField = try XCTUnwrap(view(withIdentifier: "prefs.searchField", in: contentView) as? NSSearchField)
+        let searchStatus = try XCTUnwrap(view(withIdentifier: "prefs.searchStatusLabel", in: contentView) as? NSTextField)
+
+        searchField.stringValue = L10n.tr("prefs.theme.dark")
+
+        XCTAssertTrue(sendAction(from: searchField))
+
+        let theme = try XCTUnwrap(firstPopup(withSelectedTitle: L10n.tr("prefs.theme.system"), in: contentView))
+        XCTAssertEqual(tabView.selectedTabViewItem?.identifier as? String, L10n.tr("prefs.tabAppearance"))
+        XCTAssertTrue(searchStatus.stringValue.contains(L10n.tr("prefs.theme")))
+        XCTAssertEqual(theme.title, L10n.tr("prefs.theme.system"))
+        XCTAssertTrue(isFirstResponder(theme, in: window))
+        XCTAssertNil(savedSettings.value)
+    }
+
     func testPreferenceSearchShowsNoResultWithoutChangingSelection() throws {
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
@@ -146,6 +194,18 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         }
         for subview in view.subviews {
             if let found = self.view(withIdentifier: identifier, in: subview) {
+                return found
+            }
+        }
+        return nil
+    }
+
+    private func firstPopup(withSelectedTitle title: String, in view: NSView) -> NSPopUpButton? {
+        if let popup = view as? NSPopUpButton, popup.title == title {
+            return popup
+        }
+        for subview in view.subviews {
+            if let found = firstPopup(withSelectedTitle: title, in: subview) {
                 return found
             }
         }
