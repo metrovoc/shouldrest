@@ -45,6 +45,12 @@
 "status.noRests" = "没有启用的休息计划";
 "status.pausedIndefinitely" = "已无限期暂停";
 "status.pausedUntil" = "暂停到 %@";
+"status.pauseResumesIn" = "%@后恢复";
+"status.pauseResumeManual" = "准备好后可从此菜单恢复";
+"status.durationUnderMinute" = "不到 1 分钟";
+"status.durationMinutes" = "%d 分钟";
+"status.durationHours" = "%d 小时";
+"status.durationHoursMinutes" = "%d 小时 %d 分钟";
 "status.next" = "下一次：%@，时间 %@";
 "status.nextBodyAfterEyeGates" = "距离下一次活动休息还有 %d 次护眼休息";
 "status.active" = "%@ 进行中，剩余 %d 秒";

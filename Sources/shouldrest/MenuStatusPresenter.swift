@@ -26,6 +26,10 @@ enum MenuStatusPresenter {
 
     static func lines(state: RestEngineState, settings: RestSettings, now: Date = Date()) -> [String] {
         var lines = [primaryStatusText(state: state, now: now)]
+        if let pause = state.pause {
+            lines.append(pauseSecondaryStatusText(pause, now: now))
+            return lines
+        }
         if let bodyBreakStatus = nextBodyBreakStatusText(state: state, settings: settings) {
             lines.append(bodyBreakStatus)
         }
@@ -133,6 +137,32 @@ enum MenuStatusPresenter {
 
     private static func isManualFinishReady(_ session: RestSession, now: Date) -> Bool {
         session.manualFinishEnabled && now.timeIntervalSince(session.startedAt) >= session.duration
+    }
+
+    private static func pauseSecondaryStatusText(_ pause: PauseState, now: Date) -> String {
+        guard let until = pause.until else {
+            return L10n.tr("status.pauseResumeManual")
+        }
+        let seconds = max(0, Int(ceil(until.timeIntervalSince(now))))
+        return L10n.format("status.pauseResumesIn", compactDurationText(seconds: seconds))
+    }
+
+    private static func compactDurationText(seconds: Int) -> String {
+        guard seconds >= 60 else {
+            return L10n.tr("status.durationUnderMinute")
+        }
+
+        let minutes = Int(ceil(Double(seconds) / 60))
+        guard minutes >= 60 else {
+            return L10n.format("status.durationMinutes", minutes)
+        }
+
+        let hours = minutes / 60
+        let remainingMinutes = minutes % 60
+        if remainingMinutes == 0 {
+            return L10n.format("status.durationHours", hours)
+        }
+        return L10n.format("status.durationHoursMinutes", hours, remainingMinutes)
     }
 
     private static func nextBodyBreakStatusText(state: RestEngineState, settings: RestSettings) -> String? {

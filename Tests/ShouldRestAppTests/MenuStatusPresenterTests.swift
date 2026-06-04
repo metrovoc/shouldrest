@@ -62,6 +62,38 @@ final class MenuStatusPresenterTests: XCTestCase {
         XCTAssertNil(content.healthBadge)
     }
 
+    func testTimedPauseStatusShowsAutomaticResumeContext() {
+        let state = RestEngineState(
+            pause: PauseState(
+                reason: .user,
+                startedAt: start,
+                until: start.addingTimeInterval(30 * 60)
+            )
+        )
+
+        let lines = MenuStatusPresenter.lines(state: state, settings: .defaults, now: start)
+        let content = MenuStatusPresenter.headerContent(state: state, settings: .defaults, now: start)
+
+        XCTAssertEqual(lines[0], "Paused until \(start.addingTimeInterval(30 * 60).formatted(date: .omitted, time: .shortened))")
+        XCTAssertEqual(lines[1], "Resumes in 30m")
+        XCTAssertEqual(content.secondary, "Resumes in 30m")
+    }
+
+    func testIndefinitePauseStatusShowsManualResumeContext() {
+        let state = RestEngineState(
+            pause: PauseState(reason: .user, startedAt: start, until: nil)
+        )
+
+        let lines = MenuStatusPresenter.lines(state: state, settings: .defaults, now: start)
+        let content = MenuStatusPresenter.headerContent(state: state, settings: .defaults, now: start)
+
+        XCTAssertEqual(lines, [
+            "Paused indefinitely",
+            "Resume from this menu when ready"
+        ])
+        XCTAssertEqual(content.secondary, "Resume from this menu when ready")
+    }
+
     func testDefaultMenuBarPresentationIsCompactIconOnly() {
         let engine = RestEngine(settings: .defaults, now: start)
 
