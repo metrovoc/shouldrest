@@ -169,7 +169,7 @@
 "debug.summaryBodyActiveTitle" = "Body Break is active";
 "debug.summaryBodyActiveBody" = "Use the overlay buttons to postpone, skip, or finish based on the current Body Break settings.";
 "debug.summaryPausedTitle" = "Rests are paused";
-"debug.summaryPausedBody" = "Resume from the status menu or automation when you want ShouldRest to schedule breaks again.";
+"debug.summaryPausedBody" = "Resume from the status menu when you want ShouldRest to schedule rests again.";
 "debug.summaryDeferredTitle" = "%@ is delayed";
 "debug.summaryDeferredBody" = "Reason: %@.";
 "debug.summaryScheduledTitle" = "Next rest is scheduled";

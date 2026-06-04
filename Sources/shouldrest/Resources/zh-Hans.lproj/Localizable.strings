@@ -169,7 +169,7 @@
 "debug.summaryBodyActiveTitle" = "活动休息正在进行";
 "debug.summaryBodyActiveBody" = "请根据当前活动休息设置，使用覆盖层内的推迟、跳过或完成按钮。";
 "debug.summaryPausedTitle" = "休息已暂停";
-"debug.summaryPausedBody" = "需要重新开始调度时，可从状态菜单或自动化命令恢复。";
+"debug.summaryPausedBody" = "需要重新开始安排休息时，可从状态菜单恢复。";
 "debug.summaryDeferredTitle" = "%@ 已延后";
 "debug.summaryDeferredBody" = "原因：%@。";
 "debug.summaryScheduledTitle" = "下一次休息已排定";

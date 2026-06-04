@@ -472,6 +472,11 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("debug.ready"), "Report ready")
         XCTAssertEqual(L10n.tr("debug.copied"), "Copied to Clipboard")
         XCTAssertEqual(L10n.tr("debug.updated"), "Report refreshed")
+        XCTAssertEqual(
+            L10n.tr("debug.summaryPausedBody"),
+            "Resume from the status menu when you want ShouldRest to schedule rests again."
+        )
+        XCTAssertFalse(L10n.tr("debug.summaryPausedBody").localizedCaseInsensitiveContains("automation"))
         XCTAssertEqual(L10n.tr("debug.openLog"), "Show Log in Finder")
         XCTAssertEqual(L10n.tr("debug.openSettings"), "Show Settings in Finder")
         XCTAssertTrue(L10n.tr("debug.summaryEyeActiveBody").localizedCaseInsensitiveContains("Emergency Exit twice"))
@@ -600,6 +605,8 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("debug.ready"), "报告就绪")
         XCTAssertEqual(L10n.tr("debug.copied"), "已复制到剪贴板")
         XCTAssertEqual(L10n.tr("debug.updated"), "报告已刷新")
+        XCTAssertEqual(L10n.tr("debug.summaryPausedBody"), "需要重新开始安排休息时，可从状态菜单恢复。")
+        XCTAssertFalse(L10n.tr("debug.summaryPausedBody").contains("自动化"))
         XCTAssertEqual(L10n.tr("debug.openLog"), "在 Finder 中显示日志")
         XCTAssertEqual(L10n.tr("debug.openSettings"), "在 Finder 中显示设置")
         XCTAssertTrue(L10n.tr("debug.summaryEyeActiveBody").contains("紧急退出两次"))
