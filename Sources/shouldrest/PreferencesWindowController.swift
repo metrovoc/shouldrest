@@ -500,6 +500,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private var appExclusionRuleRemoveControls: [(id: String, button: NSButton)] = []
     private var appExclusionRuleEditControls: [(id: String, button: NSButton)] = []
     private var editingAppExclusionRuleID: String?
+    private var armedAppExclusionRuleRemovalID: String?
 
     private let themeSource = NSPopUpButton()
     private let languageIdentifier = NSPopUpButton()
@@ -544,6 +545,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private var customBodyIdeaRemoveControls: [(id: String, button: NSButton)] = []
     private var customBodyIdeaEditControls: [(id: String, button: NSButton)] = []
     private var editingCustomBodyIdeaID: String?
+    private var armedCustomBodyIdeaRemovalID: String?
     private let localImagePath = NSTextField()
     private let localImageChooseButton = NSButton()
     private let localImageClearButton = NSButton()
@@ -3068,6 +3070,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     @objc private func addAppExclusionRulePressed(_ sender: NSButton) {
         let id = editingAppExclusionRuleID ?? UUID().uuidString
         guard let rule = currentAppExclusionRule(id: id) else { return }
+        clearArmedRemovalState()
         saveAppExclusionRule(rule, replacingID: editingAppExclusionRuleID)
     }
 
@@ -3076,6 +3079,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
               let rule = displayedAppExclusionRules().first(where: { $0.id == match.id }) else {
             return
         }
+        clearArmedRemovalState()
         editingAppExclusionRuleID = rule.id
         appExclusionName.stringValue = rule.name
         appExclusionTerms.objectValue = rule.matchTerms
@@ -3086,6 +3090,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     @objc private func cancelAppExclusionRuleEditPressed(_ sender: NSButton) {
+        clearArmedRemovalState()
         appExclusionName.stringValue = ""
         appExclusionTerms.objectValue = []
         setDefaultAppExclusionTargets()
@@ -3109,6 +3114,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let id = editingCustomBodyIdeaID ?? UUID().uuidString
         guard let idea = currentCustomBodyIdea(id: id) else { return }
         do {
+            clearArmedRemovalState()
             var ideas = try decodedAdvancedCustomIdeas() ?? []
             if let editingCustomBodyIdeaID,
                let index = ideas.firstIndex(where: { $0.id == editingCustomBodyIdeaID }) {
@@ -3135,6 +3141,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
               let idea = displayedCustomBodyIdeas().first(where: { $0.id == match.id }) else {
             return
         }
+        clearArmedRemovalState()
         editingCustomBodyIdeaID = idea.id
         customBodyTitle.stringValue = idea.title
         customBodyTextEditor.string = idea.body
@@ -3142,6 +3149,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     @objc private func cancelCustomBodyIdeaEditPressed(_ sender: NSButton) {
+        clearArmedRemovalState()
         customBodyTitle.stringValue = ""
         customBodyTextEditor.string = ""
         clearCustomBodyIdeaEditState()
@@ -3150,7 +3158,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     @objc private func removeCustomBodyIdeaPressed(_ sender: NSButton) {
         guard let match = customBodyIdeaRemoveControls.first(where: { $0.button === sender }) else { return }
+        guard armedCustomBodyIdeaRemovalID == match.id else {
+            armCustomBodyIdeaRemoval(id: match.id)
+            return
+        }
         do {
+            clearArmedRemovalState()
             var ideas = try decodedAdvancedCustomIdeas() ?? []
             ideas.removeAll { $0.id == match.id }
             clearCustomBodyIdeaEditState()
@@ -3174,7 +3187,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     @objc private func removeAppExclusionRulePressed(_ sender: NSButton) {
         guard let match = appExclusionRuleRemoveControls.first(where: { $0.button === sender }) else { return }
+        guard armedAppExclusionRuleRemovalID == match.id else {
+            armAppExclusionRuleRemoval(id: match.id)
+            return
+        }
         do {
+            clearArmedRemovalState()
             var rules = try decodedAdvancedAppExclusions() ?? []
             rules.removeAll { $0.id == match.id }
             clearAppExclusionRuleEditState()
@@ -3696,6 +3714,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func saveAppExclusionRule(_ rule: AppExclusionRule, replacingID: String?) {
         do {
+            clearArmedRemovalState()
             var rules = try decodedAdvancedAppExclusions() ?? []
             if let replacingID,
                let index = rules.firstIndex(where: { $0.id == replacingID }) {
@@ -3804,6 +3823,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func refreshAppExclusionRuleList() {
         let rules = displayedAppExclusionRules()
+        if let armedID = armedAppExclusionRuleRemovalID,
+           !rules.contains(where: { $0.id == armedID }) {
+            armedAppExclusionRuleRemovalID = nil
+        }
         appExclusionRuleRemoveControls.removeAll()
         appExclusionRuleEditControls.removeAll()
         removeArrangedSubviews(from: appExclusionRulesListStack)
@@ -3812,6 +3835,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             appExclusionRulesListStack.addArrangedSubview(appExclusionRuleListItem(rule: rule, index: index))
         }
 
+        updateAppExclusionRuleRemoveButtons()
         appExclusionRulesListRow?.isHidden = !isOn(appExclusionEnabled) || rules.isEmpty
         updateContextSummary()
     }
@@ -4118,6 +4142,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func refreshCustomBodyIdeaList() {
         let ideas = displayedCustomBodyIdeas()
+        if let armedID = armedCustomBodyIdeaRemovalID,
+           !ideas.contains(where: { $0.id == armedID }) {
+            armedCustomBodyIdeaRemovalID = nil
+        }
         customBodyIdeaRemoveControls.removeAll()
         customBodyIdeaEditControls.removeAll()
         removeArrangedSubviews(from: customBodyIdeasListStack)
@@ -4126,6 +4154,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             customBodyIdeasListStack.addArrangedSubview(customBodyIdeaListItem(idea: idea, index: index))
         }
 
+        updateCustomBodyIdeaRemoveButtons()
         customBodyIdeasListRow?.isHidden = !isOn(bodyEnabled) || ideas.isEmpty
         updateBodyContentSummary()
     }
@@ -4288,6 +4317,75 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let summary = collapsed.isEmpty ? L10n.tr("prefs.customIdeaEmptyBody") : collapsed
         guard summary.count > 80 else { return summary }
         return "\(summary.prefix(77))…"
+    }
+
+    private func armAppExclusionRuleRemoval(id: String) {
+        armedAppExclusionRuleRemovalID = id
+        armedCustomBodyIdeaRemovalID = nil
+        updateRemovalButtonArmStates()
+    }
+
+    private func armCustomBodyIdeaRemoval(id: String) {
+        armedCustomBodyIdeaRemovalID = id
+        armedAppExclusionRuleRemovalID = nil
+        updateRemovalButtonArmStates()
+    }
+
+    private func clearArmedRemovalState() {
+        guard armedAppExclusionRuleRemovalID != nil ||
+              armedCustomBodyIdeaRemovalID != nil else {
+            return
+        }
+        armedAppExclusionRuleRemovalID = nil
+        armedCustomBodyIdeaRemovalID = nil
+        updateRemovalButtonArmStates()
+    }
+
+    private func updateRemovalButtonArmStates() {
+        updateAppExclusionRuleRemoveButtons()
+        updateCustomBodyIdeaRemoveButtons()
+    }
+
+    private func updateAppExclusionRuleRemoveButtons() {
+        for control in appExclusionRuleRemoveControls {
+            let isArmed = control.id == armedAppExclusionRuleRemovalID
+            configureRemoveButton(
+                control.button,
+                isArmed: isArmed,
+                label: L10n.tr("prefs.removeAppExclusionRule"),
+                help: isArmed ?
+                    L10n.tr("prefs.removeAppExclusionRuleConfirmHelp") :
+                    L10n.tr("prefs.removeAppExclusionRuleHelp")
+            )
+        }
+    }
+
+    private func updateCustomBodyIdeaRemoveButtons() {
+        for control in customBodyIdeaRemoveControls {
+            let isArmed = control.id == armedCustomBodyIdeaRemovalID
+            configureRemoveButton(
+                control.button,
+                isArmed: isArmed,
+                label: L10n.tr("prefs.removeCustomIdea"),
+                help: isArmed ?
+                    L10n.tr("prefs.removeCustomIdeaConfirmHelp") :
+                    L10n.tr("prefs.removeCustomIdeaHelp")
+            )
+        }
+    }
+
+    private func configureRemoveButton(
+        _ button: NSButton,
+        isArmed: Bool,
+        label: String,
+        help: String
+    ) {
+        button.image = NSImage(
+            systemSymbolName: isArmed ? "trash.fill" : "trash",
+            accessibilityDescription: label
+        )
+        button.contentTintColor = isArmed ? .systemRed : .secondaryLabelColor
+        setIconOnlyActionHelp(label: label, help: help, on: button)
     }
 
     private func removeArrangedSubviews(from stack: NSStackView) {

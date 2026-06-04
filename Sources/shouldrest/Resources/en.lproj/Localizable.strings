@@ -317,6 +317,7 @@
 "prefs.editAppExclusionRuleHelp" = "Edit this app rule.";
 "prefs.removeAppExclusionRule" = "Remove App Rule";
 "prefs.removeAppExclusionRuleHelp" = "Remove this app rule.";
+"prefs.removeAppExclusionRuleConfirmHelp" = "Click again to remove this app rule.";
 "prefs.appExclusionAppliesEyeBody" = "Eye Gate and Body Break";
 "prefs.appExclusionAppliesEye" = "Eye Gate";
 "prefs.appExclusionAppliesBody" = "Body Break";
@@ -393,6 +394,7 @@
 "prefs.editCustomIdeaHelp" = "Edit this Body Break idea.";
 "prefs.removeCustomIdea" = "Remove Idea";
 "prefs.removeCustomIdeaHelp" = "Remove this Body Break idea.";
+"prefs.removeCustomIdeaConfirmHelp" = "Click again to remove this Body Break idea.";
 "prefs.customIdeaEmptyBody" = "No body text";
 "prefs.advancedIdeasJSON" = "Ideas bulk edit";
 "prefs.showAdvancedIdeas" = "Bulk Edit Ideas";

@@ -351,6 +351,16 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
 
         XCTAssertTrue(sendAction(from: removeWalk))
 
+        XCTAssertNil(savedSettings.value)
+        XCTAssertEqual(removeWalk.toolTip, L10n.tr("prefs.removeCustomIdeaConfirmHelp"))
+        XCTAssertEqual(removeWalk.accessibilityLabel(), L10n.tr("prefs.removeCustomIdea"))
+        XCTAssertEqual(removeWalk.accessibilityHelp(), L10n.tr("prefs.removeCustomIdeaConfirmHelp"))
+        let armedTint = try XCTUnwrap(removeWalk.contentTintColor?.usingColorSpace(.sRGB))
+        XCTAssertGreaterThan(armedTint.redComponent, armedTint.greenComponent)
+        XCTAssertGreaterThan(armedTint.redComponent, armedTint.blueComponent)
+
+        XCTAssertTrue(sendAction(from: removeWalk))
+
         waitUntilSavedSettingsArrive(savedSettings)
         let ideas = try XCTUnwrap(savedSettings.value?.contentLibrary.customBodyBreakIdeas)
         XCTAssertEqual(ideas.map(\.title), ["Stretch"])

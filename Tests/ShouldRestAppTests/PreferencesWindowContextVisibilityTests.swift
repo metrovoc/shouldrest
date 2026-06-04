@@ -667,6 +667,16 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertEqual(removeButton.image?.accessibilityDescription, L10n.tr("prefs.removeAppExclusionRule"))
         XCTAssertTrue(sendAction(from: removeButton))
 
+        XCTAssertNil(savedSettings.value)
+        XCTAssertEqual(removeButton.toolTip, L10n.tr("prefs.removeAppExclusionRuleConfirmHelp"))
+        XCTAssertEqual(removeButton.accessibilityLabel(), L10n.tr("prefs.removeAppExclusionRule"))
+        XCTAssertEqual(removeButton.accessibilityHelp(), L10n.tr("prefs.removeAppExclusionRuleConfirmHelp"))
+        let armedTint = try XCTUnwrap(removeButton.contentTintColor?.usingColorSpace(.sRGB))
+        XCTAssertGreaterThan(armedTint.redComponent, armedTint.greenComponent)
+        XCTAssertGreaterThan(armedTint.redComponent, armedTint.blueComponent)
+
+        XCTAssertTrue(sendAction(from: removeButton))
+
         waitUntilSavedSettingsArrive(savedSettings)
         let rules = try XCTUnwrap(savedSettings.value?.appExclusions)
         XCTAssertEqual(rules.count, 1)
