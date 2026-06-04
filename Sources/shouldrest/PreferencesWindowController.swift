@@ -331,6 +331,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private var shortcutEndBodyRow: NSView?
     private var shortcutEmergencyEyeRow: NSView?
     private let shortcutReset = ShortcutRecorderButton()
+    private var shortcutClearControls: [(recorder: ShortcutRecorderButton, button: NSButton)] = []
     private let shortcutConflictRow = NSStackView()
     private let shortcutConflictIcon = NSImageView()
     private let shortcutConflictLabel = NSTextField(labelWithString: "")
@@ -716,30 +717,30 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         shortcutEndBody.identifier = NSUserInterfaceItemIdentifier("shortcut.endBody")
         shortcutEmergencyEye.identifier = NSUserInterfaceItemIdentifier("shortcut.emergencyEye")
         shortcutReset.identifier = NSUserInterfaceItemIdentifier("shortcut.reset")
-        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.pauseToggle"), shortcutPauseToggle))
-        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.pause30Shortcut"), shortcutPause30))
-        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.pause1hShortcut"), shortcutPause1h))
-        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.pause2hShortcut"), shortcutPause2h))
-        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.pause5hShortcut"), shortcutPause5h))
-        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.pauseUntilMorningShortcut"), shortcutPauseUntilMorning))
-        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.nextScheduledRest"), shortcutNextScheduled))
-        let shortcutEyeNowRow = row(L10n.tr("prefs.eyeGateNow"), shortcutEyeNow)
+        shortcutsStack.addArrangedSubview(shortcutRow(L10n.tr("prefs.pauseToggle"), shortcutPauseToggle))
+        shortcutsStack.addArrangedSubview(shortcutRow(L10n.tr("prefs.pause30Shortcut"), shortcutPause30))
+        shortcutsStack.addArrangedSubview(shortcutRow(L10n.tr("prefs.pause1hShortcut"), shortcutPause1h))
+        shortcutsStack.addArrangedSubview(shortcutRow(L10n.tr("prefs.pause2hShortcut"), shortcutPause2h))
+        shortcutsStack.addArrangedSubview(shortcutRow(L10n.tr("prefs.pause5hShortcut"), shortcutPause5h))
+        shortcutsStack.addArrangedSubview(shortcutRow(L10n.tr("prefs.pauseUntilMorningShortcut"), shortcutPauseUntilMorning))
+        shortcutsStack.addArrangedSubview(shortcutRow(L10n.tr("prefs.nextScheduledRest"), shortcutNextScheduled))
+        let shortcutEyeNowRow = shortcutRow(L10n.tr("prefs.eyeGateNow"), shortcutEyeNow)
         shortcutEyeNowRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutEyeNowRow")
         self.shortcutEyeNowRow = shortcutEyeNowRow
         shortcutsStack.addArrangedSubview(shortcutEyeNowRow)
-        let shortcutBodyNowRow = row(L10n.tr("prefs.bodyBreakNow"), shortcutBodyNow)
+        let shortcutBodyNowRow = shortcutRow(L10n.tr("prefs.bodyBreakNow"), shortcutBodyNow)
         shortcutBodyNowRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutBodyNowRow")
         self.shortcutBodyNowRow = shortcutBodyNowRow
         shortcutsStack.addArrangedSubview(shortcutBodyNowRow)
-        let shortcutEndBodyRow = row(L10n.tr("prefs.endBodyBreak"), shortcutEndBody)
+        let shortcutEndBodyRow = shortcutRow(L10n.tr("prefs.endBodyBreak"), shortcutEndBody)
         shortcutEndBodyRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutEndBodyRow")
         self.shortcutEndBodyRow = shortcutEndBodyRow
         shortcutsStack.addArrangedSubview(shortcutEndBodyRow)
-        let shortcutEmergencyEyeRow = row(L10n.tr("prefs.emergencyEyeGate"), shortcutEmergencyEye)
+        let shortcutEmergencyEyeRow = shortcutRow(L10n.tr("prefs.emergencyEyeGate"), shortcutEmergencyEye)
         shortcutEmergencyEyeRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutEmergencyEyeRow")
         self.shortcutEmergencyEyeRow = shortcutEmergencyEyeRow
         shortcutsStack.addArrangedSubview(shortcutEmergencyEyeRow)
-        shortcutsStack.addArrangedSubview(row(L10n.tr("prefs.reset"), shortcutReset))
+        shortcutsStack.addArrangedSubview(shortcutRow(L10n.tr("prefs.reset"), shortcutReset))
         addTab(to: tabView, title: L10n.tr("prefs.tabShortcuts"), icon: .systemSymbol("keyboard"), stack: shortcutsStack)
 
         let advancedStack = contentStack()
@@ -1245,6 +1246,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         ].forEach { recorder in
             recorder.onChange = { [weak self] in
                 self?.updateShortcutConflictWarning()
+                self?.updateShortcutClearButtons()
                 self?.scheduleAutosave()
             }
         }
@@ -1420,6 +1422,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         syncNumberControlsFromFields()
         updateDependentControlEnablement()
         applyAdminVisibility()
+        updateShortcutClearButtons()
     }
 
     @discardableResult
@@ -1579,6 +1582,24 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         shortcutConflictLabel.stringValue = warning.message
         shortcutConflictRow.isHidden = false
         warning.recorders.forEach { $0.validationWarning = warning.message }
+    }
+
+    private func updateShortcutClearButtons() {
+        for pair in shortcutClearControls {
+            let fallback = pair.recorder.requiredFallbackShortcutValue?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let value = pair.recorder.shortcutValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            let isRequired = fallback != nil
+            let canClear = isRequired ? value != (fallback ?? "") : !value.isEmpty
+            pair.button.isEnabled = canClear
+            pair.button.toolTip = isRequired
+                ? L10n.tr("shortcut.restoreDefaultButtonHelp")
+                : L10n.tr("shortcut.clearButtonHelp")
+            pair.button.contentTintColor = canClear ? .secondaryLabelColor : .tertiaryLabelColor
+            pair.button.image = NSImage(
+                systemSymbolName: isRequired ? "arrow.counterclockwise" : "xmark.circle",
+                accessibilityDescription: pair.button.toolTip
+            )
+        }
     }
 
     private struct ShortcutPreferenceEntry {
@@ -1889,6 +1910,17 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
         updateDependentControlEnablement()
         scheduleAutosave()
+    }
+
+    @objc private func shortcutClearPressed(_ sender: NSButton) {
+        guard let pair = shortcutClearControls.first(where: { $0.button === sender }) else { return }
+        let nextValue = pair.recorder.requiredFallbackShortcutValue ?? ""
+        guard pair.recorder.shortcutValue != nextValue else {
+            updateShortcutClearButtons()
+            return
+        }
+        pair.recorder.shortcutValue = nextValue
+        pair.recorder.onChange?()
     }
 
     @objc private func toggleAdvancedDisclosure(_ sender: NSButton) {
@@ -2300,6 +2332,28 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         stack.spacing = 12
         stack.alignment = .centerY
         return stack
+    }
+
+    private func shortcutRow(_ title: String, _ recorder: ShortcutRecorderButton) -> NSStackView {
+        let clearButton = NSButton()
+        clearButton.title = ""
+        clearButton.bezelStyle = .inline
+        clearButton.isBordered = false
+        clearButton.imagePosition = .imageOnly
+        clearButton.target = self
+        clearButton.action = #selector(shortcutClearPressed(_:))
+        clearButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
+        clearButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
+        if let identifier = recorder.identifier?.rawValue {
+            clearButton.identifier = NSUserInterfaceItemIdentifier("\(identifier).clear")
+        }
+        shortcutClearControls.append((recorder: recorder, button: clearButton))
+
+        let controls = NSStackView(views: [recorder, clearButton])
+        controls.orientation = .horizontal
+        controls.spacing = 6
+        controls.alignment = .centerY
+        return row(title, controls)
     }
 
     private func multilineRow(_ title: String, _ field: NSView) -> NSStackView {

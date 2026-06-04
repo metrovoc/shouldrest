@@ -251,11 +251,13 @@
 "shortcut.notSet" = "Not set";
 "shortcut.record" = "Record Shortcut";
 "shortcut.recording" = "Recording...";
-"shortcut.recordHelp" = "Click, then press a shortcut. Delete clears it.";
+"shortcut.recordHelp" = "Click, then press a shortcut.";
 "shortcut.recordingHelp" = "Press Command, Control, or Option with a key. Esc cancels; Delete clears.";
-"shortcut.clearHelp" = "Click to replace this shortcut. Delete clears it while recording.";
-"shortcut.requiredHelp" = "Click to replace this shortcut. Delete restores the default while recording.";
+"shortcut.clearHelp" = "Click to replace this shortcut. Use the clear button to remove it.";
+"shortcut.requiredHelp" = "Click to replace this shortcut. Use the reset button to restore the default.";
 "shortcut.requiredRecordingHelp" = "Press Command, Control, or Option with a key. Esc cancels; Delete restores the default.";
+"shortcut.clearButtonHelp" = "Clear this shortcut.";
+"shortcut.restoreDefaultButtonHelp" = "Restore the default shortcut.";
 "cli.help" = "Usage: shouldrest <command> [options]\n\nCommands:\n  help                         Show this help.\n  version                      Show version.\n  settings                     Print settings path unless hidden by admin.\n  logs                         Print log path.\n  pause [-d duration]          Pause breaks. Duration: indefinitely, until-morning, 60, 1h, 1h20m.\n  resume                       Resume breaks.\n  toggle                       Pause or resume breaks.\n  reset                        Reset schedule and health.\n  eye|mini [-w wait] [-n]      Start Eye Gate now or after wait; readable content is not customizable.\n  body|long [-T title] [-t text] [-w wait] [-n]  Start or customize Body Break.\n  emergency                    Emergency Exit for an active Eye Gate.\n  preferences                  Open preferences in the running app.\n  debug                        Copy debug info in the running app.\n  debug-panel                  Open the debug panel in the running app.\n  about                        Open the about window in the running app.\n  url shouldrest://<command>    Send URL-style automation.";
 "onboarding.title" = "Welcome to ShouldRest";
 "onboarding.heading" = "Start with a stricter rest rhythm";

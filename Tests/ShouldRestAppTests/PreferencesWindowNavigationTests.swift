@@ -51,7 +51,7 @@ final class PreferencesWindowNavigationTests: XCTestCase {
 
         let pause5h = try XCTUnwrap(view(withIdentifier: "shortcut.pause5h", in: contentView))
         let pause5hRecorder = try XCTUnwrap(pause5h as? ShortcutRecorderButton)
-        let highlightedRow = try XCTUnwrap(pause5h.superview)
+        let highlightedRow = try XCTUnwrap(highlightedAncestor(of: pause5h))
         XCTAssertEqual(highlightedRow.layer?.borderWidth, 1)
         XCTAssertNotNil(highlightedRow.layer?.backgroundColor)
         XCTAssertTrue(isFirstResponder(pause5hRecorder, in: window))
@@ -159,6 +159,17 @@ final class PreferencesWindowNavigationTests: XCTestCase {
 
     private func isFirstResponder(_ control: NSControl, in window: NSWindow) -> Bool {
         window.firstResponder === control || control.currentEditor() === window.firstResponder
+    }
+
+    private func highlightedAncestor(of view: NSView) -> NSView? {
+        var candidate = view.superview
+        while let current = candidate {
+            if current.layer?.borderWidth == 1 {
+                return current
+            }
+            candidate = current.superview
+        }
+        return nil
     }
 
     private func keyEvent(

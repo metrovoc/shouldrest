@@ -276,6 +276,62 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(savedSettings.value?.shortcuts.skipToNextBodyBreak, "")
     }
 
+    func testShortcutRowsExposeVisibleClearButtons() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectShortcutsTab(in: contentView)
+        let clearButton = try XCTUnwrap(control(withIdentifier: "shortcut.pause30.clear", in: contentView) as? NSButton)
+
+        XCTAssertEqual(clearButton.title, "")
+        XCTAssertNotNil(clearButton.image)
+        XCTAssertEqual(clearButton.imagePosition, .imageOnly)
+        XCTAssertEqual(clearButton.toolTip, L10n.tr("shortcut.clearButtonHelp"))
+    }
+
+    func testShortcutClearButtonClearsShortcutAndAutosaves() throws {
+        var settings = RestSettings.defaults
+        settings.shortcuts.pauseFor30Minutes = "Cmd+1"
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectShortcutsTab(in: contentView)
+        let recorder = try XCTUnwrap(control(withIdentifier: "shortcut.pause30", in: contentView) as? ShortcutRecorderButton)
+        let clearButton = try XCTUnwrap(control(withIdentifier: "shortcut.pause30.clear", in: contentView) as? NSButton)
+
+        XCTAssertTrue(clearButton.isEnabled)
+        clearButton.performClick(nil)
+        waitUntilSavedSettingsArrive(savedSettings)
+
+        XCTAssertEqual(recorder.shortcutValue, "")
+        XCTAssertEqual(recorder.title, L10n.tr("shortcut.notSet"))
+        XCTAssertEqual(savedSettings.value?.shortcuts.pauseFor30Minutes, "")
+        XCTAssertFalse(clearButton.isEnabled)
+    }
+
+    func testRequiredShortcutClearButtonRestoresDefaultAndAutosaves() throws {
+        var settings = RestSettings.defaults
+        settings.shortcuts.emergencyEyeGateOverride = "Cmd+1"
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectShortcutsTab(in: contentView)
+        let recorder = try XCTUnwrap(control(withIdentifier: "shortcut.emergencyEye", in: contentView) as? ShortcutRecorderButton)
+        let restoreButton = try XCTUnwrap(control(withIdentifier: "shortcut.emergencyEye.clear", in: contentView) as? NSButton)
+
+        XCTAssertEqual(restoreButton.toolTip, L10n.tr("shortcut.restoreDefaultButtonHelp"))
+        XCTAssertTrue(restoreButton.isEnabled)
+        restoreButton.performClick(nil)
+        waitUntilSavedSettingsArrive(savedSettings)
+
+        XCTAssertEqual(recorder.shortcutValue, ShortcutSettings.defaultEmergencyEyeGateOverride)
+        XCTAssertEqual(recorder.title, "⌘⌥E")
+        XCTAssertEqual(savedSettings.value?.shortcuts.emergencyEyeGateOverride, ShortcutSettings.defaultEmergencyEyeGateOverride)
+        XCTAssertFalse(restoreButton.isEnabled)
+    }
+
     func testEmergencyShortcutDeleteRestoresDefaultAndAutosaves() throws {
         var settings = RestSettings.defaults
         settings.shortcuts.emergencyEyeGateOverride = "Cmd+1"
