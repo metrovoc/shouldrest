@@ -33,7 +33,7 @@ final class TerminationPolicyTests: XCTestCase {
         XCTAssertTrue(TerminationPolicy.canTerminate(state: state, settings: .defaults))
     }
 
-    func testActiveEyeGateQuitAttemptRoutesToOverlayEmergencyArming() {
+    func testActiveEyeGateQuitAttemptRoutesToOverlayEmergencyFocus() {
         let state = RestEngineState(activeSession: session(kind: .eyeGate))
 
         XCTAssertEqual(
@@ -42,7 +42,7 @@ final class TerminationPolicyTests: XCTestCase {
                 settings: .defaults,
                 now: start.addingTimeInterval(1)
             ),
-            .armEyeGateEmergencyInOverlay
+            .focusEyeGateEmergencyInOverlay
         )
         XCTAssertEqual(
             TerminationPolicy.requestAction(
@@ -50,7 +50,7 @@ final class TerminationPolicyTests: XCTestCase {
                 settings: .defaults,
                 now: start.addingTimeInterval(1)
             ),
-            .armEyeGateEmergencyInOverlay
+            .focusEyeGateEmergencyInOverlay
         )
     }
 

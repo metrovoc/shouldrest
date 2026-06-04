@@ -14,7 +14,7 @@
 "menu.skipBodyBreak" = "跳过活动休息";
 "menu.skipBodyBreakHelp" = "在允许跳过时跳过这次活动休息。";
 "menu.emergencyOverride" = "紧急退出";
-"menu.emergencyOverrideHelp" = "在当前护眼覆盖层内进入紧急退出待确认状态。";
+"menu.emergencyOverrideHelp" = "把当前护眼覆盖层带到前台；只在覆盖层内点两次或按两次 Esc 确认。";
 "menu.emergencyOverlayOnly" = "仅使用覆盖层控制";
 "menu.emergencyOverlayOnlyHelp" = "护眼休息的操作都在覆盖层内完成。请使用覆盖层内的紧急退出，或在覆盖层内按两次 Esc。";
 "menu.resume" = "恢复";
@@ -434,7 +434,7 @@
 "prefs.activeRestShortcut.eye" = "完成护眼休息";
 "prefs.activeRestShortcut.eyeHelp" = "护眼休息计时结束后，此快捷键会完成覆盖层；计时中仍不能提前关闭。";
 "prefs.emergencyEyeGate" = "紧急退出快捷键";
-"prefs.emergencyEyeGateShortcutHelp" = "护眼休息进行中时，将紧急退出带入覆盖层内待确认状态。请在覆盖层内再次点击或按 Esc 确认。";
+"prefs.emergencyEyeGateShortcutHelp" = "护眼休息进行中时，把覆盖层带到前台。只在覆盖层内点两次或按两次 Esc 确认退出。";
 "prefs.reset" = "重置计划";
 "prefs.resetShortcutHelp" = "确认后重置计时、暂停状态、已延后的休息、休息压力和待处理的自动化请求。";
 "prefs.sectionOperations" = "操作";
@@ -519,7 +519,7 @@
 "shortcut.requiredRecordingHelp" = "按 Command、Control 或 Option 加一个按键。Esc 取消；Delete 恢复默认。";
 "shortcut.clearButtonHelp" = "清空这个快捷键。";
 "shortcut.restoreDefaultButtonHelp" = "恢复默认快捷键。";
-"cli.help" = "用法：shouldrest <命令> [选项]\n\n命令：\n  help                         显示帮助。\n  version                      显示版本。\n  settings                     输出设置文件路径，除非管理员隐藏。\n  logs                         输出日志路径。\n  pause [-d duration]          暂停休息。时长：indefinitely、until-morning、60、1h、1h20m。\n  resume                       恢复休息。\n  toggle                       暂停或恢复休息。\n  reset                        重置计划和健康值。\n  eye|mini [-w wait] [-n]      立即或延迟开始护眼休息；不支持自定义可阅读内容。\n  body|long [-T title] [-t text] [-w wait] [-n]  立即开始或自定义活动休息。\n  emergency                    在当前护眼覆盖层内进入紧急退出待确认。\n  preferences                  打开运行中 app 的偏好设置。\n  debug                        复制运行中 app 的诊断信息。\n  debug-panel                  打开运行中 app 的诊断窗口。\n  about                        打开运行中 app 的关于窗口。\n  url shouldrest://<command>    发送 URL 风格自动化命令。";
+"cli.help" = "用法：shouldrest <命令> [选项]\n\n命令：\n  help                         显示帮助。\n  version                      显示版本。\n  settings                     输出设置文件路径，除非管理员隐藏。\n  logs                         输出日志路径。\n  pause [-d duration]          暂停休息。时长：indefinitely、until-morning、60、1h、1h20m。\n  resume                       恢复休息。\n  toggle                       暂停或恢复休息。\n  reset                        重置计划和健康值。\n  eye|mini [-w wait] [-n]      立即或延迟开始护眼休息；不支持自定义可阅读内容。\n  body|long [-T title] [-t text] [-w wait] [-n]  立即开始或自定义活动休息。\n  emergency                    把当前护眼覆盖层带到前台以便紧急退出。\n  preferences                  打开运行中 app 的偏好设置。\n  debug                        复制运行中 app 的诊断信息。\n  debug-panel                  打开运行中 app 的诊断窗口。\n  about                        打开运行中 app 的关于窗口。\n  url shouldrest://<command>    发送 URL 风格自动化命令。";
 "cli.invalidURL" = "ShouldRest URL 无效：%@";
 "cli.settingsPathHidden" = "管理员已隐藏设置文件路径。";
 "cli.logsPathHidden" = "管理员已隐藏日志路径。";
@@ -544,7 +544,7 @@
 "cli.requestedNextBodyContent" = "已请求更新下一次活动休息内容。";
 "cli.requestedBodyNow" = "已请求立即开始活动休息。";
 "cli.requestedBodyAfter" = "已请求 %d 秒后开始活动休息。";
-"cli.requestedEmergency" = "紧急退出请求已发送。请在覆盖层内再次点击或按 Esc 确认。";
+"cli.requestedEmergency" = "紧急退出请求已发送。请只在覆盖层内点两次或按两次 Esc 确认。";
 "cli.requestedPreferences" = "已请求打开偏好设置窗口。";
 "onboarding.title" = "欢迎使用 ShouldRest";
 "onboarding.heading" = "从更严格的休息节奏开始";
@@ -553,7 +553,7 @@
 "onboarding.eyeFeatureTitle" = "短而频繁的护眼休息";
 "onboarding.eyeFeatureBody" = "短暂不透明的覆盖层，减少 20 秒休息被忽视或习惯性跳过。";
 "onboarding.emergencyFeatureTitle" = "覆盖层内紧急退出";
-"onboarding.emergencyFeatureBody" = "紧急退出由覆盖层自身处理：Esc、配置的快捷键或淡红色紧急入口都会先进入待确认状态；第二次点击或再次按 Esc 才会从覆盖层内退出，不再要求你点击另一个窗口。";
+"onboarding.emergencyFeatureBody" = "紧急退出由覆盖层自身处理：外部请求只会把覆盖层带到前台；在覆盖层内点两次或按两次 Esc 才会退出，不再要求你点击另一个窗口。";
 "onboarding.bodyFeatureTitle" = "活动休息可配置";
 "onboarding.bodyFeatureBody" = "更长的活动休息支持推迟、图片、显示器规则，并可等你完成后再关闭。";
 "onboarding.rhythmTitle" = "选择初始休息节奏";

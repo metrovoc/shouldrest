@@ -14,7 +14,7 @@
 "menu.skipBodyBreak" = "Skip Body Break";
 "menu.skipBodyBreakHelp" = "Skip this Body Break when skipping is allowed.";
 "menu.emergencyOverride" = "Emergency Exit";
-"menu.emergencyOverrideHelp" = "Arm Emergency Exit inside the active Eye Gate overlay.";
+"menu.emergencyOverrideHelp" = "Bring the active Eye Gate overlay forward; confirm there with two clicks or two Esc presses.";
 "menu.emergencyOverlayOnly" = "Overlay controls only";
 "menu.emergencyOverlayOnlyHelp" = "Eye Gate actions stay inside the overlay. Use the overlay Emergency Exit control or press Esc twice there.";
 "menu.resume" = "Resume";
@@ -434,7 +434,7 @@
 "prefs.activeRestShortcut.eye" = "Finish Eye Gate";
 "prefs.activeRestShortcut.eyeHelp" = "After an Eye Gate timer ends, this shortcut finishes the overlay. Early dismissal stays disabled.";
 "prefs.emergencyEyeGate" = "Emergency Exit shortcut";
-"prefs.emergencyEyeGateShortcutHelp" = "During an active Eye Gate, move Emergency Exit into its in-overlay confirmation state. Confirm from the overlay with a second click or Esc.";
+"prefs.emergencyEyeGateShortcutHelp" = "During an active Eye Gate, bring the overlay forward. Confirm only from the overlay with two clicks or two Esc presses.";
 "prefs.reset" = "Reset Schedule";
 "prefs.resetShortcutHelp" = "Reset timers, pause state, delayed rests, rest pressure, and pending automation after confirmation.";
 "prefs.sectionOperations" = "Operations";
@@ -519,7 +519,7 @@
 "shortcut.requiredRecordingHelp" = "Press Command, Control, or Option with a key. Esc cancels; Delete restores the default.";
 "shortcut.clearButtonHelp" = "Clear this shortcut.";
 "shortcut.restoreDefaultButtonHelp" = "Restore the default shortcut.";
-"cli.help" = "Usage: shouldrest <command> [options]\n\nCommands:\n  help                         Show this help.\n  version                      Show version.\n  settings                     Print settings path unless hidden by admin.\n  logs                         Print log path.\n  pause [-d duration]          Pause breaks. Duration: indefinitely, until-morning, 60, 1h, 1h20m.\n  resume                       Resume breaks.\n  toggle                       Pause or resume breaks.\n  reset                        Reset schedule and health.\n  eye|mini [-w wait] [-n]      Start Eye Gate now or after wait; readable content is not customizable.\n  body|long [-T title] [-t text] [-w wait] [-n]  Start or customize Body Break.\n  emergency                    Arm Emergency Exit inside the active Eye Gate overlay.\n  preferences                  Open preferences in the running app.\n  debug                        Copy diagnostics from the running app.\n  debug-panel                  Open the diagnostics window in the running app.\n  about                        Open the about window in the running app.\n  url shouldrest://<command>    Send URL-style automation.";
+"cli.help" = "Usage: shouldrest <command> [options]\n\nCommands:\n  help                         Show this help.\n  version                      Show version.\n  settings                     Print settings path unless hidden by admin.\n  logs                         Print log path.\n  pause [-d duration]          Pause breaks. Duration: indefinitely, until-morning, 60, 1h, 1h20m.\n  resume                       Resume breaks.\n  toggle                       Pause or resume breaks.\n  reset                        Reset schedule and health.\n  eye|mini [-w wait] [-n]      Start Eye Gate now or after wait; readable content is not customizable.\n  body|long [-T title] [-t text] [-w wait] [-n]  Start or customize Body Break.\n  emergency                    Bring the active Eye Gate overlay forward for Emergency Exit.\n  preferences                  Open preferences in the running app.\n  debug                        Copy diagnostics from the running app.\n  debug-panel                  Open the diagnostics window in the running app.\n  about                        Open the about window in the running app.\n  url shouldrest://<command>    Send URL-style automation.";
 "cli.invalidURL" = "Invalid ShouldRest URL: %@";
 "cli.settingsPathHidden" = "Settings path hidden by administrator.";
 "cli.logsPathHidden" = "Logs path hidden by administrator.";
@@ -544,7 +544,7 @@
 "cli.requestedNextBodyContent" = "Requested next Body Break content.";
 "cli.requestedBodyNow" = "Requested Body Break now.";
 "cli.requestedBodyAfter" = "Requested Body Break after %d seconds.";
-"cli.requestedEmergency" = "Requested Emergency Exit. Confirm inside the overlay with a second click or Esc.";
+"cli.requestedEmergency" = "Requested Emergency Exit. Confirm inside the overlay with two clicks or two Esc presses.";
 "cli.requestedPreferences" = "Requested preferences window.";
 "onboarding.title" = "Welcome to ShouldRest";
 "onboarding.heading" = "Start with a stricter rest rhythm";
@@ -553,7 +553,7 @@
 "onboarding.eyeFeatureTitle" = "Short, frequent Eye Gates";
 "onboarding.eyeFeatureBody" = "Brief opaque breaks protect the habit from skip muscle memory and visual drift.";
 "onboarding.emergencyFeatureTitle" = "Emergency stays in the overlay";
-"onboarding.emergencyFeatureBody" = "Emergency Exit is owned by the overlay: Esc, the configured shortcut, or the dim red Emergency affordance arms it first; the second click or Esc exits from inside the overlay without asking you to click another window.";
+"onboarding.emergencyFeatureBody" = "Emergency Exit is owned by the overlay: external requests only bring it forward; two clicks or two Esc presses inside the overlay exit without asking you to click another window.";
 "onboarding.bodyFeatureTitle" = "Configurable Body Breaks";
 "onboarding.bodyFeatureBody" = "Longer movement breaks can use postpones, images, display rules, and wait for you to finish.";
 "onboarding.rhythmTitle" = "Choose your starting rhythm";

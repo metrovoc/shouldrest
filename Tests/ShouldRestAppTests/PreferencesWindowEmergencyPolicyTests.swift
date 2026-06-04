@@ -30,6 +30,7 @@ final class PreferencesWindowEmergencyPolicyTests: XCTestCase {
         XCTAssertEqual(button.accessibilityHelp(), L10n.tr("prefs.eyeEmergencyOverrideHelp"))
         XCTAssertTrue(button.toolTip?.contains("inside the overlay") ?? false)
         XCTAssertTrue(button.toolTip?.localizedCaseInsensitiveContains("second click") ?? false)
+        XCTAssertTrue(button.toolTip?.localizedCaseInsensitiveContains("Esc") ?? false)
         XCTAssertFalse(button.toolTip?.localizedCaseInsensitiveContains("hold") ?? true)
     }
 

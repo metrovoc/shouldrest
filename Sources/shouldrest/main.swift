@@ -27,7 +27,7 @@ enum AppNotificationUserInfo {
 enum TerminationPolicy {
     enum RequestAction: Equatable {
         case terminateNow
-        case armEyeGateEmergencyInOverlay
+        case focusEyeGateEmergencyInOverlay
         case notifyBlocked(RestKind)
     }
 
@@ -59,8 +59,8 @@ enum TerminationPolicy {
         }
 
         switch feedback {
-        case .armEyeGateEmergencyInOverlay:
-            return .armEyeGateEmergencyInOverlay
+        case .focusEyeGateEmergencyInOverlay:
+            return .focusEyeGateEmergencyInOverlay
         case .notifyBlocked(let kind):
             return .notifyBlocked(kind)
         }
@@ -69,7 +69,7 @@ enum TerminationPolicy {
 
 enum StrictRestBlockedActionPolicy {
     enum Feedback: Equatable {
-        case armEyeGateEmergencyInOverlay
+        case focusEyeGateEmergencyInOverlay
         case notifyBlocked(RestKind)
     }
 
@@ -89,7 +89,7 @@ enum StrictRestBlockedActionPolicy {
                policy: settings.eyeGate.emergencyOverride,
                now: now
            ) {
-            return .armEyeGateEmergencyInOverlay
+            return .focusEyeGateEmergencyInOverlay
         }
 
         return .notifyBlocked(kind)
@@ -449,9 +449,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         switch TerminationPolicy.requestAction(state: engine.state, settings: settings) {
         case .terminateNow:
             return .terminateNow
-        case .armEyeGateEmergencyInOverlay:
-            armEyeGateEmergencyForBlockedAction(actionName: "termination")
-            logger.log("Termination blocked during active Eye Gate; Emergency Exit armed inside overlay")
+        case .focusEyeGateEmergencyInOverlay:
+            focusEyeGateEmergencyForBlockedAction(actionName: "termination")
+            logger.log("Termination blocked during active Eye Gate; Emergency Exit focused inside overlay")
         case .notifyBlocked(let kind):
             showAppNotification(title: L10n.tr("app.name"), body: BlockedActionCopy.quitMessage(for: kind))
             logger.log("Termination blocked during strict \(kind.rawValue)")
@@ -1059,7 +1059,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func emergencyOverrideEyeGate() {
-        armEyeGateEmergencyForBlockedAction(actionName: "shortcut")
+        focusEyeGateEmergencyForBlockedAction(actionName: "shortcut")
     }
 
     private func handleEmergencyAutomation() {
@@ -1069,7 +1069,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
         logger.log("Emergency automation request received during active Eye Gate")
         _ = EmergencyAutomationSignal.consume()
-        armEyeGateEmergencyForBlockedAction(actionName: "automation")
+        focusEyeGateEmergencyForBlockedAction(actionName: "automation")
     }
 
     private func consumeEmergencyAutomationSignalIfNeeded() -> Bool {
@@ -1078,8 +1078,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             return false
         }
         _ = EmergencyAutomationSignal.consume()
-        logger.log("Emergency automation signal consumed as overlay arming request")
-        armEyeGateEmergencyForBlockedAction(actionName: "automation")
+        logger.log("Emergency automation signal consumed as overlay focus request")
+        focusEyeGateEmergencyForBlockedAction(actionName: "automation")
         return true
     }
 
@@ -1095,24 +1095,23 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         handleEmergencyOverrideDecision(decision, session: active, now: now)
     }
 
-    private func armEyeGateEmergencyForBlockedAction(actionName: String) {
+    private func focusEyeGateEmergencyForBlockedAction(actionName: String) {
         guard let active = engine.state.activeSession, active.kind == .eyeGate else { return }
         let now = Date()
 
-        let decision = emergencyOverrideCoordinator.arm(
+        guard EmergencyOverrideCoordinator.isAvailable(
             session: active,
             policy: settings.eyeGate.emergencyOverride,
             now: now
-        )
-        switch decision {
-        case .armed:
-            handleEmergencyOverrideDecision(decision, session: active, now: now)
-            _ = overlayController.activateEmergencyOverrideIfAvailable()
-        case .complete:
-            logger.log("Ignored external \(actionName) request as Emergency Exit confirmation")
-        case .unavailable:
-            logger.log("Blocked \(actionName) request could not arm Emergency Exit")
+        ) else {
+            logger.log("Blocked \(actionName) request could not focus Emergency Exit")
+            rebuildMenu()
+            return
         }
+
+        _ = overlayController.activateEmergencyOverrideIfAvailable()
+        logger.log("Blocked \(actionName) request focused Emergency Exit without counting as confirmation")
+        rebuildMenu()
     }
 
     private func handleEmergencyOverrideDecision(
@@ -1325,9 +1324,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
 
         switch feedback {
-        case .armEyeGateEmergencyInOverlay:
-            armEyeGateEmergencyForBlockedAction(actionName: "pause")
-            logger.log("Pause blocked during active Eye Gate; Emergency Exit armed inside overlay")
+        case .focusEyeGateEmergencyInOverlay:
+            focusEyeGateEmergencyForBlockedAction(actionName: "pause")
+            logger.log("Pause blocked during active Eye Gate; Emergency Exit focused inside overlay")
         case .notifyBlocked(let kind):
             showAppNotification(title: L10n.tr("app.name"), body: BlockedActionCopy.pauseMessage(for: kind))
             logger.log("Pause blocked during strict \(kind.rawValue)")
@@ -1345,9 +1344,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func requestScheduleReset(confirmBeforeReset: Bool) {
         if let feedback = StrictRestBlockedActionPolicy.feedback(state: engine.state, settings: settings) {
             switch feedback {
-            case .armEyeGateEmergencyInOverlay:
-                armEyeGateEmergencyForBlockedAction(actionName: "reset")
-                logger.log("Reset blocked during active Eye Gate; Emergency Exit armed inside overlay")
+            case .focusEyeGateEmergencyInOverlay:
+                focusEyeGateEmergencyForBlockedAction(actionName: "reset")
+                logger.log("Reset blocked during active Eye Gate; Emergency Exit focused inside overlay")
             case .notifyBlocked(let kind):
                 showAppNotification(
                     title: L10n.tr("app.name"),
