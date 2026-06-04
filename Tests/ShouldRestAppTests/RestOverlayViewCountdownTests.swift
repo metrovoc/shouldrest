@@ -57,6 +57,40 @@ final class RestOverlayViewCountdownTests: XCTestCase {
         XCTAssertEqual(countdown.stringValue, "20s")
     }
 
+    func testBodyBreakOverlayLongCustomTextStaysWithinReadableLayout() throws {
+        let longWord = String(repeating: "ShouldRestNeedsUnbrokenCustomContentToWrap", count: 6)
+        var settings = RestSettings.defaults
+        settings.contentLibrary.useBuiltInIdeas = false
+        settings.contentLibrary.customBodyBreakIdeas = [
+            RestIdea(
+                id: "long-custom",
+                kind: .bodyBreak,
+                title: longWord,
+                body: "\(longWord) \(longWord)"
+            )
+        ]
+
+        let view = configuredBodyOverlay(remainingSeconds: 300, settings: settings)
+        view.layoutSubtreeIfNeeded()
+
+        let title = try XCTUnwrap(view.descendant(withIdentifier: "overlay.title.label") as? NSTextField)
+        let detail = try XCTUnwrap(view.descendant(withIdentifier: "overlay.detail.label") as? NSTextField)
+        let countdown = try XCTUnwrap(view.descendant(withIdentifier: "overlay.countdown.label") as? NSTextField)
+        let readableWidth = view.bounds.width * 0.7
+
+        XCTAssertEqual(title.lineBreakMode, .byCharWrapping)
+        XCTAssertEqual(detail.lineBreakMode, .byCharWrapping)
+        XCTAssertEqual(title.maximumNumberOfLines, 3)
+        XCTAssertEqual(detail.maximumNumberOfLines, 5)
+        XCTAssertLessThanOrEqual(title.frame.width, readableWidth + 1)
+        XCTAssertLessThanOrEqual(detail.frame.width, readableWidth + 1)
+        XCTAssertTrue(view.bounds.contains(title.frame))
+        XCTAssertTrue(view.bounds.contains(detail.frame))
+        XCTAssertTrue(view.bounds.contains(countdown.frame))
+        XCTAssertFalse(title.frame.intersects(detail.frame))
+        XCTAssertFalse(detail.frame.intersects(countdown.frame))
+    }
+
     private func configuredBodyOverlay(
         remainingSeconds: Int,
         settings: RestSettings = .defaults

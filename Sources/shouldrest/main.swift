@@ -2389,13 +2389,22 @@ final class RestOverlayView: NSView {
             label.translatesAutoresizingMaskIntoConstraints = false
             label.alignment = .center
             label.textColor = .white
-            label.lineBreakMode = .byWordWrapping
+            label.lineBreakMode = .byCharWrapping
+            label.cell?.wraps = true
+            label.cell?.isScrollable = false
             addSubview(label)
         }
 
+        titleLabel.identifier = NSUserInterfaceItemIdentifier("overlay.title.label")
+        titleLabel.maximumNumberOfLines = 3
         titleLabel.font = .systemFont(ofSize: 34, weight: .semibold)
+        titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        detailLabel.identifier = NSUserInterfaceItemIdentifier("overlay.detail.label")
+        detailLabel.maximumNumberOfLines = 5
         detailLabel.font = .systemFont(ofSize: 18, weight: .regular)
+        detailLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         countdownLabel.identifier = NSUserInterfaceItemIdentifier("overlay.countdown.label")
+        countdownLabel.maximumNumberOfLines = 1
         countdownLabel.font = .monospacedDigitSystemFont(ofSize: 28, weight: .medium)
 
         emergencyPanel.identifier = NSUserInterfaceItemIdentifier("overlay.emergency.panel")
@@ -2503,6 +2512,13 @@ final class RestOverlayView: NSView {
 
     override var acceptsFirstResponder: Bool {
         true
+    }
+
+    override func layout() {
+        let readableWidth = max(160, bounds.width * 0.7)
+        titleLabel.preferredMaxLayoutWidth = readableWidth
+        detailLabel.preferredMaxLayoutWidth = readableWidth
+        super.layout()
     }
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
