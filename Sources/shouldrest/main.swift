@@ -2531,7 +2531,7 @@ final class RestOverlayView: NSView {
             label.translatesAutoresizingMaskIntoConstraints = false
             label.alignment = .center
             label.textColor = .white
-            label.lineBreakMode = .byCharWrapping
+            label.lineBreakMode = .byWordWrapping
             label.cell?.wraps = true
             label.cell?.isScrollable = false
             addSubview(label)
@@ -2663,6 +2663,7 @@ final class RestOverlayView: NSView {
         let readableWidth = max(160, bounds.width * 0.7)
         titleLabel.preferredMaxLayoutWidth = readableWidth
         detailLabel.preferredMaxLayoutWidth = readableWidth
+        updateReadableLabelWrapping(maxWidth: readableWidth)
         super.layout()
     }
 
@@ -3024,6 +3025,31 @@ final class RestOverlayView: NSView {
             label.toolTip = text
             label.setAccessibilityHelp(text)
         }
+    }
+
+    private func updateReadableLabelWrapping(maxWidth: CGFloat) {
+        [titleLabel, detailLabel].forEach { label in
+            let mode: NSLineBreakMode = containsUnbrokenTokenWiderThanReadableArea(
+                label.stringValue,
+                font: label.font ?? .systemFont(ofSize: NSFont.systemFontSize),
+                maxWidth: maxWidth
+            ) ? .byCharWrapping : .byWordWrapping
+            label.lineBreakMode = mode
+            label.cell?.lineBreakMode = mode
+        }
+    }
+
+    private func containsUnbrokenTokenWiderThanReadableArea(
+        _ text: String,
+        font: NSFont,
+        maxWidth: CGFloat
+    ) -> Bool {
+        text
+            .split(whereSeparator: { $0.isWhitespace || $0.isNewline })
+            .contains { token in
+                let tokenWidth = String(token).size(withAttributes: [.font: font]).width
+                return tokenWidth > maxWidth
+            }
     }
 
     private func setDetailText(_ text: String, allowsRichText: Bool) {

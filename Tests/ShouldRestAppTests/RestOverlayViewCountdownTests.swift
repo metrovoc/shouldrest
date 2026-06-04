@@ -69,6 +69,8 @@ final class RestOverlayViewCountdownTests: XCTestCase {
         XCTAssertEqual(title.stringValue, "Look far away")
         XCTAssertTrue(detail.stringValue.contains("Blink slowly"))
         XCTAssertTrue(detail.stringValue.contains("until the timer ends"))
+        XCTAssertEqual(title.lineBreakMode, .byWordWrapping)
+        XCTAssertEqual(detail.lineBreakMode, .byWordWrapping)
         assertOverlayLabelHelp(title)
         assertOverlayLabelHelp(detail)
         assertOverlayLabelHelp(countdown)
