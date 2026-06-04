@@ -387,7 +387,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(requestCount, 1)
     }
 
-    func testMouseDoubleClickGestureCannotConsumeBothEmergencyConfirmationSteps() throws {
+    func testSecondEmergencyMouseEventConfirmsEvenWhenSystemMarksItAsDoubleClick() throws {
         let view = configuredEyeGateOverlay()
         view.layoutSubtreeIfNeeded()
         var requestCount = 0
@@ -402,10 +402,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
 
         view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 2))
-
-        XCTAssertEqual(requestCount, 1)
-
-        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
 
         XCTAssertEqual(requestCount, 2)
     }
