@@ -287,6 +287,8 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertNotNil(clearButton.image)
         XCTAssertEqual(clearButton.imagePosition, .imageOnly)
         XCTAssertEqual(clearButton.toolTip, L10n.tr("shortcut.clearButtonHelp"))
+        XCTAssertEqual(clearButton.accessibilityLabel(), L10n.tr("shortcut.clearButtonHelp"))
+        XCTAssertEqual(clearButton.accessibilityHelp(), L10n.tr("shortcut.clearButtonHelp"))
     }
 
     func testShortcutClearButtonClearsShortcutAndAutosaves() throws {
@@ -322,6 +324,8 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         let restoreButton = try XCTUnwrap(control(withIdentifier: "shortcut.emergencyEye.clear", in: contentView) as? NSButton)
 
         XCTAssertEqual(restoreButton.toolTip, L10n.tr("shortcut.restoreDefaultButtonHelp"))
+        XCTAssertEqual(restoreButton.accessibilityLabel(), L10n.tr("shortcut.restoreDefaultButtonHelp"))
+        XCTAssertEqual(restoreButton.accessibilityHelp(), L10n.tr("shortcut.restoreDefaultButtonHelp"))
         XCTAssertTrue(restoreButton.isEnabled)
         restoreButton.performClick(nil)
         waitUntilSavedSettingsArrive(savedSettings)

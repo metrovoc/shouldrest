@@ -170,6 +170,8 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         let removeButton = try XCTUnwrap(view(withIdentifier: "prefs.customBodyIdeaRemove.0", in: contentView) as? NSButton)
         XCTAssertNotNil(removeButton.image)
         XCTAssertEqual(removeButton.toolTip, L10n.tr("prefs.removeCustomIdeaHelp"))
+        XCTAssertEqual(removeButton.accessibilityLabel(), L10n.tr("prefs.removeCustomIdeaHelp"))
+        XCTAssertEqual(removeButton.accessibilityHelp(), L10n.tr("prefs.removeCustomIdeaHelp"))
         XCTAssertTrue(jsonRow.isHidden)
         XCTAssertFalse(button.isEnabled)
     }
@@ -269,6 +271,8 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertTrue(cancelButton.isHidden)
         XCTAssertEqual(actionButton.title, L10n.tr("prefs.addCustomIdea"))
         XCTAssertEqual(editWalk.toolTip, L10n.tr("prefs.editCustomIdeaHelp"))
+        XCTAssertEqual(editWalk.accessibilityLabel(), L10n.tr("prefs.editCustomIdeaHelp"))
+        XCTAssertEqual(editWalk.accessibilityHelp(), L10n.tr("prefs.editCustomIdeaHelp"))
 
         XCTAssertTrue(sendAction(from: editWalk))
 

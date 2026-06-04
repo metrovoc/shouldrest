@@ -1607,6 +1607,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         control.setAccessibilityHelp(help)
     }
 
+    private func setIconOnlyActionHelp(_ help: String, on button: NSButton) {
+        setHelp(help, on: button)
+        button.setAccessibilityLabel(help)
+        button.image?.accessibilityDescription = help
+    }
+
     private func configureAutosave() {
         let textFields = [
             eyeInterval, eyeDuration, eyeLead, bodyInterval, bodyDuration, bodyAfterEyeGates,
@@ -2003,15 +2009,16 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             let value = pair.recorder.shortcutValue.trimmingCharacters(in: .whitespacesAndNewlines)
             let isRequired = fallback != nil
             let canClear = isRequired ? value != (fallback ?? "") : !value.isEmpty
-            pair.button.isEnabled = canClear
-            pair.button.toolTip = isRequired
+            let help = isRequired
                 ? L10n.tr("shortcut.restoreDefaultButtonHelp")
                 : L10n.tr("shortcut.clearButtonHelp")
+            pair.button.isEnabled = canClear
             pair.button.contentTintColor = canClear ? .secondaryLabelColor : .tertiaryLabelColor
             pair.button.image = NSImage(
                 systemSymbolName: isRequired ? "arrow.counterclockwise" : "xmark.circle",
-                accessibilityDescription: pair.button.toolTip
+                accessibilityDescription: help
             )
+            setIconOnlyActionHelp(help, on: pair.button)
         }
     }
 
@@ -3039,7 +3046,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         editButton.image = NSImage(systemSymbolName: "pencil", accessibilityDescription: nil)
         editButton.imagePosition = .imageOnly
         editButton.contentTintColor = .secondaryLabelColor
-        editButton.toolTip = L10n.tr("prefs.editAppExclusionRuleHelp")
+        setIconOnlyActionHelp(L10n.tr("prefs.editAppExclusionRuleHelp"), on: editButton)
         editButton.target = self
         editButton.action = #selector(editAppExclusionRulePressed(_:))
         editButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
@@ -3054,7 +3061,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         removeButton.image = NSImage(systemSymbolName: "trash", accessibilityDescription: nil)
         removeButton.imagePosition = .imageOnly
         removeButton.contentTintColor = .secondaryLabelColor
-        removeButton.toolTip = L10n.tr("prefs.removeAppExclusionRuleHelp")
+        setIconOnlyActionHelp(L10n.tr("prefs.removeAppExclusionRuleHelp"), on: removeButton)
         removeButton.target = self
         removeButton.action = #selector(removeAppExclusionRulePressed(_:))
         removeButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
@@ -3243,7 +3250,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         editButton.image = NSImage(systemSymbolName: "pencil", accessibilityDescription: nil)
         editButton.imagePosition = .imageOnly
         editButton.contentTintColor = .secondaryLabelColor
-        editButton.toolTip = L10n.tr("prefs.editCustomIdeaHelp")
+        setIconOnlyActionHelp(L10n.tr("prefs.editCustomIdeaHelp"), on: editButton)
         editButton.target = self
         editButton.action = #selector(editCustomBodyIdeaPressed(_:))
         editButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
@@ -3258,7 +3265,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         removeButton.image = NSImage(systemSymbolName: "trash", accessibilityDescription: nil)
         removeButton.imagePosition = .imageOnly
         removeButton.contentTintColor = .secondaryLabelColor
-        removeButton.toolTip = L10n.tr("prefs.removeCustomIdeaHelp")
+        setIconOnlyActionHelp(L10n.tr("prefs.removeCustomIdeaHelp"), on: removeButton)
         removeButton.target = self
         removeButton.action = #selector(removeCustomBodyIdeaPressed(_:))
         removeButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
