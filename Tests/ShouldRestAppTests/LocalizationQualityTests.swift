@@ -11,7 +11,8 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.enableEyeGate"), "启用护眼休息")
         XCTAssertEqual(L10n.tr("prefs.enableBodyBreak"), "启用活动休息")
         XCTAssertEqual(L10n.tr("prefs.language"), "界面语言")
-        XCTAssertEqual(L10n.tr("prefs.endBodyBreak"), "结束当前休息")
+        XCTAssertEqual(L10n.tr("prefs.activeRestShortcut.body"), "管理活动休息")
+        XCTAssertEqual(L10n.tr("prefs.activeRestShortcut.eye"), "完成护眼休息")
         XCTAssertEqual(L10n.tr("overlay.ready"), "就绪")
     }
 
@@ -40,6 +41,7 @@ final class LocalizationQualityTests: XCTestCase {
 
         XCTAssertFalse(simplifiedChineseValues.contains("语言覆盖"))
         XCTAssertFalse(simplifiedChineseValues.contains("结束当前活动休息"))
+        XCTAssertFalse(simplifiedChineseValues.contains("结束当前休息"))
         XCTAssertFalse(simplifiedChineseValues.contains("可用等待"))
         XCTAssertFalse(simplifiedChineseValues.contains("暂停切换"))
         XCTAssertFalse(simplifiedChineseValues.contains("原始规则 JSON"))
@@ -91,6 +93,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(englishValues.contains("blocking the app"))
         XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("app exclusion"))
         XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("app exclusions"))
+        XCTAssertFalse(englishValues.localizedCaseInsensitiveContains("end active rest"))
         XCTAssertFalse(englishValues.contains("Admin:"))
         XCTAssertFalse(englishValues.contains("debug, and preference"))
         XCTAssertFalse(englishValues.contains("Add to Rotation"))
@@ -126,6 +129,8 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(englishValues.contains("Body Break finish sound"))
         XCTAssertTrue(englishValues.contains("Pause until morning"))
         XCTAssertTrue(englishValues.contains("Pause or resume"))
+        XCTAssertTrue(englishValues.contains("Finish Eye Gate or manage Body Break"))
+        XCTAssertTrue(englishValues.contains("Manage Body Break"))
         XCTAssertTrue(englishValues.contains("Click Again to Pause Indefinitely"))
         XCTAssertTrue(englishValues.contains("Resume hour"))
         XCTAssertTrue(englishValues.contains("Show rest pressure indicator"))
@@ -168,6 +173,8 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(englishValues.contains("Start Body Break"))
         XCTAssertTrue(simplifiedChineseValues.contains("暂停到早晨方式"))
         XCTAssertTrue(simplifiedChineseValues.contains("暂停或恢复"))
+        XCTAssertTrue(simplifiedChineseValues.contains("完成护眼休息或管理活动休息"))
+        XCTAssertTrue(simplifiedChineseValues.contains("管理活动休息"))
         XCTAssertTrue(simplifiedChineseValues.contains("再次点击确认无限期暂停"))
         XCTAssertTrue(simplifiedChineseValues.contains("恢复时间"))
         XCTAssertTrue(simplifiedChineseValues.contains("显示休息压力指示器"))
@@ -208,6 +215,9 @@ final class LocalizationQualityTests: XCTestCase {
         L10n.languageOverride = "en"
         XCTAssertEqual(L10n.tr("prefs.eyeGateNow"), "Start Eye Gate")
         XCTAssertEqual(L10n.tr("prefs.bodyBreakNow"), "Start Body Break")
+        XCTAssertEqual(L10n.tr("prefs.activeRestShortcut.eyeAndBody"), "Finish Eye Gate or manage Body Break")
+        XCTAssertEqual(L10n.tr("prefs.activeRestShortcut.body"), "Manage Body Break")
+        XCTAssertEqual(L10n.tr("prefs.activeRestShortcut.eye"), "Finish Eye Gate")
         XCTAssertEqual(L10n.tr("prefs.name"), "Rule name")
         XCTAssertEqual(L10n.tr("prefs.matchTerms"), "Apps to match")
         XCTAssertEqual(L10n.tr("prefs.mode"), "Matched app behavior")
@@ -245,6 +255,9 @@ final class LocalizationQualityTests: XCTestCase {
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(L10n.tr("prefs.eyeGateNow"), "立即开始护眼休息")
         XCTAssertEqual(L10n.tr("prefs.bodyBreakNow"), "立即开始活动休息")
+        XCTAssertEqual(L10n.tr("prefs.activeRestShortcut.eyeAndBody"), "完成护眼休息或管理活动休息")
+        XCTAssertEqual(L10n.tr("prefs.activeRestShortcut.body"), "管理活动休息")
+        XCTAssertEqual(L10n.tr("prefs.activeRestShortcut.eye"), "完成护眼休息")
         XCTAssertEqual(L10n.tr("prefs.name"), "规则名称")
         XCTAssertEqual(L10n.tr("prefs.matchTerms"), "匹配应用")
         XCTAssertEqual(L10n.tr("prefs.mode"), "匹配时行为")

@@ -189,6 +189,17 @@ enum StatusMenuActionCopy {
     }
 }
 
+enum ActiveRestShortcutCopy {
+    static func title(for kind: RestKind) -> String {
+        switch kind {
+        case .eyeGate:
+            return L10n.tr("prefs.activeRestShortcut.eye")
+        case .bodyBreak:
+            return L10n.tr("prefs.activeRestShortcut.body")
+        }
+    }
+}
+
 enum StatusMenuPolicy {
     static func showsOrdinaryControls(state: RestEngineState) -> Bool {
         state.activeSession?.kind != .eyeGate
@@ -1119,7 +1130,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         } else {
             logger.log("Active rest end shortcut unavailable kind=\(active.kind.rawValue) shortcut=\(shortcut)")
             reportShortcutRegistrationFailures(
-                [(L10n.tr("prefs.endBodyBreak"), shortcut)],
+                [(ActiveRestShortcutCopy.title(for: active.kind), shortcut)],
                 rememberedKey: \.lastActiveBreakShortcutFailureKey,
                 namespace: "active"
             )

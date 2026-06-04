@@ -537,6 +537,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private var shortcutEyeNowRow: NSView?
     private var shortcutBodyNowRow: NSView?
     private var shortcutEndBodyRow: NSView?
+    private weak var shortcutEndBodyLabel: NSTextField?
     private var shortcutEmergencyEyeRow: NSView?
     private let shortcutReset = ShortcutRecorderButton()
     private var shortcutClearControls: [(recorder: ShortcutRecorderButton, button: NSButton)] = []
@@ -984,8 +985,19 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         shortcutBodyNowRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutBodyNowRow")
         self.shortcutBodyNowRow = shortcutBodyNowRow
         shortcutsStack.addArrangedSubview(shortcutBodyNowRow)
-        let shortcutEndBodyRow = shortcutRow(L10n.tr("prefs.endBodyBreak"), shortcutEndBody)
+        let shortcutEndBodyRow = shortcutRow(
+            activeRestShortcutTitle(
+                eyeGateEnabled: settings.eyeGate.isEnabled,
+                bodyBreakEnabled: settings.bodyBreak.isEnabled,
+                eyeManualFinishEnabled: settings.eyeGate.manualFinishEnabled
+            ),
+            shortcutEndBody
+        )
         shortcutEndBodyRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutEndBodyRow")
+        if let label = shortcutEndBodyRow.arrangedSubviews.first as? NSTextField {
+            label.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutEndBodyLabel")
+            shortcutEndBodyLabel = label
+        }
         self.shortcutEndBodyRow = shortcutEndBodyRow
         shortcutsStack.addArrangedSubview(shortcutEndBodyRow)
         let shortcutEmergencyEyeRow = shortcutRow(L10n.tr("prefs.emergencyEyeGate"), shortcutEmergencyEye)
@@ -2193,10 +2205,46 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         appendIfVisible(shortcutEyeNowRow, L10n.tr("prefs.eyeGateNow"), shortcutEyeNow)
         appendIfVisible(shortcutBodyNowRow, L10n.tr("prefs.bodyBreakNow"), shortcutBodyNow)
-        appendIfVisible(shortcutEndBodyRow, L10n.tr("prefs.endBodyBreak"), shortcutEndBody)
+        appendIfVisible(shortcutEndBodyRow, activeRestShortcutTitleForCurrentControls(), shortcutEndBody)
         appendIfVisible(shortcutEmergencyEyeRow, L10n.tr("prefs.emergencyEyeGate"), shortcutEmergencyEye)
         entries.append(ShortcutPreferenceEntry(title: L10n.tr("prefs.reset"), recorder: shortcutReset))
         return entries
+    }
+
+    private func activeRestShortcutTitleForCurrentControls() -> String {
+        activeRestShortcutTitle(
+            eyeGateEnabled: isOn(eyeEnabled),
+            bodyBreakEnabled: isOn(bodyEnabled),
+            eyeManualFinishEnabled: isOn(eyeManualFinish)
+        )
+    }
+
+    private func activeRestShortcutTitle(
+        eyeGateEnabled: Bool,
+        bodyBreakEnabled: Bool,
+        eyeManualFinishEnabled: Bool
+    ) -> String {
+        if bodyBreakEnabled, eyeGateEnabled, eyeManualFinishEnabled {
+            return L10n.tr("prefs.activeRestShortcut.eyeAndBody")
+        }
+        if bodyBreakEnabled {
+            return L10n.tr("prefs.activeRestShortcut.body")
+        }
+        return L10n.tr("prefs.activeRestShortcut.eye")
+    }
+
+    private func activeRestShortcutHelp(
+        eyeGateEnabled: Bool,
+        bodyBreakEnabled: Bool,
+        eyeManualFinishEnabled: Bool
+    ) -> String {
+        if bodyBreakEnabled, eyeGateEnabled, eyeManualFinishEnabled {
+            return L10n.tr("prefs.activeRestShortcut.eyeAndBodyHelp")
+        }
+        if bodyBreakEnabled {
+            return L10n.tr("prefs.activeRestShortcut.bodyHelp")
+        }
+        return L10n.tr("prefs.activeRestShortcut.eyeHelp")
     }
 
     private func hasVisibleAdminOverrides(_ admin: AdminSettings) -> Bool {
@@ -2451,11 +2499,38 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let canEndActiveRest = bodyBreakEnabled || (eyeGateEnabled && eyeManualFinishEnabled)
         shortcutEndBodyRow?.isHidden = !canEndActiveRest
         shortcutEndBody.isEnabled = canEndActiveRest
+        updateActiveRestShortcutCopy(
+            eyeGateEnabled: eyeGateEnabled,
+            bodyBreakEnabled: bodyBreakEnabled,
+            eyeManualFinishEnabled: eyeManualFinishEnabled
+        )
 
         let emergencyVisible = eyeGateEnabled && !strictPreferencesHidden && isOn(eyeEmergencyOverride)
         shortcutEmergencyEyeRow?.isHidden = !emergencyVisible
         shortcutEmergencyEye.isEnabled = emergencyVisible
         updateShortcutConflictWarning()
+    }
+
+    private func updateActiveRestShortcutCopy(
+        eyeGateEnabled: Bool,
+        bodyBreakEnabled: Bool,
+        eyeManualFinishEnabled: Bool
+    ) {
+        let title = activeRestShortcutTitle(
+            eyeGateEnabled: eyeGateEnabled,
+            bodyBreakEnabled: bodyBreakEnabled,
+            eyeManualFinishEnabled: eyeManualFinishEnabled
+        )
+        let help = activeRestShortcutHelp(
+            eyeGateEnabled: eyeGateEnabled,
+            bodyBreakEnabled: bodyBreakEnabled,
+            eyeManualFinishEnabled: eyeManualFinishEnabled
+        )
+        shortcutEndBodyLabel?.stringValue = title
+        shortcutEndBodyLabel?.toolTip = help
+        shortcutEndBodyLabel?.setAccessibilityHelp(help)
+        shortcutEndBodyRow?.toolTip = help
+        shortcutEndBodyRow?.setAccessibilityHelp(help)
     }
 
     private func updateAppearanceEyeGateVisibility(eyeGateEnabled: Bool) {

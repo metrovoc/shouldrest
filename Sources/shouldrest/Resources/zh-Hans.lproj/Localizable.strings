@@ -329,7 +329,12 @@
 "prefs.eyeGateNow" = "立即开始护眼休息";
 "prefs.bodyBreakNow" = "立即开始活动休息";
 "prefs.skipToBodyBreak" = "跳到活动休息";
-"prefs.endBodyBreak" = "结束当前休息";
+"prefs.activeRestShortcut.eyeAndBody" = "完成护眼休息或管理活动休息";
+"prefs.activeRestShortcut.eyeAndBodyHelp" = "护眼休息计时结束后，此快捷键会完成覆盖层；活动休息进行中时，它会在可推迟时推迟、可跳过时跳过，计时完成后完成。";
+"prefs.activeRestShortcut.body" = "管理活动休息";
+"prefs.activeRestShortcut.bodyHelp" = "活动休息进行中时，此快捷键会在可推迟时推迟、可跳过时跳过，计时完成后完成。";
+"prefs.activeRestShortcut.eye" = "完成护眼休息";
+"prefs.activeRestShortcut.eyeHelp" = "护眼休息计时结束后，此快捷键会完成覆盖层；计时中仍不能提前关闭。";
 "prefs.emergencyEyeGate" = "紧急退出快捷键";
 "prefs.reset" = "重置计划";
 "prefs.sectionOperations" = "操作";

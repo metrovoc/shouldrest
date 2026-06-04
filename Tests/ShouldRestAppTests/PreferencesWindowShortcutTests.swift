@@ -86,6 +86,51 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertFalse(visibleTexts.contains("Pause toggle"))
     }
 
+    func testActiveRestShortcutUsesBodyBreakActionCopyByDefault() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectShortcutsTab(in: contentView)
+
+        let label = try XCTUnwrap(view(withIdentifier: "prefs.shortcutEndBodyLabel", in: contentView) as? NSTextField)
+        XCTAssertEqual(label.stringValue, L10n.tr("prefs.activeRestShortcut.body"))
+        XCTAssertEqual(label.toolTip, L10n.tr("prefs.activeRestShortcut.bodyHelp"))
+        XCTAssertFalse(visibleTexts(in: contentView).contains("End active rest"))
+    }
+
+    func testActiveRestShortcutNamesCombinedEyeAndBodyBehaviorWhenBothApply() throws {
+        var settings = RestSettings.defaults
+        settings.eyeGate.manualFinishEnabled = true
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectShortcutsTab(in: contentView)
+
+        let label = try XCTUnwrap(view(withIdentifier: "prefs.shortcutEndBodyLabel", in: contentView) as? NSTextField)
+        XCTAssertEqual(label.stringValue, L10n.tr("prefs.activeRestShortcut.eyeAndBody"))
+        XCTAssertEqual(label.toolTip, L10n.tr("prefs.activeRestShortcut.eyeAndBodyHelp"))
+        XCTAssertTrue(visibleTexts(in: contentView).contains(L10n.tr("prefs.activeRestShortcut.eyeAndBody")))
+    }
+
+    func testActiveRestShortcutConflictUsesSpecificActionCopy() throws {
+        var settings = RestSettings.defaults
+        settings.shortcuts.pauseToggle = "Cmd+1"
+        settings.shortcuts.endBodyBreak = "Command+1"
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectShortcutsTab(in: contentView)
+
+        let warning = try XCTUnwrap(
+            visibleTexts(in: contentView).first {
+                $0.contains(L10n.tr("prefs.pauseToggle")) &&
+                    $0.contains(L10n.tr("prefs.activeRestShortcut.body"))
+            }
+        )
+        XCTAssertFalse(warning.localizedCaseInsensitiveContains("end active rest"))
+        XCTAssertTrue(warning.contains("⌘1"))
+    }
+
     func testDuplicateShortcutsShowVisibleConflictWarning() throws {
         var settings = RestSettings.defaults
         settings.shortcuts.takeEyeGateNow = "Cmd+1"
@@ -224,7 +269,7 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertFalse(visibleTexts.contains { $0.contains(L10n.tr("prefs.shortcutConflict").prefix(12)) })
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.bodyBreakNow")))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.skipToBodyBreak")))
-        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.endBodyBreak")))
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.activeRestShortcut.body")))
     }
 
     func testBodyShortcutRowsFollowBodyBreakToggleAndAutosave() throws {
@@ -274,7 +319,11 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         try selectShortcutsTab(in: contentView)
         XCTAssertTrue(try view(withIdentifier: "prefs.shortcutBodyNowRow", in: contentView).isHidden)
         XCTAssertFalse(try view(withIdentifier: "prefs.shortcutEndBodyRow", in: contentView).isHidden)
-        XCTAssertTrue(visibleTexts(in: contentView).contains(L10n.tr("prefs.endBodyBreak")))
+        let label = try XCTUnwrap(view(withIdentifier: "prefs.shortcutEndBodyLabel", in: contentView) as? NSTextField)
+        XCTAssertEqual(label.stringValue, L10n.tr("prefs.activeRestShortcut.eye"))
+        XCTAssertEqual(label.toolTip, L10n.tr("prefs.activeRestShortcut.eyeHelp"))
+        XCTAssertTrue(visibleTexts(in: contentView).contains(L10n.tr("prefs.activeRestShortcut.eye")))
+        XCTAssertFalse(visibleTexts(in: contentView).contains(L10n.tr("prefs.activeRestShortcut.body")))
     }
 
     func testLegacySkipToBodyShortcutIsShownAsBodyBreakNowWithoutDuplicateRow() throws {

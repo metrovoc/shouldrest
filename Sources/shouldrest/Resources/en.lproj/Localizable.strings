@@ -329,7 +329,12 @@
 "prefs.eyeGateNow" = "Start Eye Gate";
 "prefs.bodyBreakNow" = "Start Body Break";
 "prefs.skipToBodyBreak" = "Skip to Body Break";
-"prefs.endBodyBreak" = "End active rest";
+"prefs.activeRestShortcut.eyeAndBody" = "Finish Eye Gate or manage Body Break";
+"prefs.activeRestShortcut.eyeAndBodyHelp" = "After an Eye Gate timer ends, this shortcut finishes the overlay. During a Body Break, it postpones while available, skips when allowed, or finishes after the timer ends.";
+"prefs.activeRestShortcut.body" = "Manage Body Break";
+"prefs.activeRestShortcut.bodyHelp" = "During a Body Break, this shortcut postpones while available, skips when allowed, or finishes after the timer ends.";
+"prefs.activeRestShortcut.eye" = "Finish Eye Gate";
+"prefs.activeRestShortcut.eyeHelp" = "After an Eye Gate timer ends, this shortcut finishes the overlay. Early dismissal stays disabled.";
 "prefs.emergencyEyeGate" = "Emergency Exit shortcut";
 "prefs.reset" = "Reset Schedule";
 "prefs.sectionOperations" = "Operations";
