@@ -597,7 +597,11 @@ final class RestEngineTests: XCTestCase {
         )
 
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let rawData = try JSONEncoder().encode(legacy)
+        let rawData = try settingsDataWithLegacyEmergencyHold(
+            legacy,
+            eyeGateHold: 3,
+            bodyBreakHold: 2
+        )
         try rawData.write(to: url, options: [.atomic])
 
         let loaded = try store.load()
@@ -612,6 +616,7 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(migratedRaw.bodyBreak.emergencyOverride.confirmationSteps, 0)
         XCTAssertEqual(migratedRaw.eyeGate.emergencyOverride.minimumHoldDuration, 0)
         XCTAssertEqual(migratedRaw.bodyBreak.emergencyOverride.minimumHoldDuration, 0)
+        XCTAssertFalse(String(data: migratedData, encoding: .utf8)?.contains("minimumHoldDuration") ?? true)
 
         try store.save(legacy)
         let savedData = try Data(contentsOf: url)
@@ -621,6 +626,29 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(savedRaw.bodyBreak.emergencyOverride.confirmationSteps, 0)
         XCTAssertEqual(savedRaw.eyeGate.emergencyOverride.minimumHoldDuration, 0)
         XCTAssertEqual(savedRaw.bodyBreak.emergencyOverride.minimumHoldDuration, 0)
+        XCTAssertFalse(String(data: savedData, encoding: .utf8)?.contains("minimumHoldDuration") ?? true)
+    }
+
+    func testSettingsStoreDropsLegacyEmergencyHoldKeyWhenNoOtherMigrationIsNeeded() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let url = directory.appendingPathComponent("settings.json")
+        let store = SettingsStore(fileURL: url)
+        let legacyData = try settingsDataWithLegacyEmergencyHold(
+            .defaults,
+            eyeGateHold: 30,
+            bodyBreakHold: 30
+        )
+
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try legacyData.write(to: url, options: [.atomic])
+
+        let loaded = try store.load()
+        let savedData = try Data(contentsOf: url)
+
+        XCTAssertEqual(loaded.eyeGate.emergencyOverride.minimumHoldDuration, 0)
+        XCTAssertEqual(loaded.bodyBreak.emergencyOverride.minimumHoldDuration, 0)
+        XCTAssertFalse(String(data: savedData, encoding: .utf8)?.contains("minimumHoldDuration") ?? true)
     }
 
     func testSettingsStoreMigratesBlankEmergencyShortcutToDefault() throws {
@@ -790,5 +818,29 @@ final class RestEngineTests: XCTestCase {
             )
             current = current.addingTimeInterval(engine.settings.eyeGate.duration + 20)
         }
+    }
+
+    private func settingsDataWithLegacyEmergencyHold(
+        _ settings: RestSettings,
+        eyeGateHold: TimeInterval,
+        bodyBreakHold: TimeInterval
+    ) throws -> Data {
+        let data = try JSONEncoder().encode(settings)
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        try injectLegacyEmergencyHold(eyeGateHold, into: &object, ruleKey: "eyeGate")
+        try injectLegacyEmergencyHold(bodyBreakHold, into: &object, ruleKey: "bodyBreak")
+        return try JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys])
+    }
+
+    private func injectLegacyEmergencyHold(
+        _ hold: TimeInterval,
+        into object: inout [String: Any],
+        ruleKey: String
+    ) throws {
+        var rule = try XCTUnwrap(object[ruleKey] as? [String: Any])
+        var emergencyOverride = try XCTUnwrap(rule["emergencyOverride"] as? [String: Any])
+        emergencyOverride["minimumHoldDuration"] = hold
+        rule["emergencyOverride"] = emergencyOverride
+        object[ruleKey] = rule
     }
 }

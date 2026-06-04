@@ -1,6 +1,8 @@
 import Foundation
 
 public struct SettingsStore: Sendable {
+    private static let legacyEmergencyHoldKey = Data(#""minimumHoldDuration""#.utf8)
+
     public var fileURL: URL
     public var encoder: JSONEncoder
     public var decoder: JSONDecoder
@@ -19,7 +21,7 @@ public struct SettingsStore: Sendable {
         let data = try Data(contentsOf: fileURL)
         let decoded = try decoder.decode(RestSettings.self, from: data)
         let normalized = decoded.normalizedForCurrentDesign()
-        if decoded != normalized {
+        if decoded != normalized || data.range(of: Self.legacyEmergencyHoldKey) != nil {
             try save(normalized)
         }
         return normalized

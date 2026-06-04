@@ -91,9 +91,7 @@ public struct RestSettings: Codable, Equatable, Sendable {
             copy.eyeGate.emergencyOverride.confirmationSteps = EmergencyOverridePolicy.defaults.confirmationSteps
         }
         copy.eyeGate.emergencyOverride.confirmationSteps = min(1, copy.eyeGate.emergencyOverride.confirmationSteps)
-        copy.eyeGate.emergencyOverride.minimumHoldDuration = 0
         copy.bodyBreak.emergencyOverride.confirmationSteps = 0
-        copy.bodyBreak.emergencyOverride.minimumHoldDuration = 0
         if let emergencyShortcut = copy.shortcuts.emergencyEyeGateOverride,
            emergencyShortcut.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             copy.shortcuts.emergencyEyeGateOverride = ShortcutSettings.defaultEmergencyEyeGateOverride
@@ -204,12 +202,15 @@ public struct PostponePolicy: Codable, Equatable, Sendable {
 public struct EmergencyOverridePolicy: Codable, Equatable, Sendable {
     public var isEnabled: Bool
     public var confirmationSteps: Int
-    public var minimumHoldDuration: TimeInterval
+    // Compatibility only. Long-press confirmation is not part of the current design.
+    public var minimumHoldDuration: TimeInterval {
+        get { 0 }
+        set {}
+    }
 
     public init(isEnabled: Bool, confirmationSteps: Int, minimumHoldDuration: TimeInterval) {
         self.isEnabled = isEnabled
         self.confirmationSteps = max(0, confirmationSteps)
-        self.minimumHoldDuration = max(0, minimumHoldDuration)
     }
 
     public static let defaults = EmergencyOverridePolicy(
