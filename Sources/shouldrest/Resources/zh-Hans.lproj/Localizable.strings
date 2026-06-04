@@ -157,9 +157,9 @@
 "debug.openSettingsHelp" = "在 Finder 中显示 ShouldRest 设置文件。";
 "debug.pathHidden" = "位置访问已在偏好设置中隐藏。";
 "debug.statusLabel" = "支持报告状态";
-"debug.ready" = "就绪";
-"debug.copied" = "已复制";
-"debug.updated" = "已刷新";
+"debug.ready" = "报告就绪";
+"debug.copied" = "已复制到剪贴板";
+"debug.updated" = "报告已刷新";
 "debug.summaryReadyTitle" = "ShouldRest 已就绪";
 "debug.summaryReadyBody" = "菜单操作和偏好设置可正常使用。";
 "debug.summaryEyeActiveTitle" = "护眼休息正在覆盖屏幕";

@@ -157,9 +157,9 @@
 "debug.openSettingsHelp" = "Show the ShouldRest settings in Finder.";
 "debug.pathHidden" = "Location access is hidden in Preferences.";
 "debug.statusLabel" = "Support report status";
-"debug.ready" = "Ready";
-"debug.copied" = "Copied";
-"debug.updated" = "Updated";
+"debug.ready" = "Report ready";
+"debug.copied" = "Copied to Clipboard";
+"debug.updated" = "Report refreshed";
 "debug.summaryReadyTitle" = "ShouldRest is ready";
 "debug.summaryReadyBody" = "Menu actions and Preferences are available.";
 "debug.summaryEyeActiveTitle" = "Eye Gate is covering the screen";
