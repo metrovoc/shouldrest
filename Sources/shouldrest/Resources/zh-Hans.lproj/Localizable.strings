@@ -268,6 +268,13 @@
 "prefs.volume" = "声音音量";
 "prefs.sectionCustomIdea" = "休息内容";
 "prefs.useBuiltInIdeas" = "包含内置休息提示";
+"prefs.bodyContentSummaryBuiltInOnly" = "活动休息会轮换内置提示。";
+"prefs.bodyContentSummaryCustomOnly" = "活动休息会轮换%@。";
+"prefs.bodyContentSummaryBuiltInAndCustom" = "活动休息会轮换内置提示和%@。";
+"prefs.bodyContentSummaryFallback" = "没有启用的提示；活动休息会使用默认站立提示。";
+"prefs.bodyContentSummaryWithImage" = "%@ 图片：%@。";
+"prefs.customIdeaCountOne" = "1 条自定义提示";
+"prefs.customIdeaCountMany" = "%d 条自定义提示";
 "prefs.title" = "标题";
 "prefs.text" = "正文";
 "prefs.addCustomIdea" = "添加提示";

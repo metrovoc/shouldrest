@@ -268,6 +268,13 @@
 "prefs.volume" = "Sound volume";
 "prefs.sectionCustomIdea" = "Rest Content";
 "prefs.useBuiltInIdeas" = "Include built-in rest ideas";
+"prefs.bodyContentSummaryBuiltInOnly" = "Body Breaks rotate through built-in ideas.";
+"prefs.bodyContentSummaryCustomOnly" = "Body Breaks rotate through %@.";
+"prefs.bodyContentSummaryBuiltInAndCustom" = "Body Breaks rotate through built-in ideas plus %@.";
+"prefs.bodyContentSummaryFallback" = "No ideas are enabled; Body Breaks use the default standing prompt.";
+"prefs.bodyContentSummaryWithImage" = "%@ Image: %@.";
+"prefs.customIdeaCountOne" = "1 custom idea";
+"prefs.customIdeaCountMany" = "%d custom ideas";
 "prefs.title" = "Title";
 "prefs.text" = "Body text";
 "prefs.addCustomIdea" = "Add Idea";

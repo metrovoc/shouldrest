@@ -504,6 +504,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let customBodyAddIdeaButton = NSButton()
     private let customBodyCancelEditButton = NSButton()
     private let customBodyIdeasListStack = NSStackView()
+    private let bodyContentSummaryLabel = NSTextField(labelWithString: "")
     private var localImagePathRow: NSView?
     private var customBodyTitleRow: NSView?
     private var customBodyTextRow: NSView?
@@ -616,6 +617,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         configureBodyDisplaySummary()
         configureSoundVolumeControls()
         configureCustomBodyTextEditor()
+        configureBodyContentSummary()
         configureAppExclusionTokenField()
         configureAppExclusionPreview()
         configureAppExclusionRunningAppButton()
@@ -922,6 +924,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         localImagePathRow.identifier = NSUserInterfaceItemIdentifier("prefs.localImagePathRow")
         self.localImagePathRow = localImagePathRow
         appearanceStack.addArrangedSubview(localImagePathRow)
+        appearanceStack.addArrangedSubview(indentedControlRow(bodyContentSummaryLabel))
         let customBodyTitleRow = row(L10n.tr("prefs.title"), customBodyTitle)
         customBodyTitle.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyTitleField")
         customBodyTitleRow.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyTitleRow")
@@ -1467,6 +1470,15 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         scrollView.documentView = editor
         scrollView.widthAnchor.constraint(equalToConstant: 360).isActive = true
         scrollView.heightAnchor.constraint(equalToConstant: height).isActive = true
+    }
+
+    private func configureBodyContentSummary() {
+        bodyContentSummaryLabel.identifier = NSUserInterfaceItemIdentifier("prefs.bodyContentSummaryLabel")
+        bodyContentSummaryLabel.font = .systemFont(ofSize: 12)
+        bodyContentSummaryLabel.textColor = .secondaryLabelColor
+        bodyContentSummaryLabel.lineBreakMode = .byWordWrapping
+        bodyContentSummaryLabel.maximumNumberOfLines = 3
+        bodyContentSummaryLabel.widthAnchor.constraint(equalToConstant: 360).isActive = true
     }
 
     private func configureAppExclusionTokenField() {
@@ -2425,6 +2437,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         [localImagePathRow, customBodyTitleRow, customBodyTextRow, customBodyAddIdeaButtonRow].forEach {
             $0?.isHidden = !bodyBreakEnabled
         }
+        bodyContentSummaryLabel.isHidden = !bodyBreakEnabled
         refreshCustomBodyIdeaList()
         customBodyIdeasAdvancedButton.isHidden = !bodyBreakEnabled
         if !bodyBreakEnabled {
@@ -2439,6 +2452,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         localImageClearButton.isEnabled = bodyBreakEnabled &&
             !localImagePath.stringValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         localImagePreview.isDropEnabled = bodyBreakEnabled
+        updateBodyContentSummary()
         updateCustomBodyAddIdeaButtonState()
     }
 
@@ -3404,6 +3418,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         customBodyAddIdeaButton.isEnabled = bodyBreakEnabled &&
             currentCustomBodyIdea(id: "preview") != nil
         customBodyCancelEditButton.isEnabled = bodyBreakEnabled
+        updateBodyContentSummary()
         updateCustomBodyActionButtonPresentation()
     }
 
@@ -3438,6 +3453,67 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
 
         customBodyIdeasListRow?.isHidden = !isOn(bodyEnabled) || ideas.isEmpty
+        updateBodyContentSummary()
+    }
+
+    private func updateBodyContentSummary() {
+        guard isOn(bodyEnabled) else {
+            bodyContentSummaryLabel.stringValue = ""
+            bodyContentSummaryLabel.toolTip = nil
+            bodyContentSummaryLabel.setAccessibilityHelp(nil)
+            return
+        }
+
+        let customCount = activeCustomBodyIdeaCount()
+        let baseSummary: String
+        if isOn(useBuiltInIdeas) {
+            if customCount > 0 {
+                baseSummary = L10n.format(
+                    "prefs.bodyContentSummaryBuiltInAndCustom",
+                    localizedCustomIdeaCount(customCount)
+                )
+            } else {
+                baseSummary = L10n.tr("prefs.bodyContentSummaryBuiltInOnly")
+            }
+        } else if customCount > 0 {
+            baseSummary = L10n.format(
+                "prefs.bodyContentSummaryCustomOnly",
+                localizedCustomIdeaCount(customCount)
+            )
+        } else {
+            baseSummary = L10n.tr("prefs.bodyContentSummaryFallback")
+        }
+
+        let summary: String
+        if let imageName = selectedLocalImageName() {
+            summary = L10n.format("prefs.bodyContentSummaryWithImage", baseSummary, imageName)
+        } else {
+            summary = baseSummary
+        }
+        bodyContentSummaryLabel.stringValue = summary
+        bodyContentSummaryLabel.toolTip = summary
+        bodyContentSummaryLabel.setAccessibilityHelp(summary)
+    }
+
+    private func activeCustomBodyIdeaCount() -> Int {
+        let rotationIdeas = displayedCustomBodyIdeas().filter(\.isEnabled)
+        if hasCustomBodyIdeaRotation {
+            return rotationIdeas.count
+        }
+        return currentCustomBodyIdea(id: "preview") == nil ? 0 : 1
+    }
+
+    private func localizedCustomIdeaCount(_ count: Int) -> String {
+        count == 1
+            ? L10n.tr("prefs.customIdeaCountOne")
+            : L10n.format("prefs.customIdeaCountMany", count)
+    }
+
+    private func selectedLocalImageName() -> String? {
+        let path = localImagePath.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !path.isEmpty else { return nil }
+        let name = URL(fileURLWithPath: path).lastPathComponent
+        return name.isEmpty ? path : name
     }
 
     private func displayedCustomBodyIdeas() -> [RestIdea] {

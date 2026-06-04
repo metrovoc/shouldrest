@@ -38,6 +38,7 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyStartSoundRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyFinishSoundRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.localImagePathRow", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.bodyContentSummaryLabel", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.customBodyTitleRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.customBodyTextRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.customBodyIdeasListRow", in: contentView).isHidden)
@@ -92,6 +93,7 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertFalse(try view(withIdentifier: "prefs.bodyStartSoundRow", in: contentView).isHidden)
         XCTAssertFalse(try view(withIdentifier: "prefs.bodyFinishSoundRow", in: contentView).isHidden)
         XCTAssertFalse(try view(withIdentifier: "prefs.localImagePathRow", in: contentView).isHidden)
+        XCTAssertFalse(try view(withIdentifier: "prefs.bodyContentSummaryLabel", in: contentView).isHidden)
         XCTAssertFalse(try view(withIdentifier: "prefs.customBodyTitleRow", in: contentView).isHidden)
         XCTAssertFalse(try view(withIdentifier: "prefs.customBodyTextRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.customBodyIdeasListRow", in: contentView).isHidden)
@@ -120,6 +122,74 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertFalse(try view(withIdentifier: "prefs.eyeFinishSoundRow", in: contentView).isHidden)
         XCTAssertFalse(try view(withIdentifier: "prefs.bodyStartSoundRow", in: contentView).isHidden)
         XCTAssertFalse(try view(withIdentifier: "prefs.bodyFinishSoundRow", in: contentView).isHidden)
+    }
+
+    func testBodyContentSummaryExplainsDefaultBuiltInIdeas() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+        let summary = try XCTUnwrap(view(withIdentifier: "prefs.bodyContentSummaryLabel", in: contentView) as? NSTextField)
+
+        XCTAssertFalse(summary.isHidden)
+        XCTAssertEqual(summary.stringValue, "Body Breaks rotate through built-in ideas.")
+        XCTAssertEqual(summary.toolTip, summary.stringValue)
+        XCTAssertEqual(summary.accessibilityHelp(), summary.stringValue)
+    }
+
+    func testBodyContentSummaryTracksBuiltInToggleAndDraftCustomIdea() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        var settings = RestSettings.defaults
+        settings.contentLibrary.customBodyBreakIdeas = []
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+        let builtIns = try XCTUnwrap(view(withIdentifier: "prefs.useBuiltInIdeas", in: contentView) as? NSButton)
+        let title = try XCTUnwrap(view(withIdentifier: "prefs.customBodyTitleField", in: contentView) as? NSTextField)
+        let body = try XCTUnwrap(view(withIdentifier: "customBodyTextEditor", in: contentView) as? NSTextView)
+        let summary = try XCTUnwrap(view(withIdentifier: "prefs.bodyContentSummaryLabel", in: contentView) as? NSTextField)
+
+        builtIns.state = .off
+        XCTAssertTrue(sendAction(from: builtIns))
+        XCTAssertEqual(
+            summary.stringValue,
+            "No ideas are enabled; Body Breaks use the default standing prompt."
+        )
+
+        title.stringValue = "Loosen neck"
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: title))
+        body.string = "Roll shoulders and breathe."
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: body))
+
+        XCTAssertEqual(summary.stringValue, "Body Breaks rotate through 1 custom idea.")
+    }
+
+    func testBodyContentSummaryTracksExistingCustomIdeasAndImage() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        var settings = RestSettings.defaults
+        settings.contentLibrary.customBodyBreakIdeas = [
+            RestIdea(id: "stretch", kind: .bodyBreak, title: "Stretch", body: "Open shoulders"),
+            RestIdea(id: "walk", kind: .bodyBreak, title: "Walk", body: "Walk around")
+        ]
+        settings.contentLibrary.localImagePaths = ["/tmp/shouldrest-break.png"]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+        let summary = try XCTUnwrap(view(withIdentifier: "prefs.bodyContentSummaryLabel", in: contentView) as? NSTextField)
+
+        XCTAssertEqual(
+            summary.stringValue,
+            "Body Breaks rotate through built-in ideas plus 2 custom ideas. Image: shouldrest-break.png."
+        )
     }
 
     func testCustomBodyIdeaAddButtonCreatesRotationEntryAndAutosaves() throws {
