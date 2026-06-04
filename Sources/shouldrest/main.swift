@@ -834,32 +834,23 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func handleEmergencyAutomation() {
-        guard let active = engine.state.activeSession, active.kind == .eyeGate else {
+        guard engine.state.activeSession?.kind == .eyeGate else {
             logger.log("Emergency automation queued until active Eye Gate")
             return
         }
-        logger.log("Emergency automation executing during active Eye Gate")
+        logger.log("Emergency automation request received during active Eye Gate")
         _ = EmergencyAutomationSignal.consume()
-        let now = Date()
-        completeEmergencyOverrideEyeGate(
-            session: active,
-            now: now,
-            playSound: true
-        )
+        performEmergencyOverrideEyeGate()
     }
 
     private func consumeEmergencyAutomationSignalIfNeeded() -> Bool {
         guard EmergencyAutomationSignal.isPending() else { return false }
-        guard let active = engine.state.activeSession, active.kind == .eyeGate else {
+        guard engine.state.activeSession?.kind == .eyeGate else {
             return false
         }
         _ = EmergencyAutomationSignal.consume()
-        logger.log("Emergency automation signal consumed")
-        completeEmergencyOverrideEyeGate(
-            session: active,
-            now: Date(),
-            playSound: true
-        )
+        logger.log("Emergency automation signal consumed as confirmation request")
+        performEmergencyOverrideEyeGate()
         return true
     }
 
