@@ -16,6 +16,10 @@
 "menu.pauseUntilMorning" = "Until Morning";
 "menu.pauseIndefinitely" = "Indefinitely";
 "menu.reset" = "Reset Schedule";
+"reset.confirmTitle" = "Reset Schedule?";
+"reset.confirmBody" = "This clears the current timers, pause state, deferred rest, danger score, and one-shot automation tasks. Preferences are not changed.";
+"reset.confirmAction" = "Reset Schedule";
+"reset.confirmCancel" = "Cancel";
 "menu.preferences" = "Preferences...";
 "menu.support" = "Help & Support";
 "menu.checkUpdates" = "Check for Updates";

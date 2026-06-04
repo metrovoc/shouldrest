@@ -16,6 +16,10 @@
 "menu.pauseUntilMorning" = "暂停到早晨";
 "menu.pauseIndefinitely" = "无限期暂停";
 "menu.reset" = "重置计划";
+"reset.confirmTitle" = "重置计划？";
+"reset.confirmBody" = "这会清除当前计时、暂停状态、已延后的休息、危险值和一次性自动化任务。偏好设置不会改变。";
+"reset.confirmAction" = "重置计划";
+"reset.confirmCancel" = "取消";
 "menu.preferences" = "偏好设置...";
 "menu.support" = "帮助与支持";
 "menu.checkUpdates" = "检查更新";

@@ -1,8 +1,10 @@
+import AppKit
 import Foundation
 import XCTest
 import ShouldRestCore
 @testable import shouldrest
 
+@MainActor
 final class TerminationPolicyTests: XCTestCase {
     private let start = Date(timeIntervalSinceReferenceDate: 1_000)
 
@@ -47,6 +49,24 @@ final class TerminationPolicyTests: XCTestCase {
         )
         XCTAssertNil(BlockedActionCopy.quitMessage(state: RestEngineState(), settings: .defaults))
         XCTAssertNil(BlockedActionCopy.resetScheduleMessage(state: RestEngineState(), settings: .defaults))
+    }
+
+    func testResetScheduleConfirmationDefaultsToCancel() {
+        let alert = ResetScheduleConfirmation.makeAlert()
+
+        XCTAssertEqual(alert.messageText, L10n.tr("reset.confirmTitle"))
+        XCTAssertEqual(alert.informativeText, L10n.tr("reset.confirmBody"))
+        XCTAssertEqual(alert.alertStyle, .warning)
+        XCTAssertEqual(alert.buttons.map(\.title), [
+            L10n.tr("reset.confirmCancel"),
+            L10n.tr("reset.confirmAction")
+        ])
+        XCTAssertEqual(alert.buttons[0].keyEquivalent, "\r")
+        XCTAssertEqual(alert.buttons[1].keyEquivalent, "")
+        if #available(macOS 11.0, *) {
+            XCTAssertFalse(alert.buttons[0].hasDestructiveAction)
+            XCTAssertTrue(alert.buttons[1].hasDestructiveAction)
+        }
     }
 
     private func session(kind: RestKind) -> RestSession {

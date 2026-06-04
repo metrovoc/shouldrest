@@ -64,6 +64,30 @@ enum BlockedActionCopy {
     }
 }
 
+enum ResetScheduleConfirmation {
+    @MainActor
+    static func makeAlert() -> NSAlert {
+        let alert = NSAlert()
+        alert.messageText = L10n.tr("reset.confirmTitle")
+        alert.informativeText = L10n.tr("reset.confirmBody")
+        alert.alertStyle = .warning
+        let cancelButton = alert.addButton(withTitle: L10n.tr("reset.confirmCancel"))
+        let resetButton = alert.addButton(withTitle: L10n.tr("reset.confirmAction"))
+        cancelButton.keyEquivalent = "\r"
+        resetButton.keyEquivalent = ""
+        if #available(macOS 11.0, *) {
+            cancelButton.hasDestructiveAction = false
+            resetButton.hasDestructiveAction = true
+        }
+        return alert
+    }
+
+    @MainActor
+    static func confirmed() -> Bool {
+        makeAlert().runModal() == .alertSecondButtonReturn
+    }
+}
+
 enum StatusMenuPolicy {
     static func showsOrdinaryControls(state: RestEngineState) -> Bool {
         state.activeSession?.kind != .eyeGate
@@ -1060,6 +1084,14 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func resetBreaks() {
+        requestScheduleReset(confirmBeforeReset: true)
+    }
+
+    private func resetBreaksFromAutomation() {
+        requestScheduleReset(confirmBeforeReset: false)
+    }
+
+    private func requestScheduleReset(confirmBeforeReset: Bool) {
         if let kind = TerminationPolicy.strictActiveRestKind(state: engine.state, settings: settings) {
             showAppNotification(
                 title: L10n.tr("app.name"),
@@ -1069,6 +1101,14 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             rebuildMenu()
             return
         }
+        if confirmBeforeReset, !ResetScheduleConfirmation.confirmed() {
+            logger.log("Schedule reset canceled")
+            return
+        }
+        performScheduleReset()
+    }
+
+    private func performScheduleReset() {
         _ = engine.reset()
         unregisterActiveBreakShortcut()
         unregisterEmergencyEscapeShortcut()
@@ -1254,7 +1294,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 resumeBreaks()
             }
         case .reset:
-            resetBreaks()
+            resetBreaksFromAutomation()
         case .eye:
             handleEyeGateAutomation(userInfo)
         case .body:
