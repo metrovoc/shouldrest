@@ -75,7 +75,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
             "Idle time does not count as rest. " +
                 "Focus mode delays Body Break. " +
                 "Scheduling is limited to 09:00-18:00. " +
-                "2 app rules can pause or scope rests."
+                "2 app rules can pause rests or run them only for matched apps."
         )
     }
 
@@ -106,7 +106,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         terms.objectValue = ["Zoom"]
         controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: terms))
 
-        XCTAssertTrue(summary.stringValue.contains("1 app rule can pause or scope rests."))
+        XCTAssertTrue(summary.stringValue.contains("1 app rule can pause rests or run them only for matched apps."))
     }
 
     func testAppExclusionRuleSummariesUseSingleCharacterEllipsisWhenTruncated() throws {
@@ -351,6 +351,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertEqual(terms.placeholderString, L10n.tr("prefs.matchTermsPlaceholder"))
         XCTAssertEqual(terms.toolTip, L10n.tr("prefs.appExclusionTermsHelp"))
         XCTAssertFalse(terms.placeholderString?.localizedCaseInsensitiveContains("bundle id") ?? true)
+        XCTAssertFalse(terms.placeholderString?.localizedCaseInsensitiveContains("app identifier") ?? true)
         XCTAssertFalse(terms.toolTip?.localizedCaseInsensitiveContains("bundle id") ?? true)
         XCTAssertTrue(terms.toolTip?.contains(L10n.tr("prefs.addRunningApp")) ?? false)
     }

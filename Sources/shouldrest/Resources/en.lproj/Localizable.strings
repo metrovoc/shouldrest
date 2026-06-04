@@ -287,8 +287,8 @@
 "prefs.contextSummary.workingHoursOff" = "No working-hour limit.";
 "prefs.contextSummary.appRulesOff" = "No app-specific rules.";
 "prefs.contextSummary.appRulesEmpty" = "App rules are enabled; add an app to activate them.";
-"prefs.contextSummary.appRulesOne" = "1 app rule can pause or scope rests.";
-"prefs.contextSummary.appRulesMany" = "%d app rules can pause or scope rests.";
+"prefs.contextSummary.appRulesOne" = "1 app rule can pause rests or run them only for matched apps.";
+"prefs.contextSummary.appRulesMany" = "%d app rules can pause rests or run them only for matched apps.";
 "prefs.naturalIdleMinutes" = "Credit idle after";
 "prefs.naturalBreaksHelp" = "Count time away from the Mac as completed rest so ShouldRest does not immediately interrupt you when you return.";
 "prefs.naturalIdleMinutesHelp" = "Idle time must reach this length before it counts as a natural rest.";
@@ -301,10 +301,10 @@
 "prefs.workingEndHelp" = "The time ShouldRest stops scheduling new rests when working hours are enabled.";
 "prefs.sectionExclusion" = "App Rules";
 "prefs.name" = "Rule name";
-"prefs.enablePrimaryExclusionHelp" = "Use app rules to pause or scope rests while matching apps are active.";
+"prefs.enablePrimaryExclusionHelp" = "Use app rules to pause rests, or to run rests only while matching apps are active.";
 "prefs.appExclusionNameHelp" = "A label for this app rule in Preferences.";
 "prefs.matchTerms" = "Apps to match";
-"prefs.matchTermsPlaceholder" = "Zoom, Keynote, or app identifier";
+"prefs.matchTermsPlaceholder" = "Zoom or Keynote";
 "prefs.appExclusionTermsHelp" = "Choose Add Running App, or type app names such as Zoom or Keynote. Advanced users can use app identifiers like com.apple.Keynote.";
 "prefs.addRunningApp" = "Add Running App";
 "prefs.addRunningAppHelp" = "Choose a currently running app and add it as an app rule.";

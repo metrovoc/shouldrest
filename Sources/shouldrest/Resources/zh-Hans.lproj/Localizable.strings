@@ -287,8 +287,8 @@
 "prefs.contextSummary.workingHoursOff" = "不限制工作时间。";
 "prefs.contextSummary.appRulesOff" = "没有应用专属规则。";
 "prefs.contextSummary.appRulesEmpty" = "应用规则已启用；添加应用后才会生效。";
-"prefs.contextSummary.appRulesOne" = "1 条应用规则可暂停或限定休息。";
-"prefs.contextSummary.appRulesMany" = "%d 条应用规则可暂停或限定休息。";
+"prefs.contextSummary.appRulesOne" = "1 条应用规则可暂停休息，或只在匹配应用运行时安排休息。";
+"prefs.contextSummary.appRulesMany" = "%d 条应用规则可暂停休息，或只在匹配应用运行时安排休息。";
 "prefs.naturalIdleMinutes" = "空闲达到";
 "prefs.naturalBreaksHelp" = "把离开 Mac 的时间计为已完成休息，避免你回来后立刻被打断。";
 "prefs.naturalIdleMinutesHelp" = "空闲时间达到这个长度后，才会计为自然休息。";
@@ -301,10 +301,10 @@
 "prefs.workingEndHelp" = "启用工作时间后，ShouldRest 到这个时间停止安排新的休息。";
 "prefs.sectionExclusion" = "应用规则";
 "prefs.name" = "规则名称";
-"prefs.enablePrimaryExclusionHelp" = "应用规则可在匹配应用运行时暂停休息，或限定休息生效范围。";
+"prefs.enablePrimaryExclusionHelp" = "应用规则可在匹配应用运行时暂停休息，或让休息只在这些应用运行时生效。";
 "prefs.appExclusionNameHelp" = "这条应用规则在偏好设置中的名称。";
 "prefs.matchTerms" = "匹配应用";
-"prefs.matchTermsPlaceholder" = "Zoom、Keynote 或应用标识";
+"prefs.matchTermsPlaceholder" = "Zoom 或 Keynote";
 "prefs.appExclusionTermsHelp" = "优先使用“添加运行中应用”，也可输入 Zoom、Keynote 等应用名称；高级用法可输入 com.apple.Keynote 这类应用标识。";
 "prefs.addRunningApp" = "添加运行中应用";
 "prefs.addRunningAppHelp" = "选择当前正在运行的应用，并把它添加为应用规则。";
