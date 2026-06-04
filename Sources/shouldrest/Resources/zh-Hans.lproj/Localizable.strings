@@ -129,8 +129,8 @@
 "overlay.bodyCompleteBody" = "准备好返回工作时再完成。";
 "overlay.ready" = "就绪";
 "overlay.emergencyOverride" = "紧急退出 · Esc";
-"overlay.emergencyOverrideConfirm" = "再次点击或按 Esc 退出";
-"overlay.emergencyOverrideArmed" = "再次点击或按 Esc 退出";
+"overlay.emergencyOverrideConfirm" = "再点一次 · 再按 Esc";
+"overlay.emergencyOverrideArmed" = "再点一次 · 再按 Esc";
 "overlay.emergencyOverrideHelp" = "只在真正中断时使用。第二次点击或再次按 Esc 会在覆盖层内确认，并计为一次未完成护眼休息。";
 "overlay.bodyPostpone" = "推迟";
 "overlay.bodySkip" = "跳过";
