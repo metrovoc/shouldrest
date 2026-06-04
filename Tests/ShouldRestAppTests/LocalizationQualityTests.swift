@@ -31,6 +31,24 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(values.contains("紧急覆盖"))
     }
 
+    func testEmergencyCopyNeverDescribesLongPressConfirmation() throws {
+        let englishValues = try localizedValues(language: "en").joined(separator: "\n")
+        let simplifiedChineseValues = try localizedValues(language: "zh-Hans").joined(separator: "\n")
+
+        for forbiddenTerm in ["hold", "long press", "press and hold"] {
+            XCTAssertFalse(
+                englishValues.localizedCaseInsensitiveContains(forbiddenTerm),
+                "Emergency Exit must stay a two-click/two-Esc flow, not: \(forbiddenTerm)"
+            )
+        }
+        for forbiddenTerm in ["长按", "按住"] {
+            XCTAssertFalse(
+                simplifiedChineseValues.contains(forbiddenTerm),
+                "紧急退出必须保持点两次/两次 Esc，而不是：\(forbiddenTerm)"
+            )
+        }
+    }
+
     func testVisiblePreferenceCopyAvoidsImplementationTerms() throws {
         defer { L10n.languageOverride = nil }
 
