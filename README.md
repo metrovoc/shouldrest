@@ -6,7 +6,7 @@ The product keeps Stretchly-compatible scheduling, automation, update, debug, an
 
 ## Release Status
 
-Current release: `0.1.93`
+Current release: `0.1.94`
 
 The public DMG is ad-hoc signed because this project is currently released without a paid Apple Developer account. That means the app is not notarized by Apple. On macOS, first launch may require using Finder's Open action or approving the app in Privacy & Security.
 
