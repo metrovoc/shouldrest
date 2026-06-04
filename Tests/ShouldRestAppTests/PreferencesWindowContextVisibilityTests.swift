@@ -570,6 +570,40 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertEqual(rules[2].matchTerms, ["keynote"])
     }
 
+    func testAppExclusionModeIgnoresRawTitleWithoutRepresentedValue() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = []
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+        let checkbox = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionEnabled", in: contentView) as? NSButton)
+        let name = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionNameField", in: contentView) as? NSTextField)
+        let terms = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionTermsField", in: contentView) as? NSTokenField)
+        let mode = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionMode", in: contentView) as? NSPopUpButton)
+        let addButton = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionAddRuleButton", in: contentView) as? NSButton)
+
+        checkbox.state = .on
+        XCTAssertTrue(sendAction(from: checkbox))
+        savedSettings.value = nil
+        name.stringValue = "Calls"
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: name))
+        terms.objectValue = ["zoom"]
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: terms))
+
+        mode.addItem(withTitle: AppExclusionRule.Mode.resumeOnlyWhenMatched.rawValue)
+        mode.selectItem(at: mode.numberOfItems - 1)
+
+        XCTAssertTrue(sendAction(from: addButton))
+
+        waitUntilSavedSettingsArrive(savedSettings)
+        let rule = try XCTUnwrap(savedSettings.value?.appExclusions.first)
+        XCTAssertEqual(rule.name, "Calls")
+        XCTAssertEqual(rule.matchTerms, ["zoom"])
+        XCTAssertEqual(rule.mode, .pauseWhenMatched)
+    }
+
     func testEyeOnlyModeHidesBodyAppExclusionTarget() throws {
         var settings = RestSettings.defaults
         settings.eyeGate.isEnabled = true

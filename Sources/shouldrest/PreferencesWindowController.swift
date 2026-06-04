@@ -4112,8 +4112,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
            let value = T(rawValue: rawValue) {
             return value
         }
-        guard let title = popup.selectedItem?.title, let value = T(rawValue: title) else { return fallback }
-        return value
+        return fallback
     }
 
     private func selectPopup(_ popup: NSPopUpButton, rawValue: String) {
