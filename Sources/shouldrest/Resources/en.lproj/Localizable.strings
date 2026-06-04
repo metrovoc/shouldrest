@@ -559,9 +559,9 @@
 "onboarding.title" = "Welcome to ShouldRest";
 "onboarding.heading" = "Start with a stricter rest rhythm";
 "onboarding.subtitle" = "Short eye rests first. Movement breaks stay flexible.";
-"onboarding.body" = "The defaults are tuned for frequent, opaque 20-second Eye Gates and configurable Body Breaks.";
+"onboarding.body" = "The defaults are tuned for frequent, screen-covering 20-second Eye Gates and configurable Body Breaks.";
 "onboarding.eyeFeatureTitle" = "Short, frequent Eye Gates";
-"onboarding.eyeFeatureBody" = "Brief opaque breaks protect the habit from skip muscle memory and visual drift.";
+"onboarding.eyeFeatureBody" = "Brief screen-covering rests protect the habit from skip muscle memory and visual drift.";
 "onboarding.emergencyFeatureTitle" = "Emergency stays in the overlay";
 "onboarding.emergencyFeatureBody" = "Emergency Exit is owned by the overlay: external requests only bring it forward; two clicks or two Esc presses inside the overlay exit without asking you to click another window.";
 "onboarding.bodyFeatureTitle" = "Configurable Body Breaks";
@@ -587,7 +587,7 @@
 "about.version" = "Version %@";
 "about.tagline" = "Mac-first rest reminders built around strict eye rests and configurable movement breaks.";
 "about.eyeGateTitle" = "Short, frequent Eye Gates";
-"about.eyeGateBody" = "Opaque screen coverage keeps 20-second eye rests hard to ignore.";
+"about.eyeGateBody" = "Full-screen coverage keeps 20-second eye rests hard to ignore.";
 "about.bodyBreakTitle" = "Configurable Body Breaks";
 "about.bodyBreakBody" = "Longer breaks keep postpones, display rules, images, and wait until you finish.";
 "about.compatibilityTitle" = "Full-featured controls";

@@ -559,9 +559,9 @@
 "onboarding.title" = "欢迎使用 ShouldRest";
 "onboarding.heading" = "从更严格的休息节奏开始";
 "onboarding.subtitle" = "先保护眼睛，活动休息保持灵活。";
-"onboarding.body" = "默认设置适合频繁、短暂、不透明的 20 秒护眼休息；活动休息可继续配置。";
+"onboarding.body" = "默认设置适合频繁、短暂、覆盖屏幕的 20 秒护眼休息；活动休息可继续配置。";
 "onboarding.eyeFeatureTitle" = "短而频繁的护眼休息";
-"onboarding.eyeFeatureBody" = "短暂不透明的覆盖层，减少 20 秒休息被忽视或习惯性跳过。";
+"onboarding.eyeFeatureBody" = "短暂覆盖屏幕的护眼休息，减少 20 秒休息被忽视或习惯性跳过。";
 "onboarding.emergencyFeatureTitle" = "覆盖层内紧急退出";
 "onboarding.emergencyFeatureBody" = "紧急退出由覆盖层自身处理：外部请求只会把覆盖层带到前台；在覆盖层内点两次或按两次 Esc 才会退出，不再要求你点击另一个窗口。";
 "onboarding.bodyFeatureTitle" = "活动休息可配置";
@@ -587,7 +587,7 @@
 "about.version" = "版本 %@";
 "about.tagline" = "面向 Mac 的休息提醒，围绕严格护眼休息和可配置活动休息构建。";
 "about.eyeGateTitle" = "短而频繁的护眼休息";
-"about.eyeGateBody" = "不透明覆盖让 20 秒护眼休息更难被忽视。";
+"about.eyeGateBody" = "覆盖屏幕让 20 秒护眼休息更难被忽视。";
 "about.bodyBreakTitle" = "可配置的活动休息";
 "about.bodyBreakBody" = "较长休息保留推迟、显示器规则、图片，并可等你完成后再关闭。";
 "about.compatibilityTitle" = "完整控制能力";
