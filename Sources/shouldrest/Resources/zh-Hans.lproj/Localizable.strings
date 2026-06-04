@@ -253,10 +253,10 @@
 "prefs.appExclusionPreviewEmpty" = "添加应用名称或 Bundle ID 后即可预览这条规则。";
 "prefs.appExclusionPreviewPause" = "匹配 %@。匹配时暂停%@。";
 "prefs.appExclusionPreviewResumeOnly" = "匹配 %@。仅在匹配时运行%@。";
-"prefs.advancedRulesJSON" = "应用规则 JSON";
+"prefs.advancedRulesJSON" = "应用规则批量编辑器";
 "prefs.showAdvancedRules" = "批量编辑应用规则";
 "prefs.hideAdvancedRules" = "隐藏批量编辑器";
-"prefs.advancedRulesHelp" = "打开 JSON 编辑器，用于导入、导出或粘贴多条应用规则。已保存应用规则列表是常规编辑入口。";
+"prefs.advancedRulesHelp" = "仅在导入、导出或粘贴多条应用规则时使用此 JSON 编辑器。已保存应用规则列表是常规编辑入口。";
 "prefs.exclusionMode.pauseWhenMatched" = "匹配时暂停";
 "prefs.exclusionMode.resumeOnlyWhenMatched" = "只在匹配时运行";
 "prefs.sectionPresentation" = "外观与声音";
@@ -305,10 +305,10 @@
 "prefs.editCustomIdeaHelp" = "编辑这条活动休息提示。";
 "prefs.removeCustomIdeaHelp" = "移除此条活动休息提示。";
 "prefs.customIdeaEmptyBody" = "无正文";
-"prefs.advancedIdeasJSON" = "提示 JSON";
+"prefs.advancedIdeasJSON" = "提示批量编辑器";
 "prefs.showAdvancedIdeas" = "批量编辑提示";
 "prefs.hideAdvancedIdeas" = "隐藏批量编辑器";
-"prefs.advancedIdeasHelp" = "打开 JSON 编辑器，用于导入、导出或粘贴多条提示。自定义提示列表是常规编辑入口。";
+"prefs.advancedIdeasHelp" = "仅在导入、导出或粘贴多条提示时使用此 JSON 编辑器。自定义提示列表是常规编辑入口。";
 "prefs.localImagePath" = "活动休息图片";
 "prefs.chooseFile" = "选择...";
 "prefs.chooseBodyImageHelp" = "选择一张本地图片作为活动休息内容。";
@@ -350,7 +350,7 @@
 "prefs.autosaveSaving" = "正在保存...";
 "prefs.autosaveSaved" = "已保存";
 "prefs.autosaveRestored" = "已恢复默认";
-"prefs.autosaveInvalid" = "修复无效 JSON 后保存";
+"prefs.autosaveInvalid" = "修复批量编辑内容后保存";
 "prefs.autosaveInvalidField" = "修复%@后保存";
 "prefs.searchPlaceholder" = "查找设置";
 "prefs.searchHelp" = "按 Command-F 查找设置。按 Return 跳到下一个结果，按 Esc 清空。";
@@ -393,7 +393,7 @@
 "prefs.restoreDefaultsWarning" = "这会用应用默认值替换当前偏好设置。欢迎窗口仍会保持已完成。";
 "prefs.restoreDefaultsContinue" = "恢复默认";
 "prefs.restoreDefaultsCancel" = "取消";
-"prefs.invalidJSONTitle" = "JSON 无效";
+"prefs.invalidJSONTitle" = "批量编辑内容需要是有效 JSON";
 "prefs.invalidJSONBody" = "%@：%@";
 "shortcut.notSet" = "未设置";
 "shortcut.record" = "录制快捷键";
