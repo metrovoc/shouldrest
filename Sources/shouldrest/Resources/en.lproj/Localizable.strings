@@ -428,10 +428,10 @@
 "prefs.restoreIdeasBulkEditorHelp" = "Replace the idea import text with the last saved custom ideas.";
 "prefs.restoreIdeasBulkEditorDisabledBodyOffHelp" = "Turn on Body Break before restoring saved idea text.";
 "prefs.localImagePath" = "Body Break image";
-"prefs.chooseFile" = "Choose…";
+"prefs.chooseFile" = "Choose Image…";
 "prefs.chooseBodyImageHelp" = "Choose a local image for Body Break content.";
 "prefs.chooseBodyImageDisabledBodyOffHelp" = "Turn on Body Break before choosing an image.";
-"prefs.clear" = "Clear";
+"prefs.clear" = "Clear Image";
 "prefs.clearBodyImageHelp" = "Clear the selected Body Break image.";
 "prefs.clearBodyImageDisabledBodyOffHelp" = "Turn on Body Break before clearing the image.";
 "prefs.clearBodyImageDisabledEmptyHelp" = "Choose an image before clearing it.";
