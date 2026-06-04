@@ -5923,6 +5923,7 @@ final class ShortcutRecorderButton: NSButton {
         default:
             guard let shortcut = Self.shortcutString(from: event) else {
                 NSSound.beep()
+                showRejectedRecordingInput()
                 return
             }
             shortcutValue = shortcut
@@ -5937,6 +5938,10 @@ final class ShortcutRecorderButton: NSButton {
         if didChange {
             onChange?()
         }
+    }
+
+    private func showRejectedRecordingInput() {
+        applyDisplayState(.recordingRejected)
     }
 
     private func updateDisplay() {
@@ -5961,6 +5966,7 @@ final class ShortcutRecorderButton: NSButton {
     private enum DisplayState {
         case unset
         case recording
+        case recordingRejected
         case assigned(String)
     }
 
@@ -5979,6 +5985,14 @@ final class ShortcutRecorderButton: NSButton {
             toolTip = combinedHelp(with: interactionHelp)
             contentTintColor = .controlAccentColor
             setSymbol("record.circle", fallback: "keyboard")
+        case .recordingRejected:
+            title = L10n.tr("shortcut.recordingInvalid")
+            let interactionHelp = requiredFallbackShortcutValue == nil
+                ? L10n.tr("shortcut.recordingHelp")
+                : L10n.tr("shortcut.requiredRecordingHelp")
+            toolTip = combinedHelp(with: interactionHelp)
+            contentTintColor = .systemOrange
+            setSymbol("exclamationmark.triangle.fill", fallback: "exclamationmark.triangle")
         case .assigned(let display):
             title = display
             let interactionHelp = requiredFallbackShortcutValue == nil
@@ -5989,10 +6003,19 @@ final class ShortcutRecorderButton: NSButton {
             setSymbol("keyboard")
         }
 
-        if case .recording = state {} else {
+        if shouldApplySavedValidationWarning(for: state) {
             applyValidationWarningIfNeeded()
         }
         applyAccessibilityMetadata()
+    }
+
+    private func shouldApplySavedValidationWarning(for state: DisplayState) -> Bool {
+        switch state {
+        case .recording, .recordingRejected:
+            return false
+        case .unset, .assigned:
+            return true
+        }
     }
 
     private func combinedHelp(with interactionHelp: String) -> String {

@@ -552,6 +552,7 @@
 "shortcut.add" = "设置快捷键";
 "shortcut.record" = "录制快捷键";
 "shortcut.recording" = "录制中…";
+"shortcut.recordingInvalid" = "使用 ⌘、⌃ 或 ⌥";
 "shortcut.recordHelp" = "点击后按 Command、Control 或 Option 加一个按键。";
 "shortcut.recordingHelp" = "按 Command、Control 或 Option 加一个按键。Esc 取消；Delete 清空。";
 "shortcut.clearHelp" = "点击可替换该快捷键。使用清空按钮可移除。";

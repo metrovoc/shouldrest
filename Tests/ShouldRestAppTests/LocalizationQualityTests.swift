@@ -127,6 +127,7 @@ final class LocalizationQualityTests: XCTestCase {
             "Click, then press Command, Control, or Option with a key."
         )
         XCTAssertTrue(L10n.tr("shortcut.recordHelp").contains("Command, Control, or Option"))
+        XCTAssertEqual(L10n.tr("shortcut.recordingInvalid"), "Use ⌘, ⌃, or ⌥")
         XCTAssertNotEqual(L10n.tr("shortcut.recordHelp"), "Click, then press a shortcut.")
 
         L10n.languageOverride = "zh-Hans"
@@ -135,6 +136,7 @@ final class LocalizationQualityTests: XCTestCase {
             "点击后按 Command、Control 或 Option 加一个按键。"
         )
         XCTAssertTrue(L10n.tr("shortcut.recordHelp").contains("Command、Control 或 Option"))
+        XCTAssertEqual(L10n.tr("shortcut.recordingInvalid"), "使用 ⌘、⌃ 或 ⌥")
         XCTAssertNotEqual(L10n.tr("shortcut.recordHelp"), "点击后按快捷键。")
     }
 

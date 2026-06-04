@@ -35,6 +35,34 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(button.image?.accessibilityDescription, L10n.tr("shortcut.recording"))
     }
 
+    func testInvalidShortcutInputShowsVisibleRecordingFeedbackAndKeepsRecording() throws {
+        let button = ShortcutRecorderButton()
+        var changeCount = 0
+        button.onChange = { changeCount += 1 }
+
+        button.performClick(nil)
+        button.keyDown(with: try keyEvent(keyCode: kVK_ANSI_A, characters: "a"))
+
+        XCTAssertEqual(button.title, L10n.tr("shortcut.recordingInvalid"))
+        XCTAssertEqual(button.toolTip, L10n.tr("shortcut.recordingHelp"))
+        XCTAssertEqual(button.accessibilityLabel(), L10n.tr("shortcut.recordingInvalid"))
+        XCTAssertEqual(button.accessibilityHelp(), L10n.tr("shortcut.recordingHelp"))
+        XCTAssertEqual(button.image?.accessibilityDescription, L10n.tr("shortcut.recordingInvalid"))
+        XCTAssertEqual(button.shortcutValue, "")
+        XCTAssertEqual(changeCount, 0)
+        XCTAssertWarningTint(button)
+
+        button.keyDown(with: try keyEvent(
+            keyCode: kVK_ANSI_A,
+            characters: "a",
+            modifierFlags: [.command]
+        ))
+
+        XCTAssertEqual(button.shortcutValue, "Cmd+A")
+        XCTAssertEqual(button.title, "⌘A")
+        XCTAssertEqual(changeCount, 1)
+    }
+
     func testShortcutRecorderCancelsRecordingWhenFocusMovesAwayWithoutSaving() throws {
         let savedSettings = SavedSettingsBox()
         let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
@@ -616,11 +644,15 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertLessThan(color?.blueComponent ?? 1, 0.25, file: file, line: line)
     }
 
-    private func keyEvent(keyCode: Int, characters: String = "") throws -> NSEvent {
+    private func keyEvent(
+        keyCode: Int,
+        characters: String = "",
+        modifierFlags: NSEvent.ModifierFlags = []
+    ) throws -> NSEvent {
         try XCTUnwrap(NSEvent.keyEvent(
             with: .keyDown,
             location: .zero,
-            modifierFlags: [],
+            modifierFlags: modifierFlags,
             timestamp: 0,
             windowNumber: 0,
             context: nil,
