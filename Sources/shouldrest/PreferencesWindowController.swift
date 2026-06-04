@@ -435,6 +435,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let bodyConfiguredDisplay = NSPopUpButton()
     private var bodyConfiguredDisplayRow: NSView?
     private let bodyDisplaySummaryLabel = NSTextField(labelWithString: "")
+    private let contextSummaryIcon = NSImageView()
+    private let contextSummaryLabel = NSTextField(labelWithString: "")
 
     private let naturalBreaks = NSButton(checkboxWithTitle: L10n.tr("prefs.naturalBreaks"), target: nil, action: nil)
     private let naturalIdleMinutes = NSTextField()
@@ -826,6 +828,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         let contextStack = contentStack()
         contextStack.addArrangedSubview(section(L10n.tr("prefs.sectionContext"), symbolName: "scope"))
+        contextStack.addArrangedSubview(contextSummaryView())
         naturalBreaks.identifier = NSUserInterfaceItemIdentifier("prefs.naturalBreaks")
         contextStack.addArrangedSubview(naturalBreaks)
         let naturalIdleMinutesRow = numberRow(
@@ -1166,6 +1169,33 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         let stack = NSStackView(views: [scheduleSummaryIcon, scheduleSummaryLabel])
         stack.identifier = NSUserInterfaceItemIdentifier("prefs.scheduleSummary")
+        stack.orientation = .horizontal
+        stack.spacing = 8
+        stack.alignment = .top
+        stack.edgeInsets = NSEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
+        stack.wantsLayer = true
+        stack.layer?.cornerRadius = 7
+        stack.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.08).cgColor
+        stack.layer?.borderWidth = 1
+        stack.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.55).cgColor
+        return stack
+    }
+
+    private func contextSummaryView() -> NSStackView {
+        contextSummaryIcon.identifier = NSUserInterfaceItemIdentifier("prefs.contextSummaryIcon")
+        contextSummaryIcon.image = NSImage(systemSymbolName: "scope", accessibilityDescription: nil)
+        contextSummaryIcon.symbolConfiguration = .init(pointSize: 15, weight: .semibold)
+        contextSummaryIcon.contentTintColor = .secondaryLabelColor
+        contextSummaryIcon.widthAnchor.constraint(equalToConstant: 20).isActive = true
+
+        contextSummaryLabel.identifier = NSUserInterfaceItemIdentifier("prefs.contextSummaryLabel")
+        contextSummaryLabel.textColor = .secondaryLabelColor
+        contextSummaryLabel.lineBreakMode = .byWordWrapping
+        contextSummaryLabel.maximumNumberOfLines = 4
+        contextSummaryLabel.widthAnchor.constraint(equalToConstant: 590).isActive = true
+
+        let stack = NSStackView(views: [contextSummaryIcon, contextSummaryLabel])
+        stack.identifier = NSUserInterfaceItemIdentifier("prefs.contextSummary")
         stack.orientation = .horizontal
         stack.spacing = 8
         stack.alignment = .top
@@ -2290,6 +2320,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         appExclusionAddRunningApp.isEnabled = exclusionEnabled
         refreshAppExclusionRuleList()
         updateAppExclusionAddRuleButtonState()
+        updateContextSummary()
 
         updateUpdatePreferencesVisibility()
 
@@ -2778,6 +2809,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         if let field = obj.object as? NSTextField,
            numberInputs.contains(where: { $0.field === field }) {
             updateScheduleSummary()
+            updateContextSummary()
         }
         if let field = obj.object as? NSTextField, isMorningPauseSummaryField(field) {
             updateMorningPauseSummary()
@@ -3159,6 +3191,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             currentAppExclusionRule(id: "preview") != nil
         appExclusionCancelEditButton.isEnabled = isOn(appExclusionEnabled)
         updateAppExclusionPreview()
+        updateContextSummary()
         updateAppExclusionActionButtonPresentation()
     }
 
@@ -3224,6 +3257,74 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
 
         appExclusionRulesListRow?.isHidden = !isOn(appExclusionEnabled) || rules.isEmpty
+        updateContextSummary()
+    }
+
+    private func updateContextSummary() {
+        let summary = [
+            contextIdleSummary(),
+            contextFocusSummary(),
+            contextWorkingHoursSummary(),
+            contextAppRulesSummary()
+        ].joined(separator: " ")
+        contextSummaryLabel.stringValue = summary
+        contextSummaryLabel.toolTip = summary
+        contextSummaryLabel.setAccessibilityHelp(summary)
+    }
+
+    private func contextIdleSummary() -> String {
+        guard isOn(naturalBreaks) else {
+            return L10n.tr("prefs.contextSummary.idleOff")
+        }
+        return L10n.format("prefs.contextSummary.idleOn", max(1, intValue(naturalIdleMinutes)))
+    }
+
+    private func contextFocusSummary() -> String {
+        guard isOn(bodyEnabled) else {
+            return L10n.tr("prefs.contextSummary.focusUnavailable")
+        }
+        guard isOn(focusMonitor) else {
+            return L10n.tr("prefs.contextSummary.focusOff")
+        }
+        return isOn(focusDefersBody)
+            ? L10n.tr("prefs.contextSummary.focusDefersBody")
+            : L10n.tr("prefs.contextSummary.focusObserved")
+    }
+
+    private func contextWorkingHoursSummary() -> String {
+        guard isOn(workingHoursEnabled) else {
+            return L10n.tr("prefs.contextSummary.workingHoursOff")
+        }
+        let start = Self.timeString(minutes: Self.minutes(
+            fromTimePicker: workingStartPicker,
+            fallback: settings.workingHours.startMinuteOfDay
+        ))
+        let end = Self.timeString(minutes: Self.minutes(
+            fromTimePicker: workingEndPicker,
+            fallback: settings.workingHours.endMinuteOfDay
+        ))
+        return L10n.format("prefs.contextSummary.workingHoursOn", start, end)
+    }
+
+    private func contextAppRulesSummary() -> String {
+        guard isOn(appExclusionEnabled) else {
+            return L10n.tr("prefs.contextSummary.appRulesOff")
+        }
+        let count = activeAppExclusionRuleCount()
+        guard count > 0 else {
+            return L10n.tr("prefs.contextSummary.appRulesEmpty")
+        }
+        return count == 1
+            ? L10n.tr("prefs.contextSummary.appRulesOne")
+            : L10n.format("prefs.contextSummary.appRulesMany", count)
+    }
+
+    private func activeAppExclusionRuleCount() -> Int {
+        let rules = displayedAppExclusionRules()
+        if !rules.isEmpty {
+            return rules.count
+        }
+        return currentAppExclusionRule(id: "preview") == nil ? 0 : 1
     }
 
     private func displayedAppExclusionRules() -> [AppExclusionRule] {

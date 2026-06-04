@@ -5,6 +5,108 @@ import XCTest
 
 @MainActor
 final class PreferencesWindowContextVisibilityTests: XCTestCase {
+    func testContextSummaryExplainsDefaultContextRules() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        var settings = RestSettings.defaults
+        settings.naturalBreaks.isEnabled = true
+        settings.naturalBreaks.inactivityResetTime = 6 * 60
+        settings.focusMode.monitorFocusMode = false
+        settings.workingHours.isEnabled = false
+        settings.appExclusions = []
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+        let summary = try XCTUnwrap(view(withIdentifier: "prefs.contextSummaryLabel", in: contentView) as? NSTextField)
+        let icon = try XCTUnwrap(view(withIdentifier: "prefs.contextSummaryIcon", in: contentView) as? NSImageView)
+
+        XCTAssertNotNil(icon.image)
+        XCTAssertEqual(
+            summary.stringValue,
+            "Idle periods over 6 min count as completed rest. " +
+                "Focus mode does not change rest timing. " +
+                "No working-hour limit. " +
+                "No app-specific rules."
+        )
+        XCTAssertEqual(summary.toolTip, summary.stringValue)
+        XCTAssertEqual(summary.accessibilityHelp(), summary.stringValue)
+        XCTAssertTrue(visibleTexts(in: contentView).contains(summary.stringValue))
+    }
+
+    func testContextSummaryExplainsActiveContextRules() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        var settings = RestSettings.defaults
+        settings.naturalBreaks.isEnabled = false
+        settings.focusMode.monitorFocusMode = true
+        settings.focusMode.deferBodyBreak = true
+        settings.workingHours = WorkingHoursSettings(isEnabled: true, startMinuteOfDay: 9 * 60, endMinuteOfDay: 18 * 60)
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "calls",
+                name: "Calls",
+                matchTerms: ["zoom"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            ),
+            AppExclusionRule(
+                id: "deep-work",
+                name: "Deep work",
+                matchTerms: ["xcode"],
+                mode: .resumeOnlyWhenMatched,
+                appliesTo: [.eyeGate, .bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+        let summary = try XCTUnwrap(view(withIdentifier: "prefs.contextSummaryLabel", in: contentView) as? NSTextField)
+
+        XCTAssertEqual(
+            summary.stringValue,
+            "Idle time does not count as rest. " +
+                "Focus mode delays Body Break. " +
+                "Scheduling is limited to 09:00-18:00. " +
+                "2 app rules can pause or scope rests."
+        )
+    }
+
+    func testContextSummaryUpdatesForAppRuleDraft() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "empty",
+                name: "Draft",
+                matchTerms: [],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+        let terms = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionTermsField", in: contentView) as? NSTokenField)
+        let summary = try XCTUnwrap(view(withIdentifier: "prefs.contextSummaryLabel", in: contentView) as? NSTextField)
+
+        XCTAssertTrue(summary.stringValue.contains("App rules are enabled; add an app to activate them."))
+
+        terms.objectValue = ["Zoom"]
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: terms))
+
+        XCTAssertTrue(summary.stringValue.contains("1 app rule can pause or scope rests."))
+    }
+
     func testDisabledContextOptionsHideDependentPreferences() throws {
         var settings = RestSettings.defaults
         settings.naturalBreaks.isEnabled = false

@@ -241,6 +241,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(L10n.tr("prefs.eyeEmergencyOverrideHelp").contains("覆盖层内"))
         XCTAssertTrue(L10n.tr("prefs.eyeEmergencyOverrideHelp").contains("第二次点击"))
         XCTAssertFalse(L10n.tr("prefs.eyeEmergencyOverrideHelp").contains("长按"))
+        XCTAssertFalse(L10n.tr("prefs.eyeEmergencyOverrideHelp").contains("按住"))
         XCTAssertFalse(L10n.tr("prefs.eyeEmergencyOverrideHelp").contains("另一个窗口"))
         XCTAssertTrue(L10n.tr("cli.help").contains("进入紧急退出待确认"))
         XCTAssertFalse(L10n.tr("cli.help").contains("再次运行"))
