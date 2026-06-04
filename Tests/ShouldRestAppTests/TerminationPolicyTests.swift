@@ -125,7 +125,11 @@ final class TerminationPolicyTests: XCTestCase {
         let state = RestEngineState(activeSession: session(kind: .eyeGate))
 
         XCTAssertEqual(
-            BlockedActionCopy.quitMessage(state: state, settings: .defaults),
+            BlockedActionCopy.quitMessage(state: state, settings: .defaults, now: start.addingTimeInterval(1)),
+            "Use Emergency Exit in the overlay to quit during Eye Gate. Click Emergency Exit or press Esc twice; this records a missed rest."
+        )
+        XCTAssertEqual(
+            BlockedActionCopy.quitMessage(state: state, settings: .defaults, now: start.addingTimeInterval(60)),
             "Finish Eye Gate before quitting."
         )
         XCTAssertEqual(

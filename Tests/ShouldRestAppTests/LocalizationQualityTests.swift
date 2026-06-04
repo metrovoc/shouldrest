@@ -388,7 +388,7 @@ final class LocalizationQualityTests: XCTestCase {
 
         L10n.languageOverride = "en"
         XCTAssertEqual(L10n.tr("menu.reset"), "Reset Schedule")
-        XCTAssertEqual(L10n.tr("menu.emergencyOverlayOnly"), "Use overlay Emergency Exit")
+        XCTAssertEqual(L10n.tr("menu.emergencyOverlayOnly"), "Use Emergency Exit in the overlay")
         XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("This menu cannot exit"))
         XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("lower-right corner"))
         XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("Esc twice"))
@@ -404,16 +404,25 @@ final class LocalizationQualityTests: XCTestCase {
         )
         XCTAssertEqual(L10n.tr("prefs.reset"), "Reset Schedule")
         XCTAssertEqual(L10n.format("notification.quitBlocked", "Eye Gate"), "Finish Eye Gate before quitting.")
+        XCTAssertEqual(
+            L10n.tr("notification.quitBlockedEyeGateEmergency"),
+            "Use Emergency Exit in the overlay to quit during Eye Gate. Click Emergency Exit or press Esc twice; this records a missed rest."
+        )
+        XCTAssertTrue(L10n.tr("notification.quitBlockedEyeGateEmergency").contains("Emergency Exit in the overlay"))
+        XCTAssertTrue(L10n.tr("notification.quitBlockedEyeGateEmergency").contains("Esc twice"))
+        XCTAssertTrue(L10n.tr("notification.quitBlockedEyeGateEmergency").contains("missed rest"))
         XCTAssertEqual(L10n.format("notification.resetBlocked", "Eye Gate"), "Finish Eye Gate before resetting the schedule.")
         XCTAssertEqual(L10n.format("notification.pauseBlocked", "Eye Gate"), "Finish Eye Gate before pausing.")
         XCTAssertFalse(L10n.tr("notification.quitBlocked").localizedCaseInsensitiveContains("strict"))
+        XCTAssertFalse(L10n.tr("notification.quitBlockedEyeGateEmergency").localizedCaseInsensitiveContains("hold"))
+        XCTAssertFalse(L10n.tr("notification.quitBlockedEyeGateEmergency").localizedCaseInsensitiveContains("another window"))
         XCTAssertFalse(L10n.tr("notification.resetBlocked").localizedCaseInsensitiveContains("strict"))
         XCTAssertFalse(L10n.tr("notification.pauseBlocked").localizedCaseInsensitiveContains("strict"))
         XCTAssertFalse(L10n.tr("notification.resetBlocked").localizedCaseInsensitiveContains("breaks"))
 
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(L10n.tr("menu.reset"), "重置计划")
-        XCTAssertEqual(L10n.tr("menu.emergencyOverlayOnly"), "使用覆盖层紧急退出")
+        XCTAssertEqual(L10n.tr("menu.emergencyOverlayOnly"), "在覆盖层内使用紧急退出")
         XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("此菜单不能退出"))
         XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("右下角"))
         XCTAssertTrue(L10n.tr("menu.emergencyOverlayOnlyHelp").contains("两次 Esc"))
@@ -423,9 +432,18 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("status.bodyBreakActiveGuidance"), "使用覆盖层按钮推迟、跳过或完成。")
         XCTAssertEqual(L10n.tr("prefs.reset"), "重置计划")
         XCTAssertEqual(L10n.format("notification.quitBlocked", "护眼休息"), "请先完成护眼休息，再退出。")
+        XCTAssertEqual(
+            L10n.tr("notification.quitBlockedEyeGateEmergency"),
+            "要在护眼休息中退出，请在覆盖层内使用紧急退出：点击紧急退出或按两次 Esc；这会记录一次未完成休息。"
+        )
+        XCTAssertTrue(L10n.tr("notification.quitBlockedEyeGateEmergency").contains("覆盖层内使用紧急退出"))
+        XCTAssertTrue(L10n.tr("notification.quitBlockedEyeGateEmergency").contains("两次 Esc"))
+        XCTAssertTrue(L10n.tr("notification.quitBlockedEyeGateEmergency").contains("未完成休息"))
         XCTAssertEqual(L10n.format("notification.resetBlocked", "护眼休息"), "请先完成护眼休息，再重置计划。")
         XCTAssertEqual(L10n.format("notification.pauseBlocked", "护眼休息"), "请先完成护眼休息，再暂停。")
         XCTAssertFalse(L10n.tr("notification.quitBlocked").contains("严格"))
+        XCTAssertFalse(L10n.tr("notification.quitBlockedEyeGateEmergency").contains("长按"))
+        XCTAssertFalse(L10n.tr("notification.quitBlockedEyeGateEmergency").contains("另一个窗口"))
         XCTAssertFalse(L10n.tr("notification.resetBlocked").contains("严格"))
         XCTAssertFalse(L10n.tr("notification.pauseBlocked").contains("严格"))
     }

@@ -97,13 +97,26 @@ enum StrictRestBlockedActionPolicy {
 }
 
 enum BlockedActionCopy {
+    static func quitMessageForAvailableEyeGateEmergency() -> String {
+        L10n.tr("notification.quitBlockedEyeGateEmergency")
+    }
+
     static func quitMessage(for kind: RestKind) -> String {
         L10n.format("notification.quitBlocked", MenuStatusPresenter.restKindName(kind))
     }
 
-    static func quitMessage(state: RestEngineState, settings: RestSettings) -> String? {
+    static func quitMessage(state: RestEngineState, settings: RestSettings, now: Date = Date()) -> String? {
         guard let kind = TerminationPolicy.strictActiveRestKind(state: state, settings: settings) else {
             return nil
+        }
+        if let active = state.activeSession,
+           active.kind == .eyeGate,
+           EmergencyOverrideCoordinator.isAvailable(
+               session: active,
+               policy: settings.eyeGate.emergencyOverride,
+               now: now
+           ) {
+            return quitMessageForAvailableEyeGateEmergency()
         }
         return quitMessage(for: kind)
     }
@@ -699,7 +712,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 menu.addItem(.separator())
             }
             if !showsOrdinaryControls {
-                appendStrictRestSupportItems(to: menu)
+                appendStrictRestSupportItems(to: menu, now: now)
                 setStatusMenu(menu, on: item)
                 return
             }
@@ -760,23 +773,23 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(supportMenuItem())
 
         menu.addItem(.separator())
-        menu.addItem(quitMenuItem())
+        menu.addItem(quitMenuItem(now: now))
         setStatusMenu(menu, on: item)
     }
 
-    private func appendStrictRestSupportItems(to menu: NSMenu) {
+    private func appendStrictRestSupportItems(to menu: NSMenu, now: Date) {
         if StrictRestStatusMenuPolicy.showsSafeDiagnosticsCopy(state: engine.state) {
             menu.addItem(actionItem(L10n.tr("menu.copyDebug"), #selector(copyDebugInfo)))
             menu.addItem(.separator())
         }
         if StrictRestStatusMenuPolicy.showsDisabledQuitExplanation(state: engine.state, settings: settings) {
-            menu.addItem(quitMenuItem())
+            menu.addItem(quitMenuItem(now: now))
         }
     }
 
-    private func quitMenuItem() -> NSMenuItem {
+    private func quitMenuItem(now: Date = Date()) -> NSMenuItem {
         let quitItem = NSMenuItem(title: L10n.tr("menu.quit"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
-        if let message = BlockedActionCopy.quitMessage(state: engine.state, settings: settings) {
+        if let message = BlockedActionCopy.quitMessage(state: engine.state, settings: settings, now: now) {
             quitItem.isEnabled = false
             quitItem.toolTip = message
         } else {
