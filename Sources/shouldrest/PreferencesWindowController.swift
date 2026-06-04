@@ -5112,13 +5112,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                 accessibilityDescription: L10n.tr("prefs.imagePreviewEmpty")
             )
             localImagePreview.contentTintColor = .tertiaryLabelColor
-            localImagePreviewLabel.stringValue = L10n.tr("prefs.imagePreviewEmpty")
-            localImagePreviewLabel.toolTip = L10n.tr("prefs.imageDropHelp")
+            setLocalImagePreviewLabel(
+                L10n.tr("prefs.imagePreviewEmpty"),
+                help: L10n.tr("prefs.imageDropHelp")
+            )
             return
         }
 
         let url = URL(fileURLWithPath: path)
-        localImagePreviewLabel.toolTip = path
         guard let image = NSImage(contentsOfFile: path) else {
             let description = L10n.format("prefs.imagePreviewUnavailable", url.lastPathComponent)
             localImagePreview.image = NSImage(
@@ -5126,14 +5127,20 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                 accessibilityDescription: description
             )
             localImagePreview.contentTintColor = .systemOrange
-            localImagePreviewLabel.stringValue = description
+            setLocalImagePreviewLabel(description, help: path)
             return
         }
 
         image.accessibilityDescription = url.lastPathComponent
         localImagePreview.image = image
         localImagePreview.contentTintColor = nil
-        localImagePreviewLabel.stringValue = url.lastPathComponent
+        setLocalImagePreviewLabel(url.lastPathComponent, help: path)
+    }
+
+    private func setLocalImagePreviewLabel(_ text: String, help: String) {
+        localImagePreviewLabel.stringValue = text
+        localImagePreviewLabel.toolTip = help
+        localImagePreviewLabel.setAccessibilityHelp(help)
     }
 
     private func separator() -> NSBox {
