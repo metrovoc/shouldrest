@@ -100,6 +100,53 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         XCTAssertFalse(visibleTexts.contains("Pause scheduler on sleep or lock"))
     }
 
+    func testAdminPreferencesMessageBannerMirrorsFullMessageForHoverAndAccessibility() throws {
+        let message = "Managed by your team\nAsk Facilities before changing schedules."
+        var settings = RestSettings.defaults
+        settings.admin.customPreferencesMessage = message
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        let banner = try XCTUnwrap(view(withIdentifier: "prefs.adminMessageLabel", in: contentView) as? NSTextField)
+
+        XCTAssertFalse(banner.isHidden)
+        XCTAssertEqual(banner.stringValue, message)
+        XCTAssertEqual(banner.toolTip, message)
+        XCTAssertEqual(banner.accessibilityHelp(), message)
+    }
+
+    func testBlankAdminPreferencesMessageDoesNotExposeEmptyBanner() throws {
+        var settings = RestSettings.defaults
+        settings.admin.customPreferencesMessage = "   \n  "
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        let banner = try XCTUnwrap(view(withIdentifier: "prefs.adminMessageLabel", in: contentView) as? NSTextField)
+
+        XCTAssertTrue(banner.isHidden)
+        XCTAssertEqual(banner.stringValue, "")
+        XCTAssertNil(banner.toolTip)
+        XCTAssertNil(banner.accessibilityHelp())
+    }
+
+    func testEditingAdminPreferencesMessageUpdatesBannerBeforeAutosaveCompletes() throws {
+        var settings = RestSettings.defaults
+        settings.admin.customPreferencesMessage = "Managed by your team"
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let banner = try XCTUnwrap(view(withIdentifier: "prefs.adminMessageLabel", in: contentView) as? NSTextField)
+
+        try selectAdvancedTab(in: contentView)
+        let messageField = try XCTUnwrap(view(withIdentifier: "prefs.preferencesMessageField", in: contentView) as? NSTextField)
+        messageField.stringValue = "Use the shared team rhythm."
+
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: messageField))
+
+        XCTAssertEqual(banner.stringValue, "Use the shared team rhythm.")
+        XCTAssertEqual(banner.toolTip, "Use the shared team rhythm.")
+        XCTAssertEqual(banner.accessibilityHelp(), "Use the shared team rhythm.")
+    }
+
     func testTurningOffUpdateCheckingHidesDependentPreferencesAndAutosaves() throws {
         let savedSettings = SavedSettingsBox()
         let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }

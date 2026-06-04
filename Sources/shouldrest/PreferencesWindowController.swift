@@ -693,6 +693,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         root.addArrangedSubview(tabView)
 
         let scheduleStack = contentStack()
+        adminMessageLabel.identifier = NSUserInterfaceItemIdentifier("prefs.adminMessageLabel")
         adminMessageLabel.lineBreakMode = .byWordWrapping
         adminMessageLabel.widthAnchor.constraint(equalToConstant: 620).isActive = true
         scheduleStack.addArrangedSubview(adminMessageLabel)
@@ -2189,8 +2190,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             setSaveStatus(.ready)
         }
 
-        adminMessageLabel.stringValue = settings.admin.customPreferencesMessage
-        adminMessageLabel.isHidden = settings.admin.customPreferencesMessage.isEmpty
+        updateAdminMessageLabel(settings.admin.customPreferencesMessage)
 
         eyeEnabled.state = state(settings.eyeGate.isEnabled)
         eyeInterval.stringValue = String(Int(settings.eyeGate.interval / 60))
@@ -2448,10 +2448,20 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     private func applyAdminVisibility() {
+        updateAdminMessageLabel(settings.admin.customPreferencesMessage)
         updateDependentControlEnablement()
 
         updateUpdatePreferencesVisibility()
         updateShortcutConflictWarning()
+    }
+
+    private func updateAdminMessageLabel(_ message: String) {
+        let isVisible = !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let visibleMessage = isVisible ? message : ""
+        adminMessageLabel.stringValue = visibleMessage
+        adminMessageLabel.isHidden = !isVisible
+        adminMessageLabel.toolTip = isVisible ? visibleMessage : nil
+        adminMessageLabel.setAccessibilityHelp(isVisible ? visibleMessage : nil)
     }
 
     private func updateUpdatePreferencesVisibility() {
@@ -3477,6 +3487,9 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
         if let field = obj.object as? NSTextField, isMorningPauseSummaryField(field) {
             updateMorningPauseSummary()
+        }
+        if let field = obj.object as? NSTextField, field === customPreferencesMessage {
+            updateAdminMessageLabel(field.stringValue)
         }
         hasPendingTextEditing = true
         setSaveStatus(.editing)
