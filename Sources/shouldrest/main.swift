@@ -2549,10 +2549,6 @@ final class RestOverlayView: NSView {
             return .unavailable
         }
 
-        if emergencyOverrideArmed, (emergencyRemainingSeconds ?? 0) > 0 {
-            return .unavailable
-        }
-
         return .activated
     }
 
@@ -2597,7 +2593,7 @@ final class RestOverlayView: NSView {
         emergencyPanelWidthConstraint?.constant = 164
         emergencyPanelHeightConstraint?.constant = 44
         let style = EmergencyOverlayVisualStyle.style(
-            remainingSeconds: remainingSeconds,
+            remainingSeconds: emergencyOverrideArmed ? 0 : remainingSeconds,
             isArmed: emergencyOverrideArmed
         )
         emergencyPanel.layer?.backgroundColor = NSColor.systemRed

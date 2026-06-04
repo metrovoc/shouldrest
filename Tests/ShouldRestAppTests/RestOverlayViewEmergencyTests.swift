@@ -387,6 +387,24 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(requestCount, 1)
     }
 
+    func testArmedEmergencyButtonClickIgnoresLegacyHoldRemaining() throws {
+        let view = configuredEyeGateOverlay(
+            remainingSeconds: 5,
+            isArmed: true
+        )
+        var requestCount = 0
+        view.onEmergencyOverrideRequested = {
+            requestCount += 1
+        }
+
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
+        button.performClick(nil)
+
+        XCTAssertEqual(requestCount, 1)
+    }
+
     func testSecondEmergencyMouseEventConfirmsEvenWhenSystemMarksItAsDoubleClick() throws {
         let view = configuredEyeGateOverlay()
         view.layoutSubtreeIfNeeded()
