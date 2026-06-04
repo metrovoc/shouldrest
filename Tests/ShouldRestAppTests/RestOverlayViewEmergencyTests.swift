@@ -134,7 +134,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
                 now: requestTime
             )
             switch decision {
-            case .waiting:
+            case .armed:
                 view.configure(
                     session: session,
                     remainingSeconds: 58,

@@ -3,7 +3,7 @@ import ShouldRestCore
 
 enum EmergencyOverrideDecision: Equatable {
     case unavailable
-    case waiting(remainingSeconds: Int)
+    case armed
     case complete
 }
 
@@ -38,32 +38,7 @@ struct EmergencyOverrideCoordinator {
         }
 
         armedSessionID = session.id
-        return .waiting(remainingSeconds: 0)
-    }
-
-    mutating func completionIfArmedAndReady(
-        session: RestSession,
-        policy: EmergencyOverridePolicy,
-        now: Date
-    ) -> EmergencyOverrideDecision? {
-        guard Self.isAvailable(session: session, policy: policy, now: now),
-              armedSessionID == session.id else {
-            clear(sessionID: session.id)
-            return nil
-        }
-
-        return nil
-    }
-
-    func remainingSeconds(
-        session: RestSession,
-        policy: EmergencyOverridePolicy,
-        now: Date
-    ) -> Int? {
-        guard Self.isAvailable(session: session, policy: policy, now: now) else {
-            return nil
-        }
-        return 0
+        return .armed
     }
 
     mutating func clear(sessionID: UUID? = nil) {

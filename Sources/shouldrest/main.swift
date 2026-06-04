@@ -327,14 +327,6 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             if emergencyOverrideCoordinator.armedSessionID != active.id {
                 emergencyOverrideCoordinator.clear()
             }
-            if let decision = emergencyOverrideCoordinator.completionIfArmedAndReady(
-                session: active,
-                policy: settings.eyeGate.emergencyOverride,
-                now: now
-            ) {
-                handleEmergencyOverrideDecision(decision, session: active, now: now)
-                return
-            }
             if case .deferred(let kind, let reason) = engine.deferActiveForAppExclusion(now: now, context: currentContext()) {
                 unregisterActiveBreakShortcut()
                 unregisterEmergencyEscapeShortcut()
@@ -929,7 +921,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         now: Date
     ) {
         switch decision {
-        case .waiting(let remainingSeconds):
+        case .armed:
             overlayController.update(
                 session: session,
                 settings: overlaySettings(for: session),
@@ -939,11 +931,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: session),
                 bodyActions: nil
             )
-            if remainingSeconds <= 0 {
-                logger.log("Emergency override armed for \(session.kind.rawValue), awaiting second overlay confirmation")
-            } else {
-                logger.log("Emergency override waiting for \(session.kind.rawValue), available in \(remainingSeconds)s")
-            }
+            logger.log("Emergency override armed for \(session.kind.rawValue), awaiting second overlay confirmation")
             rebuildMenu()
         case .complete:
             completeEmergencyOverrideEyeGate(
