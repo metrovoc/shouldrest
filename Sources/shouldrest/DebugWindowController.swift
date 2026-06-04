@@ -126,10 +126,12 @@ final class DebugWindowController: NSWindowController {
     }
 
     private func headerView() -> NSView {
-        let icon = NSImageView(image: symbolImage("stethoscope"))
+        let icon = NSImageView(image: symbolImage("stethoscope", accessibilityDescription: L10n.tr("debug.heading")))
         icon.identifier = NSUserInterfaceItemIdentifier("debug.headerIcon")
         icon.contentTintColor = .controlAccentColor
         icon.imageScaling = .scaleProportionallyUpOrDown
+        icon.setAccessibilityLabel(L10n.tr("debug.heading"))
+        icon.setAccessibilityHelp(L10n.tr("debug.subtitle"))
         icon.translatesAutoresizingMaskIntoConstraints = false
         icon.widthAnchor.constraint(equalToConstant: 40).isActive = true
         icon.heightAnchor.constraint(equalToConstant: 40).isActive = true
@@ -298,7 +300,7 @@ final class DebugWindowController: NSWindowController {
         button.target = self
         button.action = action
         button.bezelStyle = .rounded
-        button.image = symbolImage(symbolName)
+        button.image = symbolImage(symbolName, accessibilityDescription: title)
         button.imagePosition = .imageLeading
         button.imageHugsTitle = true
         button.toolTip = toolTip
@@ -340,7 +342,9 @@ final class DebugWindowController: NSWindowController {
         let summary = safetySummaryProvider()
         safetyTitleLabel.stringValue = summary.title
         safetyBodyLabel.stringValue = summary.body
-        safetyIcon.image = symbolImage(summary.symbolName)
+        safetyIcon.image = symbolImage(summary.symbolName, accessibilityDescription: summary.title)
+        safetyIcon.setAccessibilityLabel(summary.title)
+        safetyIcon.setAccessibilityHelp(summary.body)
 
         let tint: NSColor
         switch summary.severity {
@@ -387,7 +391,7 @@ final class DebugWindowController: NSWindowController {
         }
     }
 
-    private func symbolImage(_ name: String) -> NSImage {
-        NSImage(systemSymbolName: name, accessibilityDescription: nil) ?? NSImage()
+    private func symbolImage(_ name: String, accessibilityDescription: String? = nil) -> NSImage {
+        NSImage(systemSymbolName: name, accessibilityDescription: accessibilityDescription) ?? NSImage()
     }
 }

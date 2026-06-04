@@ -2004,11 +2004,17 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     private func configureShortcutConflictWarning() {
-        shortcutConflictIcon.image = NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: nil)
+        shortcutConflictIcon.image = NSImage(
+            systemSymbolName: "exclamationmark.triangle.fill",
+            accessibilityDescription: L10n.tr("prefs.shortcutConflictTitle")
+        )
+        shortcutConflictIcon.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutConflictIcon")
+        shortcutConflictIcon.setAccessibilityLabel(L10n.tr("prefs.shortcutConflictTitle"))
         shortcutConflictIcon.contentTintColor = .systemOrange
         shortcutConflictIcon.symbolConfiguration = .init(pointSize: 14, weight: .semibold)
         shortcutConflictIcon.widthAnchor.constraint(equalToConstant: 18).isActive = true
 
+        shortcutConflictLabel.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutConflictLabel")
         shortcutConflictLabel.textColor = .systemOrange
         shortcutConflictLabel.lineBreakMode = .byWordWrapping
         shortcutConflictLabel.widthAnchor.constraint(equalToConstant: 590).isActive = true
@@ -2042,9 +2048,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func configureSoundPreviewButton(_ button: NSButton, identifier: String) {
         button.title = L10n.tr("prefs.previewSound")
-        button.image = NSImage(systemSymbolName: "speaker.wave.2", accessibilityDescription: nil)
+        button.image = NSImage(systemSymbolName: "speaker.wave.2", accessibilityDescription: button.title)
         button.imagePosition = .imageLeading
         button.toolTip = L10n.tr("prefs.previewSoundHelp")
+        button.setAccessibilityLabel(button.title)
+        button.setAccessibilityHelp(button.toolTip)
         button.target = self
         button.action = #selector(previewSound(_:))
         button.identifier = NSUserInterfaceItemIdentifier(identifier)
@@ -2336,11 +2344,19 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         guard let warning = shortcutValidationWarning(for: entries) else {
             shortcutConflictLabel.stringValue = ""
+            shortcutConflictLabel.toolTip = nil
+            shortcutConflictLabel.setAccessibilityHelp(nil)
+            shortcutConflictIcon.image?.accessibilityDescription = L10n.tr("prefs.shortcutConflictTitle")
+            shortcutConflictIcon.setAccessibilityHelp(nil)
             shortcutConflictRow.isHidden = true
             return
         }
 
         shortcutConflictLabel.stringValue = warning.message
+        shortcutConflictLabel.toolTip = warning.message
+        shortcutConflictLabel.setAccessibilityHelp(warning.message)
+        shortcutConflictIcon.image?.accessibilityDescription = warning.message
+        shortcutConflictIcon.setAccessibilityHelp(warning.message)
         shortcutConflictRow.isHidden = false
         warning.recorders.forEach { $0.validationWarning = warning.message }
     }

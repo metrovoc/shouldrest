@@ -230,7 +230,7 @@ final class AboutWindowController: NSWindowController {
         button.target = self
         button.action = action
         button.bezelStyle = .rounded
-        button.image = symbolImage(symbolName)
+        button.image = symbolImage(symbolName, accessibilityDescription: title)
         button.imagePosition = .imageLeading
         button.imageHugsTitle = true
         button.toolTip = toolTip

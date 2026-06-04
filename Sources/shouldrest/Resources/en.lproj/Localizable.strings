@@ -457,6 +457,7 @@
 "prefs.searchMatched" = "%@ · %@";
 "prefs.searchMatchedIndexed" = "%d/%d · %@ · %@";
 "prefs.searchNoResults" = "No matching setting";
+"prefs.shortcutConflictTitle" = "Shortcut conflict";
 "prefs.shortcutConflict" = "Shortcut conflict: %@ is assigned to %@.";
 "prefs.shortcutUnsupported" = "Unsupported shortcut: %@ for %@.";
 "prefs.display.all" = "All displays";

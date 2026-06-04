@@ -79,6 +79,7 @@ final class AboutWindowTests: XCTestCase {
 
         for button in buttons.all {
             XCTAssertNotNil(button.image)
+            XCTAssertEqual(button.image?.accessibilityDescription, button.title)
             XCTAssertEqual(button.imagePosition, .imageLeading)
             XCTAssertFalse(button.toolTip?.isEmpty ?? true)
             XCTAssertEqual(button.accessibilityLabel(), button.title)

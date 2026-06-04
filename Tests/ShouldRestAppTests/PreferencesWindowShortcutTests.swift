@@ -176,6 +176,13 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(bodyNow.accessibilityHelp(), warning)
         XCTAssertEqual(eyeNow.image?.accessibilityDescription, eyeNow.title)
         XCTAssertNotEqual(eyeNow.image?.accessibilityDescription, "exclamationmark.triangle.fill")
+        let warningIcon = try XCTUnwrap(view(withIdentifier: "prefs.shortcutConflictIcon", in: contentView) as? NSImageView)
+        let warningLabel = try XCTUnwrap(view(withIdentifier: "prefs.shortcutConflictLabel", in: contentView) as? NSTextField)
+        XCTAssertEqual(warningLabel.stringValue, warning)
+        XCTAssertEqual(warningLabel.toolTip, warning)
+        XCTAssertEqual(warningLabel.accessibilityHelp(), warning)
+        XCTAssertEqual(warningIcon.image?.accessibilityDescription, warning)
+        XCTAssertEqual(warningIcon.accessibilityHelp(), warning)
         XCTAssertWarningTint(eyeNow)
         XCTAssertWarningTint(bodyNow)
     }

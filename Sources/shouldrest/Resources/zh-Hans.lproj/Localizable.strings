@@ -457,6 +457,7 @@
 "prefs.searchMatched" = "%@ · %@";
 "prefs.searchMatchedIndexed" = "%d/%d · %@ · %@";
 "prefs.searchNoResults" = "没有匹配的设置";
+"prefs.shortcutConflictTitle" = "快捷键冲突";
 "prefs.shortcutConflict" = "快捷键冲突：%@ 同时分配给 %@。";
 "prefs.shortcutUnsupported" = "不支持的快捷键：%@（%@）。";
 "prefs.display.all" = "所有显示器";

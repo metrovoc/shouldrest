@@ -30,6 +30,11 @@ final class DebugWindowTests: XCTestCase {
         XCTAssertEqual(contentView.label(withIdentifier: "debug.safetyBody")?.stringValue, L10n.tr("debug.summaryReadyBody"))
         XCTAssertFalse(try XCTUnwrap(contentView.label(withIdentifier: "debug.subtitle")?.stringValue).contains("runtime flags"))
         XCTAssertFalse(try XCTUnwrap(contentView.label(withIdentifier: "debug.safetyTitle")?.stringValue).contains("blocking"))
+        let headerIcon = try XCTUnwrap(contentView.descendant(withIdentifier: "debug.headerIcon") as? NSImageView)
+        XCTAssertEqual(headerIcon.image?.accessibilityDescription, L10n.tr("debug.heading"))
+        let safetyIcon = try XCTUnwrap(contentView.descendant(withIdentifier: "debug.safetyIcon") as? NSImageView)
+        XCTAssertEqual(safetyIcon.image?.accessibilityDescription, L10n.tr("debug.summaryReadyTitle"))
+        XCTAssertEqual(safetyIcon.accessibilityHelp(), L10n.tr("debug.summaryReadyBody"))
 
         let textView = try XCTUnwrap(contentView.debugTextView())
         XCTAssertEqual(textView.string, "state=initial")
@@ -61,6 +66,7 @@ final class DebugWindowTests: XCTestCase {
 
         for button in buttons.all {
             XCTAssertNotNil(button.image)
+            XCTAssertEqual(button.image?.accessibilityDescription, button.title)
             XCTAssertEqual(button.imagePosition, .imageLeading)
             XCTAssertFalse(button.toolTip?.isEmpty ?? true)
             XCTAssertEqual(button.accessibilityLabel(), button.title)
@@ -88,6 +94,9 @@ final class DebugWindowTests: XCTestCase {
         XCTAssertEqual(contentView.debugTextView()?.string, "state=refreshed")
         XCTAssertEqual(contentView.label(withIdentifier: "debug.safetyTitle")?.stringValue, "Updated safety state")
         XCTAssertEqual(contentView.label(withIdentifier: "debug.safetyBody")?.stringValue, "Updated recovery guidance")
+        let safetyIcon = try XCTUnwrap(contentView.descendant(withIdentifier: "debug.safetyIcon") as? NSImageView)
+        XCTAssertEqual(safetyIcon.image?.accessibilityDescription, "Updated safety state")
+        XCTAssertEqual(safetyIcon.accessibilityHelp(), "Updated recovery guidance")
         XCTAssertEqual(status.stringValue, L10n.tr("debug.updated"))
         XCTAssertEqual(status.toolTip, L10n.tr("debug.updated"))
         XCTAssertEqual(status.accessibilityHelp(), L10n.tr("debug.updated"))
