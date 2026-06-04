@@ -909,10 +909,10 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         )
     }
 
-    private func overlayEmergencyOverrideAction(for session: RestSession, now: Date) -> (() -> Void)? {
+    private func overlayEmergencyOverrideAction(for session: RestSession, now: Date) -> (() -> EmergencyOverrideDecision)? {
         guard canEmergencyOverrideEyeGate(session, now: now) else { return nil }
         return { [weak self] in
-            self?.performEmergencyOverrideEyeGate()
+            self?.performEmergencyOverrideEyeGate() ?? .unavailable
         }
     }
 
@@ -1111,8 +1111,11 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         return true
     }
 
-    private func performEmergencyOverrideEyeGate() {
-        guard let active = engine.state.activeSession, active.kind == .eyeGate else { return }
+    @discardableResult
+    private func performEmergencyOverrideEyeGate() -> EmergencyOverrideDecision {
+        guard let active = engine.state.activeSession, active.kind == .eyeGate else {
+            return .unavailable
+        }
 
         let now = Date()
         let decision = emergencyOverrideCoordinator.request(
@@ -1121,6 +1124,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             now: now
         )
         handleEmergencyOverrideDecision(decision, session: active, now: now)
+        return decision
     }
 
     private func focusEyeGateEmergencyForBlockedAction(actionName: String) {
@@ -1170,6 +1174,15 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 )
             }
         case .unavailable:
+            overlayController.update(
+                session: session,
+                settings: overlaySettings(for: session),
+                now: now,
+                manualAwaiting: false,
+                emergencyOverrideAction: overlayEmergencyOverrideAction(for: session, now: now),
+                emergencyOverrideArmed: false,
+                bodyActions: nil
+            )
             logger.log("Emergency override unavailable for \(session.kind.rawValue)")
             rebuildMenu()
         }
@@ -2140,14 +2153,14 @@ final class OverlayController {
     private var windows: [CGDirectDisplayID: OverlayWindow] = [:]
     private var session: RestSession?
     private var settings: RestSettings?
-    private var emergencyOverrideAction: (() -> Void)?
+    private var emergencyOverrideAction: (() -> EmergencyOverrideDecision)?
     private var bodyActions: BodyOverlayActions?
 
     func present(
         session: RestSession,
         settings: RestSettings,
         now: Date,
-        emergencyOverrideAction: (() -> Void)? = nil,
+        emergencyOverrideAction: (() -> EmergencyOverrideDecision)? = nil,
         emergencyOverrideArmed: Bool = false,
         bodyActions: BodyOverlayActions? = nil
     ) {
@@ -2177,7 +2190,7 @@ final class OverlayController {
         settings: RestSettings,
         now: Date,
         manualAwaiting: Bool,
-        emergencyOverrideAction: (() -> Void)? = nil,
+        emergencyOverrideAction: (() -> EmergencyOverrideDecision)? = nil,
         emergencyOverrideArmed: Bool = false,
         bodyActions: BodyOverlayActions? = nil
     ) {
@@ -2497,7 +2510,7 @@ final class RestOverlayView: NSView {
     private var emergencyPanelWidthConstraint: NSLayoutConstraint?
     private var emergencyPanelHeightConstraint: NSLayoutConstraint?
     private var bodyActionRequestPending = false
-    var onEmergencyOverrideRequested: (() -> Void)?
+    var onEmergencyOverrideRequested: (() -> EmergencyOverrideDecision)?
     var bodyActions: BodyOverlayActions? {
         didSet {
             bodyActionRequestPending = false
@@ -2789,15 +2802,25 @@ final class RestOverlayView: NSView {
 
         let confirmsAlreadyArmedEmergency = emergencyOverrideArmed
         if case .activated = activateEmergencyOverrideIfAvailable() {
-            armEmergencyOverrideLocallyIfNeeded()
             if confirmsAlreadyArmedEmergency {
                 // Let AppKit unwind the click/key event before the handler closes overlay windows.
-                DispatchQueue.main.async {
-                    request()
+                DispatchQueue.main.async { [weak self] in
+                    self?.applyEmergencyOverrideDecision(request())
                 }
             } else {
-                request()
+                applyEmergencyOverrideDecision(request())
             }
+        }
+    }
+
+    private func applyEmergencyOverrideDecision(_ decision: EmergencyOverrideDecision) {
+        switch decision {
+        case .armed:
+            armEmergencyOverrideLocallyIfNeeded()
+        case .complete:
+            break
+        case .unavailable:
+            clearEmergencyOverrideLocally()
         }
     }
 
@@ -2859,6 +2882,13 @@ final class RestOverlayView: NSView {
         emergencyRemainingSeconds = 0
         emergencyOverrideArmed = true
         updateEmergencyAffordanceUI()
+    }
+
+    private func clearEmergencyOverrideLocally() {
+        emergencyRemainingSeconds = nil
+        emergencyOverrideArmed = false
+        emergencyPanel.isHidden = true
+        emergencyButton.isHidden = true
     }
 
     private func configureEmergencyButton(
