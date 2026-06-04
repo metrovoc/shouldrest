@@ -5007,8 +5007,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let allMatches = searchTargets.filter {
             $0.normalizedText.contains(normalizedQuery)
         }
-        let matches = allMatches.filter {
+        let revealedTargetView = revealFirstCollapsedSearchTarget(in: allMatches)
+        var matches = allMatches.filter {
             isSearchTargetVisible($0.view)
+        }
+        if let revealedTargetView,
+           !matches.contains(where: { $0.view === revealedTargetView }),
+           let revealedTarget = searchTargets.first(where: { $0.view === revealedTargetView }) {
+            matches.append(revealedTarget)
         }
 
         guard !matches.isEmpty else {
@@ -5036,6 +5042,9 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                   let previousTargetView,
                   let previousIndex = matches.firstIndex(where: { $0.view === previousTargetView }) {
             targetIndex = (previousIndex + 1) % matches.count
+        } else if let revealedTargetView,
+                  let revealedIndex = matches.firstIndex(where: { $0.view === revealedTargetView }) {
+            targetIndex = revealedIndex
         } else {
             targetIndex = 0
         }
@@ -5094,6 +5103,102 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             current = candidate.superview
         }
         return true
+    }
+
+    private func revealFirstCollapsedSearchTarget(in targets: [PreferencesSearchTarget]) -> NSView? {
+        for target in targets {
+            if let revealedView = revealCollapsedSearchDisclosureTarget(target.view) {
+                return revealedView
+            }
+            if !isSearchTargetVisible(target.view),
+               revealCollapsedSearchContainer(containing: target.view) {
+                return target.view
+            }
+        }
+        return nil
+    }
+
+    private func revealCollapsedSearchDisclosureTarget(_ view: NSView) -> NSView? {
+        if view === appExclusionsAdvancedButton,
+           appExclusionsJSONRow?.isHidden == true,
+           !appExclusionsAdvancedButton.isHidden {
+            setAdvancedDisclosure(
+                row: appExclusionsJSONRow,
+                button: appExclusionsAdvancedButton,
+                expanded: true
+            )
+            return appExclusionsJSONRow
+        }
+
+        if view === customBodyIdeasAdvancedButton,
+           customBodyIdeasJSONRow?.isHidden == true,
+           !customBodyIdeasAdvancedButton.isHidden {
+            setAdvancedDisclosure(
+                row: customBodyIdeasJSONRow,
+                button: customBodyIdeasAdvancedButton,
+                expanded: true
+            )
+            return customBodyIdeasJSONRow
+        }
+
+        if view === adminControlsAdvancedButton,
+           adminControlsStack.isHidden,
+           !adminControlsAdvancedButton.isHidden {
+            setAdvancedDisclosure(
+                row: adminControlsStack,
+                button: adminControlsAdvancedButton,
+                expanded: true
+            )
+            return adminControlsStack
+        }
+
+        return nil
+    }
+
+    private func revealCollapsedSearchContainer(containing view: NSView) -> Bool {
+        if viewIsDescendantOrEqual(view, of: appExclusionsJSONRow),
+           !appExclusionsAdvancedButton.isHidden {
+            setAdvancedDisclosure(
+                row: appExclusionsJSONRow,
+                button: appExclusionsAdvancedButton,
+                expanded: true
+            )
+            return true
+        }
+
+        if viewIsDescendantOrEqual(view, of: customBodyIdeasJSONRow),
+           !customBodyIdeasAdvancedButton.isHidden {
+            setAdvancedDisclosure(
+                row: customBodyIdeasJSONRow,
+                button: customBodyIdeasAdvancedButton,
+                expanded: true
+            )
+            return true
+        }
+
+        if viewIsDescendantOrEqual(view, of: adminControlsStack),
+           !adminControlsAdvancedButton.isHidden {
+            setAdvancedDisclosure(
+                row: adminControlsStack,
+                button: adminControlsAdvancedButton,
+                expanded: true
+            )
+            return true
+        }
+
+        return false
+    }
+
+    private func viewIsDescendantOrEqual(_ view: NSView, of container: NSView?) -> Bool {
+        guard let container else { return false }
+        var current: NSView? = view
+        while let candidate = current {
+            if candidate === container {
+                return true
+            }
+            current = candidate.superview
+        }
+        return false
     }
 
     private func highlightSearchTarget(_ view: NSView) {

@@ -164,9 +164,11 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         XCTAssertTrue(sendAction(from: searchField))
 
         let bulkRules = try XCTUnwrap(view(withIdentifier: "appExclusions", in: contentView) as? NSButton)
+        let bulkRulesRow = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionsJSONRow", in: contentView))
         XCTAssertEqual(tabView.selectedTabViewItem?.identifier as? String, L10n.tr("prefs.tabContext"))
-        XCTAssertEqual(bulkRules.title, L10n.tr("prefs.showAdvancedRules"))
-        XCTAssertTrue(searchStatus.stringValue.contains(L10n.tr("prefs.showAdvancedRules")))
+        XCTAssertFalse(bulkRulesRow.isHidden)
+        XCTAssertEqual(bulkRules.title, L10n.tr("prefs.hideAdvancedRules"))
+        XCTAssertTrue(searchStatus.stringValue.contains(L10n.tr("prefs.advancedRulesJSON")))
         XCTAssertTrue(isFirstResponder(searchField, in: window))
         XCTAssertFalse(isFirstResponder(bulkRules, in: window))
         XCTAssertNil(savedSettings.value)
@@ -177,6 +179,60 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         XCTAssertEqual(searchStatus.stringValue, L10n.format("prefs.searchNoResults", "json"))
         XCTAssertEqual(searchStatus.toolTip, searchStatus.stringValue)
         XCTAssertEqual(searchStatus.accessibilityHelp(), searchStatus.stringValue)
+        XCTAssertNil(savedSettings.value)
+    }
+
+    func testPreferenceSearchExpandsCustomIdeaImportEditor() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
+        let tabView = try XCTUnwrap(view(withIdentifier: "prefs.tabView", in: contentView) as? NSTabView)
+        let searchField = try XCTUnwrap(view(withIdentifier: "prefs.searchField", in: contentView) as? NSSearchField)
+        let searchStatus = try XCTUnwrap(view(withIdentifier: "prefs.searchStatusLabel", in: contentView) as? NSTextField)
+
+        searchField.stringValue = "import ideas"
+
+        XCTAssertTrue(sendAction(from: searchField))
+
+        let ideasButton = try XCTUnwrap(view(withIdentifier: "customIdeas", in: contentView) as? NSButton)
+        let ideasRow = try XCTUnwrap(view(withIdentifier: "prefs.customBodyIdeasJSONRow", in: contentView))
+        XCTAssertEqual(tabView.selectedTabViewItem?.identifier as? String, L10n.tr("prefs.tabAppearance"))
+        XCTAssertFalse(ideasRow.isHidden)
+        XCTAssertEqual(ideasButton.title, L10n.tr("prefs.hideAdvancedIdeas"))
+        XCTAssertTrue(searchStatus.stringValue.contains(L10n.tr("prefs.advancedIdeasJSON")))
+        XCTAssertTrue(isFirstResponder(searchField, in: window))
+        XCTAssertFalse(isFirstResponder(ideasButton, in: window))
+        XCTAssertNil(savedSettings.value)
+    }
+
+    func testPreferenceSearchExpandsAdminControls() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
+        let tabView = try XCTUnwrap(view(withIdentifier: "prefs.tabView", in: contentView) as? NSTabView)
+        let searchField = try XCTUnwrap(view(withIdentifier: "prefs.searchField", in: contentView) as? NSSearchField)
+        let searchStatus = try XCTUnwrap(view(withIdentifier: "prefs.searchStatusLabel", in: contentView) as? NSTextField)
+
+        searchField.stringValue = "hide update"
+
+        XCTAssertTrue(sendAction(from: searchField))
+
+        let adminButton = try XCTUnwrap(view(withIdentifier: "adminControls", in: contentView) as? NSButton)
+        let updateControl = try XCTUnwrap(view(withIdentifier: "prefs.adminHideUpdates", in: contentView) as? NSButton)
+        XCTAssertEqual(tabView.selectedTabViewItem?.identifier as? String, L10n.tr("prefs.tabAdvanced"))
+        XCTAssertFalse(updateControl.isHidden)
+        XCTAssertEqual(adminButton.title, L10n.tr("prefs.hideAdminControls"))
+        XCTAssertTrue(searchStatus.stringValue.contains(L10n.tr("prefs.adminHideUpdates")))
+        XCTAssertTrue(isFirstResponder(searchField, in: window))
+        XCTAssertFalse(isFirstResponder(adminButton, in: window))
         XCTAssertNil(savedSettings.value)
     }
 
