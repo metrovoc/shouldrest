@@ -102,10 +102,12 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
 
         let visibleTexts = visibleTexts(in: contentView)
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.pauseForSuspendOrLock")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.preferencesMessage")))
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.hideAdminControls")))
         XCTAssertFalse(visibleTexts.contains("Administrative controls"))
         XCTAssertFalse(visibleTexts.contains("Hide administrative controls"))
         XCTAssertFalse(L10n.tr("prefs.adminControlsHelp").localizedCaseInsensitiveContains("deployment"))
+        XCTAssertFalse(L10n.tr("prefs.preferencesMessageHelp").localizedCaseInsensitiveContains("managed setup"))
         XCTAssertFalse(visibleTexts.contains("Pause scheduler on sleep or lock"))
     }
 

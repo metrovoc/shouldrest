@@ -478,8 +478,8 @@
 "prefs.pauseForSuspendOrLockHelp" = "Mac 睡眠或锁屏期间暂停后续休息，回来后继续。";
 "prefs.updateFeedURL" = "更新来源";
 "prefs.updateFeedURLHelp" = "ShouldRest 查找新版本的位置；如果自行管理更新，可以留空。";
-"prefs.preferencesMessage" = "偏好设置提示";
-"prefs.preferencesMessageHelp" = "可选提示，会显示在偏好设置顶部，适合托管部署使用。";
+"prefs.preferencesMessage" = "偏好窗口提示";
+"prefs.preferencesMessageHelp" = "显示在偏好窗口顶部的可选说明，适合写团队、设备或当前环境的提醒。";
 "prefs.showAdminControls" = "高级支持选项";
 "prefs.hideAdminControls" = "隐藏高级支持选项";
 "prefs.adminControlsHelp" = "仅在需要隐藏更新、文件位置或严格休息控件时，才使用这些很少改动的支持选项。";
