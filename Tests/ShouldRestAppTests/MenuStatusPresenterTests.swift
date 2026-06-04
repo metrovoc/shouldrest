@@ -122,8 +122,8 @@ final class MenuStatusPresenterTests: XCTestCase {
         let content = MenuStatusPresenter.headerContent(state: state, settings: .defaults, now: start)
 
         XCTAssertEqual(lines[0], "Paused until \(start.addingTimeInterval(30 * 60).formatted(date: .omitted, time: .shortened))")
-        XCTAssertEqual(lines[1], "Manual pause · resumes in 30m")
-        XCTAssertEqual(content.secondary, "Manual pause · resumes in 30m")
+        XCTAssertEqual(lines[1], "Paused by you · resumes in 30m")
+        XCTAssertEqual(content.secondary, "Paused by you · resumes in 30m")
     }
 
     func testIndefinitePauseStatusShowsManualResumeContext() {
@@ -136,9 +136,9 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         XCTAssertEqual(lines, [
             "Paused indefinitely",
-            "Manual pause · resume from this menu when ready"
+            "Paused by you · resume from this menu when ready"
         ])
-        XCTAssertEqual(content.secondary, "Manual pause · resume from this menu when ready")
+        XCTAssertEqual(content.secondary, "Paused by you · resume from this menu when ready")
     }
 
     func testPauseStatusNamesNonManualPauseReasons() {

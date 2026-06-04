@@ -59,7 +59,7 @@
 "status.pauseResumeManual" = "Resume from this menu when ready";
 "status.pauseResumesInWithReason" = "%@ · resumes in %@";
 "status.pauseResumeManualWithReason" = "%@ · resume from this menu when ready";
-"status.pauseReason.user" = "Manual pause";
+"status.pauseReason.user" = "Paused by you";
 "status.pauseReason.untilMorning" = "Until morning";
 "status.pauseReason.suspendOrLock" = "Sleep or lock";
 "status.pauseReason.appExclusion" = "App exclusion";
