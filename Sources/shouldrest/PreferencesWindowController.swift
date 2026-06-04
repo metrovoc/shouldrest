@@ -1487,6 +1487,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         editor.isRichText = false
         editor.isAutomaticQuoteSubstitutionEnabled = false
         editor.isAutomaticDashSubstitutionEnabled = false
+        editor.isAutomaticTextReplacementEnabled = false
+        editor.isAutomaticSpellingCorrectionEnabled = false
+        editor.isContinuousSpellCheckingEnabled = false
+        editor.isGrammarCheckingEnabled = false
+        editor.isAutomaticLinkDetectionEnabled = false
+        editor.isAutomaticDataDetectionEnabled = false
+        editor.allowsUndo = true
         editor.font = font
         editor.textContainerInset = NSSize(width: 8, height: 6)
         editor.isHorizontallyResizable = false
