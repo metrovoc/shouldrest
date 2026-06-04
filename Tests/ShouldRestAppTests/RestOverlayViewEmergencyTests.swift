@@ -618,6 +618,48 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(requestCount, 1)
     }
 
+    func testAuthoritativeUnarmedRefreshClearsStuckEmergencyCompletionPending() throws {
+        let session = eyeGateSession()
+        let view = RestOverlayView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
+        view.configure(
+            session: session,
+            remainingSeconds: 60,
+            settings: .defaults,
+            showsContent: true,
+            manualAwaiting: false,
+            emergencyOverrideRemainingSeconds: 0,
+            emergencyOverrideArmed: true
+        )
+        var requestCount = 0
+        view.onEmergencyOverrideRequested = {
+            requestCount += 1
+            return .complete
+        }
+
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        button.performClick(nil)
+
+        XCTAssertFalse(button.isEnabled)
+        XCTAssertEqual(requestCount, 0)
+        drainMainQueue()
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertFalse(button.isEnabled)
+
+        view.configure(
+            session: session,
+            remainingSeconds: 59,
+            settings: .defaults,
+            showsContent: true,
+            manualAwaiting: false,
+            emergencyOverrideRemainingSeconds: 0,
+            emergencyOverrideArmed: false
+        )
+
+        XCTAssertTrue(button.isEnabled)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverride"))
+        XCTAssertEqual(button.accessibilityLabel(), L10n.tr("overlay.emergencyOverride"))
+    }
+
     func testArmedEmergencyButtonClickIgnoresLegacyHoldRemaining() throws {
         let view = configuredEyeGateOverlay(
             remainingSeconds: 5,

@@ -1241,14 +1241,13 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             logger.log("Emergency override armed for \(session.kind.rawValue), awaiting second overlay confirmation")
             rebuildMenu()
         case .complete:
-            // Closing screen-level overlay windows inside mouseDown/keyDown can wedge AppKit.
-            DispatchQueue.main.async { [weak self] in
-                self?.completeEmergencyOverrideEyeGate(
-                    session: session,
-                    now: now,
-                    playSound: true
-                )
-            }
+            // RestOverlayView defers the second in-overlay confirmation until the
+            // click/key event returns, so the app can complete immediately here.
+            completeEmergencyOverrideEyeGate(
+                session: session,
+                now: now,
+                playSound: true
+            )
         case .unavailable:
             overlayController.update(
                 session: session,
@@ -3015,7 +3014,9 @@ final class RestOverlayView: NSView {
         }
 
         emergencyRemainingSeconds = remainingSeconds
-        let shouldKeepLocalConfirmation = isSameEmergencySession && emergencyOverrideArmed
+        let shouldKeepLocalConfirmation = isSameEmergencySession &&
+            emergencyOverrideArmed &&
+            !emergencyOverrideCompletionPending
         emergencyOverrideArmed = isArmed || shouldKeepLocalConfirmation
         if !emergencyOverrideArmed {
             emergencyOverrideCompletionPending = false
