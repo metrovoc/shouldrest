@@ -591,7 +591,7 @@
 "onboarding.eyeFeatureTitle" = "短而频繁的护眼休息";
 "onboarding.eyeFeatureBody" = "短暂覆盖屏幕的护眼休息，减少 20 秒休息被忽视或习惯性跳过。";
 "onboarding.emergencyFeatureTitle" = "覆盖层内紧急退出";
-"onboarding.emergencyFeatureBody" = "紧急退出由覆盖层自身处理：外部请求只会把覆盖层带到前台；在覆盖层内点两次或按两次 Esc 才会退出，不再要求你点击另一个窗口。";
+"onboarding.emergencyFeatureBody" = "紧急退出不会打开额外确认窗口：外部请求只会把覆盖层带到前台；请在覆盖层内点击紧急退出两次，或按两次 Esc 退出。";
 "onboarding.bodyFeatureTitle" = "活动休息可配置";
 "onboarding.bodyFeatureBody" = "更长的活动休息支持推迟、图片、显示器规则，并可等你完成后再关闭。";
 "onboarding.rhythmTitle" = "选择初始休息节奏";

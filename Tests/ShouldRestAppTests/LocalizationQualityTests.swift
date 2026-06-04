@@ -708,10 +708,13 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(L10n.tr("cli.help").contains("debug                        Copy support report."))
         XCTAssertFalse(L10n.tr("cli.help").contains("debug-panel"))
         XCTAssertFalse(L10n.tr("cli.help").localizedCaseInsensitiveContains("run it again"))
-        XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").contains("external requests only bring it forward"))
-        XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").localizedCaseInsensitiveContains("two clicks"))
+        XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").contains("does not open a separate confirmation window"))
+        XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").contains("external requests only bring the overlay forward"))
+        XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").localizedCaseInsensitiveContains("Emergency Exit twice"))
+        XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").contains("Esc twice"))
         XCTAssertFalse(L10n.tr("onboarding.emergencyFeatureBody").localizedCaseInsensitiveContains("countdown"))
-        XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").localizedCaseInsensitiveContains("without asking you to click another window"))
+        XCTAssertFalse(L10n.tr("onboarding.emergencyFeatureBody").localizedCaseInsensitiveContains("owned"))
+        XCTAssertFalse(L10n.tr("onboarding.emergencyFeatureBody").localizedCaseInsensitiveContains("another window"))
 
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(L10n.tr("overlay.emergencyOverride"), "紧急退出 · Esc")
@@ -760,10 +763,13 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(L10n.tr("cli.logsPathHidden").contains("策略"))
         XCTAssertFalse(L10n.tr("cli.help").contains("管理员"))
         XCTAssertFalse(L10n.tr("cli.help").contains("再次运行"))
+        XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").contains("不会打开额外确认窗口"))
         XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").contains("外部请求只会把覆盖层带到前台"))
-        XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").contains("点两次"))
+        XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").contains("点击紧急退出两次"))
+        XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").contains("两次 Esc"))
         XCTAssertFalse(L10n.tr("onboarding.emergencyFeatureBody").contains("倒计时"))
-        XCTAssertTrue(L10n.tr("onboarding.emergencyFeatureBody").contains("不再要求你点击另一个窗口"))
+        XCTAssertFalse(L10n.tr("onboarding.emergencyFeatureBody").contains("自身处理"))
+        XCTAssertFalse(L10n.tr("onboarding.emergencyFeatureBody").contains("另一个窗口"))
     }
 
     func testOnboardingPrimaryActionNamesSelectedRhythm() {
