@@ -368,7 +368,9 @@
 "prefs.customIdeaCountOne" = "1 custom idea";
 "prefs.customIdeaCountMany" = "%d custom ideas";
 "prefs.title" = "Title";
+"prefs.customBodyTitleHelp" = "Short title shown in the Body Break overlay and custom ideas list.";
 "prefs.text" = "Body text";
+"prefs.customBodyTextHelp" = "Plain text shown in the Body Break overlay for this custom idea.";
 "prefs.addCustomIdea" = "Add Idea";
 "prefs.addCustomIdeaHelp" = "Add the current title and body text as a Body Break idea.";
 "prefs.updateCustomIdea" = "Update Idea";

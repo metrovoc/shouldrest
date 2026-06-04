@@ -1561,21 +1561,24 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             in: customBodyTextScrollView,
             identifier: "customBodyTextEditor",
             font: .systemFont(ofSize: NSFont.systemFontSize),
-            height: 96
+            height: 96,
+            help: L10n.tr("prefs.customBodyTextHelp")
         )
         configureTextEditor(
             appExclusionsJSONEditor,
             in: appExclusionsJSONScrollView,
             identifier: "appExclusionsJSONEditor",
             font: .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular),
-            height: 148
+            height: 148,
+            help: L10n.tr("prefs.advancedRulesGuidance")
         )
         configureTextEditor(
             customBodyIdeasJSONEditor,
             in: customBodyIdeasJSONScrollView,
             identifier: "customBodyIdeasJSONEditor",
             font: .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .regular),
-            height: 148
+            height: 148,
+            help: L10n.tr("prefs.advancedIdeasGuidance")
         )
     }
 
@@ -1584,7 +1587,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         in scrollView: NSScrollView,
         identifier: String,
         font: NSFont,
-        height: CGFloat
+        height: CGFloat,
+        help: String? = nil
     ) {
         editor.identifier = NSUserInterfaceItemIdentifier(identifier)
         editor.isRichText = false
@@ -1604,12 +1608,16 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         editor.autoresizingMask = [.width]
         editor.textContainer?.widthTracksTextView = true
         editor.textContainer?.containerSize = NSSize(width: 360, height: CGFloat.greatestFiniteMagnitude)
+        editor.toolTip = help
+        editor.setAccessibilityHelp(help)
 
         scrollView.identifier = NSUserInterfaceItemIdentifier("\(identifier)ScrollView")
         scrollView.borderType = .bezelBorder
         scrollView.hasVerticalScroller = true
         scrollView.drawsBackground = true
         scrollView.documentView = editor
+        scrollView.toolTip = help
+        scrollView.setAccessibilityHelp(help)
         scrollView.widthAnchor.constraint(equalToConstant: 360).isActive = true
         scrollView.heightAnchor.constraint(equalToConstant: height).isActive = true
     }
@@ -1893,6 +1901,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         setHelp(L10n.tr("prefs.soundVolumeHelp"), on: soundVolumeSlider)
         setHelp(L10n.tr("prefs.soundVolumeHelp"), on: soundVolumeValueLabel)
         setHelp(L10n.tr("prefs.useBuiltInIdeasHelp"), on: useBuiltInIdeas)
+        setHelp(L10n.tr("prefs.customBodyTitleHelp"), on: customBodyTitle)
     }
 
     private func setNumberInputHelp(_ help: String, on field: NSTextField) {

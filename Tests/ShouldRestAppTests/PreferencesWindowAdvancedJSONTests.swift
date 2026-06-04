@@ -124,6 +124,14 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertTrue(ideasScrollView.hasVerticalScroller)
         XCTAssertTrue(appScrollView.documentView === appEditor)
         XCTAssertTrue(ideasScrollView.documentView === ideasEditor)
+        XCTAssertEqual(appEditor.toolTip, L10n.tr("prefs.advancedRulesGuidance"))
+        XCTAssertEqual(appEditor.accessibilityHelp(), L10n.tr("prefs.advancedRulesGuidance"))
+        XCTAssertEqual(appScrollView.toolTip, L10n.tr("prefs.advancedRulesGuidance"))
+        XCTAssertEqual(appScrollView.accessibilityHelp(), L10n.tr("prefs.advancedRulesGuidance"))
+        XCTAssertEqual(ideasEditor.toolTip, L10n.tr("prefs.advancedIdeasGuidance"))
+        XCTAssertEqual(ideasEditor.accessibilityHelp(), L10n.tr("prefs.advancedIdeasGuidance"))
+        XCTAssertEqual(ideasScrollView.toolTip, L10n.tr("prefs.advancedIdeasGuidance"))
+        XCTAssertEqual(ideasScrollView.accessibilityHelp(), L10n.tr("prefs.advancedIdeasGuidance"))
     }
 
     func testAdvancedJSONLoadsPrettyPrintedMultilineContent() throws {

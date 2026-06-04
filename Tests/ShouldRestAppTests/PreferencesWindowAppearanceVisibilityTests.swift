@@ -37,7 +37,8 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
             ("prefs.bodyFinishSound", "prefs.bodyFinishSoundHelp"),
             ("prefs.soundVolumeSlider", "prefs.soundVolumeHelp"),
             ("prefs.soundVolumeValue", "prefs.soundVolumeHelp"),
-            ("prefs.useBuiltInIdeas", "prefs.useBuiltInIdeasHelp")
+            ("prefs.useBuiltInIdeas", "prefs.useBuiltInIdeasHelp"),
+            ("prefs.customBodyTitleField", "prefs.customBodyTitleHelp")
         ]
 
         for expectation in expectedHelp {
@@ -50,6 +51,10 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         }
         XCTAssertFalse(visibleTexts(in: contentView).contains(L10n.tr("prefs.themeHelp")))
         XCTAssertFalse(visibleTexts(in: contentView).contains(L10n.tr("prefs.soundVolumeHelp")))
+
+        let customBodyText = try XCTUnwrap(view(withIdentifier: "customBodyTextEditor", in: contentView) as? NSTextView)
+        XCTAssertEqual(customBodyText.toolTip, L10n.tr("prefs.customBodyTextHelp"))
+        XCTAssertEqual(customBodyText.accessibilityHelp(), L10n.tr("prefs.customBodyTextHelp"))
     }
 
     func testDisabledBodyBreakHidesBodyOnlyAppearanceControls() throws {
