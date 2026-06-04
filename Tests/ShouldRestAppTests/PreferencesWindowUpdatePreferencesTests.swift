@@ -85,6 +85,7 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
             ("prefs.pauseUntilMorningLocation", "prefs.pauseUntilMorningLocationHelp"),
             ("prefs.pauseForSuspendOrLock", "prefs.pauseForSuspendOrLockHelp"),
             ("prefs.updateFeedURLField", "prefs.updateFeedURLHelp"),
+            ("prefs.restoreUpdateSourceButton", "prefs.restoreUpdateSourceDisabledUpdatesOffHelp"),
             ("prefs.adminHideUpdates", "prefs.adminHideUpdatesHelp"),
             ("prefs.adminHideSettingsPath", "prefs.adminHideSettingsPathHelp"),
             ("prefs.adminHideStrict", "prefs.adminHideStrictHelp"),
@@ -109,6 +110,67 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         XCTAssertFalse(L10n.tr("prefs.adminControlsHelp").localizedCaseInsensitiveContains("deployment"))
         XCTAssertFalse(L10n.tr("prefs.preferencesMessageHelp").localizedCaseInsensitiveContains("managed setup"))
         XCTAssertFalse(visibleTexts.contains("Pause scheduler on sleep or lock"))
+    }
+
+    func testDefaultUpdateSourceRestoreButtonExplainsAlreadyDefaultState() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAdvancedTab(in: contentView)
+
+        let field = try XCTUnwrap(view(withIdentifier: "prefs.updateFeedURLField", in: contentView) as? NSTextField)
+        let button = try XCTUnwrap(view(withIdentifier: "prefs.restoreUpdateSourceButton", in: contentView) as? NSButton)
+
+        XCTAssertEqual(field.stringValue, RestSettings.defaults.operations.updateFeedURL)
+        XCTAssertFalse(button.isEnabled)
+        XCTAssertEqual(button.title, "")
+        XCTAssertNotNil(button.image)
+        XCTAssertEqual(button.toolTip, L10n.tr("prefs.restoreUpdateSourceDisabledDefaultHelp"))
+        XCTAssertEqual(button.accessibilityLabel(), L10n.tr("prefs.restoreUpdateSource"))
+        XCTAssertEqual(button.accessibilityHelp(), L10n.tr("prefs.restoreUpdateSourceDisabledDefaultHelp"))
+        XCTAssertEqual(button.image?.accessibilityDescription, L10n.tr("prefs.restoreUpdateSource"))
+    }
+
+    func testUpdateSourceRestoreButtonRestoresDefaultAndAutosaves() throws {
+        let savedSettings = SavedSettingsBox()
+        var settings = RestSettings.defaults
+        settings.operations.updateFeedURL = ""
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAdvancedTab(in: contentView)
+
+        let field = try XCTUnwrap(view(withIdentifier: "prefs.updateFeedURLField", in: contentView) as? NSTextField)
+        let button = try XCTUnwrap(view(withIdentifier: "prefs.restoreUpdateSourceButton", in: contentView) as? NSButton)
+
+        XCTAssertEqual(field.stringValue, "")
+        XCTAssertTrue(button.isEnabled)
+        XCTAssertEqual(button.toolTip, L10n.tr("prefs.restoreUpdateSourceHelp"))
+        XCTAssertEqual(button.accessibilityHelp(), L10n.tr("prefs.restoreUpdateSourceHelp"))
+
+        XCTAssertTrue(sendAction(from: button))
+
+        XCTAssertEqual(field.stringValue, RestSettings.defaults.operations.updateFeedURL)
+        waitUntilSavedSettingsArrive(savedSettings)
+        XCTAssertEqual(savedSettings.value?.operations.updateFeedURL, RestSettings.defaults.operations.updateFeedURL)
+        XCTAssertFalse(button.isEnabled)
+        XCTAssertEqual(button.toolTip, L10n.tr("prefs.restoreUpdateSourceDisabledDefaultHelp"))
+    }
+
+    func testUpdateSourceRestoreButtonExplainsUpdateCheckingPrerequisite() throws {
+        var settings = RestSettings.defaults
+        settings.operations.checkForUpdates = false
+        settings.operations.updateFeedURL = ""
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAdvancedTab(in: contentView)
+
+        let button = try XCTUnwrap(view(withIdentifier: "prefs.restoreUpdateSourceButton", in: contentView) as? NSButton)
+
+        XCTAssertFalse(button.isEnabled)
+        XCTAssertEqual(button.toolTip, L10n.tr("prefs.restoreUpdateSourceDisabledUpdatesOffHelp"))
+        XCTAssertEqual(button.accessibilityHelp(), L10n.tr("prefs.restoreUpdateSourceDisabledUpdatesOffHelp"))
     }
 
     func testAdminPreferencesMessageBannerMirrorsFullMessageForHoverAndAccessibility() throws {

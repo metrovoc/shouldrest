@@ -377,6 +377,8 @@ private final class PreferencesWindow: NSWindow {
 
 @MainActor
 final class PreferencesWindowController: NSWindowController, NSWindowDelegate, NSTextFieldDelegate, NSSearchFieldDelegate, NSTextViewDelegate, PreferencesWindowKeyboardDelegate {
+    private static let defaultUpdateFeedURL = RestSettings.defaults.operations.updateFeedURL
+
     private var settings: RestSettings
     private let onSave: (RestSettings) -> Void
     private let adminMessageLabel = NSTextField(labelWithString: "")
@@ -592,6 +594,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private var pauseUntilMorningLongitudeRow: NSView?
     private let pauseForSuspendOrLock = NSButton(checkboxWithTitle: L10n.tr("prefs.pauseForSuspendOrLock"), target: nil, action: nil)
     private let updateFeedURL = NSTextField()
+    private let restoreUpdateSourceButton = NSButton()
     private var updateFeedURLRow: NSView?
     private let disableUpdateFeatures = NSButton(checkboxWithTitle: L10n.tr("prefs.adminHideUpdates"), target: nil, action: nil)
     private let hideSettingsPath = NSButton(checkboxWithTitle: L10n.tr("prefs.adminHideSettingsPath"), target: nil, action: nil)
@@ -660,6 +663,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         configureCustomBodyAddIdeaButton()
         configureCustomBodyIdeasList()
         configureSoundPreviewButtons()
+        configureUpdateSourceRestoreButton()
         configureSearchField()
         configureShortcutConflictWarning()
         configureShortcutRecorders()
@@ -1161,7 +1165,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         advancedStack.addArrangedSubview(indentedControlRow(pauseUntilMorningSummaryLabel))
         pauseForSuspendOrLock.identifier = NSUserInterfaceItemIdentifier("prefs.pauseForSuspendOrLock")
         advancedStack.addArrangedSubview(pauseForSuspendOrLock)
-        let updateFeedURLRow = row(L10n.tr("prefs.updateFeedURL"), updateFeedURL)
+        let updateFeedURLRow = row(L10n.tr("prefs.updateFeedURL"), updateSourceRow())
         updateFeedURL.identifier = NSUserInterfaceItemIdentifier("prefs.updateFeedURLField")
         updateFeedURLRow.identifier = NSUserInterfaceItemIdentifier("prefs.updateFeedURLRow")
         self.updateFeedURLRow = updateFeedURLRow
@@ -2192,6 +2196,21 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         updateSoundPreviewButton(button, soundLabel: soundLabel, mutedBySilentNotifications: false)
     }
 
+    private func configureUpdateSourceRestoreButton() {
+        restoreUpdateSourceButton.identifier = NSUserInterfaceItemIdentifier("prefs.restoreUpdateSourceButton")
+        restoreUpdateSourceButton.title = ""
+        restoreUpdateSourceButton.bezelStyle = .inline
+        restoreUpdateSourceButton.isBordered = false
+        restoreUpdateSourceButton.image = NSImage(systemSymbolName: "arrow.counterclockwise", accessibilityDescription: nil)
+        restoreUpdateSourceButton.imagePosition = .imageOnly
+        restoreUpdateSourceButton.contentTintColor = .secondaryLabelColor
+        restoreUpdateSourceButton.target = self
+        restoreUpdateSourceButton.action = #selector(restoreUpdateSourcePressed(_:))
+        restoreUpdateSourceButton.widthAnchor.constraint(equalToConstant: 24).isActive = true
+        restoreUpdateSourceButton.heightAnchor.constraint(equalToConstant: 24).isActive = true
+        updateUpdateSourceRestoreButtonState()
+    }
+
     private func loadSettings() {
         isLoadingSettings = true
         defer {
@@ -2480,6 +2499,28 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         notifyNewVersion.isEnabled = showUpdateDependents
         updateFeedURLRow?.isHidden = !showUpdateDependents
         updateFeedURL.isEnabled = showUpdateDependents
+        updateUpdateSourceRestoreButtonState()
+    }
+
+    private func updateUpdateSourceRestoreButtonState() {
+        let showUpdateDependents = !settings.admin.disableAppUpdateFeatures && isOn(checkUpdates)
+        let usesDefaultSource = updateFeedURL.stringValue
+            .trimmingCharacters(in: .whitespacesAndNewlines) == Self.defaultUpdateFeedURL
+        restoreUpdateSourceButton.isEnabled = showUpdateDependents && !usesDefaultSource
+
+        let help: String
+        if !showUpdateDependents {
+            help = L10n.tr("prefs.restoreUpdateSourceDisabledUpdatesOffHelp")
+        } else if usesDefaultSource {
+            help = L10n.tr("prefs.restoreUpdateSourceDisabledDefaultHelp")
+        } else {
+            help = L10n.tr("prefs.restoreUpdateSourceHelp")
+        }
+        setIconOnlyActionHelp(
+            label: L10n.tr("prefs.restoreUpdateSource"),
+            help: help,
+            on: restoreUpdateSourceButton
+        )
     }
 
     private func updateShortcutConflictWarning() {
@@ -3048,6 +3089,19 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         setSaveStatus(.restored)
     }
 
+    @objc private func restoreUpdateSourcePressed(_ sender: NSButton) {
+        guard !settings.admin.disableAppUpdateFeatures,
+              isOn(checkUpdates),
+              updateFeedURL.stringValue.trimmingCharacters(in: .whitespacesAndNewlines) != Self.defaultUpdateFeedURL else {
+            updateUpdateSourceRestoreButtonState()
+            return
+        }
+
+        updateFeedURL.stringValue = Self.defaultUpdateFeedURL
+        updateUpdateSourceRestoreButtonState()
+        scheduleAutosave()
+    }
+
     private func confirmRestoreDefaults() -> Bool {
         makeRestoreDefaultsAlert().runModal() == .alertSecondButtonReturn
     }
@@ -3532,6 +3586,9 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         if let field = obj.object as? NSTextField, field === customPreferencesMessage {
             updateAdminMessageLabel(field.stringValue)
         }
+        if let field = obj.object as? NSTextField, field === updateFeedURL {
+            updateUpdateSourceRestoreButtonState()
+        }
         hasPendingTextEditing = true
         setSaveStatus(.editing)
     }
@@ -3549,6 +3606,9 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             }
             if field === customBodyTitle, hasCustomBodyIdeaRotation {
                 return
+            }
+            if field === updateFeedURL {
+                updateUpdateSourceRestoreButtonState()
             }
         }
         hasPendingTextEditing = false
@@ -4912,6 +4972,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func soundPickerRow(_ popup: NSPopUpButton, _ previewButton: NSButton) -> NSStackView {
         let stack = NSStackView(views: [popup, previewButton])
+        stack.orientation = .horizontal
+        stack.spacing = 8
+        stack.alignment = .centerY
+        return stack
+    }
+
+    private func updateSourceRow() -> NSStackView {
+        let stack = NSStackView(views: [updateFeedURL, restoreUpdateSourceButton])
         stack.orientation = .horizontal
         stack.spacing = 8
         stack.alignment = .centerY
