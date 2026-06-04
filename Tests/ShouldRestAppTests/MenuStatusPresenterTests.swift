@@ -239,22 +239,35 @@ final class MenuStatusPresenterTests: XCTestCase {
                 lastSeenAt: start
             )
         )
+        let appRuleLines = MenuStatusPresenter.lines(state: appRuleState, settings: .defaults, now: start)
+        let appRuleHeader = MenuStatusPresenter.headerContent(state: appRuleState, settings: .defaults, now: start)
+        let appRuleTooltip = MenuStatusPresenter.tooltip(state: appRuleState, settings: .defaults, now: start)
 
         XCTAssertEqual(
-            MenuStatusPresenter.lines(state: appRuleState, settings: .defaults, now: start)[0],
+            appRuleLines[0],
             "Body Break delayed: App rule: Presentation"
         )
+        XCTAssertEqual(appRuleLines[1], "Scheduling resumes automatically when this context ends.")
+        XCTAssertEqual(appRuleHeader.secondary, "Scheduling resumes automatically when this context ends.")
+        XCTAssertTrue(appRuleTooltip.contains("Scheduling resumes automatically when this context ends."))
         XCTAssertEqual(
             MenuStatusPresenter.lines(state: focusState, settings: .defaults, now: start)[0],
             "Body Break delayed: Focus or Do Not Disturb"
         )
         XCTAssertFalse(
-            MenuStatusPresenter.lines(state: appRuleState, settings: .defaults, now: start)[0]
-                .localizedCaseInsensitiveContains("exclusion")
+            appRuleLines[0].localizedCaseInsensitiveContains("exclusion")
         )
         XCTAssertFalse(
-            MenuStatusPresenter.lines(state: appRuleState, settings: .defaults, now: start)[0]
-                .localizedCaseInsensitiveContains("deferred")
+            appRuleLines[0].localizedCaseInsensitiveContains("deferred")
+        )
+
+        L10n.languageOverride = "zh-Hans"
+        XCTAssertEqual(
+            MenuStatusPresenter.lines(state: appRuleState, settings: .defaults, now: start),
+            [
+                "活动休息已延后：应用规则：Presentation",
+                "当前上下文结束后会自动恢复调度。"
+            ]
         )
     }
 

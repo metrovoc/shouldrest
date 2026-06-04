@@ -34,6 +34,10 @@ enum MenuStatusPresenter {
             lines.append(pauseSecondaryStatusText(pause, now: now))
             return lines
         }
+        if state.activeDeferral != nil {
+            lines.append(deferralSecondaryStatusText())
+            return lines
+        }
         if let bodyBreakStatus = nextBodyBreakStatusText(state: state, settings: settings) {
             lines.append(bodyBreakStatus)
         }
@@ -205,6 +209,10 @@ enum MenuStatusPresenter {
         case .focusMode:
             return L10n.tr("status.pauseReason.focusMode")
         }
+    }
+
+    private static func deferralSecondaryStatusText() -> String {
+        L10n.tr("status.deferralGuidance")
     }
 
     private static func activeRemainingText(seconds: Int) -> String {

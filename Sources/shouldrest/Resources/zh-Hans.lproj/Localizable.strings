@@ -108,7 +108,8 @@
 "status.bodyBreakActiveGuidance" = "使用覆盖层按钮推迟、跳过或完成。";
 "status.readyCompact" = "完成";
 "status.deferredShort" = "已延后";
-"status.deferred" = "%@ 已延后：%@";
+"status.deferred" = "%@已延后：%@";
+"status.deferralGuidance" = "当前上下文结束后会自动恢复调度。";
 "status.health" = "休息欠账：%d/10";
 "status.healthBadge" = "欠账 %d/10";
 "status.tooltipHeader" = "ShouldRest - 休息提醒应用";

@@ -109,6 +109,7 @@
 "status.readyCompact" = "done";
 "status.deferredShort" = "Delayed";
 "status.deferred" = "%@ delayed: %@";
+"status.deferralGuidance" = "Scheduling resumes automatically when this context ends.";
 "status.health" = "Rest debt: %d/10";
 "status.healthBadge" = "Debt %d/10";
 "status.tooltipHeader" = "ShouldRest - The rest reminder app";
