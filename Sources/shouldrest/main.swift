@@ -342,6 +342,29 @@ enum DisabledStatusMenuItemFactory {
     }
 }
 
+enum StatusMenuClipboardFeedback {
+    enum Kind {
+        case diagnostics
+        case settingsPath
+
+        var notificationBody: String {
+            switch self {
+            case .diagnostics:
+                return L10n.tr("menu.copyDebugDone")
+            case .settingsPath:
+                return L10n.tr("menu.copySettingsPathDone")
+            }
+        }
+    }
+
+    @discardableResult
+    static func copy(_ string: String, kind: Kind, pasteboard: NSPasteboard = .general) -> String {
+        pasteboard.clearContents()
+        pasteboard.setString(string, forType: .string)
+        return kind.notificationBody
+    }
+}
+
 @MainActor
 final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private let settingsStore: SettingsStore
@@ -1436,8 +1459,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func copyDebugInfo() {
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(debugInfo(), forType: .string)
+        let notificationBody = StatusMenuClipboardFeedback.copy(debugInfo(), kind: .diagnostics)
+        showAppNotification(title: L10n.tr("app.name"), body: notificationBody)
         logger.log("Diagnostics copied")
     }
 
@@ -1447,8 +1470,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func copySettingsPath() {
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(settingsStore.fileURL.path, forType: .string)
+        let notificationBody = StatusMenuClipboardFeedback.copy(settingsStore.fileURL.path, kind: .settingsPath)
+        showAppNotification(title: L10n.tr("app.name"), body: notificationBody)
         logger.log("Settings path copied")
     }
 

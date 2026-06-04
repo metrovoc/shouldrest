@@ -52,6 +52,7 @@
 "menu.downloadLatestHelp" = "Open the latest ShouldRest release download page.";
 "menu.copyDebug" = "Copy Diagnostics";
 "menu.copyDebugHelp" = "Copy the current rest state, settings summary, and support paths.";
+"menu.copyDebugDone" = "Diagnostics copied to the clipboard.";
 "menu.debugPanel" = "Diagnostics...";
 "menu.debugPanelHelp" = "Open the diagnostics window.";
 "menu.about" = "About ShouldRest...";
@@ -62,6 +63,7 @@
 "menu.showSettingsFileHelp" = "Reveal the settings file in Finder.";
 "menu.copySettingsPath" = "Copy Settings Path";
 "menu.copySettingsPathHelp" = "Copy the settings file path.";
+"menu.copySettingsPathDone" = "Settings path copied to the clipboard.";
 "menu.quit" = "Quit ShouldRest";
 "menu.quitHelp" = "Quit ShouldRest when no strict rest is active.";
 "notification.eyeGateSoon" = "Eye Gate soon";
