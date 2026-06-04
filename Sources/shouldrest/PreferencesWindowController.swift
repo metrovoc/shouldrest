@@ -1630,6 +1630,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         control.setAccessibilityHelp(help)
     }
 
+    private func setOptionalHelp(_ help: String?, on control: NSControl) {
+        control.toolTip = help
+        control.setAccessibilityHelp(help)
+    }
+
     private func setIconOnlyActionHelp(_ help: String, on button: NSButton) {
         setHelp(help, on: button)
         button.setAccessibilityLabel(help)
@@ -2115,6 +2120,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let eyeGateEnabled = isOn(eyeEnabled)
         let strictPreferencesHidden = isOn(hideStrictPreferences)
         updateScheduleSummary()
+        updateRestEnablementGuards(eyeGateEnabled: eyeGateEnabled)
         [eyeIntervalRow, eyeDurationRow, eyeColorRow].forEach { $0?.isHidden = !eyeGateEnabled }
         [eyeNotify, eyeManualFinish].forEach { $0.isHidden = !eyeGateEnabled }
         setNumberInputEnabled(eyeInterval, eyeGateEnabled)
@@ -2244,6 +2250,18 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             eyeManualFinishEnabled: isOn(eyeManualFinish),
             strictPreferencesHidden: strictPreferencesHidden
         )
+    }
+
+    private func updateRestEnablementGuards(eyeGateEnabled: Bool) {
+        let bodyBreakEnabled = isOn(bodyEnabled)
+        let canToggleEyeGate = !eyeGateEnabled || bodyBreakEnabled
+        let canToggleBodyBreak = !bodyBreakEnabled || eyeGateEnabled
+        let help = L10n.tr("prefs.cannotDisableBothRests")
+
+        eyeEnabled.isEnabled = canToggleEyeGate
+        bodyEnabled.isEnabled = canToggleBodyBreak
+        setOptionalHelp(canToggleEyeGate ? nil : help, on: eyeEnabled)
+        setOptionalHelp(canToggleBodyBreak ? nil : help, on: bodyEnabled)
     }
 
     private func updateScheduleSummary() {

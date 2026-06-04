@@ -190,6 +190,37 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertEqual(savedSettings.value?.eyeGate.isEnabled, false)
     }
 
+    func testLastEnabledRestTypeCannotBeDisabledFromScheduleUI() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectScheduleTab(in: contentView)
+        let bodyEnabled = try XCTUnwrap(view(withIdentifier: "prefs.bodyEnabled", in: contentView) as? NSButton)
+        let eyeEnabled = try XCTUnwrap(view(withIdentifier: "prefs.eyeEnabled", in: contentView) as? NSButton)
+
+        XCTAssertTrue(eyeEnabled.isEnabled)
+        XCTAssertTrue(bodyEnabled.isEnabled)
+
+        bodyEnabled.state = .off
+        XCTAssertTrue(sendAction(from: bodyEnabled))
+
+        XCTAssertFalse(eyeEnabled.isEnabled)
+        XCTAssertTrue(bodyEnabled.isEnabled)
+        XCTAssertEqual(eyeEnabled.toolTip, L10n.tr("prefs.cannotDisableBothRests"))
+        XCTAssertEqual(eyeEnabled.accessibilityHelp(), L10n.tr("prefs.cannotDisableBothRests"))
+
+        bodyEnabled.state = .on
+        XCTAssertTrue(sendAction(from: bodyEnabled))
+        eyeEnabled.state = .off
+        XCTAssertTrue(sendAction(from: eyeEnabled))
+
+        XCTAssertTrue(eyeEnabled.isEnabled)
+        XCTAssertFalse(bodyEnabled.isEnabled)
+        XCTAssertNil(eyeEnabled.toolTip)
+        XCTAssertEqual(bodyEnabled.toolTip, L10n.tr("prefs.cannotDisableBothRests"))
+        XCTAssertEqual(bodyEnabled.accessibilityHelp(), L10n.tr("prefs.cannotDisableBothRests"))
+    }
+
     func testDisabledEyeGateHidesDependentScheduleRows() throws {
         var settings = RestSettings.defaults
         settings.eyeGate.isEnabled = false
