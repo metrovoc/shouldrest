@@ -48,6 +48,8 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         XCTAssertFalse(searchStatus.isHidden)
         XCTAssertTrue(searchStatus.stringValue.contains(L10n.tr("prefs.tabShortcuts")))
         XCTAssertTrue(searchStatus.stringValue.contains(L10n.tr("prefs.pause5hShortcut")))
+        XCTAssertEqual(searchStatus.toolTip, searchStatus.stringValue)
+        XCTAssertEqual(searchStatus.accessibilityHelp(), searchStatus.stringValue)
 
         let pause5h = try XCTUnwrap(view(withIdentifier: "shortcut.pause5h", in: contentView))
         let pause5hRecorder = try XCTUnwrap(pause5h as? ShortcutRecorderButton)
@@ -163,7 +165,9 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         searchField.stringValue = "json"
 
         XCTAssertTrue(sendAction(from: searchField))
-        XCTAssertEqual(searchStatus.stringValue, L10n.tr("prefs.searchNoResults"))
+        XCTAssertEqual(searchStatus.stringValue, L10n.format("prefs.searchNoResults", "json"))
+        XCTAssertEqual(searchStatus.toolTip, searchStatus.stringValue)
+        XCTAssertEqual(searchStatus.accessibilityHelp(), searchStatus.stringValue)
         XCTAssertNil(savedSettings.value)
     }
 
@@ -216,8 +220,13 @@ final class PreferencesWindowNavigationTests: XCTestCase {
 
         XCTAssertEqual(tabView.selectedTabViewItem?.identifier as? String, originalSelection)
         XCTAssertFalse(searchStatus.isHidden)
-        XCTAssertEqual(searchStatus.stringValue, L10n.tr("prefs.searchNoResults"))
+        XCTAssertEqual(
+            searchStatus.stringValue,
+            L10n.format("prefs.searchNoResults", "setting-that-does-not-exist")
+        )
         XCTAssertEqual(searchStatus.textColor, .systemOrange)
+        XCTAssertEqual(searchStatus.toolTip, searchStatus.stringValue)
+        XCTAssertEqual(searchStatus.accessibilityHelp(), searchStatus.stringValue)
     }
 
     func testPreferenceSearchIgnoresCurrentlyHiddenSettings() throws {
@@ -241,8 +250,13 @@ final class PreferencesWindowNavigationTests: XCTestCase {
 
         XCTAssertEqual(tabView.selectedTabViewItem?.identifier as? String, originalSelection)
         XCTAssertFalse(searchStatus.isHidden)
-        XCTAssertEqual(searchStatus.stringValue, L10n.tr("prefs.searchNoResults"))
+        XCTAssertEqual(
+            searchStatus.stringValue,
+            L10n.format("prefs.searchNoResults", L10n.tr("prefs.maxPostpones"))
+        )
         XCTAssertEqual(searchStatus.textColor, .systemOrange)
+        XCTAssertEqual(searchStatus.toolTip, searchStatus.stringValue)
+        XCTAssertEqual(searchStatus.accessibilityHelp(), searchStatus.stringValue)
         XCTAssertNil(savedSettings.value)
     }
 

@@ -4746,8 +4746,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         guard !normalizedQuery.isEmpty else {
             currentSearchQuery = ""
             currentSearchTargetView = nil
-            searchStatusLabel.stringValue = ""
-            searchStatusLabel.isHidden = true
+            setSearchStatus("", hidden: true)
             return
         }
 
@@ -4758,9 +4757,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         guard !matches.isEmpty else {
             currentSearchQuery = normalizedQuery
             currentSearchTargetView = nil
-            searchStatusLabel.stringValue = L10n.tr("prefs.searchNoResults")
-            searchStatusLabel.textColor = .systemOrange
-            searchStatusLabel.isHidden = false
+            setSearchStatus(
+                L10n.format(
+                    "prefs.searchNoResults",
+                    query.trimmingCharacters(in: .whitespacesAndNewlines)
+                ),
+                color: .systemOrange
+            )
             return
         }
 
@@ -4781,13 +4784,24 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         target.view.scrollToVisible(target.view.bounds)
         highlightSearchTarget(target.view)
         focusSearchTarget(target.view)
-        searchStatusLabel.stringValue = searchStatusText(
+        setSearchStatus(searchStatusText(
             target: target,
             index: targetIndex,
             count: matches.count
-        )
-        searchStatusLabel.textColor = .secondaryLabelColor
-        searchStatusLabel.isHidden = false
+        ))
+    }
+
+    private func setSearchStatus(
+        _ text: String,
+        color: NSColor = .secondaryLabelColor,
+        hidden: Bool = false
+    ) {
+        searchStatusLabel.stringValue = text
+        searchStatusLabel.textColor = color
+        searchStatusLabel.isHidden = hidden
+        let help = hidden || text.isEmpty ? nil : text
+        searchStatusLabel.toolTip = help
+        searchStatusLabel.setAccessibilityHelp(help)
     }
 
     private func searchStatusText(target: PreferencesSearchTarget, index: Int, count: Int) -> String {

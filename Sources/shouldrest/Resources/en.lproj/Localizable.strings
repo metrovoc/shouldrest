@@ -472,7 +472,7 @@
 "prefs.searchHelp" = "Press Command-F to find a setting. Press Return for the next match, or Esc to clear.";
 "prefs.searchMatched" = "%@ · %@";
 "prefs.searchMatchedIndexed" = "%d/%d · %@ · %@";
-"prefs.searchNoResults" = "No matching setting";
+"prefs.searchNoResults" = "No setting matches \"%@\"";
 "prefs.shortcutConflictTitle" = "Shortcut conflict";
 "prefs.shortcutConflict" = "Shortcut conflict: %@ is assigned to %@.";
 "prefs.shortcutConflictReview" = "Show";

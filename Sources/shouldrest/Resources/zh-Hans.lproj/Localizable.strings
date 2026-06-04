@@ -472,7 +472,7 @@
 "prefs.searchHelp" = "按 Command-F 查找设置。按 Return 跳到下一个结果，按 Esc 清空。";
 "prefs.searchMatched" = "%@ · %@";
 "prefs.searchMatchedIndexed" = "%d/%d · %@ · %@";
-"prefs.searchNoResults" = "没有匹配的设置";
+"prefs.searchNoResults" = "没有匹配“%@”的设置";
 "prefs.shortcutConflictTitle" = "快捷键冲突";
 "prefs.shortcutConflict" = "快捷键冲突：%@ 同时分配给 %@。";
 "prefs.shortcutConflictReview" = "定位";
