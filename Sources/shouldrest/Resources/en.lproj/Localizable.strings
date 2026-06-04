@@ -142,14 +142,14 @@
 "prefs.enableEyeGate" = "Enable Eye Gate";
 "prefs.cannotDisableBothRests" = "At least one rest type must stay enabled.";
 "prefs.notifyEyeGate" = "Notify before Eye Gate";
-"prefs.eyeManualFinish" = "Manual finish after Eye Gate duration";
-"prefs.eyeManualFinishHelp" = "After the required Eye Gate duration, keep the overlay up until you explicitly finish. This never enables early dismissal.";
+"prefs.eyeManualFinish" = "Wait for me after Eye Gate ends";
+"prefs.eyeManualFinishHelp" = "When the Eye Gate timer ends, keep the overlay up until you finish it. Early dismissal stays disabled.";
 "prefs.eyeEmergencyOverride" = "Enable Emergency Exit";
 "prefs.eyeEmergencyOverrideHelp" = "First click or Esc arms Emergency Exit inside the overlay; the second click or Esc exits and records a missed Eye Gate.";
 "prefs.enableBodyBreak" = "Enable Body Break";
 "prefs.notifyBodyBreak" = "Notify before Body Break";
-"prefs.manualFinish" = "Manual finish after Body Break duration";
-"prefs.bodyManualFinishHelp" = "After the required Body Break duration, wait for an explicit finish instead of closing immediately.";
+"prefs.manualFinish" = "Wait for me after Body Break ends";
+"prefs.bodyManualFinishHelp" = "When the Body Break timer ends, keep the overlay up until you finish it instead of closing immediately.";
 "prefs.naturalBreaks" = "Credit natural rests from idle time";
 "prefs.monitorFocus" = "Monitor Focus / Do Not Disturb";
 "prefs.focusDefersBody" = "Focus mode defers Body Break";
@@ -441,7 +441,7 @@
 "onboarding.emergencyFeatureTitle" = "Emergency without deadlock";
 "onboarding.emergencyFeatureBody" = "Emergency Exit is owned by the overlay: Esc, the configured shortcut, or the dim red Emergency affordance arms it first; the second click or Esc exits from inside the overlay without asking you to click another window.";
 "onboarding.bodyFeatureTitle" = "Configurable Body Breaks";
-"onboarding.bodyFeatureBody" = "Longer movement breaks can use postpones, images, display rules, and manual finish.";
+"onboarding.bodyFeatureBody" = "Longer movement breaks can use postpones, images, display rules, and wait for you to finish.";
 "onboarding.rhythmTitle" = "Choose your starting rhythm";
 "onboarding.learnMore" = "About ShouldRest";
 "onboarding.learnMoreHelp" = "Open product details and project links.";
@@ -457,7 +457,7 @@
 "about.eyeGateTitle" = "Short, frequent Eye Gates";
 "about.eyeGateBody" = "Opaque screen coverage keeps 20-second eye rests hard to ignore.";
 "about.bodyBreakTitle" = "Configurable Body Breaks";
-"about.bodyBreakBody" = "Longer breaks keep postpones, display rules, images, and manual finish.";
+"about.bodyBreakBody" = "Longer breaks keep postpones, display rules, images, and wait until you finish.";
 "about.compatibilityTitle" = "Stretchly-compatible where it helps";
 "about.compatibilityBody" = "Scheduling, automation, updates, diagnostics, and preferences stay available.";
 "about.ok" = "OK";

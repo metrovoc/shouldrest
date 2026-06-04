@@ -142,14 +142,14 @@
 "prefs.enableEyeGate" = "启用护眼休息";
 "prefs.cannotDisableBothRests" = "至少需要保留一种休息类型。";
 "prefs.notifyEyeGate" = "护眼休息前通知";
-"prefs.eyeManualFinish" = "护眼休息到时后手动完成";
-"prefs.eyeManualFinishHelp" = "达到护眼休息时长后，覆盖层继续等待你明确完成；这不会允许提前结束。";
+"prefs.eyeManualFinish" = "护眼休息计时结束后等我完成";
+"prefs.eyeManualFinishHelp" = "计时结束后，覆盖层会继续显示，直到你完成休息；仍然不能提前结束。";
 "prefs.eyeEmergencyOverride" = "启用紧急退出";
 "prefs.eyeEmergencyOverrideHelp" = "第一次点击或按 Esc 会在覆盖层内进入待确认；第二次点击或按 Esc 才退出，并记录为一次未完成护眼休息。";
 "prefs.enableBodyBreak" = "启用活动休息";
 "prefs.notifyBodyBreak" = "活动休息前通知";
-"prefs.manualFinish" = "活动休息到时后手动完成";
-"prefs.bodyManualFinishHelp" = "达到活动休息时长后，等待你明确完成，而不是立即关闭。";
+"prefs.manualFinish" = "活动休息计时结束后等我完成";
+"prefs.bodyManualFinishHelp" = "计时结束后，覆盖层会继续显示，直到你完成休息，而不是立即关闭。";
 "prefs.naturalBreaks" = "用空闲时间抵扣自然休息";
 "prefs.monitorFocus" = "监测专注 / 勿扰模式";
 "prefs.focusDefersBody" = "专注模式延后活动休息";
@@ -441,7 +441,7 @@
 "onboarding.emergencyFeatureTitle" = "紧急退出不再锁死";
 "onboarding.emergencyFeatureBody" = "紧急退出由覆盖层自身处理：Esc、配置的快捷键或淡红色紧急入口都会先进入待确认状态；第二次点击或再次按 Esc 才会从覆盖层内退出，不再要求你点击另一个窗口。";
 "onboarding.bodyFeatureTitle" = "活动休息可配置";
-"onboarding.bodyFeatureBody" = "更长的活动休息支持推迟、图片、显示器规则和手动完成。";
+"onboarding.bodyFeatureBody" = "更长的活动休息支持推迟、图片、显示器规则，并可等你完成后再关闭。";
 "onboarding.rhythmTitle" = "选择初始休息节奏";
 "onboarding.learnMore" = "关于 ShouldRest";
 "onboarding.learnMoreHelp" = "打开产品信息和项目链接。";
@@ -457,7 +457,7 @@
 "about.eyeGateTitle" = "短而频繁的护眼休息";
 "about.eyeGateBody" = "不透明覆盖让 20 秒护眼休息更难被忽视。";
 "about.bodyBreakTitle" = "可配置的活动休息";
-"about.bodyBreakBody" = "较长休息保留推迟、显示器规则、图片和手动完成。";
+"about.bodyBreakBody" = "较长休息保留推迟、显示器规则、图片，并可等你完成后再关闭。";
 "about.compatibilityTitle" = "在有帮助处兼容 Stretchly";
 "about.compatibilityBody" = "调度、自动化、更新、诊断和偏好设置仍然可用。";
 "about.ok" = "好";
