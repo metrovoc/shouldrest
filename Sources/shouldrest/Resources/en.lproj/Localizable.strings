@@ -159,9 +159,9 @@
 "prefs.checkUpdates" = "Check for updates";
 "prefs.notifyNewVersion" = "Notify when a new version is found";
 "prefs.showOnboardingNextLaunch" = "Show welcome window on next launch";
-"prefs.adminHideUpdates" = "Admin: hide update UI";
-"prefs.adminHideSettingsPath" = "Admin: hide settings, log, support, and image paths";
-"prefs.adminHideStrict" = "Admin: hide strict preferences";
+"prefs.adminHideUpdates" = "Hide update UI";
+"prefs.adminHideSettingsPath" = "Hide settings, log, support, and image paths";
+"prefs.adminHideStrict" = "Hide strict preferences";
 "prefs.tabSchedule" = "Schedule";
 "prefs.tabContext" = "Context";
 "prefs.tabAppearance" = "Appearance";

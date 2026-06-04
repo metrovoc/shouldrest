@@ -37,6 +37,26 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.updateFeedURL")))
     }
 
+    func testAdministrativeControlsDoNotRepeatAdminPrefix() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        var settings = RestSettings.defaults
+        settings.admin.disableAppUpdateFeatures = true
+        settings.admin.hideSettingsFileLocation = true
+        settings.admin.hideStrictPreferences = true
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAdvancedTab(in: contentView)
+        let visibleTexts = visibleTexts(in: contentView)
+
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.adminHideUpdates")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.adminHideSettingsPath")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.adminHideStrict")))
+        XCTAssertFalse(visibleTexts.contains { $0.contains("Admin:") })
+    }
+
     func testTurningOffUpdateCheckingHidesDependentPreferencesAndAutosaves() throws {
         let savedSettings = SavedSettingsBox()
         let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
