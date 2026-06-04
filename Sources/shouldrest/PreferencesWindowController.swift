@@ -909,29 +909,39 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         let appearanceStack = contentStack()
         appearanceStack.addArrangedSubview(section(L10n.tr("prefs.sectionPresentation"), symbolName: "paintbrush"))
+        themeSource.identifier = NSUserInterfaceItemIdentifier("prefs.theme")
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.theme"), themeSource))
+        languageIdentifier.identifier = NSUserInterfaceItemIdentifier("prefs.language")
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.language"), languageIdentifier))
         currentTimeInBodyBreak.identifier = NSUserInterfaceItemIdentifier("prefs.currentTimeBody")
         appearanceStack.addArrangedSubview(currentTimeInBodyBreak)
+        breakHealth.identifier = NSUserInterfaceItemIdentifier("prefs.breakHealth")
         appearanceStack.addArrangedSubview(breakHealth)
+        silentNotifications.identifier = NSUserInterfaceItemIdentifier("prefs.silentNotifications")
         appearanceStack.addArrangedSubview(silentNotifications)
         let eyeStartSoundRow = row(L10n.tr("prefs.eyeStartSound"), soundPickerRow(eyeStartSound, eyeStartSoundPreview))
+        eyeStartSound.identifier = NSUserInterfaceItemIdentifier("prefs.eyeStartSound")
         eyeStartSoundRow.identifier = NSUserInterfaceItemIdentifier("prefs.eyeStartSoundRow")
         self.eyeStartSoundRow = eyeStartSoundRow
         appearanceStack.addArrangedSubview(eyeStartSoundRow)
         let eyeFinishSoundRow = row(L10n.tr("prefs.eyeFinishSound"), soundPickerRow(eyeFinishSound, eyeFinishSoundPreview))
+        eyeFinishSound.identifier = NSUserInterfaceItemIdentifier("prefs.eyeFinishSound")
         eyeFinishSoundRow.identifier = NSUserInterfaceItemIdentifier("prefs.eyeFinishSoundRow")
         self.eyeFinishSoundRow = eyeFinishSoundRow
         appearanceStack.addArrangedSubview(eyeFinishSoundRow)
         let bodyStartSoundRow = row(L10n.tr("prefs.bodyStartSound"), soundPickerRow(bodyStartSound, bodyStartSoundPreview))
+        bodyStartSound.identifier = NSUserInterfaceItemIdentifier("prefs.bodyStartSound")
         bodyStartSoundRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyStartSoundRow")
         self.bodyStartSoundRow = bodyStartSoundRow
         appearanceStack.addArrangedSubview(bodyStartSoundRow)
         let bodyFinishSoundRow = row(L10n.tr("prefs.bodyFinishSound"), soundPickerRow(bodyFinishSound, bodyFinishSoundPreview))
+        bodyFinishSound.identifier = NSUserInterfaceItemIdentifier("prefs.bodyFinishSound")
         bodyFinishSoundRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyFinishSoundRow")
         self.bodyFinishSoundRow = bodyFinishSoundRow
         appearanceStack.addArrangedSubview(bodyFinishSoundRow)
-        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.volume"), soundVolumeRow()))
+        let soundVolumeControlRow = row(L10n.tr("prefs.volume"), soundVolumeRow())
+        soundVolumeControlRow.identifier = NSUserInterfaceItemIdentifier("prefs.soundVolumeRow")
+        appearanceStack.addArrangedSubview(soundVolumeControlRow)
         appearanceStack.addArrangedSubview(soundPreviewStatusLabel)
         appearanceStack.addArrangedSubview(separator())
         appearanceStack.addArrangedSubview(section(L10n.tr("prefs.sectionCustomIdea"), symbolName: "text.bubble"))
@@ -964,6 +974,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         customBodyIdeasJSONRow.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyIdeasJSONRow")
         self.customBodyIdeasJSONRow = customBodyIdeasJSONRow
         appearanceStack.addArrangedSubview(customBodyIdeasJSONRow)
+        configureAppearancePreferenceHelp()
         addTab(to: tabView, title: L10n.tr("prefs.tabAppearance"), icon: .systemSymbol("paintbrush"), stack: appearanceStack)
 
         let shortcutsStack = contentStack()
@@ -1348,7 +1359,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         let wideFields: [NSView] = [
             eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, customBodyTitle,
-            localImagePath, languageIdentifier, shortcutPauseToggle,
+            localImagePath, themeSource, languageIdentifier, shortcutPauseToggle,
             shortcutPause30, shortcutPause1h, shortcutPause2h, shortcutPause5h, shortcutPauseUntilMorning,
             shortcutNextScheduled, shortcutEyeNow, shortcutBodyNow, shortcutEndBody,
             shortcutEmergencyEye, shortcutReset,
@@ -1404,11 +1415,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     private func configureSoundVolumeControls() {
+        soundVolumeSlider.identifier = NSUserInterfaceItemIdentifier("prefs.soundVolumeSlider")
         soundVolumeSlider.minValue = 0
         soundVolumeSlider.maxValue = 1
         soundVolumeSlider.numberOfTickMarks = 5
         soundVolumeSlider.allowsTickMarkValuesOnly = false
         soundVolumeSlider.widthAnchor.constraint(equalToConstant: 190).isActive = true
+        soundVolumeValueLabel.identifier = NSUserInterfaceItemIdentifier("prefs.soundVolumeValue")
         soundVolumeValueLabel.textColor = .secondaryLabelColor
         soundVolumeValueLabel.alignment = .right
         soundVolumeValueLabel.widthAnchor.constraint(equalToConstant: 54).isActive = true
@@ -1806,6 +1819,21 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         setHelp(L10n.tr("prefs.bodyContentDisplayHelp"), on: bodyContentDisplay)
         setHelp(L10n.tr("prefs.bodyBlankSecondaryHelp"), on: bodyBlankSecondaryDisplays)
         setHelp(L10n.tr("prefs.configuredDisplayIndexHelp"), on: bodyConfiguredDisplay)
+    }
+
+    private func configureAppearancePreferenceHelp() {
+        setHelp(L10n.tr("prefs.themeHelp"), on: themeSource)
+        setHelp(L10n.tr("prefs.languageHelp"), on: languageIdentifier)
+        setHelp(L10n.tr("prefs.currentTimeBodyHelp"), on: currentTimeInBodyBreak)
+        setHelp(L10n.tr("prefs.breakHealthHelp"), on: breakHealth)
+        setHelp(L10n.tr("prefs.silentNotificationsHelp"), on: silentNotifications)
+        setHelp(L10n.tr("prefs.eyeStartSoundHelp"), on: eyeStartSound)
+        setHelp(L10n.tr("prefs.eyeFinishSoundHelp"), on: eyeFinishSound)
+        setHelp(L10n.tr("prefs.bodyStartSoundHelp"), on: bodyStartSound)
+        setHelp(L10n.tr("prefs.bodyFinishSoundHelp"), on: bodyFinishSound)
+        setHelp(L10n.tr("prefs.soundVolumeHelp"), on: soundVolumeSlider)
+        setHelp(L10n.tr("prefs.soundVolumeHelp"), on: soundVolumeValueLabel)
+        setHelp(L10n.tr("prefs.useBuiltInIdeasHelp"), on: useBuiltInIdeas)
     }
 
     private func setNumberInputHelp(_ help: String, on field: NSTextField) {

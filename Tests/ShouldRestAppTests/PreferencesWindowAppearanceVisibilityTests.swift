@@ -19,6 +19,39 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertFalse(visibleTexts.contains("仅图标 - 最短"))
     }
 
+    func testAppearanceControlsExposeBehaviorHelp() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+
+        let expectedHelp: [(identifier: String, helpKey: String)] = [
+            ("prefs.theme", "prefs.themeHelp"),
+            ("prefs.language", "prefs.languageHelp"),
+            ("prefs.currentTimeBody", "prefs.currentTimeBodyHelp"),
+            ("prefs.breakHealth", "prefs.breakHealthHelp"),
+            ("prefs.silentNotifications", "prefs.silentNotificationsHelp"),
+            ("prefs.eyeStartSound", "prefs.eyeStartSoundHelp"),
+            ("prefs.eyeFinishSound", "prefs.eyeFinishSoundHelp"),
+            ("prefs.bodyStartSound", "prefs.bodyStartSoundHelp"),
+            ("prefs.bodyFinishSound", "prefs.bodyFinishSoundHelp"),
+            ("prefs.soundVolumeSlider", "prefs.soundVolumeHelp"),
+            ("prefs.soundVolumeValue", "prefs.soundVolumeHelp"),
+            ("prefs.useBuiltInIdeas", "prefs.useBuiltInIdeasHelp")
+        ]
+
+        for expectation in expectedHelp {
+            let control = try XCTUnwrap(
+                view(withIdentifier: expectation.identifier, in: contentView) as? NSControl,
+                expectation.identifier
+            )
+            XCTAssertEqual(control.toolTip, L10n.tr(expectation.helpKey), expectation.identifier)
+            XCTAssertEqual(control.accessibilityHelp(), L10n.tr(expectation.helpKey), expectation.identifier)
+        }
+        XCTAssertFalse(visibleTexts(in: contentView).contains(L10n.tr("prefs.themeHelp")))
+        XCTAssertFalse(visibleTexts(in: contentView).contains(L10n.tr("prefs.soundVolumeHelp")))
+    }
+
     func testDisabledBodyBreakHidesBodyOnlyAppearanceControls() throws {
         var settings = RestSettings.defaults
         settings.bodyBreak.isEnabled = false
