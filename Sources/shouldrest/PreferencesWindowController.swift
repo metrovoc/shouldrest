@@ -3320,7 +3320,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     @objc private func copyAppRulesBulkEditorPressed(_ sender: NSButton) {
-        copyBulkEditorText(appExclusionsJSONEditor)
+        copyBulkEditorText(appExclusionsJSONEditor, copiedObjectName: L10n.tr("prefs.advancedRulesJSON"))
     }
 
     @objc private func restoreAppRulesBulkEditorPressed(_ sender: NSButton) {
@@ -3335,7 +3335,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     @objc private func copyIdeasBulkEditorPressed(_ sender: NSButton) {
-        copyBulkEditorText(customBodyIdeasJSONEditor)
+        copyBulkEditorText(customBodyIdeasJSONEditor, copiedObjectName: L10n.tr("prefs.advancedIdeasJSON"))
     }
 
     @objc private func restoreIdeasBulkEditorPressed(_ sender: NSButton) {
@@ -3348,7 +3348,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
     }
 
-    private func copyBulkEditorText(_ editor: NSTextView) {
+    private func copyBulkEditorText(_ editor: NSTextView, copiedObjectName: String) {
         let text = editor.string
         guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             updateAdvancedBulkEditorActionStates()
@@ -3356,7 +3356,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(text, forType: .string)
-        setSaveStatus(.copied)
+        setSaveStatus(.copied, objectName: copiedObjectName)
         updateAdvancedBulkEditorActionStates()
     }
 
@@ -3624,7 +3624,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         return flushPendingAutosave(showAlerts: true)
     }
 
-    private func setSaveStatus(_ status: PreferencesSaveStatus) {
+    private func setSaveStatus(_ status: PreferencesSaveStatus, objectName: String? = nil) {
         switch status {
         case .invalid:
             break
@@ -3657,7 +3657,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         case .copied:
             symbolName = "doc.on.clipboard"
             color = .systemBlue
-            title = L10n.tr("prefs.autosaveCopied")
+            title = objectName.map { L10n.format("prefs.autosaveCopiedField", $0) }
+                ?? L10n.tr("prefs.autosaveCopied")
         case .restored:
             symbolName = "arrow.counterclockwise.circle.fill"
             color = .systemBlue
@@ -3681,6 +3682,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         saveStatusLabel.toolTip = help
         saveStatusIcon.setAccessibilityLabel(title)
         saveStatusIcon.setAccessibilityHelp(help)
+        saveStatusLabel.setAccessibilityLabel(title)
         saveStatusLabel.setAccessibilityHelp(help)
     }
 

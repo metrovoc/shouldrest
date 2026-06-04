@@ -187,12 +187,11 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         NSPasteboard.general.clearContents()
         XCTAssertTrue(sendAction(from: appCopy))
         XCTAssertEqual(NSPasteboard.general.string(forType: .string), appEditor.string)
-        XCTAssertEqual(statusLabel.stringValue, L10n.tr("prefs.autosaveCopied"))
-        XCTAssertEqual(statusLabel.toolTip, L10n.tr("prefs.autosaveCopied"))
-        XCTAssertEqual(statusLabel.accessibilityHelp(), L10n.tr("prefs.autosaveCopied"))
-        XCTAssertEqual(statusIcon.image?.accessibilityDescription, L10n.tr("prefs.autosaveCopied"))
-        XCTAssertEqual(statusIcon.accessibilityLabel(), L10n.tr("prefs.autosaveCopied"))
-        XCTAssertEqual(statusIcon.accessibilityHelp(), L10n.tr("prefs.autosaveCopied"))
+        assertAutosaveStatus(
+            label: statusLabel,
+            icon: statusIcon,
+            title: L10n.format("prefs.autosaveCopiedField", L10n.tr("prefs.advancedRulesJSON"))
+        )
 
         appEditor.string = "{ invalid json"
         controller.textDidChange(Notification(name: NSText.didChangeNotification, object: appEditor))
@@ -211,6 +210,11 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         NSPasteboard.general.clearContents()
         XCTAssertTrue(sendAction(from: ideasCopy))
         XCTAssertEqual(NSPasteboard.general.string(forType: .string), ideasEditor.string)
+        assertAutosaveStatus(
+            label: statusLabel,
+            icon: statusIcon,
+            title: L10n.format("prefs.autosaveCopiedField", L10n.tr("prefs.advancedIdeasJSON"))
+        )
 
         ideasEditor.string = "{ invalid json"
         controller.textDidChange(Notification(name: NSText.didChangeNotification, object: ideasEditor))
@@ -521,6 +525,22 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         while settings.value == nil && Date() < deadline {
             RunLoop.current.run(until: Date().addingTimeInterval(0.05))
         }
+    }
+
+    private func assertAutosaveStatus(
+        label: NSTextField,
+        icon: NSImageView,
+        title: String,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        XCTAssertEqual(label.stringValue, title, file: file, line: line)
+        XCTAssertEqual(label.toolTip, title, file: file, line: line)
+        XCTAssertEqual(label.accessibilityLabel(), title, file: file, line: line)
+        XCTAssertEqual(label.accessibilityHelp(), title, file: file, line: line)
+        XCTAssertEqual(icon.image?.accessibilityDescription, title, file: file, line: line)
+        XCTAssertEqual(icon.accessibilityLabel(), title, file: file, line: line)
+        XCTAssertEqual(icon.accessibilityHelp(), title, file: file, line: line)
     }
 }
 

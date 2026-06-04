@@ -487,6 +487,7 @@
 "prefs.autosaveSaving" = "正在保存…";
 "prefs.autosaveSaved" = "已保存";
 "prefs.autosaveCopied" = "已复制到剪贴板";
+"prefs.autosaveCopiedField" = "%@已复制到剪贴板";
 "prefs.autosaveRestored" = "已恢复默认";
 "prefs.autosaveInvalid" = "修复批量编辑内容后保存";
 "prefs.autosaveInvalidField" = "修复%@后保存";
