@@ -5426,7 +5426,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func updateSoundVolumeLabel() {
         let value = min(1, max(0, soundVolumeSlider.doubleValue))
-        soundVolumeValueLabel.stringValue = "\(Int(round(value * 100)))%"
+        let percentage = "\(Int(round(value * 100)))%"
+        let help = L10n.format("prefs.soundVolumeValueHelp", percentage)
+        soundVolumeValueLabel.stringValue = percentage
+        soundVolumeValueLabel.toolTip = help
+        soundVolumeValueLabel.setAccessibilityLabel(percentage)
+        soundVolumeValueLabel.setAccessibilityHelp(help)
+        soundVolumeSlider.setAccessibilityValue(percentage as NSString)
     }
 
     private func selected<T: RawRepresentable>(_ type: T.Type, from popup: NSPopUpButton, fallback: T) -> T where T.RawValue == String {

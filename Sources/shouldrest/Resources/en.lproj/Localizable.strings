@@ -380,6 +380,7 @@
 "prefs.sound.custom" = "Custom (%@)";
 "prefs.volume" = "Sound volume";
 "prefs.soundVolumeHelp" = "Volume used for rest sounds and sound previews.";
+"prefs.soundVolumeValueHelp" = "Current sound volume: %@. Used for rest sounds and sound previews.";
 "prefs.sectionCustomIdea" = "Rest Content";
 "prefs.useBuiltInIdeas" = "Include built-in rest ideas";
 "prefs.useBuiltInIdeasHelp" = "Include the built-in Body Break suggestions in the rotation.";

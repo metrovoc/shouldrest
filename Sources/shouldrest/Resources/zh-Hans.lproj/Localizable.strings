@@ -380,6 +380,7 @@
 "prefs.sound.custom" = "自定义（%@）";
 "prefs.volume" = "声音音量";
 "prefs.soundVolumeHelp" = "休息声音和试听声音使用的音量。";
+"prefs.soundVolumeValueHelp" = "当前声音音量：%@。用于休息声音和试听声音。";
 "prefs.sectionCustomIdea" = "休息内容";
 "prefs.useBuiltInIdeas" = "包含内置休息提示";
 "prefs.useBuiltInIdeasHelp" = "在活动休息轮换中包含内置休息提示。";

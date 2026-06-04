@@ -36,7 +36,6 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
             ("prefs.bodyStartSound", "prefs.bodyStartSoundHelp"),
             ("prefs.bodyFinishSound", "prefs.bodyFinishSoundHelp"),
             ("prefs.soundVolumeSlider", "prefs.soundVolumeHelp"),
-            ("prefs.soundVolumeValue", "prefs.soundVolumeHelp"),
             ("prefs.useBuiltInIdeas", "prefs.useBuiltInIdeasHelp"),
             ("prefs.customBodyTitleField", "prefs.customBodyTitleHelp")
         ]
@@ -52,9 +51,37 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertFalse(visibleTexts(in: contentView).contains(L10n.tr("prefs.themeHelp")))
         XCTAssertFalse(visibleTexts(in: contentView).contains(L10n.tr("prefs.soundVolumeHelp")))
 
+        let soundVolumeSlider = try XCTUnwrap(view(withIdentifier: "prefs.soundVolumeSlider", in: contentView) as? NSSlider)
+        let soundVolumeValue = try XCTUnwrap(view(withIdentifier: "prefs.soundVolumeValue", in: contentView) as? NSTextField)
+        let expectedVolumeHelp = L10n.format("prefs.soundVolumeValueHelp", "100%")
+        XCTAssertEqual(soundVolumeValue.stringValue, "100%")
+        XCTAssertEqual(soundVolumeValue.toolTip, expectedVolumeHelp)
+        XCTAssertEqual(soundVolumeValue.accessibilityLabel(), "100%")
+        XCTAssertEqual(soundVolumeValue.accessibilityHelp(), expectedVolumeHelp)
+        XCTAssertEqual(soundVolumeSlider.accessibilityValue() as? String, "100%")
+
         let customBodyText = try XCTUnwrap(view(withIdentifier: "customBodyTextEditor", in: contentView) as? NSTextView)
         XCTAssertEqual(customBodyText.toolTip, L10n.tr("prefs.customBodyTextHelp"))
         XCTAssertEqual(customBodyText.accessibilityHelp(), L10n.tr("prefs.customBodyTextHelp"))
+    }
+
+    func testSoundVolumeValueHelpTracksSliderChanges() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+        let slider = try XCTUnwrap(view(withIdentifier: "prefs.soundVolumeSlider", in: contentView) as? NSSlider)
+        let value = try XCTUnwrap(view(withIdentifier: "prefs.soundVolumeValue", in: contentView) as? NSTextField)
+
+        slider.doubleValue = 0.35
+        XCTAssertTrue(sendAction(from: slider))
+
+        let expectedHelp = L10n.format("prefs.soundVolumeValueHelp", "35%")
+        XCTAssertEqual(value.stringValue, "35%")
+        XCTAssertEqual(value.toolTip, expectedHelp)
+        XCTAssertEqual(value.accessibilityLabel(), "35%")
+        XCTAssertEqual(value.accessibilityHelp(), expectedHelp)
+        XCTAssertEqual(slider.accessibilityValue() as? String, "35%")
     }
 
     func testDisabledBodyBreakHidesBodyOnlyAppearanceControls() throws {
