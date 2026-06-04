@@ -26,7 +26,7 @@
 "pause.indefiniteConfirmAction" = "Pause Indefinitely";
 "pause.indefiniteConfirmCancel" = "Cancel";
 "reset.confirmTitle" = "Reset Schedule?";
-"reset.confirmBody" = "This clears the current timers, pause state, delayed rest, rest pressure, and one-shot automation tasks. Preferences are not changed.";
+"reset.confirmBody" = "This clears the current timers, pause state, delayed rest, rest pressure, and pending automation requests. Preferences are not changed.";
 "reset.confirmAction" = "Reset Schedule";
 "reset.confirmCancel" = "Cancel";
 "menu.preferences" = "Preferences...";
