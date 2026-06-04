@@ -548,6 +548,7 @@
 "prefs.unit.hour" = "点";
 "prefs.restoreDefaults" = "恢复默认";
 "prefs.restoreDefaultsHelp" = "确认后用应用默认值替换当前偏好设置；欢迎窗口仍会保持已完成。";
+"prefs.restoreDefaultsDisabledDefaultHelp" = "当前偏好设置已是应用默认值。";
 "prefs.restoreDefaultsWarning" = "这会用应用默认值替换当前偏好设置。欢迎窗口仍会保持已完成。";
 "prefs.restoreDefaultsContinue" = "恢复默认";
 "prefs.restoreDefaultsCancel" = "取消";

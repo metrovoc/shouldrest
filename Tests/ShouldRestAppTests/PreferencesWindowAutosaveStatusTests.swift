@@ -1,4 +1,5 @@
 import AppKit
+import ShouldRestCore
 import XCTest
 @testable import shouldrest
 
@@ -43,12 +44,49 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
         XCTAssertEqual(subtitle.stringValue, L10n.tr("prefs.headerSubtitle"))
         XCTAssertEqual(statusLabel.stringValue, L10n.tr("prefs.autosaveReady"))
         let restoreDefaultsButton = try XCTUnwrap(view(withIdentifier: "prefs.restoreDefaultsButton", in: contentView) as? NSButton)
-        XCTAssertEqual(restoreDefaultsButton.toolTip, L10n.tr("prefs.restoreDefaultsHelp"))
+        XCTAssertFalse(restoreDefaultsButton.isEnabled)
+        XCTAssertEqual(restoreDefaultsButton.toolTip, L10n.tr("prefs.restoreDefaultsDisabledDefaultHelp"))
         XCTAssertEqual(restoreDefaultsButton.accessibilityLabel(), L10n.tr("prefs.restoreDefaults"))
-        XCTAssertEqual(restoreDefaultsButton.accessibilityHelp(), L10n.tr("prefs.restoreDefaultsHelp"))
+        XCTAssertEqual(restoreDefaultsButton.accessibilityHelp(), L10n.tr("prefs.restoreDefaultsDisabledDefaultHelp"))
         XCTAssertNotNil(restoreDefaultsButton.image)
         XCTAssertEqual(restoreDefaultsButton.image?.accessibilityDescription, L10n.tr("prefs.restoreDefaults"))
         XCTAssertEqual(restoreDefaultsButton.imagePosition, .imageLeading)
+    }
+
+    func testRestoreDefaultsButtonEnablesOnlyForVisiblePreferenceChanges() throws {
+        var onboardingCompletedDefaults = RestSettings.defaults
+        onboardingCompletedDefaults.operations.hasCompletedOnboarding = true
+        let defaultController = PreferencesWindowController(settings: onboardingCompletedDefaults, onSave: { _ in })
+        let defaultContent = try XCTUnwrap(defaultController.window?.contentView)
+        let defaultButton = try XCTUnwrap(view(withIdentifier: "prefs.restoreDefaultsButton", in: defaultContent) as? NSButton)
+
+        XCTAssertFalse(defaultButton.isEnabled)
+        XCTAssertEqual(defaultButton.toolTip, L10n.tr("prefs.restoreDefaultsDisabledDefaultHelp"))
+
+        var customSettings = RestSettings.restoredDefaults
+        customSettings.eyeGate.interval = 25 * 60
+        let customController = PreferencesWindowController(settings: customSettings, onSave: { _ in })
+        let customContent = try XCTUnwrap(customController.window?.contentView)
+        let customButton = try XCTUnwrap(view(withIdentifier: "prefs.restoreDefaultsButton", in: customContent) as? NSButton)
+
+        XCTAssertTrue(customButton.isEnabled)
+        XCTAssertEqual(customButton.toolTip, L10n.tr("prefs.restoreDefaultsHelp"))
+        XCTAssertEqual(customButton.accessibilityHelp(), L10n.tr("prefs.restoreDefaultsHelp"))
+    }
+
+    func testRestoreDefaultsButtonEnablesImmediatelyForPendingTextEdits() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let restoreDefaultsButton = try XCTUnwrap(view(withIdentifier: "prefs.restoreDefaultsButton", in: contentView) as? NSButton)
+        let eyeInterval = try XCTUnwrap(view(withIdentifier: "eyeIntervalField", in: contentView) as? NSTextField)
+
+        XCTAssertFalse(restoreDefaultsButton.isEnabled)
+
+        eyeInterval.stringValue = "21"
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: eyeInterval))
+
+        XCTAssertTrue(restoreDefaultsButton.isEnabled)
+        XCTAssertEqual(restoreDefaultsButton.toolTip, L10n.tr("prefs.restoreDefaultsHelp"))
     }
 
     func testRestoreDefaultsConfirmationDefaultsToCancel() throws {
@@ -77,11 +115,13 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.autosaveReady"), "All changes saved")
         XCTAssertEqual(L10n.tr("prefs.autosaveCopied"), "Copied to clipboard")
         XCTAssertEqual(L10n.format("prefs.autosaveCopiedField", "App rules import text"), "Copied App rules import text to clipboard")
+        XCTAssertEqual(L10n.tr("prefs.restoreDefaultsDisabledDefaultHelp"), "Current preferences already match the app defaults.")
 
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(L10n.tr("prefs.autosaveReady"), "所有更改已保存")
         XCTAssertEqual(L10n.tr("prefs.autosaveCopied"), "已复制到剪贴板")
         XCTAssertEqual(L10n.format("prefs.autosaveCopiedField", "应用规则导入文本"), "应用规则导入文本已复制到剪贴板")
+        XCTAssertEqual(L10n.tr("prefs.restoreDefaultsDisabledDefaultHelp"), "当前偏好设置已是应用默认值。")
     }
 
     private func view(withIdentifier identifier: String, in view: NSView) -> NSView? {

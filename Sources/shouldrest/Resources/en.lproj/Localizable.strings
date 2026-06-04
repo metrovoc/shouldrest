@@ -548,6 +548,7 @@
 "prefs.unit.hour" = "hour";
 "prefs.restoreDefaults" = "Restore Defaults";
 "prefs.restoreDefaultsHelp" = "Replace current preferences with app defaults after confirmation. The welcome window stays completed.";
+"prefs.restoreDefaultsDisabledDefaultHelp" = "Current preferences already match the app defaults.";
 "prefs.restoreDefaultsWarning" = "This will replace your current preferences with app defaults. The welcome window will stay completed.";
 "prefs.restoreDefaultsContinue" = "Restore Defaults";
 "prefs.restoreDefaultsCancel" = "Cancel";

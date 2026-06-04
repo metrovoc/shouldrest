@@ -386,6 +386,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let searchStatusLabel = NSTextField(labelWithString: "")
     private let saveStatusIcon = NSImageView()
     private let saveStatusLabel = NSTextField(labelWithString: "")
+    private let restoreDefaultsButton = NSButton()
     private let scheduleSummaryIcon = NSImageView()
     private let scheduleSummaryLabel = NSTextField(labelWithString: "")
     private let rhythmPresetRecommendedButton = NSButton()
@@ -1269,18 +1270,16 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         footer.spacing = 12
         footer.alignment = .centerY
         footer.edgeInsets = NSEdgeInsets(top: 10, left: 24, bottom: 14, right: 24)
-        let restoreDefaultsButton = NSButton(title: L10n.tr("prefs.restoreDefaults"), target: self, action: #selector(restoreDefaultsPressed))
+        restoreDefaultsButton.title = L10n.tr("prefs.restoreDefaults")
+        restoreDefaultsButton.target = self
+        restoreDefaultsButton.action = #selector(restoreDefaultsPressed)
         restoreDefaultsButton.identifier = NSUserInterfaceItemIdentifier("prefs.restoreDefaultsButton")
         restoreDefaultsButton.image = NSImage(
             systemSymbolName: "arrow.counterclockwise",
             accessibilityDescription: restoreDefaultsButton.title
         )
         restoreDefaultsButton.imagePosition = .imageLeading
-        setTextButtonHelp(
-            title: restoreDefaultsButton.title,
-            help: L10n.tr("prefs.restoreDefaultsHelp"),
-            on: restoreDefaultsButton
-        )
+        updateRestoreDefaultsButtonState()
         let spacer = NSView()
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
         footer.addArrangedSubview(spacer)
@@ -2342,6 +2341,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         applyAdminVisibility()
         updateShortcutClearButtons()
         updateAdvancedBulkEditorActionStates()
+        updateRestoreDefaultsButtonState()
     }
 
     @discardableResult
@@ -2472,6 +2472,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         onSave(next)
         setSaveStatus(.saved)
         updateAdvancedBulkEditorActionStates()
+        updateRestoreDefaultsButtonState()
         return true
     }
 
@@ -3083,6 +3084,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     @objc private func restoreDefaultsPressed() {
+        guard !restorablePreferencesAreDefault() else {
+            updateRestoreDefaultsButtonState()
+            return
+        }
         guard confirmRestoreDefaults() else { return }
         settings = .restoredDefaults
         loadSettings()
@@ -3105,6 +3110,32 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func confirmRestoreDefaults() -> Bool {
         makeRestoreDefaultsAlert().runModal() == .alertSecondButtonReturn
+    }
+
+    private func updateRestoreDefaultsButtonState() {
+        let isDefault = restorablePreferencesAreDefault()
+        restoreDefaultsButton.isEnabled = !isDefault
+        let help = isDefault ? L10n.tr("prefs.restoreDefaultsDisabledDefaultHelp") : L10n.tr("prefs.restoreDefaultsHelp")
+        setTextButtonHelp(title: restoreDefaultsButton.title, help: help, on: restoreDefaultsButton)
+    }
+
+    private func markRestoreDefaultsAvailableForPendingPreferenceChange() {
+        restoreDefaultsButton.isEnabled = true
+        setTextButtonHelp(
+            title: restoreDefaultsButton.title,
+            help: L10n.tr("prefs.restoreDefaultsHelp"),
+            on: restoreDefaultsButton
+        )
+    }
+
+    private func restorablePreferencesAreDefault() -> Bool {
+        Self.restorableComparisonSettings(settings) == Self.restorableComparisonSettings(.restoredDefaults)
+    }
+
+    private static func restorableComparisonSettings(_ settings: RestSettings) -> RestSettings {
+        var copy = settings
+        copy.operations.hasCompletedOnboarding = RestSettings.restoredDefaults.operations.hasCompletedOnboarding
+        return copy
     }
 
     func makeRestoreDefaultsAlert() -> NSAlert {
@@ -3591,6 +3622,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             updateUpdateSourceRestoreButtonState()
         }
         hasPendingTextEditing = true
+        markRestoreDefaultsAvailableForPendingPreferenceChange()
         setSaveStatus(.editing)
     }
 
@@ -3644,6 +3676,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             updateAdvancedBulkEditorActionStates()
         }
         setSaveStatus(.editing)
+        markRestoreDefaultsAvailableForPendingPreferenceChange()
         scheduleAutosave()
     }
 
@@ -3663,6 +3696,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let generation = autosaveGeneration
         autosaveTask?.cancel()
         setSaveStatus(.saving)
+        markRestoreDefaultsAvailableForPendingPreferenceChange()
         autosaveTask = Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: 250_000_000)
             guard !Task.isCancelled else { return }
