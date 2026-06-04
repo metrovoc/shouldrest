@@ -5376,6 +5376,14 @@ final class ShortcutRecorderButton: NSButton {
         true
     }
 
+    override func resignFirstResponder() -> Bool {
+        if isRecording {
+            isRecording = false
+            updateDisplay()
+        }
+        return super.resignFirstResponder()
+    }
+
     @objc private func beginRecording() {
         isRecording = true
         applyDisplayState(.recording)

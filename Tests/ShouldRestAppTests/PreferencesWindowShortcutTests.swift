@@ -35,6 +35,28 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(button.image?.accessibilityDescription, L10n.tr("shortcut.recording"))
     }
 
+    func testShortcutRecorderCancelsRecordingWhenFocusMovesAwayWithoutSaving() throws {
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
+        try selectShortcutsTab(in: contentView)
+        let recorder = try XCTUnwrap(control(withIdentifier: "shortcut.pause30", in: contentView) as? ShortcutRecorderButton)
+        let searchField = try XCTUnwrap(view(withIdentifier: "prefs.searchField", in: contentView) as? NSSearchField)
+
+        recorder.performClick(nil)
+
+        XCTAssertEqual(recorder.title, L10n.tr("shortcut.recording"))
+        XCTAssertTrue(isFirstResponder(recorder, in: window))
+
+        XCTAssertTrue(window.makeFirstResponder(searchField))
+
+        XCTAssertEqual(recorder.title, L10n.tr("shortcut.notSet"))
+        XCTAssertEqual(recorder.toolTip, shortcutHelp("prefs.pause30ShortcutHelp", "shortcut.recordHelp"))
+        XCTAssertTrue(isFirstResponder(searchField, in: window))
+        XCTAssertNil(savedSettings.value)
+    }
+
     func testRequiredShortcutRecorderRestoresFallbackInsteadOfClearing() throws {
         let button = ShortcutRecorderButton()
         button.requiredFallbackShortcutValue = ShortcutSettings.defaultEmergencyEyeGateOverride
