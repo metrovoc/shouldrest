@@ -2596,6 +2596,7 @@ final class RestOverlayView: NSView {
     private var detailCacheKey: String?
     private var emergencyRemainingSeconds: Int?
     private var emergencyOverrideArmed = false
+    private var emergencyOverrideCompletionPending = false
     private var emergencySessionID: UUID?
     private var emergencyPanelWidthConstraint: NSLayoutConstraint?
     private var emergencyPanelHeightConstraint: NSLayoutConstraint?
@@ -2893,10 +2894,15 @@ final class RestOverlayView: NSView {
         guard let request = onEmergencyOverrideRequested else {
             return
         }
+        guard !emergencyOverrideCompletionPending else {
+            return
+        }
 
         let confirmsAlreadyArmedEmergency = emergencyOverrideArmed
         if case .activated = activateEmergencyOverrideIfAvailable() {
             if confirmsAlreadyArmedEmergency {
+                emergencyOverrideCompletionPending = true
+                updateEmergencyAffordanceUI()
                 // Let AppKit unwind the click/key event before the handler closes overlay windows.
                 DispatchQueue.main.async { [weak self] in
                     self?.applyEmergencyOverrideDecision(request())
@@ -2910,6 +2916,7 @@ final class RestOverlayView: NSView {
     private func applyEmergencyOverrideDecision(_ decision: EmergencyOverrideDecision) {
         switch decision {
         case .armed:
+            emergencyOverrideCompletionPending = false
             armEmergencyOverrideLocallyIfNeeded()
         case .complete:
             break
@@ -2981,6 +2988,7 @@ final class RestOverlayView: NSView {
     private func clearEmergencyOverrideLocally() {
         emergencyRemainingSeconds = nil
         emergencyOverrideArmed = false
+        emergencyOverrideCompletionPending = false
         emergencyPanel.isHidden = true
         emergencyButton.isHidden = true
     }
@@ -2992,6 +3000,10 @@ final class RestOverlayView: NSView {
     ) {
         if emergencySessionID != sessionID {
             emergencySessionID = sessionID
+            emergencyOverrideCompletionPending = false
+        }
+        if remainingSeconds == nil || !isArmed {
+            emergencyOverrideCompletionPending = false
         }
 
         emergencyRemainingSeconds = remainingSeconds
@@ -3026,6 +3038,7 @@ final class RestOverlayView: NSView {
             .withAlphaComponent(style.panelBorderAlpha)
             .cgColor
         emergencyButton.alphaValue = style.buttonAlpha
+        emergencyButton.isEnabled = !emergencyOverrideCompletionPending
         emergencyButton.contentTintColor = NSColor.systemRed.withAlphaComponent(style.tintAlpha)
 
         let title: String
