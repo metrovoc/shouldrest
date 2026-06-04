@@ -901,7 +901,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         self.appExclusionRulesListRow = appExclusionRulesListRow
         contextStack.addArrangedSubview(appExclusionRulesListRow)
         contextStack.addArrangedSubview(appExclusionsAdvancedButton)
-        let appExclusionsJSONRow = multilineRow(L10n.tr("prefs.advancedRulesJSON"), appExclusionsJSONScrollView)
+        let appExclusionsJSONRow = advancedBulkEditorRow(
+            L10n.tr("prefs.advancedRulesJSON"),
+            guidance: L10n.tr("prefs.advancedRulesGuidance"),
+            field: appExclusionsJSONScrollView,
+            guidanceIdentifier: "prefs.appExclusionsJSONGuidance"
+        )
         appExclusionsJSONRow.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionsJSONRow")
         self.appExclusionsJSONRow = appExclusionsJSONRow
         contextStack.addArrangedSubview(appExclusionsJSONRow)
@@ -970,7 +975,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         self.customBodyIdeasListRow = customBodyIdeasListRow
         appearanceStack.addArrangedSubview(customBodyIdeasListRow)
         appearanceStack.addArrangedSubview(customBodyIdeasAdvancedButton)
-        let customBodyIdeasJSONRow = multilineRow(L10n.tr("prefs.advancedIdeasJSON"), customBodyIdeasJSONScrollView)
+        let customBodyIdeasJSONRow = advancedBulkEditorRow(
+            L10n.tr("prefs.advancedIdeasJSON"),
+            guidance: L10n.tr("prefs.advancedIdeasGuidance"),
+            field: customBodyIdeasJSONScrollView,
+            guidanceIdentifier: "prefs.customBodyIdeasJSONGuidance"
+        )
         customBodyIdeasJSONRow.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyIdeasJSONRow")
         self.customBodyIdeasJSONRow = customBodyIdeasJSONRow
         appearanceStack.addArrangedSubview(customBodyIdeasJSONRow)
@@ -4138,6 +4148,37 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let label = NSTextField(labelWithString: title)
         label.widthAnchor.constraint(equalToConstant: 220).isActive = true
         let stack = NSStackView(views: [label, field])
+        stack.orientation = .horizontal
+        stack.spacing = 12
+        stack.alignment = .top
+        return stack
+    }
+
+    private func advancedBulkEditorRow(
+        _ title: String,
+        guidance: String,
+        field: NSView,
+        guidanceIdentifier: String
+    ) -> NSStackView {
+        let label = NSTextField(labelWithString: title)
+        label.widthAnchor.constraint(equalToConstant: 220).isActive = true
+
+        let guidanceLabel = NSTextField(labelWithString: guidance)
+        guidanceLabel.identifier = NSUserInterfaceItemIdentifier(guidanceIdentifier)
+        guidanceLabel.font = .systemFont(ofSize: 12)
+        guidanceLabel.textColor = .secondaryLabelColor
+        guidanceLabel.lineBreakMode = .byWordWrapping
+        guidanceLabel.maximumNumberOfLines = 3
+        guidanceLabel.widthAnchor.constraint(equalToConstant: 360).isActive = true
+        guidanceLabel.toolTip = guidance
+        guidanceLabel.setAccessibilityHelp(guidance)
+
+        let fieldStack = NSStackView(views: [guidanceLabel, field])
+        fieldStack.orientation = .vertical
+        fieldStack.spacing = 6
+        fieldStack.alignment = .leading
+
+        let stack = NSStackView(views: [label, fieldStack])
         stack.orientation = .horizontal
         stack.spacing = 12
         stack.alignment = .top

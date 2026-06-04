@@ -58,6 +58,37 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertEqual(ideasButton.accessibilityHelp(), L10n.tr("prefs.advancedIdeasHelp"))
     }
 
+    func testAdvancedJSONEditorsExplainBulkUseInPlace() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        let appButton = try XCTUnwrap(view(withIdentifier: "appExclusions", in: contentView) as? NSButton)
+        let appRow = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionsJSONRow", in: contentView))
+        let appGuidance = try XCTUnwrap(
+            view(withIdentifier: "prefs.appExclusionsJSONGuidance", in: contentView) as? NSTextField
+        )
+        XCTAssertTrue(appRow.isHidden)
+        XCTAssertEqual(appGuidance.stringValue, L10n.tr("prefs.advancedRulesGuidance"))
+        XCTAssertEqual(appGuidance.toolTip, L10n.tr("prefs.advancedRulesGuidance"))
+        XCTAssertEqual(appGuidance.accessibilityHelp(), L10n.tr("prefs.advancedRulesGuidance"))
+
+        XCTAssertTrue(sendAction(from: appButton))
+        XCTAssertFalse(appRow.isHidden)
+
+        let ideasButton = try XCTUnwrap(view(withIdentifier: "customIdeas", in: contentView) as? NSButton)
+        let ideasRow = try XCTUnwrap(view(withIdentifier: "prefs.customBodyIdeasJSONRow", in: contentView))
+        let ideasGuidance = try XCTUnwrap(
+            view(withIdentifier: "prefs.customBodyIdeasJSONGuidance", in: contentView) as? NSTextField
+        )
+        XCTAssertTrue(ideasRow.isHidden)
+        XCTAssertEqual(ideasGuidance.stringValue, L10n.tr("prefs.advancedIdeasGuidance"))
+        XCTAssertEqual(ideasGuidance.toolTip, L10n.tr("prefs.advancedIdeasGuidance"))
+        XCTAssertEqual(ideasGuidance.accessibilityHelp(), L10n.tr("prefs.advancedIdeasGuidance"))
+
+        XCTAssertTrue(sendAction(from: ideasButton))
+        XCTAssertFalse(ideasRow.isHidden)
+    }
+
     func testAdvancedJSONEditorsUseScrollableMultilineTextViews() throws {
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
