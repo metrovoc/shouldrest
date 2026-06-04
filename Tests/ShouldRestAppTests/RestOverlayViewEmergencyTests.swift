@@ -300,6 +300,37 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(requestCount, 2)
     }
 
+    func testTwoEscapeKeyPressesConfirmWithoutHoldOrExternalWindow() throws {
+        let view = configuredEyeGateOverlay()
+        var requestCount = 0
+        view.onEmergencyOverrideRequested = {
+            requestCount += 1
+        }
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        let event = try XCTUnwrap(NSEvent.keyEvent(
+            with: .keyDown,
+            location: .zero,
+            modifierFlags: [],
+            timestamp: 0,
+            windowNumber: 0,
+            context: nil,
+            characters: "\u{1B}",
+            charactersIgnoringModifiers: "\u{1B}",
+            isARepeat: false,
+            keyCode: UInt16(kVK_Escape)
+        ))
+
+        view.keyDown(with: event)
+
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
+
+        view.keyDown(with: event)
+
+        XCTAssertEqual(requestCount, 2)
+    }
+
     func testLegacyPositiveEmergencyRemainingStillAllowsFirstConfirmationClick() {
         let view = configuredEyeGateOverlay(
             remainingSeconds: 2,
