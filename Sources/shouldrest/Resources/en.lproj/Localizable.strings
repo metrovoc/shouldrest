@@ -315,6 +315,7 @@
 "prefs.addAppExclusionRuleHelp" = "Add these apps as an app rule.";
 "prefs.addAppExclusionRuleDisabledOffHelp" = "Turn on App Rules before adding a rule.";
 "prefs.addAppExclusionRuleDisabledEmptyHelp" = "Choose a running app or type an app name first.";
+"prefs.defaultAppExclusionRuleName" = "App rule";
 "prefs.updateAppExclusionRule" = "Update App Rule";
 "prefs.updateAppExclusionRuleHelp" = "Update the selected app rule.";
 "prefs.cancelAppExclusionRuleEdit" = "Cancel Edit";
@@ -397,6 +398,7 @@
 "prefs.bodyContentSummaryWithImage" = "%@ Image: %@.";
 "prefs.customIdeaCountOne" = "1 custom idea";
 "prefs.customIdeaCountMany" = "%d custom ideas";
+"prefs.defaultCustomIdeaTitle" = "Body Break idea";
 "prefs.title" = "Title";
 "prefs.customBodyTitleHelp" = "Short title shown in the Body Break overlay and custom ideas list.";
 "prefs.text" = "Body text";

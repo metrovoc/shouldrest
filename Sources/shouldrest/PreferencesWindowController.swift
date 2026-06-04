@@ -3842,7 +3842,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let name = appExclusionName.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
         return AppExclusionRule(
             id: id,
-            name: name.isEmpty ? "App Exclusion" : name,
+            name: name.isEmpty ? defaultAppExclusionRuleName() : name,
             matchTerms: terms,
             mode: mode,
             appliesTo: appExclusionAppliesToSelection(),
@@ -3896,7 +3896,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         guard !terms.isEmpty else { return }
         appendAppExclusionRule(AppExclusionRule(
             id: UUID().uuidString,
-            name: candidate.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "App Exclusion" : candidate.name,
+            name: candidate.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? defaultAppExclusionRuleName() : candidate.name,
             matchTerms: terms,
             mode: selected(AppExclusionRule.Mode.self, from: appExclusionMode, fallback: .pauseWhenMatched),
             appliesTo: appExclusionAppliesToSelection(),
@@ -4303,7 +4303,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private func normalizedAppExclusionRuleForPreferences(_ rule: AppExclusionRule) -> AppExclusionRule {
         AppExclusionRule(
             id: rule.id.isEmpty ? UUID().uuidString : rule.id,
-            name: rule.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "App Exclusion" : rule.name,
+            name: rule.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? defaultAppExclusionRuleName() : rule.name,
             matchTerms: AppExclusionApplicationCandidate.uniqueNonemptyTerms(rule.matchTerms.map { Optional($0) }),
             mode: rule.mode,
             appliesTo: rule.appliesTo.isEmpty ? defaultAppExclusionTargetsForPreferences() : rule.appliesTo,
@@ -4321,6 +4321,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         return [.eyeGate]
     }
 
+    private func defaultAppExclusionRuleName() -> String {
+        L10n.tr("prefs.defaultAppExclusionRuleName")
+    }
+
     private func savedCustomIdeas() -> [RestIdea] {
         guard let idea = currentCustomBodyIdea(id: settings.contentLibrary.customBodyBreakIdeas.first?.id ?? UUID().uuidString) else {
             return []
@@ -4335,10 +4339,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         return RestIdea(
             id: id,
             kind: .bodyBreak,
-            title: title.isEmpty ? "Custom Body Break" : title,
+            title: title.isEmpty ? defaultCustomBodyIdeaTitle() : title,
             body: body,
             isEnabled: true
         )
+    }
+
+    private func defaultCustomBodyIdeaTitle() -> String {
+        L10n.tr("prefs.defaultCustomIdeaTitle")
     }
 
     private func updateCustomBodyAddIdeaButtonState() {
@@ -4474,7 +4482,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                 RestIdea(
                     id: $0.id.isEmpty ? UUID().uuidString : $0.id,
                     kind: .bodyBreak,
-                    title: $0.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Custom Body Break" : $0.title,
+                    title: $0.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? defaultCustomBodyIdeaTitle() : $0.title,
                     body: ContentSanitizer.sanitizeRichText($0.body),
                     isEnabled: $0.isEnabled
                 )
@@ -4648,7 +4656,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                     RestIdea(
                         id: $0.id.isEmpty ? UUID().uuidString : $0.id,
                         kind: .bodyBreak,
-                        title: $0.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Custom Body Break" : $0.title,
+                        title: $0.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? defaultCustomBodyIdeaTitle() : $0.title,
                         body: ContentSanitizer.sanitizeRichText($0.body),
                         isEnabled: $0.isEnabled
                     )

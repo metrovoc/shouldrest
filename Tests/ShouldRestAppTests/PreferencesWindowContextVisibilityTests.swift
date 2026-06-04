@@ -586,6 +586,31 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertFalse(body.stringValue.contains(" - "))
     }
 
+    func testBlankAppRuleNameUsesLocalizedDefaultTitle() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "zh-Hans"
+
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "blank-name",
+                name: " ",
+                matchTerms: ["zoom"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+        let title = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionRuleTitle.0", in: contentView) as? NSTextField)
+
+        XCTAssertEqual(title.stringValue, L10n.tr("prefs.defaultAppExclusionRuleName"))
+        XCTAssertFalse(title.stringValue.contains("App Exclusion"))
+    }
+
     func testLastAppExclusionTargetCannotBeClearedFromUI() throws {
         var settings = RestSettings.defaults
         settings.appExclusions = [

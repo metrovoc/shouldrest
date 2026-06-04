@@ -339,6 +339,36 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertFalse(button.isEnabled)
     }
 
+    func testBodyOnlyCustomIdeaUsesLocalizedDefaultTitle() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "zh-Hans"
+
+        var settings = RestSettings.defaults
+        settings.contentLibrary.customBodyBreakIdeas = []
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+        let body = try XCTUnwrap(view(withIdentifier: "customBodyTextEditor", in: contentView) as? NSTextView)
+        let button = try XCTUnwrap(view(withIdentifier: "prefs.customBodyAddIdeaButton", in: contentView) as? NSButton)
+
+        body.string = "转动肩膀，放松呼吸。"
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: body))
+
+        XCTAssertTrue(button.isEnabled)
+        XCTAssertTrue(sendAction(from: button))
+
+        waitUntilSavedSettingsArrive(savedSettings)
+        let ideas = try XCTUnwrap(savedSettings.value?.contentLibrary.customBodyBreakIdeas)
+        XCTAssertEqual(ideas.first?.title, L10n.tr("prefs.defaultCustomIdeaTitle"))
+        XCTAssertFalse(ideas.first?.title.contains("Custom Body Break") ?? true)
+        XCTAssertEqual(
+            (try view(withIdentifier: "prefs.customBodyIdeaTitle.0", in: contentView) as? NSTextField)?.stringValue,
+            L10n.tr("prefs.defaultCustomIdeaTitle")
+        )
+    }
+
     func testCustomBodyIdeaAddButtonAppendsToAdvancedIdeaRotation() throws {
         var settings = RestSettings.defaults
         settings.contentLibrary.customBodyBreakIdeas = [
@@ -564,6 +594,26 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
             (try view(withIdentifier: "prefs.customBodyIdeaBody.1", in: contentView) as? NSTextField)?.stringValue,
             "Walk around"
         )
+    }
+
+    func testBlankExistingCustomIdeaTitleUsesLocalizedDefaultTitle() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "zh-Hans"
+
+        var settings = RestSettings.defaults
+        settings.contentLibrary.customBodyBreakIdeas = [
+            RestIdea(id: "body-only", kind: .bodyBreak, title: " ", body: "转动肩膀。")
+        ]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+
+        XCTAssertEqual(
+            (try view(withIdentifier: "prefs.customBodyIdeaTitle.0", in: contentView) as? NSTextField)?.stringValue,
+            L10n.tr("prefs.defaultCustomIdeaTitle")
+        )
+        XCTAssertFalse(visibleTexts(in: contentView).contains("Custom Body Break"))
     }
 
     func testCustomBodyIdeaSummariesUseSingleCharacterEllipsisWhenTruncated() throws {

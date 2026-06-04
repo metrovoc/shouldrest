@@ -315,6 +315,7 @@
 "prefs.addAppExclusionRuleHelp" = "把这些应用添加为应用规则。";
 "prefs.addAppExclusionRuleDisabledOffHelp" = "开启应用规则后才能添加。";
 "prefs.addAppExclusionRuleDisabledEmptyHelp" = "请先选择运行中的应用，或输入应用名称。";
+"prefs.defaultAppExclusionRuleName" = "应用规则";
 "prefs.updateAppExclusionRule" = "更新应用规则";
 "prefs.updateAppExclusionRuleHelp" = "更新当前选中的应用规则。";
 "prefs.cancelAppExclusionRuleEdit" = "取消编辑";
@@ -397,6 +398,7 @@
 "prefs.bodyContentSummaryWithImage" = "%@ 图片：%@。";
 "prefs.customIdeaCountOne" = "1 条自定义提示";
 "prefs.customIdeaCountMany" = "%d 条自定义提示";
+"prefs.defaultCustomIdeaTitle" = "活动休息提示";
 "prefs.title" = "标题";
 "prefs.customBodyTitleHelp" = "显示在活动休息覆盖层和自定义提示列表中的简短标题。";
 "prefs.text" = "正文";
