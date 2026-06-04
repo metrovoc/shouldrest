@@ -518,6 +518,61 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(requestCount, 2)
     }
 
+    func testExternallyArmedEmergencyStillDefersCompletionWhenOverlayHasNotRefreshed() throws {
+        let start = Date(timeIntervalSinceReferenceDate: 4_000)
+        let session = RestSession(
+            kind: .eyeGate,
+            startedAt: start,
+            scheduledAt: start,
+            duration: 60,
+            manualFinishEnabled: false
+        )
+        let policy = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 1, minimumHoldDuration: 30)
+        var coordinator = EmergencyOverrideCoordinator()
+        let view = RestOverlayView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
+        view.configure(
+            session: session,
+            remainingSeconds: 60,
+            settings: .defaults,
+            showsContent: true,
+            manualAwaiting: false,
+            emergencyOverrideRemainingSeconds: 0,
+            emergencyOverrideArmed: false
+        )
+        view.layoutSubtreeIfNeeded()
+
+        XCTAssertEqual(
+            coordinator.arm(session: session, policy: policy, now: start.addingTimeInterval(1)),
+            .armed
+        )
+
+        var decisions: [EmergencyOverrideDecision] = []
+        var didComplete = false
+        view.onEmergencyOverrideRequested = {
+            let decision = coordinator.request(
+                session: session,
+                policy: policy,
+                now: start.addingTimeInterval(2)
+            )
+            decisions.append(decision)
+            if case .complete = decision {
+                DispatchQueue.main.async {
+                    didComplete = true
+                }
+            }
+        }
+
+        view.mouseDown(with: try mouseEvent(at: NSPoint(x: 790, y: 12), clickCount: 1))
+
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        XCTAssertEqual(decisions, [.complete])
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+        XCTAssertFalse(didComplete)
+
+        drainMainQueue()
+        XCTAssertTrue(didComplete)
+    }
+
     func testArmedEmergencyMouseClickDefersConfirmationUntilMouseEventReturns() throws {
         let view = configuredEyeGateOverlay(
             remainingSeconds: 0,

@@ -6,6 +6,16 @@ import XCTest
 final class EmergencyOverrideCoordinatorTests: XCTestCase {
     private let start = Date(timeIntervalSinceReferenceDate: 1_000)
 
+    func testMinimumHoldDurationIsCompatibilityOnly() {
+        var policy = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 1, minimumHoldDuration: 30)
+
+        XCTAssertEqual(policy.minimumHoldDuration, 0)
+
+        policy.minimumHoldDuration = 45
+
+        XCTAssertEqual(policy.minimumHoldDuration, 0)
+    }
+
     func testEnabledEmergencyRequiresSecondRequestEvenWhenLegacyStepsAreZero() {
         let session = eyeGateSession()
         let policy = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 0, minimumHoldDuration: 3)
