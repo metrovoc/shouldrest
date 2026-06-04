@@ -109,11 +109,25 @@ enum AppVersion {
     private static let fallback = "0.1.133"
 
     static var current: String {
-        guard let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
+        current(bundle: Bundle.main)
+    }
+
+    static func current(bundle: Bundle?) -> String {
+        guard let bundle,
+              isShouldRestBundle(bundle),
+              let version = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
               !version.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return fallback
         }
         return version
+    }
+
+    private static func isShouldRestBundle(_ bundle: Bundle) -> Bool {
+        if let identifier = bundle.bundleIdentifier?.trimmingCharacters(in: .whitespacesAndNewlines),
+           identifier == AppIdentity.defaultBundleIdentifier || identifier.hasPrefix("dev.shouldrest.") {
+            return true
+        }
+        return bundle.executableURL?.lastPathComponent == "shouldrest"
     }
 }
 
