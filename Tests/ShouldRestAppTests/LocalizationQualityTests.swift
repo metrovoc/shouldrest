@@ -38,6 +38,33 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(L10n.tr("overlay.bodySkipHelp").contains("推迟"))
     }
 
+    func testEnglishGlobalPauseCopyUsesRestsAsUmbrellaTerm() {
+        L10n.languageOverride = "en"
+        defer { L10n.languageOverride = nil }
+
+        XCTAssertEqual(L10n.tr("notification.resumingBreaks"), "Resuming rests")
+        XCTAssertEqual(
+            L10n.tr("prefs.pauseToggleShortcutHelp"),
+            "Pause rests indefinitely when running, or resume them when already paused."
+        )
+        XCTAssertEqual(L10n.tr("prefs.pause30ShortcutHelp"), "Pause rests for 30 minutes.")
+        XCTAssertEqual(L10n.tr("prefs.pause1hShortcutHelp"), "Pause rests for 1 hour.")
+        XCTAssertEqual(L10n.tr("prefs.pause2hShortcutHelp"), "Pause rests for 2 hours.")
+        XCTAssertEqual(L10n.tr("prefs.pause5hShortcutHelp"), "Pause rests for 5 hours.")
+        XCTAssertEqual(
+            L10n.tr("prefs.pauseUntilMorningShortcutHelp"),
+            "Pause rests until the configured morning resume time."
+        )
+
+        let help = L10n.tr("cli.help")
+        XCTAssertTrue(help.contains("pause [-d duration]          Pause rests."))
+        XCTAssertTrue(help.contains("resume                       Resume rests."))
+        XCTAssertTrue(help.contains("toggle                       Pause or resume rests."))
+        XCTAssertFalse(help.contains("Pause breaks"))
+        XCTAssertFalse(help.contains("Resume breaks"))
+        XCTAssertFalse(help.contains("Pause or resume breaks"))
+    }
+
     func testSimplifiedChineseVisibleValuesAvoidUntranslatedCoreTerms() throws {
         let values = try simplifiedChineseLocalizedValues().joined(separator: "\n")
 
