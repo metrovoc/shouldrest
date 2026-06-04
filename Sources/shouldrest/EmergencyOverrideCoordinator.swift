@@ -41,6 +41,8 @@ struct EmergencyOverrideCoordinator {
         policy: EmergencyOverridePolicy,
         now: Date
     ) -> EmergencyOverrideDecision {
+        // Current design is always two in-overlay requests: first arms, second exits.
+        // Legacy hold duration and step-count settings are compatibility data only.
         guard Self.isAvailable(session: session, policy: policy, now: now) else {
             clear()
             return .unavailable

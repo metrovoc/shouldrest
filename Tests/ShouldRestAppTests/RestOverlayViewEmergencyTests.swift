@@ -123,6 +123,9 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(engine.state.activeSession?.id, session.id)
         XCTAssertTrue(coordinator.isArmed(for: session))
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+        drainMainQueue()
+        XCTAssertEqual(engine.state.activeSession?.id, session.id)
+        XCTAssertEqual(engine.state.statistics.emergencyOverrides, 0)
 
         requestTime = start.addingTimeInterval(2)
         button.performClick(nil)
