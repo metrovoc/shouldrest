@@ -706,7 +706,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             eyeLead,
             unit: L10n.tr("prefs.unit.seconds"),
             min: 0,
-            max: 3600
+            max: 3600,
+            identifier: "eyeLead"
         )
         eyeLeadRow.identifier = NSUserInterfaceItemIdentifier("prefs.eyeLeadRow")
         self.eyeLeadRow = eyeLeadRow
@@ -765,7 +766,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         scheduleStack.addArrangedSubview(bodyColorRow)
         bodyNotify.identifier = NSUserInterfaceItemIdentifier("prefs.bodyNotify")
         scheduleStack.addArrangedSubview(bodyNotify)
-        let bodyLeadRow = numberRow(L10n.tr("prefs.notificationLead"), bodyLead, unit: L10n.tr("prefs.unit.seconds"), min: 0, max: 3600)
+        let bodyLeadRow = numberRow(
+            L10n.tr("prefs.notificationLead"),
+            bodyLead,
+            unit: L10n.tr("prefs.unit.seconds"),
+            min: 0,
+            max: 3600,
+            identifier: "bodyLead"
+        )
         bodyLeadRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyLeadRow")
         self.bodyLeadRow = bodyLeadRow
         scheduleStack.addArrangedSubview(bodyLeadRow)
@@ -825,6 +833,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         self.bodyConfiguredDisplayRow = bodyConfiguredDisplayRow
         scheduleStack.addArrangedSubview(bodyConfiguredDisplayRow)
         scheduleStack.addArrangedSubview(indentedControlRow(bodyDisplaySummaryLabel))
+        configureSchedulePreferenceHelp()
         addTab(to: tabView, title: L10n.tr("prefs.tabSchedule"), icon: .systemSymbol("clock"), stack: scheduleStack)
 
         let contextStack = contentStack()
@@ -1770,6 +1779,44 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         setHelp(L10n.tr("prefs.preferencesMessageHelp"), on: customPreferencesMessage)
     }
 
+    private func configureSchedulePreferenceHelp() {
+        setHelp(L10n.tr("prefs.enableEyeGateHelp"), on: eyeEnabled)
+        setNumberInputHelp(L10n.tr("prefs.eyeIntervalHelp"), on: eyeInterval)
+        setNumberInputHelp(L10n.tr("prefs.eyeDurationHelp"), on: eyeDuration)
+        setHelp(L10n.tr("prefs.overlayColorHelp"), on: eyeColor)
+        setHelp(L10n.tr("prefs.notifyEyeGateHelp"), on: eyeNotify)
+        setNumberInputHelp(L10n.tr("prefs.notificationLeadHelp"), on: eyeLead)
+        setHelp(L10n.tr("prefs.eyeManualFinishHelp"), on: eyeManualFinish)
+        setHelp(L10n.tr("prefs.eyeEmergencyOverrideHelp"), on: eyeEmergencyOverride)
+
+        setHelp(L10n.tr("prefs.enableBodyBreakHelp"), on: bodyEnabled)
+        setNumberInputHelp(L10n.tr("prefs.bodyIntervalHelp"), on: bodyInterval)
+        setNumberInputHelp(L10n.tr("prefs.bodyDurationHelp"), on: bodyDuration)
+        setNumberInputHelp(L10n.tr("prefs.bodyAfterEyeGatesHelp"), on: bodyAfterEyeGates)
+        setHelp(L10n.tr("prefs.overlayColorHelp"), on: bodyColor)
+        setHelp(L10n.tr("prefs.notifyBodyBreakHelp"), on: bodyNotify)
+        setNumberInputHelp(L10n.tr("prefs.notificationLeadHelp"), on: bodyLead)
+        setNumberInputHelp(L10n.tr("prefs.bodyPostponeMinutesHelp"), on: bodyPostponeMinutes)
+        setNumberInputHelp(L10n.tr("prefs.bodyPostponeLimitHelp"), on: bodyPostponeLimit)
+        setNumberInputHelp(L10n.tr("prefs.bodyPostponeWindowPercentHelp"), on: bodyPostponeWindowPercent)
+        setHelp(L10n.tr("prefs.bodyAllowSkipHelp"), on: bodyAllowSkip)
+        setHelp(L10n.tr("prefs.bodyManualFinishHelp"), on: bodyManualFinish)
+        setHelp(L10n.tr("prefs.bodyAllDisplaysHelp"), on: bodyCoversAllDisplays)
+        setHelp(L10n.tr("prefs.bodyCoveredDisplayHelp"), on: bodyCoveredDisplay)
+        setHelp(L10n.tr("prefs.bodyContentDisplayHelp"), on: bodyContentDisplay)
+        setHelp(L10n.tr("prefs.bodyBlankSecondaryHelp"), on: bodyBlankSecondaryDisplays)
+        setHelp(L10n.tr("prefs.configuredDisplayIndexHelp"), on: bodyConfiguredDisplay)
+    }
+
+    private func setNumberInputHelp(_ help: String, on field: NSTextField) {
+        setHelp(help, on: field)
+        guard let input = numberInputs.first(where: { $0.field === field }) else { return }
+        setHelp(help, on: input.stepper)
+        if let slider = input.slider {
+            setHelp(help, on: slider)
+        }
+    }
+
     private func setHelp(_ help: String, on control: NSControl) {
         control.toolTip = help
         control.setAccessibilityHelp(help)
@@ -2459,8 +2506,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         eyeEnabled.isEnabled = canToggleEyeGate
         bodyEnabled.isEnabled = canToggleBodyBreak
-        setOptionalHelp(canToggleEyeGate ? nil : help, on: eyeEnabled)
-        setOptionalHelp(canToggleBodyBreak ? nil : help, on: bodyEnabled)
+        setOptionalHelp(canToggleEyeGate ? L10n.tr("prefs.enableEyeGateHelp") : help, on: eyeEnabled)
+        setOptionalHelp(canToggleBodyBreak ? L10n.tr("prefs.enableBodyBreakHelp") : help, on: bodyEnabled)
     }
 
     private func updateScheduleSummary() {

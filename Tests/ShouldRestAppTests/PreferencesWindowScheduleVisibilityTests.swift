@@ -91,6 +91,61 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertEqual(savedSettings.value?.bodyBreak.duration, 5 * 60)
     }
 
+    func testScheduleControlsExposeBehaviorHelp() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectScheduleTab(in: contentView)
+
+        let expectedHelp: [(identifier: String, helpKey: String)] = [
+            ("prefs.eyeEnabled", "prefs.enableEyeGateHelp"),
+            ("eyeIntervalField", "prefs.eyeIntervalHelp"),
+            ("eyeIntervalStepper", "prefs.eyeIntervalHelp"),
+            ("eyeIntervalSlider", "prefs.eyeIntervalHelp"),
+            ("eyeDurationField", "prefs.eyeDurationHelp"),
+            ("eyeDurationStepper", "prefs.eyeDurationHelp"),
+            ("eyeDurationSlider", "prefs.eyeDurationHelp"),
+            ("prefs.eyeNotify", "prefs.notifyEyeGateHelp"),
+            ("eyeLeadField", "prefs.notificationLeadHelp"),
+            ("eyeLeadStepper", "prefs.notificationLeadHelp"),
+            ("prefs.bodyEnabled", "prefs.enableBodyBreakHelp"),
+            ("bodyIntervalField", "prefs.bodyIntervalHelp"),
+            ("bodyIntervalStepper", "prefs.bodyIntervalHelp"),
+            ("bodyIntervalSlider", "prefs.bodyIntervalHelp"),
+            ("bodyDurationField", "prefs.bodyDurationHelp"),
+            ("bodyDurationStepper", "prefs.bodyDurationHelp"),
+            ("bodyDurationSlider", "prefs.bodyDurationHelp"),
+            ("bodyAfterEyeGatesField", "prefs.bodyAfterEyeGatesHelp"),
+            ("bodyAfterEyeGatesStepper", "prefs.bodyAfterEyeGatesHelp"),
+            ("bodyAfterEyeGatesSlider", "prefs.bodyAfterEyeGatesHelp"),
+            ("prefs.bodyNotify", "prefs.notifyBodyBreakHelp"),
+            ("bodyLeadField", "prefs.notificationLeadHelp"),
+            ("bodyLeadStepper", "prefs.notificationLeadHelp"),
+            ("bodyPostponeMinutesField", "prefs.bodyPostponeMinutesHelp"),
+            ("bodyPostponeMinutesStepper", "prefs.bodyPostponeMinutesHelp"),
+            ("bodyPostponeLimitField", "prefs.bodyPostponeLimitHelp"),
+            ("bodyPostponeLimitStepper", "prefs.bodyPostponeLimitHelp"),
+            ("bodyPostponeWindowPercentField", "prefs.bodyPostponeWindowPercentHelp"),
+            ("bodyPostponeWindowPercentStepper", "prefs.bodyPostponeWindowPercentHelp"),
+            ("prefs.bodyCoversAllDisplays", "prefs.bodyAllDisplaysHelp"),
+            ("prefs.bodyCoveredDisplay", "prefs.bodyCoveredDisplayHelp"),
+            ("prefs.bodyContentDisplay", "prefs.bodyContentDisplayHelp"),
+            ("prefs.bodyBlankSecondaryDisplays", "prefs.bodyBlankSecondaryHelp"),
+            ("prefs.bodyConfiguredDisplay", "prefs.configuredDisplayIndexHelp")
+        ]
+
+        for expectation in expectedHelp {
+            let control = try XCTUnwrap(
+                view(withIdentifier: expectation.identifier, in: contentView) as? NSControl,
+                expectation.identifier
+            )
+            XCTAssertEqual(control.toolTip, L10n.tr(expectation.helpKey), expectation.identifier)
+            XCTAssertEqual(control.accessibilityHelp(), L10n.tr(expectation.helpKey), expectation.identifier)
+        }
+        XCTAssertFalse(visibleTexts(in: contentView).contains(L10n.tr("prefs.eyeIntervalHelp")))
+        XCTAssertFalse(visibleTexts(in: contentView).contains(L10n.tr("prefs.bodyPostponeLimitHelp")))
+    }
+
     func testScheduleSummaryUpdatesWhenCoreSliderChangesAndAutosaves() throws {
         let savedSettings = SavedSettingsBox()
         let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
@@ -216,7 +271,8 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
 
         XCTAssertTrue(eyeEnabled.isEnabled)
         XCTAssertFalse(bodyEnabled.isEnabled)
-        XCTAssertNil(eyeEnabled.toolTip)
+        XCTAssertEqual(eyeEnabled.toolTip, L10n.tr("prefs.enableEyeGateHelp"))
+        XCTAssertEqual(eyeEnabled.accessibilityHelp(), L10n.tr("prefs.enableEyeGateHelp"))
         XCTAssertEqual(bodyEnabled.toolTip, L10n.tr("prefs.cannotDisableBothRests"))
         XCTAssertEqual(bodyEnabled.accessibilityHelp(), L10n.tr("prefs.cannotDisableBothRests"))
     }
