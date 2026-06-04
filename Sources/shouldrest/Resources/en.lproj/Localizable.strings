@@ -370,8 +370,8 @@
 "prefs.bodyFinishSound" = "Body Break finish sound";
 "prefs.bodyFinishSoundHelp" = "Sound played when a Body Break completes, is finished, or is skipped.";
 "prefs.finishSound" = "Finish sound";
-"prefs.previewSound" = "Preview";
-"prefs.previewSoundHelp" = "Play this sound once";
+"prefs.previewSound" = "Play Preview";
+"prefs.previewSoundHelp" = "Play the selected sound once.";
 "prefs.previewSoundLabel" = "Preview %@";
 "prefs.previewSoundSpecificHelp" = "Play the selected %@ once.";
 "prefs.previewSoundMutedHelp" = "Silent mode is on, so %@ previews will not play.";

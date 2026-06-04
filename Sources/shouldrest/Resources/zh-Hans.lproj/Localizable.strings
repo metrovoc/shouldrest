@@ -370,8 +370,8 @@
 "prefs.bodyFinishSound" = "活动休息结束声音";
 "prefs.bodyFinishSoundHelp" = "活动休息完成、你完成休息或跳过时播放的声音。";
 "prefs.finishSound" = "结束声音";
-"prefs.previewSound" = "试听";
-"prefs.previewSoundHelp" = "播放一次此声音";
+"prefs.previewSound" = "播放试听";
+"prefs.previewSoundHelp" = "播放一次当前选择的声音。";
 "prefs.previewSoundLabel" = "试听%@";
 "prefs.previewSoundSpecificHelp" = "播放一次当前选择的%@。";
 "prefs.previewSoundMutedHelp" = "已开启静音模式，%@试听不会播放。";

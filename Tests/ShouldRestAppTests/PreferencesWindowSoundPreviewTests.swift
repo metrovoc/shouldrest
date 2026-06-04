@@ -25,6 +25,7 @@ final class PreferencesWindowSoundPreviewTests: XCTestCase {
             let expectedLabel = L10n.format("prefs.previewSoundLabel", soundLabel)
             let expectedHelp = L10n.format("prefs.previewSoundSpecificHelp", soundLabel)
             XCTAssertEqual(button.title, L10n.tr("prefs.previewSound"))
+            XCTAssertEqual(button.title, "Play Preview")
             XCTAssertNotNil(button.image)
             XCTAssertEqual(button.image?.accessibilityDescription, expectedLabel)
             XCTAssertEqual(button.imagePosition, .imageLeading)
