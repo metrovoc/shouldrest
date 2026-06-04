@@ -4,16 +4,22 @@ import XCTest
 
 @MainActor
 final class CommandLineAutomationTests: XCTestCase {
-    func testHelpDescribesDebugCommandsAsDiagnostics() {
+    func testHelpDescribesSupportCommandsAsDirectUserActions() {
         let output = captureStandardOutput {
             XCTAssertTrue(CommandLineAutomation.handle(arguments: ["shouldrest", "help"]))
         }
 
-        XCTAssertTrue(output.contains("debug                        Copy diagnostics from the running app."))
-        XCTAssertTrue(output.contains("debug-panel                  Open the diagnostics window in the running app."))
+        XCTAssertTrue(output.contains("eye|mini [-w wait]           Start Eye Gate now or after wait; it is always strict and text-free."))
+        XCTAssertTrue(output.contains("preferences                  Open ShouldRest preferences."))
+        XCTAssertTrue(output.contains("debug                        Copy diagnostics."))
+        XCTAssertTrue(output.contains("debug-panel                  Open the diagnostics window."))
+        XCTAssertTrue(output.contains("about                        Open the About window."))
         XCTAssertTrue(output.contains("emergency                    Bring the active Eye Gate overlay forward for Emergency Exit."))
         XCTAssertTrue(output.contains("settings                     Print settings location unless hidden by policy."))
         XCTAssertTrue(output.contains("logs                         Print log location unless hidden by policy."))
+        XCTAssertFalse(output.contains("eye|mini [-w wait] [-n]"))
+        XCTAssertFalse(output.localizedCaseInsensitiveContains("readable content is not customizable"))
+        XCTAssertFalse(output.localizedCaseInsensitiveContains("running app"))
         XCTAssertFalse(output.localizedCaseInsensitiveContains("settings path"))
         XCTAssertFalse(output.localizedCaseInsensitiveContains("log path"))
         XCTAssertFalse(output.localizedCaseInsensitiveContains("hidden by admin"))
