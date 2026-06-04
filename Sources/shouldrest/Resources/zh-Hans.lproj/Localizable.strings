@@ -56,6 +56,13 @@
 "status.pausedUntil" = "暂停到 %@";
 "status.pauseResumesIn" = "%@后恢复";
 "status.pauseResumeManual" = "准备好后可从此菜单恢复";
+"status.pauseResumesInWithReason" = "%@ · %@后恢复";
+"status.pauseResumeManualWithReason" = "%@ · 准备好后可从此菜单恢复";
+"status.pauseReason.user" = "手动暂停";
+"status.pauseReason.untilMorning" = "暂停到早晨";
+"status.pauseReason.suspendOrLock" = "睡眠或锁屏";
+"status.pauseReason.appExclusion" = "应用排除";
+"status.pauseReason.focusMode" = "专注模式";
 "status.durationSeconds" = "%d 秒";
 "status.durationUnderMinute" = "不到 1 分钟";
 "status.durationMinutes" = "%d 分钟";

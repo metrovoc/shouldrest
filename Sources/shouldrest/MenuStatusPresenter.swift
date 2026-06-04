@@ -140,11 +140,27 @@ enum MenuStatusPresenter {
     }
 
     private static func pauseSecondaryStatusText(_ pause: PauseState, now: Date) -> String {
+        let reason = pauseReasonText(pause.reason)
         guard let until = pause.until else {
-            return L10n.tr("status.pauseResumeManual")
+            return L10n.format("status.pauseResumeManualWithReason", reason)
         }
         let seconds = max(0, Int(ceil(until.timeIntervalSince(now))))
-        return L10n.format("status.pauseResumesIn", compactDurationText(seconds: seconds))
+        return L10n.format("status.pauseResumesInWithReason", reason, compactDurationText(seconds: seconds))
+    }
+
+    private static func pauseReasonText(_ reason: PauseReason) -> String {
+        switch reason {
+        case .user:
+            return L10n.tr("status.pauseReason.user")
+        case .untilMorning:
+            return L10n.tr("status.pauseReason.untilMorning")
+        case .suspendOrLock:
+            return L10n.tr("status.pauseReason.suspendOrLock")
+        case .appExclusion:
+            return L10n.tr("status.pauseReason.appExclusion")
+        case .focusMode:
+            return L10n.tr("status.pauseReason.focusMode")
+        }
     }
 
     private static func activeRemainingText(seconds: Int) -> String {

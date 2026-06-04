@@ -101,8 +101,8 @@ final class MenuStatusPresenterTests: XCTestCase {
         let content = MenuStatusPresenter.headerContent(state: state, settings: .defaults, now: start)
 
         XCTAssertEqual(lines[0], "Paused until \(start.addingTimeInterval(30 * 60).formatted(date: .omitted, time: .shortened))")
-        XCTAssertEqual(lines[1], "Resumes in 30m")
-        XCTAssertEqual(content.secondary, "Resumes in 30m")
+        XCTAssertEqual(lines[1], "Manual pause · resumes in 30m")
+        XCTAssertEqual(content.secondary, "Manual pause · resumes in 30m")
     }
 
     func testIndefinitePauseStatusShowsManualResumeContext() {
@@ -115,9 +115,31 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         XCTAssertEqual(lines, [
             "Paused indefinitely",
-            "Resume from this menu when ready"
+            "Manual pause · resume from this menu when ready"
         ])
-        XCTAssertEqual(content.secondary, "Resume from this menu when ready")
+        XCTAssertEqual(content.secondary, "Manual pause · resume from this menu when ready")
+    }
+
+    func testPauseStatusNamesNonManualPauseReasons() {
+        let untilMorning = RestEngineState(
+            pause: PauseState(
+                reason: .untilMorning,
+                startedAt: start,
+                until: start.addingTimeInterval(8 * 60 * 60)
+            )
+        )
+        let sleepOrLock = RestEngineState(
+            pause: PauseState(reason: .suspendOrLock, startedAt: start, until: nil)
+        )
+
+        XCTAssertEqual(
+            MenuStatusPresenter.lines(state: untilMorning, settings: .defaults, now: start)[1],
+            "Until morning · resumes in 8h"
+        )
+        XCTAssertEqual(
+            MenuStatusPresenter.lines(state: sleepOrLock, settings: .defaults, now: start)[1],
+            "Sleep or lock · resume from this menu when ready"
+        )
     }
 
     func testDefaultMenuBarPresentationIsCompactIconOnly() {
