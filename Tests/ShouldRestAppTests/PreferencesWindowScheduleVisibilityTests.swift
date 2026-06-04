@@ -40,6 +40,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertEqual(movement.title, L10n.tr("prefs.rhythmPreset.movement"))
         [recommended, frequentEye, movement].forEach { button in
             XCTAssertNotNil(button.image)
+            XCTAssertEqual(button.image?.accessibilityDescription, button.title)
             XCTAssertEqual(button.imagePosition, .imageLeading)
             XCTAssertFalse(button.toolTip?.isEmpty ?? true)
             XCTAssertEqual(button.accessibilityLabel(), button.title)

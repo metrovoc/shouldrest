@@ -1235,9 +1235,16 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         footer.edgeInsets = NSEdgeInsets(top: 10, left: 24, bottom: 14, right: 24)
         let restoreDefaultsButton = NSButton(title: L10n.tr("prefs.restoreDefaults"), target: self, action: #selector(restoreDefaultsPressed))
         restoreDefaultsButton.identifier = NSUserInterfaceItemIdentifier("prefs.restoreDefaultsButton")
-        restoreDefaultsButton.image = NSImage(systemSymbolName: "arrow.counterclockwise", accessibilityDescription: nil)
+        restoreDefaultsButton.image = NSImage(
+            systemSymbolName: "arrow.counterclockwise",
+            accessibilityDescription: restoreDefaultsButton.title
+        )
         restoreDefaultsButton.imagePosition = .imageLeading
-        setHelp(L10n.tr("prefs.restoreDefaultsHelp"), on: restoreDefaultsButton)
+        setTextButtonHelp(
+            title: restoreDefaultsButton.title,
+            help: L10n.tr("prefs.restoreDefaultsHelp"),
+            on: restoreDefaultsButton
+        )
         let spacer = NSView()
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
         footer.addArrangedSubview(spacer)
@@ -1512,7 +1519,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     ) {
         button.identifier = NSUserInterfaceItemIdentifier("prefs.rhythmPreset.\(preset.identifier)")
         button.title = preset.title
-        button.image = NSImage(systemSymbolName: preset.symbolName, accessibilityDescription: nil)
+        button.image = NSImage(systemSymbolName: preset.symbolName, accessibilityDescription: preset.title)
         button.imagePosition = .imageLeading
         button.imageHugsTitle = true
         button.bezelStyle = .rounded
