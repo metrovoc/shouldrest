@@ -2165,19 +2165,37 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     private func configureSoundPreviewButtons() {
-        configureSoundPreviewButton(eyeStartSoundPreview, identifier: "eyeStart")
-        configureSoundPreviewButton(eyeFinishSoundPreview, identifier: "eyeFinish")
-        configureSoundPreviewButton(bodyStartSoundPreview, identifier: "bodyStart")
-        configureSoundPreviewButton(bodyFinishSoundPreview, identifier: "bodyFinish")
+        configureSoundPreviewButton(
+            eyeStartSoundPreview,
+            identifier: "eyeStart",
+            soundLabel: L10n.tr("prefs.eyeStartSound")
+        )
+        configureSoundPreviewButton(
+            eyeFinishSoundPreview,
+            identifier: "eyeFinish",
+            soundLabel: L10n.tr("prefs.eyeFinishSound")
+        )
+        configureSoundPreviewButton(
+            bodyStartSoundPreview,
+            identifier: "bodyStart",
+            soundLabel: L10n.tr("prefs.bodyStartSound")
+        )
+        configureSoundPreviewButton(
+            bodyFinishSoundPreview,
+            identifier: "bodyFinish",
+            soundLabel: L10n.tr("prefs.bodyFinishSound")
+        )
     }
 
-    private func configureSoundPreviewButton(_ button: NSButton, identifier: String) {
+    private func configureSoundPreviewButton(_ button: NSButton, identifier: String, soundLabel: String) {
+        let accessibilityLabel = L10n.format("prefs.previewSoundLabel", soundLabel)
+        let help = L10n.format("prefs.previewSoundSpecificHelp", soundLabel)
         button.title = L10n.tr("prefs.previewSound")
-        button.image = NSImage(systemSymbolName: "speaker.wave.2", accessibilityDescription: button.title)
+        button.image = NSImage(systemSymbolName: "speaker.wave.2", accessibilityDescription: accessibilityLabel)
         button.imagePosition = .imageLeading
-        button.toolTip = L10n.tr("prefs.previewSoundHelp")
-        button.setAccessibilityLabel(button.title)
-        button.setAccessibilityHelp(button.toolTip)
+        button.toolTip = help
+        button.setAccessibilityLabel(accessibilityLabel)
+        button.setAccessibilityHelp(help)
         button.target = self
         button.action = #selector(previewSound(_:))
         button.identifier = NSUserInterfaceItemIdentifier(identifier)

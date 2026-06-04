@@ -370,6 +370,8 @@
 "prefs.finishSound" = "Finish sound";
 "prefs.previewSound" = "Preview";
 "prefs.previewSoundHelp" = "Play this sound once";
+"prefs.previewSoundLabel" = "Preview %@";
+"prefs.previewSoundSpecificHelp" = "Play the selected %@ once.";
 "prefs.soundPreviewSilence" = "Silence selected";
 "prefs.soundPreviewPlayed" = "Previewed %@";
 "prefs.sound.silence" = "Silence";

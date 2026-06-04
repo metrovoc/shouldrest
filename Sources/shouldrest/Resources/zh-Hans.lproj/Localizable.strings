@@ -370,6 +370,8 @@
 "prefs.finishSound" = "结束声音";
 "prefs.previewSound" = "试听";
 "prefs.previewSoundHelp" = "播放一次此声音";
+"prefs.previewSoundLabel" = "试听%@";
+"prefs.previewSoundSpecificHelp" = "播放一次当前选择的%@。";
 "prefs.soundPreviewSilence" = "当前选择静音";
 "prefs.soundPreviewPlayed" = "已试听 %@";
 "prefs.sound.silence" = "静音";

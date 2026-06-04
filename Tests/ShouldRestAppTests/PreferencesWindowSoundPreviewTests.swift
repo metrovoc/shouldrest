@@ -4,20 +4,36 @@ import XCTest
 
 @MainActor
 final class PreferencesWindowSoundPreviewTests: XCTestCase {
-    func testSoundPreviewButtonsUseIconAndTooltip() throws {
+    func testSoundPreviewButtonsUseIconAndContextualHelp() throws {
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
 
         try selectAppearanceTab(in: contentView)
 
-        let button = try XCTUnwrap(view(withIdentifier: "eyeStart", in: contentView) as? NSButton)
-        XCTAssertEqual(button.title, L10n.tr("prefs.previewSound"))
-        XCTAssertNotNil(button.image)
-        XCTAssertEqual(button.image?.accessibilityDescription, button.title)
-        XCTAssertEqual(button.imagePosition, .imageLeading)
-        XCTAssertEqual(button.toolTip, L10n.tr("prefs.previewSoundHelp"))
-        XCTAssertEqual(button.accessibilityLabel(), button.title)
-        XCTAssertEqual(button.accessibilityHelp(), L10n.tr("prefs.previewSoundHelp"))
+        let expected: [(identifier: String, labelKey: String)] = [
+            ("eyeStart", "prefs.eyeStartSound"),
+            ("eyeFinish", "prefs.eyeFinishSound"),
+            ("bodyStart", "prefs.bodyStartSound"),
+            ("bodyFinish", "prefs.bodyFinishSound")
+        ]
+
+        var labels = Set<String>()
+        for item in expected {
+            let button = try XCTUnwrap(view(withIdentifier: item.identifier, in: contentView) as? NSButton)
+            let soundLabel = L10n.tr(item.labelKey)
+            let expectedLabel = L10n.format("prefs.previewSoundLabel", soundLabel)
+            let expectedHelp = L10n.format("prefs.previewSoundSpecificHelp", soundLabel)
+            XCTAssertEqual(button.title, L10n.tr("prefs.previewSound"))
+            XCTAssertNotNil(button.image)
+            XCTAssertEqual(button.image?.accessibilityDescription, expectedLabel)
+            XCTAssertEqual(button.imagePosition, .imageLeading)
+            XCTAssertEqual(button.toolTip, expectedHelp)
+            XCTAssertEqual(button.accessibilityLabel(), expectedLabel)
+            XCTAssertEqual(button.accessibilityHelp(), expectedHelp)
+            labels.insert(expectedLabel)
+        }
+
+        XCTAssertEqual(labels.count, expected.count)
     }
 
     func testPreviewingSilentSoundShowsVisibleStatus() throws {
