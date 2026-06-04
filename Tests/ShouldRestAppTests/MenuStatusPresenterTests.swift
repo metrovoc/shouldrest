@@ -258,7 +258,9 @@ final class MenuStatusPresenterTests: XCTestCase {
         let content = MenuStatusPresenter.headerContent(state: state, settings: .defaults, now: start.addingTimeInterval(21))
 
         XCTAssertEqual(lines.first, "Eye Gate ready to finish")
+        XCTAssertEqual(lines[1], "Finish from the overlay when ready.")
         XCTAssertEqual(content.primary, "Eye Gate ready to finish")
+        XCTAssertEqual(content.secondary, "Finish from the overlay when ready.")
         XCTAssertFalse(lines.first?.contains("0s") ?? true)
     }
 
@@ -282,7 +284,7 @@ final class MenuStatusPresenterTests: XCTestCase {
         XCTAssertTrue(lines[0].contains("5m remaining"))
         XCTAssertFalse(lines[0].contains("295s"))
         XCTAssertFalse(lines[0].contains("bodyBreak"))
-        XCTAssertEqual(lines.count, 1)
+        XCTAssertEqual(lines[1], "Use overlay controls to postpone, skip, or finish.")
     }
 
     func testActiveEyeGateStatusKeepsExactShortSeconds() {
@@ -297,5 +299,6 @@ final class MenuStatusPresenterTests: XCTestCase {
         let lines = MenuStatusPresenter.lines(state: state, settings: .defaults, now: start.addingTimeInterval(5))
 
         XCTAssertEqual(lines.first, "Eye Gate active, 15s remaining")
+        XCTAssertEqual(lines[1], "Emergency Exit lives in the overlay: click it or press Esc twice.")
     }
 }

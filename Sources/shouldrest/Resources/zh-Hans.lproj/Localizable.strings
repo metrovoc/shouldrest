@@ -73,6 +73,9 @@
 "status.nextBodyAfterEyeGates" = "距离下一次活动休息还有 %d 次护眼休息";
 "status.active" = "%@ 进行中，剩余 %@";
 "status.readyToFinish" = "%@ 已完成，等待结束";
+"status.eyeGateActiveGuidance" = "紧急退出在覆盖层内：点击它或按两次 Esc。";
+"status.eyeGateReadyGuidance" = "准备好后，从覆盖层内完成休息。";
+"status.bodyBreakActiveGuidance" = "使用覆盖层按钮推迟、跳过或完成。";
 "status.readyCompact" = "完成";
 "status.deferredShort" = "已延后";
 "status.deferred" = "%@ 已延后：%@";

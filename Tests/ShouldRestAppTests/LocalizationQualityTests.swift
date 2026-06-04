@@ -273,6 +273,15 @@ final class LocalizationQualityTests: XCTestCase {
         L10n.languageOverride = "en"
         XCTAssertEqual(L10n.tr("menu.reset"), "Reset Schedule")
         XCTAssertEqual(L10n.tr("menu.emergencyOverlayOnly"), "Emergency Exit: use overlay or Esc twice")
+        XCTAssertEqual(
+            L10n.tr("status.eyeGateActiveGuidance"),
+            "Emergency Exit lives in the overlay: click it or press Esc twice."
+        )
+        XCTAssertEqual(L10n.tr("status.eyeGateReadyGuidance"), "Finish from the overlay when ready.")
+        XCTAssertEqual(
+            L10n.tr("status.bodyBreakActiveGuidance"),
+            "Use overlay controls to postpone, skip, or finish."
+        )
         XCTAssertEqual(L10n.tr("prefs.reset"), "Reset Schedule")
         XCTAssertEqual(L10n.format("notification.quitBlocked", "Eye Gate"), "Finish Eye Gate before quitting.")
         XCTAssertEqual(L10n.format("notification.resetBlocked", "Eye Gate"), "Finish Eye Gate before resetting the schedule.")
@@ -285,6 +294,9 @@ final class LocalizationQualityTests: XCTestCase {
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(L10n.tr("menu.reset"), "重置计划")
         XCTAssertEqual(L10n.tr("menu.emergencyOverlayOnly"), "紧急退出：覆盖层内点击或按 Esc 两次")
+        XCTAssertEqual(L10n.tr("status.eyeGateActiveGuidance"), "紧急退出在覆盖层内：点击它或按两次 Esc。")
+        XCTAssertEqual(L10n.tr("status.eyeGateReadyGuidance"), "准备好后，从覆盖层内完成休息。")
+        XCTAssertEqual(L10n.tr("status.bodyBreakActiveGuidance"), "使用覆盖层按钮推迟、跳过或完成。")
         XCTAssertEqual(L10n.tr("prefs.reset"), "重置计划")
         XCTAssertEqual(L10n.format("notification.quitBlocked", "护眼休息"), "请先完成护眼休息，再退出。")
         XCTAssertEqual(L10n.format("notification.resetBlocked", "护眼休息"), "请先完成护眼休息，再重置计划。")

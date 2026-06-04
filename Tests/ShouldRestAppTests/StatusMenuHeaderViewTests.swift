@@ -15,7 +15,7 @@ final class StatusMenuHeaderViewTests: XCTestCase {
             )
         )
 
-        XCTAssertEqual(view.frame.size, NSSize(width: 318, height: 70))
+        XCTAssertEqual(view.frame.size, NSSize(width: 318, height: 82))
         XCTAssertNotNil(view.descendant(withIdentifier: "statusMenu.headerIcon") as? NSImageView)
         XCTAssertEqual(try textField("statusMenu.headerTitle", in: view).stringValue, "ShouldRest")
         XCTAssertEqual(try textField("statusMenu.headerPrimary", in: view).stringValue, "Next: Eye Gate at 8:00 PM")
@@ -39,6 +39,25 @@ final class StatusMenuHeaderViewTests: XCTestCase {
         XCTAssertEqual(try textField("statusMenu.headerPrimary", in: view).stringValue, "Paused indefinitely")
         XCTAssertTrue(try textField("statusMenu.headerSecondary", in: view).isHidden)
         XCTAssertTrue(try textField("statusMenu.headerBadge", in: view).isHidden)
+    }
+
+    func testHeaderSecondaryWrapsGuidanceCopy() throws {
+        let view = StatusMenuHeaderView(
+            content: MenuStatusPresenter.HeaderContent(
+                title: "ShouldRest",
+                primary: "Eye Gate active, 15s remaining",
+                secondary: "Emergency Exit lives in the overlay: click it or press Esc twice.",
+                healthBadge: nil,
+                icon: .restGate
+            )
+        )
+
+        let secondary = try textField("statusMenu.headerSecondary", in: view)
+
+        XCTAssertFalse(secondary.isHidden)
+        XCTAssertEqual(secondary.lineBreakMode, .byWordWrapping)
+        XCTAssertEqual(secondary.maximumNumberOfLines, 2)
+        XCTAssertEqual(secondary.stringValue, "Emergency Exit lives in the overlay: click it or press Esc twice.")
     }
 
     private func textField(_ identifier: String, in view: NSView) throws -> NSTextField {

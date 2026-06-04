@@ -4,7 +4,7 @@ import AppKit
 final class StatusMenuHeaderView: NSView {
     private enum Metrics {
         static let width: CGFloat = 318
-        static let height: CGFloat = 70
+        static let height: CGFloat = 82
         static let horizontalInset: CGFloat = 12
         static let iconSize: CGFloat = 30
     }
@@ -39,7 +39,9 @@ final class StatusMenuHeaderView: NSView {
             content.secondary ?? "",
             identifier: "statusMenu.headerSecondary",
             font: .systemFont(ofSize: 11, weight: .regular),
-            color: .tertiaryLabelColor
+            color: .tertiaryLabelColor,
+            lineBreakMode: .byWordWrapping,
+            maximumNumberOfLines: 2
         )
         secondaryLabel.isHidden = content.secondary == nil
 
@@ -99,14 +101,16 @@ final class StatusMenuHeaderView: NSView {
         _ text: String,
         identifier: String,
         font: NSFont,
-        color: NSColor
+        color: NSColor,
+        lineBreakMode: NSLineBreakMode = .byTruncatingTail,
+        maximumNumberOfLines: Int = 1
     ) -> NSTextField {
         let label = NSTextField(labelWithString: text)
         label.identifier = NSUserInterfaceItemIdentifier(identifier)
         label.font = font
         label.textColor = color
-        label.lineBreakMode = .byTruncatingTail
-        label.maximumNumberOfLines = 1
+        label.lineBreakMode = lineBreakMode
+        label.maximumNumberOfLines = maximumNumberOfLines
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return label
     }

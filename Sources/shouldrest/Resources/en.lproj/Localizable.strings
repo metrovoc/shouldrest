@@ -73,6 +73,9 @@
 "status.nextBodyAfterEyeGates" = "Next Body Break after %d Eye Gates";
 "status.active" = "%@ active, %@ remaining";
 "status.readyToFinish" = "%@ ready to finish";
+"status.eyeGateActiveGuidance" = "Emergency Exit lives in the overlay: click it or press Esc twice.";
+"status.eyeGateReadyGuidance" = "Finish from the overlay when ready.";
+"status.bodyBreakActiveGuidance" = "Use overlay controls to postpone, skip, or finish.";
 "status.readyCompact" = "done";
 "status.deferredShort" = "Deferred";
 "status.deferred" = "%@ deferred: %@";
