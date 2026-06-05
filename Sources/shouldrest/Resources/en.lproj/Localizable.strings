@@ -633,13 +633,17 @@
 "shortcut.recordingCanceledHelp" = "Shortcut recording was canceled. Click again to record a shortcut.";
 "shortcut.clearHelp" = "Click to replace this shortcut. Use the clear button to remove it.";
 "shortcut.requiredHelp" = "Click to replace this shortcut. Use the restore button to return to the default.";
+"shortcut.requiredHelpWithValue" = "Click to replace this shortcut. Use the restore button to return to the default (%@).";
 "shortcut.requiredRecordingHelp" = "Press Command, Control, or Option with a key. Esc cancels; Delete restores the default.";
+"shortcut.requiredRecordingHelpWithValue" = "Press Command, Control, or Option with a key. Esc cancels; Delete restores %@.";
 "shortcut.clearButton" = "Clear Shortcut";
 "shortcut.clearButtonHelp" = "Clear this shortcut.";
 "shortcut.clearButtonDisabledEmptyHelp" = "Assign a shortcut before clearing it.";
 "shortcut.restoreDefaultButton" = "Restore Default Shortcut";
 "shortcut.restoreDefaultButtonHelp" = "Restore the default shortcut.";
+"shortcut.restoreDefaultButtonHelpWithValue" = "Restore the default shortcut (%@).";
 "shortcut.restoreDefaultButtonDisabledDefaultHelp" = "This shortcut is already using the default.";
+"shortcut.restoreDefaultButtonDisabledDefaultHelpWithValue" = "This shortcut is already using the default (%@).";
 "cli.help" = "Usage: shouldrest <command> [options]\n\nCommands:\n  help                         Show this help.\n  version                      Show version.\n  settings                     Show settings location.\n  logs                         Show log location.\n  pause [-d duration]          Pause rests. Duration: indefinitely, until-morning, 60, 1h, 1h20m.\n  resume                       Resume rests.\n  toggle                       Pause or resume rests.\n  reset                        Reset schedule and rest debt.\n  eye|mini [-w wait]           Start Eye Gate now or after wait; it is always strict and text-free.\n  body|long [-T title] [-t text] [-w wait] [-n]  Start or customize Body Break.\n  emergency                    Bring the active Eye Gate overlay forward for Emergency Exit.\n  preferences                  Open ShouldRest preferences.\n  support                      Copy support report.\n  support-panel                Open the support report window.\n  about                        Open the About window.\n  url shouldrest://<command>    Run a shouldrest:// command.";
 "cli.invalidURL" = "Invalid ShouldRest URL: %@";
 "cli.settingsPathHidden" = "Settings location is hidden in this setup.";

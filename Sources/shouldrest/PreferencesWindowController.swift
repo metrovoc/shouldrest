@@ -3050,8 +3050,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             if isRequired {
                 label = L10n.tr("shortcut.restoreDefaultButton")
                 help = canClear
-                    ? L10n.tr("shortcut.restoreDefaultButtonHelp")
-                    : L10n.tr("shortcut.restoreDefaultButtonDisabledDefaultHelp")
+                    ? restoreDefaultShortcutHelp(fallback: fallback)
+                    : restoreDefaultShortcutDisabledHelp(fallback: fallback)
             } else {
                 label = L10n.tr("shortcut.clearButton")
                 help = canClear
@@ -3066,6 +3066,29 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             )
             setIconOnlyActionHelp(label: label, help: help, on: pair.button)
         }
+    }
+
+    private func restoreDefaultShortcutHelp(fallback: String?) -> String {
+        guard let fallbackDisplay = fallbackShortcutDisplay(fallback) else {
+            return L10n.tr("shortcut.restoreDefaultButtonHelp")
+        }
+        return L10n.format("shortcut.restoreDefaultButtonHelpWithValue", fallbackDisplay)
+    }
+
+    private func restoreDefaultShortcutDisabledHelp(fallback: String?) -> String {
+        guard let fallbackDisplay = fallbackShortcutDisplay(fallback) else {
+            return L10n.tr("shortcut.restoreDefaultButtonDisabledDefaultHelp")
+        }
+        return L10n.format("shortcut.restoreDefaultButtonDisabledDefaultHelpWithValue", fallbackDisplay)
+    }
+
+    private func fallbackShortcutDisplay(_ fallback: String?) -> String? {
+        guard let fallback = fallback?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !fallback.isEmpty else {
+            return nil
+        }
+        let display = ShortcutDisplay.string(fallback)
+        return display.isEmpty ? nil : display
     }
 
     private func handleShortcutChange(completionStatus: PreferencesSaveStatus? = nil) {
@@ -6947,7 +6970,7 @@ final class ShortcutRecorderButton: NSButton {
             title = L10n.tr("shortcut.recording")
             let interactionHelp = requiredFallbackShortcutValue == nil
                 ? L10n.tr("shortcut.recordingHelp")
-                : L10n.tr("shortcut.requiredRecordingHelp")
+                : requiredRecordingHelp()
             toolTip = combinedHelp(with: interactionHelp)
             contentTintColor = .controlAccentColor
             setSymbol("record.circle", fallback: "keyboard")
@@ -6955,7 +6978,7 @@ final class ShortcutRecorderButton: NSButton {
             title = L10n.tr("shortcut.recordingInvalid")
             let interactionHelp = requiredFallbackShortcutValue == nil
                 ? L10n.tr("shortcut.recordingHelp")
-                : L10n.tr("shortcut.requiredRecordingHelp")
+                : requiredRecordingHelp()
             toolTip = combinedHelp(with: interactionHelp)
             contentTintColor = .systemOrange
             setSymbol("exclamationmark.triangle.fill", fallback: "exclamationmark.triangle")
@@ -6968,7 +6991,7 @@ final class ShortcutRecorderButton: NSButton {
             title = display
             let interactionHelp = requiredFallbackShortcutValue == nil
                 ? L10n.tr("shortcut.clearHelp")
-                : L10n.tr("shortcut.requiredHelp")
+                : requiredShortcutHelp()
             toolTip = combinedHelp(with: interactionHelp)
             contentTintColor = nil
             setSymbol("keyboard")
@@ -6978,6 +7001,29 @@ final class ShortcutRecorderButton: NSButton {
             applyValidationWarningIfNeeded()
         }
         applyAccessibilityMetadata()
+    }
+
+    private func requiredShortcutHelp() -> String {
+        guard let fallbackDisplay = requiredFallbackDisplay else {
+            return L10n.tr("shortcut.requiredHelp")
+        }
+        return L10n.format("shortcut.requiredHelpWithValue", fallbackDisplay)
+    }
+
+    private func requiredRecordingHelp() -> String {
+        guard let fallbackDisplay = requiredFallbackDisplay else {
+            return L10n.tr("shortcut.requiredRecordingHelp")
+        }
+        return L10n.format("shortcut.requiredRecordingHelpWithValue", fallbackDisplay)
+    }
+
+    private var requiredFallbackDisplay: String? {
+        guard let requiredFallbackShortcutValue = requiredFallbackShortcutValue?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !requiredFallbackShortcutValue.isEmpty else {
+            return nil
+        }
+        let display = ShortcutDisplay.string(requiredFallbackShortcutValue)
+        return display.isEmpty ? nil : display
     }
 
     private func shouldApplySavedValidationWarning(for state: DisplayState) -> Bool {

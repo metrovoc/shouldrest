@@ -215,6 +215,22 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("shortcut.recordingInvalid"), "Use ⌘, ⌃, or ⌥")
         XCTAssertNotEqual(L10n.tr("shortcut.recordHelp"), "Click, then press a shortcut.")
         XCTAssertTrue(L10n.tr("shortcut.requiredHelp").localizedCaseInsensitiveContains("restore button"))
+        XCTAssertEqual(
+            L10n.format("shortcut.requiredHelpWithValue", "⌘⌥E"),
+            "Click to replace this shortcut. Use the restore button to return to the default (⌘⌥E)."
+        )
+        XCTAssertEqual(
+            L10n.format("shortcut.requiredRecordingHelpWithValue", "⌘⌥E"),
+            "Press Command, Control, or Option with a key. Esc cancels; Delete restores ⌘⌥E."
+        )
+        XCTAssertEqual(
+            L10n.format("shortcut.restoreDefaultButtonHelpWithValue", "⌘⌥E"),
+            "Restore the default shortcut (⌘⌥E)."
+        )
+        XCTAssertEqual(
+            L10n.format("shortcut.restoreDefaultButtonDisabledDefaultHelpWithValue", "⌘⌥E"),
+            "This shortcut is already using the default (⌘⌥E)."
+        )
         XCTAssertFalse(L10n.tr("shortcut.requiredHelp").localizedCaseInsensitiveContains("reset button"))
 
         L10n.languageOverride = "zh-Hans"
@@ -226,6 +242,22 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("shortcut.recordingInvalid"), "使用 ⌘、⌃ 或 ⌥")
         XCTAssertNotEqual(L10n.tr("shortcut.recordHelp"), "点击后按快捷键。")
         XCTAssertTrue(L10n.tr("shortcut.requiredHelp").contains("恢复按钮"))
+        XCTAssertEqual(
+            L10n.format("shortcut.requiredHelpWithValue", "⌘⌥E"),
+            "点击可替换该快捷键。使用恢复按钮可恢复默认（⌘⌥E）。"
+        )
+        XCTAssertEqual(
+            L10n.format("shortcut.requiredRecordingHelpWithValue", "⌘⌥E"),
+            "按 Command、Control 或 Option 加一个按键。Esc 取消；Delete 恢复 ⌘⌥E。"
+        )
+        XCTAssertEqual(
+            L10n.format("shortcut.restoreDefaultButtonHelpWithValue", "⌘⌥E"),
+            "恢复默认快捷键（⌘⌥E）。"
+        )
+        XCTAssertEqual(
+            L10n.format("shortcut.restoreDefaultButtonDisabledDefaultHelpWithValue", "⌘⌥E"),
+            "当前已使用默认快捷键（⌘⌥E）。"
+        )
         XCTAssertFalse(L10n.tr("shortcut.requiredHelp").contains("重置按钮"))
     }
 

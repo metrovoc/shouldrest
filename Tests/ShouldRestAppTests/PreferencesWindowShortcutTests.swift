@@ -116,25 +116,25 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         button.requiredFallbackShortcutValue = ShortcutSettings.defaultEmergencyEyeGateOverride
 
         XCTAssertEqual(button.title, "⌘⌥E")
-        XCTAssertEqual(button.toolTip, L10n.tr("shortcut.requiredHelp"))
+        XCTAssertEqual(button.toolTip, requiredShortcutHelp())
 
         button.shortcutValue = "Cmd+1"
         XCTAssertEqual(button.title, "⌘1")
-        XCTAssertEqual(button.toolTip, L10n.tr("shortcut.requiredHelp"))
+        XCTAssertEqual(button.toolTip, requiredShortcutHelp())
 
         button.shortcutValue = ""
         XCTAssertEqual(button.shortcutValue, ShortcutSettings.defaultEmergencyEyeGateOverride)
         XCTAssertEqual(button.title, "⌘⌥E")
-        XCTAssertEqual(button.toolTip, L10n.tr("shortcut.requiredHelp"))
+        XCTAssertEqual(button.toolTip, requiredShortcutHelp())
 
         button.shortcutValue = "Cmd+1"
         button.performClick(nil)
-        XCTAssertEqual(button.toolTip, L10n.tr("shortcut.requiredRecordingHelp"))
+        XCTAssertEqual(button.toolTip, requiredRecordingHelp())
         button.keyDown(with: try keyEvent(keyCode: kVK_Delete))
 
         XCTAssertEqual(button.shortcutValue, ShortcutSettings.defaultEmergencyEyeGateOverride)
         XCTAssertEqual(button.title, "⌘⌥E")
-        XCTAssertEqual(button.toolTip, L10n.tr("shortcut.requiredHelp"))
+        XCTAssertEqual(button.toolTip, requiredShortcutHelp())
     }
 
     func testUnsetShortcutsExposeSetShortcutActionWithoutLongRecordInstruction() throws {
@@ -228,8 +228,8 @@ final class PreferencesWindowShortcutTests: XCTestCase {
 
         XCTAssertEqual(pause30.toolTip, shortcutHelp("prefs.pause30ShortcutHelp", "shortcut.recordHelp"))
         XCTAssertEqual(pause30.accessibilityHelp(), shortcutHelp("prefs.pause30ShortcutHelp", "shortcut.recordHelp"))
-        XCTAssertEqual(emergency.toolTip, shortcutHelp("prefs.emergencyEyeGateShortcutHelp", "shortcut.requiredHelp"))
-        XCTAssertEqual(emergency.accessibilityHelp(), shortcutHelp("prefs.emergencyEyeGateShortcutHelp", "shortcut.requiredHelp"))
+        XCTAssertEqual(emergency.toolTip, shortcutHelpText("prefs.emergencyEyeGateShortcutHelp", requiredShortcutHelp()))
+        XCTAssertEqual(emergency.accessibilityHelp(), shortcutHelpText("prefs.emergencyEyeGateShortcutHelp", requiredShortcutHelp()))
         XCTAssertEqual(endActive.toolTip, shortcutHelp("prefs.activeRestShortcut.bodyHelp", "shortcut.clearHelp"))
         XCTAssertFalse((emergency.toolTip ?? "").localizedCaseInsensitiveContains("shortcut again"))
 
@@ -668,9 +668,9 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertNotNil(restoreButton.image)
         XCTAssertEqual(restoreButton.imagePosition, .imageOnly)
         XCTAssertFalse(restoreButton.isEnabled)
-        XCTAssertEqual(restoreButton.toolTip, L10n.tr("shortcut.restoreDefaultButtonDisabledDefaultHelp"))
+        XCTAssertEqual(restoreButton.toolTip, restoreDefaultShortcutDisabledHelp())
         XCTAssertEqual(restoreButton.accessibilityLabel(), L10n.tr("shortcut.restoreDefaultButton"))
-        XCTAssertEqual(restoreButton.accessibilityHelp(), L10n.tr("shortcut.restoreDefaultButtonDisabledDefaultHelp"))
+        XCTAssertEqual(restoreButton.accessibilityHelp(), restoreDefaultShortcutDisabledHelp())
         XCTAssertEqual(
             restoreButton.image?.accessibilityDescription,
             L10n.tr("shortcut.restoreDefaultButton")
@@ -751,9 +751,10 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         let restoreButton = try XCTUnwrap(control(withIdentifier: "shortcut.emergencyEye.clear", in: contentView) as? NSButton)
         let statusLabel = try XCTUnwrap(view(withIdentifier: "autosaveStatusLabel", in: contentView) as? NSTextField)
 
-        XCTAssertEqual(restoreButton.toolTip, L10n.tr("shortcut.restoreDefaultButtonHelp"))
+        XCTAssertEqual(restoreButton.toolTip, restoreDefaultShortcutHelp())
         XCTAssertEqual(restoreButton.accessibilityLabel(), L10n.tr("shortcut.restoreDefaultButton"))
-        XCTAssertEqual(restoreButton.accessibilityHelp(), L10n.tr("shortcut.restoreDefaultButtonHelp"))
+        XCTAssertEqual(restoreButton.accessibilityHelp(), restoreDefaultShortcutHelp())
+        XCTAssertTrue(restoreButton.toolTip?.contains("⌘⌥E") == true)
         XCTAssertTrue(restoreButton.isEnabled)
         restoreButton.performClick(nil)
         waitUntilSavedSettingsArrive(savedSettings)
@@ -766,9 +767,9 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(statusLabel.accessibilityLabel(), L10n.tr("prefs.autosaveShortcutRestored"))
         XCTAssertEqual(statusLabel.accessibilityHelp(), L10n.tr("prefs.autosaveShortcutRestored"))
         XCTAssertFalse(restoreButton.isEnabled)
-        XCTAssertEqual(restoreButton.toolTip, L10n.tr("shortcut.restoreDefaultButtonDisabledDefaultHelp"))
+        XCTAssertEqual(restoreButton.toolTip, restoreDefaultShortcutDisabledHelp())
         XCTAssertEqual(restoreButton.accessibilityLabel(), L10n.tr("shortcut.restoreDefaultButton"))
-        XCTAssertEqual(restoreButton.accessibilityHelp(), L10n.tr("shortcut.restoreDefaultButtonDisabledDefaultHelp"))
+        XCTAssertEqual(restoreButton.accessibilityHelp(), restoreDefaultShortcutDisabledHelp())
         XCTAssertEqual(
             restoreButton.image?.accessibilityDescription,
             L10n.tr("shortcut.restoreDefaultButton")
@@ -785,11 +786,11 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         try selectShortcutsTab(in: contentView)
         let emergencyShortcut = try XCTUnwrap(control(withIdentifier: "shortcut.emergencyEye", in: contentView) as? ShortcutRecorderButton)
 
-        XCTAssertEqual(emergencyShortcut.toolTip, shortcutHelp("prefs.emergencyEyeGateShortcutHelp", "shortcut.requiredHelp"))
+        XCTAssertEqual(emergencyShortcut.toolTip, shortcutHelpText("prefs.emergencyEyeGateShortcutHelp", requiredShortcutHelp()))
         emergencyShortcut.performClick(nil)
         XCTAssertEqual(
             emergencyShortcut.toolTip,
-            shortcutHelp("prefs.emergencyEyeGateShortcutHelp", "shortcut.requiredRecordingHelp")
+            shortcutHelpText("prefs.emergencyEyeGateShortcutHelp", requiredRecordingHelp())
         )
         emergencyShortcut.keyDown(with: try keyEvent(keyCode: kVK_Delete))
         waitUntilSavedSettingsArrive(savedSettings)
@@ -921,6 +922,26 @@ final class PreferencesWindowShortcutTests: XCTestCase {
 
     private func shortcutHelp(_ actionHelpKey: String, _ interactionHelpKey: String) -> String {
         "\(L10n.tr(actionHelpKey))\n\(L10n.tr(interactionHelpKey))"
+    }
+
+    private func shortcutHelpText(_ actionHelpKey: String, _ interactionHelp: String) -> String {
+        "\(L10n.tr(actionHelpKey))\n\(interactionHelp)"
+    }
+
+    private func requiredShortcutHelp() -> String {
+        L10n.format("shortcut.requiredHelpWithValue", "⌘⌥E")
+    }
+
+    private func requiredRecordingHelp() -> String {
+        L10n.format("shortcut.requiredRecordingHelpWithValue", "⌘⌥E")
+    }
+
+    private func restoreDefaultShortcutHelp() -> String {
+        L10n.format("shortcut.restoreDefaultButtonHelpWithValue", "⌘⌥E")
+    }
+
+    private func restoreDefaultShortcutDisabledHelp() -> String {
+        L10n.format("shortcut.restoreDefaultButtonDisabledDefaultHelpWithValue", "⌘⌥E")
     }
 
     private func visibleTexts(in view: NSView, ancestorHidden: Bool = false) -> [String] {
