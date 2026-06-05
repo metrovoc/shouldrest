@@ -362,6 +362,42 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertTrue(terms.toolTip?.contains(L10n.tr("prefs.addRunningApp")) ?? false)
     }
 
+    func testAppExclusionRuleListRowsUseScannableListItemPresentation() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "calls",
+                name: "Calls",
+                matchTerms: ["zoom"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectContextTab(in: contentView)
+
+        let row = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionRuleRow.0", in: contentView) as? NSStackView)
+        let title = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionRuleTitle.0", in: contentView) as? NSTextField)
+        let body = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionRuleBody.0", in: contentView) as? NSTextField)
+
+        XCTAssertTrue(row.wantsLayer)
+        XCTAssertEqual(row.edgeInsets.top, 6)
+        XCTAssertEqual(row.edgeInsets.left, 8)
+        XCTAssertLessThanOrEqual(row.layer?.cornerRadius ?? 99, 8)
+        XCTAssertEqual(row.layer?.borderWidth, 1)
+        XCTAssertNotNil(row.layer?.backgroundColor)
+        XCTAssertNotNil(row.layer?.borderColor)
+        XCTAssertGreaterThanOrEqual(row.constraints.first { $0.firstAttribute == .width }?.constant ?? 0, 360)
+        XCTAssertGreaterThanOrEqual(row.constraints.first { $0.firstAttribute == .height }?.constant ?? 0, 52)
+        XCTAssertLessThanOrEqual(title.constraints.first { $0.firstAttribute == .width }?.constant ?? 999, 284)
+        XCTAssertLessThanOrEqual(body.constraints.first { $0.firstAttribute == .width }?.constant ?? 999, 284)
+        XCTAssertEqual(row.toolTip, "\(title.stringValue). \(body.stringValue)")
+        XCTAssertEqual(row.accessibilityHelp(), row.toolTip)
+    }
+
     func testAppExclusionPreviewShowsEmptyDraftGuidance() throws {
         defer { L10n.languageOverride = nil }
         L10n.languageOverride = "en"

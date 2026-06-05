@@ -4254,14 +4254,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         title.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionRuleTitle.\(index)")
         title.font = .systemFont(ofSize: 12, weight: .medium)
         title.lineBreakMode = .byTruncatingTail
-        title.widthAnchor.constraint(equalToConstant: 300).isActive = true
+        title.widthAnchor.constraint(equalToConstant: 284).isActive = true
 
         let body = NSTextField(labelWithString: appExclusionRuleSummary(rule))
         body.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionRuleBody.\(index)")
         body.font = .systemFont(ofSize: 11)
         body.textColor = .secondaryLabelColor
         body.lineBreakMode = .byTruncatingTail
-        body.widthAnchor.constraint(equalToConstant: 300).isActive = true
+        body.widthAnchor.constraint(equalToConstant: 284).isActive = true
 
         let textStack = NSStackView(views: [title, body])
         textStack.orientation = .vertical
@@ -4311,12 +4311,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         actionStack.spacing = 2
         actionStack.alignment = .centerY
 
-        let row = NSStackView(views: [textStack, actionStack])
-        row.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionRuleRow.\(index)")
-        row.orientation = .horizontal
-        row.spacing = 8
-        row.alignment = .centerY
-        return row
+        return preferenceListItemRow(
+            identifier: "prefs.appExclusionRuleRow.\(index)",
+            title: rule.name,
+            summary: body.stringValue,
+            content: textStack,
+            actions: actionStack
+        )
     }
 
     private func appExclusionRuleSummary(_ rule: AppExclusionRule) -> String {
@@ -4616,14 +4617,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         title.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyIdeaTitle.\(index)")
         title.font = .systemFont(ofSize: 12, weight: .medium)
         title.lineBreakMode = .byTruncatingTail
-        title.widthAnchor.constraint(equalToConstant: 300).isActive = true
+        title.widthAnchor.constraint(equalToConstant: 284).isActive = true
 
         let body = NSTextField(labelWithString: customBodyIdeaBodySummary(idea.body))
         body.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyIdeaBody.\(index)")
         body.font = .systemFont(ofSize: 11)
         body.textColor = .secondaryLabelColor
         body.lineBreakMode = .byTruncatingTail
-        body.widthAnchor.constraint(equalToConstant: 300).isActive = true
+        body.widthAnchor.constraint(equalToConstant: 284).isActive = true
 
         let textStack = NSStackView(views: [title, body])
         textStack.orientation = .vertical
@@ -4673,11 +4674,39 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         actionStack.spacing = 2
         actionStack.alignment = .centerY
 
-        let row = NSStackView(views: [textStack, actionStack])
-        row.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyIdeaRow.\(index)")
+        return preferenceListItemRow(
+            identifier: "prefs.customBodyIdeaRow.\(index)",
+            title: idea.title,
+            summary: body.stringValue,
+            content: textStack,
+            actions: actionStack
+        )
+    }
+
+    private func preferenceListItemRow(
+        identifier: String,
+        title: String,
+        summary: String,
+        content: NSView,
+        actions: NSView
+    ) -> NSStackView {
+        let row = NSStackView(views: [content, actions])
+        row.identifier = NSUserInterfaceItemIdentifier(identifier)
         row.orientation = .horizontal
         row.spacing = 8
         row.alignment = .centerY
+        row.edgeInsets = NSEdgeInsets(top: 6, left: 8, bottom: 6, right: 6)
+        row.wantsLayer = true
+        row.layer?.cornerRadius = 6
+        row.layer?.borderWidth = 1
+        row.layer?.backgroundColor = NSColor.controlBackgroundColor.withAlphaComponent(0.42).cgColor
+        row.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.45).cgColor
+        row.widthAnchor.constraint(equalToConstant: 360).isActive = true
+        row.heightAnchor.constraint(greaterThanOrEqualToConstant: 52).isActive = true
+
+        let help = "\(title). \(summary)"
+        row.toolTip = help
+        row.setAccessibilityHelp(help)
         return row
     }
 
