@@ -12,12 +12,19 @@ final class StatusMenuHeaderView: NSView {
     init(content: MenuStatusPresenter.HeaderContent) {
         super.init(frame: NSRect(x: 0, y: 0, width: Metrics.width, height: Metrics.height))
         identifier = NSUserInterfaceItemIdentifier("statusMenu.header")
+        let summary = Self.accessibilitySummary(for: content)
+        toolTip = summary
+        setAccessibilityLabel(summary)
+        setAccessibilityHelp(summary)
         translatesAutoresizingMaskIntoConstraints = false
         widthAnchor.constraint(equalToConstant: Metrics.width).isActive = true
         heightAnchor.constraint(equalToConstant: Metrics.height).isActive = true
 
         let iconView = NSImageView(image: image(for: content.icon))
         iconView.identifier = NSUserInterfaceItemIdentifier("statusMenu.headerIcon")
+        iconView.toolTip = content.title
+        iconView.setAccessibilityLabel(content.title)
+        iconView.setAccessibilityHelp(summary)
         iconView.imageScaling = .scaleProportionallyUpOrDown
         iconView.translatesAutoresizingMaskIntoConstraints = false
         iconView.widthAnchor.constraint(equalToConstant: Metrics.iconSize).isActive = true
@@ -43,7 +50,7 @@ final class StatusMenuHeaderView: NSView {
             lineBreakMode: .byWordWrapping,
             maximumNumberOfLines: 2
         )
-        secondaryLabel.isHidden = content.secondary == nil
+        setOptionalTextAccessibility(on: secondaryLabel, text: content.secondary)
 
         let textStack = NSStackView(views: [titleLabel, primaryLabel, secondaryLabel])
         textStack.orientation = .vertical
@@ -53,7 +60,7 @@ final class StatusMenuHeaderView: NSView {
 
         let badgeLabel = badge(content.healthBadge)
         badgeLabel.identifier = NSUserInterfaceItemIdentifier("statusMenu.headerBadge")
-        badgeLabel.isHidden = content.healthBadge == nil
+        setOptionalTextAccessibility(on: badgeLabel, text: content.healthBadge)
 
         let row = NSStackView(views: [iconView, textStack, badgeLabel])
         row.orientation = .horizontal
@@ -80,6 +87,29 @@ final class StatusMenuHeaderView: NSView {
 
     required init?(coder: NSCoder) {
         nil
+    }
+
+    private static func accessibilitySummary(for content: MenuStatusPresenter.HeaderContent) -> String {
+        [content.title, content.primary, content.secondary, content.healthBadge]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .joined(separator: ". ")
+    }
+
+    private func setOptionalTextAccessibility(on label: NSTextField, text: String?) {
+        let readableText = text?.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let readableText, !readableText.isEmpty else {
+            label.isHidden = true
+            label.toolTip = nil
+            label.setAccessibilityLabel(nil)
+            label.setAccessibilityHelp(nil)
+            return
+        }
+
+        label.isHidden = false
+        label.toolTip = readableText
+        label.setAccessibilityLabel(readableText)
+        label.setAccessibilityHelp(readableText)
     }
 
     private func image(for icon: MenuStatusPresenter.MenuBarIcon) -> NSImage {
@@ -111,6 +141,9 @@ final class StatusMenuHeaderView: NSView {
         label.textColor = color
         label.lineBreakMode = lineBreakMode
         label.maximumNumberOfLines = maximumNumberOfLines
+        label.toolTip = text
+        label.setAccessibilityLabel(text)
+        label.setAccessibilityHelp(text)
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         return label
     }
