@@ -58,11 +58,11 @@
 "menu.debugPanelHelp" = "打开支持报告窗口。";
 "menu.about" = "关于 ShouldRest…";
 "menu.aboutHelp" = "打开产品和版本信息。";
-"menu.settingsFile" = "设置位置";
+"menu.settingsFile" = "设置";
 "menu.settingsFileHelp" = "打开或复制 ShouldRest 保存设置的位置。";
-"menu.showSettingsFile" = "在 Finder 中显示设置位置";
+"menu.showSettingsFile" = "在 Finder 中显示";
 "menu.showSettingsFileHelp" = "在 Finder 中显示 ShouldRest 的设置位置。";
-"menu.copySettingsPath" = "复制设置位置";
+"menu.copySettingsPath" = "复制位置";
 "menu.copySettingsPathHelp" = "复制 ShouldRest 的设置位置。";
 "menu.copySettingsPathDone" = "设置位置已复制到剪贴板。";
 "menu.quit" = "退出 ShouldRest";

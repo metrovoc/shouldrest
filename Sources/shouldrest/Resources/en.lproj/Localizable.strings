@@ -58,11 +58,11 @@
 "menu.debugPanelHelp" = "Open the support report window.";
 "menu.about" = "About ShouldRest…";
 "menu.aboutHelp" = "Open product and version information.";
-"menu.settingsFile" = "Settings Location";
+"menu.settingsFile" = "Settings";
 "menu.settingsFileHelp" = "Open or copy where ShouldRest keeps its settings.";
-"menu.showSettingsFile" = "Show Settings Location in Finder";
+"menu.showSettingsFile" = "Show in Finder";
 "menu.showSettingsFileHelp" = "Show the ShouldRest settings location in Finder.";
-"menu.copySettingsPath" = "Copy Settings Location";
+"menu.copySettingsPath" = "Copy Location";
 "menu.copySettingsPathHelp" = "Copy the ShouldRest settings location.";
 "menu.copySettingsPathDone" = "Settings location copied to the clipboard.";
 "menu.quit" = "Quit ShouldRest";
