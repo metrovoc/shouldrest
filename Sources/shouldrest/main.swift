@@ -2350,7 +2350,7 @@ final class OverlayController {
             case .focused:
                 window.makeKeyAndOrderFront(nil)
                 window.orderFrontRegardless()
-                window.makeFirstResponder(window.overlayView)
+                _ = window.overlayView.focusEmergencyOverrideAffordanceIfAvailable()
                 return .focused
             case .unavailable:
                 break
@@ -2526,6 +2526,10 @@ final class OverlayWindow: NSWindow {
 }
 
 final class OverlayActionButton: NSButton {
+    override var acceptsFirstResponder: Bool {
+        true
+    }
+
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
         true
     }
@@ -2981,6 +2985,7 @@ final class RestOverlayView: NSView {
             return .unavailable
         }
 
+        _ = window?.makeFirstResponder(emergencyButton)
         return .focused
     }
 

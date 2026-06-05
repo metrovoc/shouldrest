@@ -361,6 +361,61 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(requestCount, 1)
     }
 
+    func testOverlayEmergencyFocusMakesButtonFirstResponderWithoutConfirming() throws {
+        let screen = try XCTUnwrap(NSScreen.main)
+        let session = eyeGateSession()
+        let window = OverlayWindow(screen: screen, session: session, settings: .defaults)
+        defer { window.close() }
+        var requestCount = 0
+        window.overlayView.onEmergencyOverrideRequested = {
+            requestCount += 1
+            return requestCount == 1 ? .armed : .complete
+        }
+        window.overlayView.configure(
+            session: session,
+            remainingSeconds: 60,
+            settings: .defaults,
+            showsContent: true,
+            manualAwaiting: false,
+            isEmergencyOverrideAvailable: true
+        )
+        let button = try XCTUnwrap(window.overlayView.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+
+        XCTAssertEqual(window.overlayView.focusEmergencyOverrideAffordanceIfAvailable(), .focused)
+
+        XCTAssertTrue(window.firstResponder === button)
+        XCTAssertEqual(requestCount, 0)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverride"))
+    }
+
+    func testFocusedEmergencyButtonStillRoutesEscapeThroughWindowEventDispatch() throws {
+        let screen = try XCTUnwrap(NSScreen.main)
+        let session = eyeGateSession()
+        let window = OverlayWindow(screen: screen, session: session, settings: .defaults)
+        defer { window.close() }
+        var requestCount = 0
+        window.overlayView.onEmergencyOverrideRequested = {
+            requestCount += 1
+            return requestCount == 1 ? .armed : .complete
+        }
+        window.overlayView.configure(
+            session: session,
+            remainingSeconds: 60,
+            settings: .defaults,
+            showsContent: true,
+            manualAwaiting: false,
+            isEmergencyOverrideAvailable: true
+        )
+        let button = try XCTUnwrap(window.overlayView.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        XCTAssertEqual(window.overlayView.focusEmergencyOverrideAffordanceIfAvailable(), .focused)
+        XCTAssertTrue(window.firstResponder === button)
+
+        window.sendEvent(try escapeKeyEvent(windowNumber: window.windowNumber))
+
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+    }
+
     func testOverlayWindowKeepsOverlayViewInWindowLocalCoordinates() throws {
         let screen = try XCTUnwrap(NSScreen.main)
         let window = OverlayWindow(screen: screen, session: eyeGateSession(), settings: .defaults)
@@ -444,7 +499,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(requestCount, 2)
     }
 
-    func testHoldingEscapeDoesNotConfirmEmergencyThroughKeyRepeat() throws {
+    func testEscapeKeyRepeatDoesNotConfirmEmergency() throws {
         let view = configuredEyeGateOverlay()
         var requestCount = 0
         view.onEmergencyOverrideRequested = {
