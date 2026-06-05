@@ -356,6 +356,7 @@
 "prefs.appExclusionPreviewPause" = "Pause %2$@ during %1$@.";
 "prefs.appExclusionPreviewResumeOnly" = "Run %2$@ only during %1$@.";
 "prefs.advancedRulesJSON" = "App rules import text";
+"prefs.appRulesExport" = "App Rules Export";
 "prefs.showAdvancedRules" = "Import or Export App Rules";
 "prefs.hideAdvancedRules" = "Hide Import Text";
 "prefs.advancedRulesHelp" = "Use this only to import app rules, export app rules, or paste and copy several rules at once. The saved app rules list is the normal editor.";
@@ -440,6 +441,7 @@
 "prefs.removeCustomIdeaConfirmHelp" = "Click again to remove this Body Break idea.";
 "prefs.customIdeaEmptyBody" = "No body text";
 "prefs.advancedIdeasJSON" = "Idea import text";
+"prefs.ideasExport" = "Ideas Export";
 "prefs.showAdvancedIdeas" = "Import or Export Ideas";
 "prefs.hideAdvancedIdeas" = "Hide Import Text";
 "prefs.advancedIdeasHelp" = "Use this only to import ideas, export ideas, or paste and copy several ideas at once. The custom ideas list is the normal editor.";

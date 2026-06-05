@@ -3736,7 +3736,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     @objc private func copyAppRulesBulkEditorPressed(_ sender: NSButton) {
-        copyBulkEditorText(appExclusionsJSONEditor, copiedObjectName: L10n.tr("prefs.advancedRulesJSON"))
+        copyBulkEditorText(appExclusionsJSONEditor, copiedObjectName: L10n.tr("prefs.appRulesExport"))
     }
 
     @objc private func restoreAppRulesBulkEditorPressed(_ sender: NSButton) {
@@ -3751,7 +3751,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     @objc private func copyIdeasBulkEditorPressed(_ sender: NSButton) {
-        copyBulkEditorText(customBodyIdeasJSONEditor, copiedObjectName: L10n.tr("prefs.advancedIdeasJSON"))
+        copyBulkEditorText(customBodyIdeasJSONEditor, copiedObjectName: L10n.tr("prefs.ideasExport"))
     }
 
     @objc private func restoreIdeasBulkEditorPressed(_ sender: NSButton) {

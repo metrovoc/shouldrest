@@ -553,6 +553,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.sectionExclusion"), "App Rules")
         XCTAssertEqual(L10n.tr("prefs.enablePrimaryExclusion"), "Enable app rules")
         XCTAssertEqual(L10n.tr("prefs.advancedRulesJSON"), "App rules import text")
+        XCTAssertEqual(L10n.tr("prefs.appRulesExport"), "App Rules Export")
         XCTAssertEqual(L10n.tr("prefs.showAdvancedRules"), "Import or Export App Rules")
         XCTAssertEqual(L10n.tr("prefs.copyBulkEditor"), "Copy Import Text")
         XCTAssertEqual(L10n.tr("prefs.restoreBulkEditor"), "Restore Saved Text")
@@ -566,7 +567,16 @@ final class LocalizationQualityTests: XCTestCase {
             L10n.tr("prefs.restoreAppRulesBulkEditorDisabledNoChangesHelp"),
             "Change this field before restoring saved app rules."
         )
+        XCTAssertEqual(
+            L10n.format("prefs.autosaveCopiedField", L10n.tr("prefs.appRulesExport")),
+            "Copied App Rules Export to clipboard"
+        )
+        XCTAssertNotEqual(
+            L10n.format("prefs.autosaveCopiedField", L10n.tr("prefs.appRulesExport")),
+            "Copied App rules import text to clipboard"
+        )
         XCTAssertEqual(L10n.tr("prefs.advancedIdeasJSON"), "Idea import text")
+        XCTAssertEqual(L10n.tr("prefs.ideasExport"), "Ideas Export")
         XCTAssertEqual(L10n.tr("prefs.showAdvancedIdeas"), "Import or Export Ideas")
         XCTAssertEqual(L10n.tr("prefs.defaultCustomIdeaTitle"), "Body Break idea")
         XCTAssertNotEqual(L10n.tr("prefs.defaultCustomIdeaTitle"), "Custom Body Break")
@@ -579,6 +589,14 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(
             L10n.tr("prefs.restoreIdeasBulkEditorDisabledNoChangesHelp"),
             "Change this field before restoring saved custom ideas."
+        )
+        XCTAssertEqual(
+            L10n.format("prefs.autosaveCopiedField", L10n.tr("prefs.ideasExport")),
+            "Copied Ideas Export to clipboard"
+        )
+        XCTAssertNotEqual(
+            L10n.format("prefs.autosaveCopiedField", L10n.tr("prefs.ideasExport")),
+            "Copied Idea import text to clipboard"
         )
         XCTAssertEqual(L10n.tr("prefs.invalidJSONTitle"), "Import text has an invalid format")
         XCTAssertEqual(
@@ -744,6 +762,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.sectionExclusion"), "应用规则")
         XCTAssertEqual(L10n.tr("prefs.enablePrimaryExclusion"), "启用应用规则")
         XCTAssertEqual(L10n.tr("prefs.advancedRulesJSON"), "应用规则导入文本")
+        XCTAssertEqual(L10n.tr("prefs.appRulesExport"), "应用规则导出文本")
         XCTAssertEqual(L10n.tr("prefs.showAdvancedRules"), "导入或导出应用规则")
         XCTAssertEqual(L10n.tr("prefs.copyBulkEditor"), "复制导入文本")
         XCTAssertEqual(L10n.tr("prefs.restoreBulkEditor"), "还原已保存文本")
@@ -757,7 +776,16 @@ final class LocalizationQualityTests: XCTestCase {
             L10n.tr("prefs.restoreAppRulesBulkEditorDisabledNoChangesHelp"),
             "修改此处文本后，才能还原已保存应用规则。"
         )
+        XCTAssertEqual(
+            L10n.format("prefs.autosaveCopiedField", L10n.tr("prefs.appRulesExport")),
+            "应用规则导出文本已复制到剪贴板"
+        )
+        XCTAssertNotEqual(
+            L10n.format("prefs.autosaveCopiedField", L10n.tr("prefs.appRulesExport")),
+            "应用规则导入文本已复制到剪贴板"
+        )
         XCTAssertEqual(L10n.tr("prefs.advancedIdeasJSON"), "提示导入文本")
+        XCTAssertEqual(L10n.tr("prefs.ideasExport"), "提示导出文本")
         XCTAssertEqual(L10n.tr("prefs.showAdvancedIdeas"), "导入或导出提示")
         XCTAssertEqual(L10n.tr("prefs.defaultCustomIdeaTitle"), "活动休息提示")
         XCTAssertNotEqual(L10n.tr("prefs.defaultCustomIdeaTitle"), "Custom Body Break")
@@ -770,6 +798,14 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(
             L10n.tr("prefs.restoreIdeasBulkEditorDisabledNoChangesHelp"),
             "修改此处文本后，才能还原已保存自定义提示。"
+        )
+        XCTAssertEqual(
+            L10n.format("prefs.autosaveCopiedField", L10n.tr("prefs.ideasExport")),
+            "提示导出文本已复制到剪贴板"
+        )
+        XCTAssertNotEqual(
+            L10n.format("prefs.autosaveCopiedField", L10n.tr("prefs.ideasExport")),
+            "提示导入文本已复制到剪贴板"
         )
         XCTAssertEqual(L10n.tr("prefs.invalidJSONTitle"), "导入文本格式无效")
         XCTAssertEqual(

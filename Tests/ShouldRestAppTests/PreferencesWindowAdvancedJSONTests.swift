@@ -197,8 +197,9 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         assertAutosaveStatus(
             label: statusLabel,
             icon: statusIcon,
-            title: L10n.format("prefs.autosaveCopiedField", L10n.tr("prefs.advancedRulesJSON"))
+            title: L10n.format("prefs.autosaveCopiedField", L10n.tr("prefs.appRulesExport"))
         )
+        XCTAssertFalse(statusLabel.stringValue.contains(L10n.tr("prefs.advancedRulesJSON")))
 
         appEditor.string = "{ invalid json"
         controller.textDidChange(Notification(name: NSText.didChangeNotification, object: appEditor))
@@ -220,8 +221,9 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         assertAutosaveStatus(
             label: statusLabel,
             icon: statusIcon,
-            title: L10n.format("prefs.autosaveCopiedField", L10n.tr("prefs.advancedIdeasJSON"))
+            title: L10n.format("prefs.autosaveCopiedField", L10n.tr("prefs.ideasExport"))
         )
+        XCTAssertFalse(statusLabel.stringValue.contains(L10n.tr("prefs.advancedIdeasJSON")))
 
         ideasEditor.string = "{ invalid json"
         controller.textDidChange(Notification(name: NSText.didChangeNotification, object: ideasEditor))

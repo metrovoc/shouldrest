@@ -356,6 +356,7 @@
 "prefs.appExclusionPreviewPause" = "在 %1$@ 运行时暂停%2$@。";
 "prefs.appExclusionPreviewResumeOnly" = "仅在 %1$@ 运行时安排%2$@。";
 "prefs.advancedRulesJSON" = "应用规则导入文本";
+"prefs.appRulesExport" = "应用规则导出文本";
 "prefs.showAdvancedRules" = "导入或导出应用规则";
 "prefs.hideAdvancedRules" = "隐藏导入文本";
 "prefs.advancedRulesHelp" = "仅在导入应用规则、导出应用规则，或一次性粘贴和复制多条规则时使用。已保存应用规则列表是常规编辑入口。";
@@ -440,6 +441,7 @@
 "prefs.removeCustomIdeaConfirmHelp" = "再次点击即可移除此条活动休息提示。";
 "prefs.customIdeaEmptyBody" = "无正文";
 "prefs.advancedIdeasJSON" = "提示导入文本";
+"prefs.ideasExport" = "提示导出文本";
 "prefs.showAdvancedIdeas" = "导入或导出提示";
 "prefs.hideAdvancedIdeas" = "隐藏导入文本";
 "prefs.advancedIdeasHelp" = "仅在导入提示、导出提示，或一次性粘贴和复制多条提示时使用。自定义提示列表是常规编辑入口。";
