@@ -508,8 +508,8 @@ final class OnboardingWindowController: NSWindowController {
         rhythmPresetRationale.toolTip = rationale
         rhythmPresetRationale.setAccessibilityLabel(rationale)
         rhythmPresetRationale.setAccessibilityHelp(rationale)
-        rhythmPresetRationaleIcon.image = symbolImage(
-            selectedRhythmPreset == .firstRunDefault ? "checkmark.seal" : selectedRhythmPreset.symbolName,
+        rhythmPresetRationaleIcon.image = rhythmPresetRationaleImage(
+            for: selectedRhythmPreset,
             accessibilityDescription: rationale
         )
         rhythmPresetRationaleIcon.setAccessibilityLabel(rationale)
@@ -545,11 +545,25 @@ final class OnboardingWindowController: NSWindowController {
     }
 
     private func rhythmPresetHeaderImage(for preset: RestRhythmPreset) -> NSImage {
-        symbolImage(preset.symbolName, accessibilityDescription: rhythmPresetAccessibilityTitle(for: preset))
+        rhythmPresetImage(for: preset, accessibilityDescription: rhythmPresetAccessibilityTitle(for: preset))
     }
 
     private func rhythmPresetSegmentImage(for preset: RestRhythmPreset) -> NSImage {
-        symbolImage(preset.symbolName, accessibilityDescription: preset.title)
+        rhythmPresetImage(for: preset, accessibilityDescription: preset.title)
+    }
+
+    private func rhythmPresetRationaleImage(for preset: RestRhythmPreset, accessibilityDescription: String?) -> NSImage {
+        guard preset != .firstRunDefault else {
+            return symbolImage("checkmark.seal", accessibilityDescription: accessibilityDescription)
+        }
+        return rhythmPresetImage(for: preset, accessibilityDescription: accessibilityDescription)
+    }
+
+    private func rhythmPresetImage(for preset: RestRhythmPreset, accessibilityDescription: String?) -> NSImage {
+        if preset.usesRestGateIcon {
+            return RestGateIcon.menuBarImage(accessibilityDescription: accessibilityDescription)
+        }
+        return symbolImage(preset.symbolName, accessibilityDescription: accessibilityDescription)
     }
 
     private func rhythmPresetAccessibilityTitle(for preset: RestRhythmPreset) -> String {

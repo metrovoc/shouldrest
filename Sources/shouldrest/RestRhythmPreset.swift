@@ -48,10 +48,14 @@ enum RestRhythmPreset: Int, CaseIterable, Equatable {
         case .recommended:
             "timer"
         case .frequentEye:
-            "eye"
+            "pause.rectangle"
         case .movement:
             "figure.walk"
         }
+    }
+
+    var usesRestGateIcon: Bool {
+        self == .frequentEye
     }
 
     var eyeIntervalMinutes: Int {

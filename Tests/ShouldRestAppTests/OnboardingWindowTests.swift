@@ -137,10 +137,15 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertEqual(control.label(forSegment: RestRhythmPreset.recommended.rawValue), "Balanced")
         XCTAssertEqual(control.label(forSegment: RestRhythmPreset.frequentEye.rawValue), "More Eye Rests")
         XCTAssertEqual(control.label(forSegment: RestRhythmPreset.movement.rawValue), "More Movement")
+        XCTAssertTrue(RestRhythmPreset.frequentEye.usesRestGateIcon)
+        XCTAssertNotEqual(RestRhythmPreset.frequentEye.symbolName, "eye")
         for preset in RestRhythmPreset.allCases {
             XCTAssertEqual(control.image(forSegment: preset.rawValue)?.accessibilityDescription, preset.title)
             XCTAssertEqual(control.toolTip(forSegment: preset.rawValue), preset.help)
         }
+        let frequentEyeSegmentImage = try XCTUnwrap(control.image(forSegment: RestRhythmPreset.frequentEye.rawValue))
+        XCTAssertEqual(frequentEyeSegmentImage.size, NSSize(width: 18, height: 18))
+        XCTAssertTrue(frequentEyeSegmentImage.isTemplate)
         XCTAssertEqual(description.stringValue, RestRhythmPreset.firstRunDefault.help)
         XCTAssertEqual(description.toolTip, RestRhythmPreset.firstRunDefault.help)
         XCTAssertEqual(description.accessibilityLabel(), RestRhythmPreset.firstRunDefault.help)
@@ -151,6 +156,8 @@ final class OnboardingWindowTests: XCTestCase {
             icon.image?.accessibilityDescription,
             "\(L10n.tr("onboarding.rhythmTitle")): \(RestRhythmPreset.firstRunDefault.title)"
         )
+        XCTAssertEqual(icon.image?.size, NSSize(width: 18, height: 18))
+        XCTAssertTrue(icon.image?.isTemplate ?? false)
         XCTAssertEqual(icon.accessibilityHelp(), RestRhythmPreset.firstRunDefault.help)
         XCTAssertEqual(rationale.stringValue, RestRhythmPreset.firstRunDefault.onboardingRationale)
         XCTAssertEqual(rationale.toolTip, RestRhythmPreset.firstRunDefault.onboardingRationale)
