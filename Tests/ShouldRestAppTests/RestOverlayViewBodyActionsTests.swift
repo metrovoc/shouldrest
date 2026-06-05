@@ -110,6 +110,33 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
         )
     }
 
+    func testPartiallyUnavailableBodyOverlayActionsClearHiddenButtons() throws {
+        let view = configuredBodyOverlay(
+            actions: BodyOverlayActions(
+                canPostpone: false,
+                canFinish: false,
+                canSkip: true,
+                postpone: nil,
+                finish: nil,
+                skip: nil
+            )
+        )
+
+        let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodyActions.panel"))
+        let postponeButton = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodyPostpone.button") as? NSButton)
+        let skipButton = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodySkip.button") as? NSButton)
+        let finishButton = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodyFinish.button") as? NSButton)
+
+        XCTAssertFalse(panel.isHidden)
+        assertHiddenBodyActionButtonIsCleared(postponeButton)
+        assertBodyActionButton(
+            skipButton,
+            title: L10n.tr("overlay.bodySkip"),
+            toolTip: L10n.tr("overlay.bodySkipHelp")
+        )
+        assertHiddenBodyActionButtonIsCleared(finishButton)
+    }
+
     func testUnavailableBodyOverlayActionsDoNotInvokeCallbacks() throws {
         var invokedActions: [String] = []
         let view = configuredBodyOverlay(
@@ -128,7 +155,13 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
         view.performBodySkipAction()
 
         let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodyActions.panel"))
+        let postponeButton = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodyPostpone.button") as? NSButton)
+        let skipButton = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodySkip.button") as? NSButton)
+        let finishButton = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodyFinish.button") as? NSButton)
         XCTAssertTrue(panel.isHidden)
+        assertHiddenBodyActionButtonIsCleared(postponeButton)
+        assertHiddenBodyActionButtonIsCleared(skipButton)
+        assertHiddenBodyActionButtonIsCleared(finishButton)
         XCTAssertTrue(invokedActions.isEmpty)
     }
 
@@ -204,6 +237,7 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
 
         let finishButton = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodyFinish.button") as? NSButton)
         XCTAssertTrue(finishButton.isHidden)
+        assertHiddenBodyActionButtonIsCleared(finishButton)
     }
 
     func testBodyOverlayActionsRemainAvailableWhenContentIsHidden() {
@@ -397,6 +431,21 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
             file: file,
             line: line
         )
+    }
+
+    private func assertHiddenBodyActionButtonIsCleared(
+        _ button: NSButton,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        XCTAssertTrue(button.isHidden, file: file, line: line)
+        XCTAssertFalse(button.isEnabled, file: file, line: line)
+        XCTAssertEqual(button.title, "", file: file, line: line)
+        XCTAssertEqual(button.attributedTitle.string, "", file: file, line: line)
+        XCTAssertNil(button.image, file: file, line: line)
+        XCTAssertNil(button.toolTip, file: file, line: line)
+        XCTAssertNil(button.accessibilityLabel(), file: file, line: line)
+        XCTAssertNil(button.accessibilityHelp(), file: file, line: line)
     }
 
     private func drainMainQueue(

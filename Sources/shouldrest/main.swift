@@ -3131,10 +3131,23 @@ final class RestOverlayView: NSView {
         ].forEach { button, kind in
             button.isEnabled = !button.isHidden && !bodyActionRequestPending
             button.alphaValue = bodyActionRequestPending ? 0.42 : 0.78
-            updateBodyActionButtonPresentation(button, kind: kind)
+            if button.isHidden {
+                clearBodyActionButtonPresentation(button)
+            } else {
+                updateBodyActionButtonPresentation(button, kind: kind)
+            }
         }
         bodyActionStack.isHidden = bodyPostponeButton.isHidden && bodySkipButton.isHidden && bodyFinishButton.isHidden
         bodyActionPanel.isHidden = bodyActionStack.isHidden
+    }
+
+    private func clearBodyActionButtonPresentation(_ button: OverlayActionButton) {
+        button.image = nil
+        button.toolTip = nil
+        button.setAccessibilityLabel(nil)
+        button.setAccessibilityHelp(nil)
+        button.title = ""
+        button.attributedTitle = NSAttributedString(string: "")
     }
 
     private func updateBodyActionButtonPresentation(_ button: OverlayActionButton, kind: BodyOverlayActionKind) {
