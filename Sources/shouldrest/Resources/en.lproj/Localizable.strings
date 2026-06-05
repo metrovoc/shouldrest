@@ -324,7 +324,9 @@
 "prefs.appExclusionTermsHelp" = "Choose Add Running App first. If the app is not running, type an app name such as Zoom or Keynote.";
 "prefs.addRunningApp" = "Add Running App";
 "prefs.addRunningAppHelp" = "Choose a currently running app and add it as an app rule.";
+"prefs.addRunningAppMenuItemHelp" = "Add %@ as an app rule.";
 "prefs.noRunningApps" = "No running apps to add";
+"prefs.noRunningAppsHelp" = "Open the app first, then choose Add Running App again.";
 "prefs.mode" = "When these apps are active";
 "prefs.appExclusionModeHelp" = "Choose whether these apps pause selected rests or are the only time selected rests can run.";
 "prefs.addAppExclusionRule" = "Add App Rule";

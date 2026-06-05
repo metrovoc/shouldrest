@@ -347,6 +347,50 @@ private final class AppExclusionApplicationCandidateBox: NSObject {
     }
 }
 
+enum AppExclusionRunningAppMenuItemFactory {
+    static func makeCandidateItem(
+        candidate: AppExclusionApplicationCandidate,
+        target: AnyObject?,
+        action: Selector,
+        imageProvider: (String) -> NSImage? = { symbolName in
+            NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
+        }
+    ) -> NSMenuItem {
+        let title = candidate.menuTitle
+        let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
+        item.target = target
+        item.representedObject = AppExclusionApplicationCandidateBox(candidate)
+        item.image = imageProvider("app")
+        applyPresentation(
+            title: title,
+            help: L10n.format("prefs.addRunningAppMenuItemHelp", title),
+            to: item
+        )
+        return item
+    }
+
+    static func makeNoCandidatesItem(
+        imageProvider: (String) -> NSImage? = { symbolName in
+            NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
+        }
+    ) -> NSMenuItem {
+        let title = L10n.tr("prefs.noRunningApps")
+        let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+        item.isEnabled = false
+        item.image = imageProvider("info.circle")
+        applyPresentation(title: title, help: L10n.tr("prefs.noRunningAppsHelp"), to: item)
+        return item
+    }
+
+    private static func applyPresentation(title: String, help: String, to item: NSMenuItem) {
+        item.toolTip = help
+        item.setAccessibilityLabel(title)
+        item.setAccessibilityHelp(help)
+        item.image?.isTemplate = true
+        item.image?.accessibilityDescription = title
+    }
+}
+
 @MainActor
 private protocol PreferencesWindowKeyboardDelegate: AnyObject {
     func focusPreferencesSearch()
@@ -3417,14 +3461,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         let menu = NSMenu()
         for candidate in candidates {
-            let item = NSMenuItem(
-                title: candidate.menuTitle,
-                action: #selector(addRunningAppExclusionMenuItemSelected(_:)),
-                keyEquivalent: ""
+            let item = AppExclusionRunningAppMenuItemFactory.makeCandidateItem(
+                candidate: candidate,
+                target: self,
+                action: #selector(addRunningAppExclusionMenuItemSelected(_:))
             )
-            item.target = self
-            item.representedObject = AppExclusionApplicationCandidateBox(candidate)
-            item.image = NSImage(systemSymbolName: "app", accessibilityDescription: nil)
             menu.addItem(item)
         }
         menu.popUp(
@@ -3472,9 +3513,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func showNoRunningApplicationsMenu(from sender: NSButton) {
         let menu = NSMenu()
-        let item = NSMenuItem(title: L10n.tr("prefs.noRunningApps"), action: nil, keyEquivalent: "")
-        item.isEnabled = false
-        menu.addItem(item)
+        menu.addItem(AppExclusionRunningAppMenuItemFactory.makeNoCandidatesItem())
         menu.popUp(
             positioning: nil,
             at: NSPoint(x: 0, y: sender.bounds.maxY + 4),

@@ -84,11 +84,14 @@ final class StatusMenuActionIconTests: XCTestCase {
 
         XCTAssertEqual(item.title, L10n.tr("menu.settingsFile"))
         XCTAssertEqual(item.toolTip, L10n.tr("menu.settingsFileHelp"))
+        XCTAssertEqual(item.accessibilityLabel(), L10n.tr("menu.settingsFile"))
         XCTAssertEqual(item.accessibilityHelp(), L10n.tr("menu.settingsFileHelp"))
         XCTAssertEqual(showItem.toolTip, L10n.tr("menu.showSettingsFileHelp"))
+        XCTAssertEqual(showItem.accessibilityLabel(), L10n.tr("menu.showSettingsFile"))
         XCTAssertEqual(showItem.accessibilityHelp(), L10n.tr("menu.showSettingsFileHelp"))
         XCTAssertEqual(copyItem.title, L10n.tr("menu.copySettingsPath"))
         XCTAssertEqual(copyItem.toolTip, L10n.tr("menu.copySettingsPathHelp"))
+        XCTAssertEqual(copyItem.accessibilityLabel(), L10n.tr("menu.copySettingsPath"))
         XCTAssertEqual(copyItem.accessibilityHelp(), L10n.tr("menu.copySettingsPathHelp"))
 
         for menuItem in [item, showItem, copyItem] {
@@ -118,6 +121,26 @@ final class StatusMenuActionIconTests: XCTestCase {
         XCTAssertEqual(item.image?.accessibilityDescription, item.title)
         XCTAssertEqual(showItem.image?.accessibilityDescription, showItem.title)
         XCTAssertEqual(copyItem.image?.accessibilityDescription, copyItem.title)
+    }
+
+    func testMenuItemPresentationUpdatesTooltipAccessibilityAndImageDescriptionTogether() {
+        let image = NSImage(systemSymbolName: "gearshape", accessibilityDescription: nil)
+        let item = NSMenuItem(title: "Preferences", action: nil, keyEquivalent: "")
+        item.image = image
+
+        StatusMenuItemPresentation.apply(help: "Open preferences.", to: item)
+
+        XCTAssertEqual(item.toolTip, "Open preferences.")
+        XCTAssertEqual(item.accessibilityLabel(), "Preferences")
+        XCTAssertEqual(item.accessibilityHelp(), "Open preferences.")
+        XCTAssertEqual(item.image?.accessibilityDescription, "Preferences")
+
+        StatusMenuItemPresentation.apply(title: "Settings", help: "Open settings.", to: item)
+
+        XCTAssertEqual(item.toolTip, "Open settings.")
+        XCTAssertEqual(item.accessibilityLabel(), "Settings")
+        XCTAssertEqual(item.accessibilityHelp(), "Open settings.")
+        XCTAssertEqual(item.image?.accessibilityDescription, "Settings")
     }
 
     func testUnknownMenuActionsDoNotClaimHelp() {

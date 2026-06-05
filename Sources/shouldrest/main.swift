@@ -367,12 +367,10 @@ enum DisabledStatusMenuItemFactory {
     static func make(title: String, toolTip: String? = nil, symbolName: String? = nil) -> NSMenuItem {
         let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
         item.isEnabled = false
-        item.toolTip = toolTip
-        item.setAccessibilityLabel(title)
-        item.setAccessibilityHelp(toolTip)
         if let symbolName {
             item.image = image(symbolName, accessibilityDescription: title)
         }
+        StatusMenuItemPresentation.apply(title: title, help: toolTip, to: item)
         return item
     }
 
@@ -386,6 +384,16 @@ enum DisabledStatusMenuItemFactory {
     }
 }
 
+enum StatusMenuItemPresentation {
+    static func apply(title: String? = nil, help: String?, to item: NSMenuItem) {
+        let accessibilityTitle = title ?? (item.title.isEmpty ? nil : item.title)
+        item.toolTip = help
+        item.setAccessibilityLabel(accessibilityTitle)
+        item.setAccessibilityHelp(help)
+        item.image?.accessibilityDescription = accessibilityTitle
+    }
+}
+
 enum StatusMenuOverlayFocusItemFactory {
     static func make(
         target: AnyObject?,
@@ -396,10 +404,11 @@ enum StatusMenuOverlayFocusItemFactory {
         item.target = target
         item.image = imageProvider("exclamationmark.triangle")
         item.image?.isTemplate = true
-        item.image?.accessibilityDescription = item.title
-        item.toolTip = L10n.tr("menu.emergencyOverlayOnlyHelp")
-        item.setAccessibilityLabel(item.title)
-        item.setAccessibilityHelp(item.toolTip)
+        StatusMenuItemPresentation.apply(
+            title: item.title,
+            help: L10n.tr("menu.emergencyOverlayOnlyHelp"),
+            to: item
+        )
         return item
     }
 }
@@ -474,8 +483,7 @@ enum StatusMenuSettingsLocationMenuItemFactory {
     }
 
     private static func setHelp(_ help: String?, on item: NSMenuItem) {
-        item.toolTip = help
-        item.setAccessibilityHelp(help)
+        StatusMenuItemPresentation.apply(help: help, to: item)
     }
 }
 
@@ -835,11 +843,11 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         let resetItem = actionItem(L10n.tr("menu.reset"), #selector(resetBreaks))
         if let message = BlockedActionCopy.resetScheduleMessage(state: engine.state, settings: settings) {
             resetItem.isEnabled = false
-            resetItem.toolTip = message
+            setMenuItemHelp(message, on: resetItem)
         } else {
             resetItem.isEnabled = true
+            setMenuItemHelp(L10n.tr("menu.resetHelp"), on: resetItem)
         }
-        resetItem.setAccessibilityHelp(resetItem.toolTip)
         menu.addItem(resetItem)
         menu.addItem(.separator())
         menu.addItem(actionItem(L10n.tr("menu.preferences"), #selector(openPreferences)))
@@ -864,12 +872,11 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         let quitItem = NSMenuItem(title: L10n.tr("menu.quit"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         if let message = BlockedActionCopy.quitMessage(state: engine.state, settings: settings, now: now) {
             quitItem.isEnabled = false
-            quitItem.toolTip = message
+            setMenuItemHelp(message, on: quitItem)
         } else {
             quitItem.isEnabled = true
-            quitItem.toolTip = L10n.tr("menu.quitHelp")
+            setMenuItemHelp(L10n.tr("menu.quitHelp"), on: quitItem)
         }
-        quitItem.setAccessibilityHelp(quitItem.toolTip)
         quitItem.image = menuItemImage("power", accessibilityDescription: quitItem.title)
         return quitItem
     }
@@ -1004,8 +1011,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func setMenuItemHelp(_ help: String?, on item: NSMenuItem) {
-        item.toolTip = help
-        item.setAccessibilityHelp(help)
+        StatusMenuItemPresentation.apply(help: help, to: item)
     }
 
     private func canPostponeBodyBreak(_ session: RestSession, now: Date) -> Bool {

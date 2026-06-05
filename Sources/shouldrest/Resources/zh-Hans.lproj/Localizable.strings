@@ -324,7 +324,9 @@
 "prefs.appExclusionTermsHelp" = "优先使用“添加运行中应用”；如果应用没有运行，也可输入 Zoom、Keynote 等应用名称。";
 "prefs.addRunningApp" = "添加运行中应用";
 "prefs.addRunningAppHelp" = "选择当前正在运行的应用，并把它添加为应用规则。";
+"prefs.addRunningAppMenuItemHelp" = "将 %@ 添加为应用规则。";
 "prefs.noRunningApps" = "没有可添加的运行中应用";
+"prefs.noRunningAppsHelp" = "先打开对应应用，然后再次选择添加运行中应用。";
 "prefs.mode" = "这些应用运行时";
 "prefs.appExclusionModeHelp" = "选择这些应用运行时暂停所选休息，还是只在这些应用运行时安排所选休息。";
 "prefs.addAppExclusionRule" = "添加应用规则";

@@ -562,6 +562,53 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertEqual(fallback.terms, ["com.example.Tool"])
     }
 
+    func testRunningAppPickerCandidateMenuItemsHaveAccessibleActionCopy() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+        let target = AppExclusionRunningAppMenuItemTarget()
+        let candidate = AppExclusionApplicationCandidate(name: "Zoom", bundleIdentifier: "us.zoom.xos")
+
+        let item = AppExclusionRunningAppMenuItemFactory.makeCandidateItem(
+            candidate: candidate,
+            target: target,
+            action: #selector(AppExclusionRunningAppMenuItemTarget.pick(_:)),
+            imageProvider: { symbolName in
+                NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
+            }
+        )
+
+        XCTAssertTrue(item.target === target)
+        XCTAssertEqual(item.action, #selector(AppExclusionRunningAppMenuItemTarget.pick(_:)))
+        XCTAssertEqual(item.title, "Zoom")
+        XCTAssertNotNil(item.representedObject)
+        XCTAssertEqual(item.toolTip, "Add Zoom as an app rule.")
+        XCTAssertEqual(item.accessibilityLabel(), "Zoom")
+        XCTAssertEqual(item.accessibilityHelp(), "Add Zoom as an app rule.")
+        XCTAssertTrue(item.image?.isTemplate ?? false)
+        XCTAssertEqual(item.image?.accessibilityDescription, "Zoom")
+        XCTAssertFalse(item.toolTip?.contains("us.zoom.xos") ?? true)
+        XCTAssertFalse(item.accessibilityHelp()?.contains("us.zoom.xos") ?? true)
+    }
+
+    func testRunningAppPickerEmptyMenuItemHasDisabledStatusCopy() {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        let item = AppExclusionRunningAppMenuItemFactory.makeNoCandidatesItem(
+            imageProvider: { symbolName in
+                NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
+            }
+        )
+
+        XCTAssertFalse(item.isEnabled)
+        XCTAssertEqual(item.title, "No running apps to add")
+        XCTAssertEqual(item.toolTip, "Open the app first, then choose Add Running App again.")
+        XCTAssertEqual(item.accessibilityLabel(), "No running apps to add")
+        XCTAssertEqual(item.accessibilityHelp(), "Open the app first, then choose Add Running App again.")
+        XCTAssertTrue(item.image?.isTemplate ?? false)
+        XCTAssertEqual(item.image?.accessibilityDescription, "No running apps to add")
+    }
+
     func testLegacyTargetlessAppExclusionGetsVisibleDefaultTarget() throws {
         defer { L10n.languageOverride = nil }
         L10n.languageOverride = "en"
@@ -1228,4 +1275,8 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
 
 private final class SavedSettingsBox {
     var value: RestSettings?
+}
+
+private final class AppExclusionRunningAppMenuItemTarget: NSObject {
+    @objc func pick(_ sender: NSMenuItem) {}
 }
