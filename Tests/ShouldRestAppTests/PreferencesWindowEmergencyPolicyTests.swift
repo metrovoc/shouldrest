@@ -12,6 +12,7 @@ final class PreferencesWindowEmergencyPolicyTests: XCTestCase {
 
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.eyeEmergencyOverride")))
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.eyeEmergencyOverrideHelp")))
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.eyeEmergencyOverrideDisabledHelp")))
         XCTAssertFalse(visibleTexts.contains("Emergency Exit hold time"))
         XCTAssertFalse(visibleTexts.contains("紧急退出等待时长"))
         XCTAssertFalse(visibleTexts.contains { $0.localizedCaseInsensitiveContains("confirmation steps") })
@@ -40,6 +41,29 @@ final class PreferencesWindowEmergencyPolicyTests: XCTestCase {
         XCTAssertTrue(button.toolTip?.localizedCaseInsensitiveContains("Esc") ?? false)
         XCTAssertFalse(button.toolTip?.localizedCaseInsensitiveContains("arm") ?? true)
         XCTAssertFalse(button.toolTip?.localizedCaseInsensitiveContains("hold") ?? true)
+    }
+
+    func testDisabledEmergencyPolicyExplainsBlockedConsequencesInline() throws {
+        var settings = RestSettings.defaults
+        settings.eyeGate.emergencyOverride.isEnabled = false
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        let button = try XCTUnwrap(view(withIdentifier: "prefs.eyeEmergencyOverride", in: contentView) as? NSButton)
+        let helpLabel = try XCTUnwrap(view(withIdentifier: "prefs.eyeEmergencyOverrideHelp", in: contentView) as? NSTextField)
+
+        XCTAssertEqual(button.state, .off)
+        XCTAssertEqual(button.toolTip, L10n.tr("prefs.eyeEmergencyOverrideDisabledHelp"))
+        XCTAssertEqual(button.accessibilityHelp(), L10n.tr("prefs.eyeEmergencyOverrideDisabledHelp"))
+        XCTAssertEqual(helpLabel.stringValue, L10n.tr("prefs.eyeEmergencyOverrideDisabledHelp"))
+        XCTAssertEqual(helpLabel.toolTip, L10n.tr("prefs.eyeEmergencyOverrideDisabledHelp"))
+        XCTAssertEqual(helpLabel.accessibilityLabel(), L10n.tr("prefs.eyeEmergencyOverrideDisabledHelp"))
+        XCTAssertEqual(helpLabel.accessibilityHelp(), L10n.tr("prefs.eyeEmergencyOverrideDisabledHelp"))
+        XCTAssertEqual(helpLabel.textColor, .systemOrange)
+        XCTAssertTrue(button.toolTip?.contains("quit") ?? false)
+        XCTAssertTrue(button.toolTip?.contains("pause") ?? false)
+        XCTAssertFalse(button.toolTip?.localizedCaseInsensitiveContains("hold") ?? true)
+        XCTAssertFalse(button.toolTip?.localizedCaseInsensitiveContains("another window") ?? true)
     }
 
     func testStrictAdminVisibilityHidesEyeGateEmergencyPolicyControls() throws {

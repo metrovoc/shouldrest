@@ -379,12 +379,33 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
 
         savedSettings.value = nil
         let emergency = try XCTUnwrap(view(withIdentifier: "prefs.eyeEmergencyOverride", in: contentView) as? NSButton)
+        let statusLabel = try XCTUnwrap(view(withIdentifier: "autosaveStatusLabel", in: contentView) as? NSTextField)
         emergency.state = .off
 
         XCTAssertTrue(sendAction(from: emergency))
         XCTAssertNil(findView(withIdentifier: "prefs.eyeEmergencyHoldRow", in: contentView))
+        try assertInlineHelp(
+            "prefs.eyeEmergencyOverrideHelp",
+            text: L10n.tr("prefs.eyeEmergencyOverrideDisabledHelp"),
+            in: contentView
+        )
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(savedSettings.value?.eyeGate.emergencyOverride.isEnabled, false)
+        XCTAssertEqual(statusLabel.stringValue, L10n.tr("prefs.autosaveEmergencyExitDisabled"))
+        XCTAssertEqual(statusLabel.toolTip, L10n.tr("prefs.autosaveEmergencyExitDisabled"))
+
+        savedSettings.value = nil
+        emergency.state = .on
+
+        XCTAssertTrue(sendAction(from: emergency))
+        try assertInlineHelp(
+            "prefs.eyeEmergencyOverrideHelp",
+            text: L10n.tr("prefs.eyeEmergencyOverrideHelp"),
+            in: contentView
+        )
+        waitUntilSavedSettingsArrive(savedSettings)
+        XCTAssertEqual(savedSettings.value?.eyeGate.emergencyOverride.isEnabled, true)
+        XCTAssertEqual(statusLabel.stringValue, L10n.tr("prefs.autosaveEmergencyExitEnabled"))
     }
 
     func testDisabledBodyBreakHidesDependentScheduleRows() throws {

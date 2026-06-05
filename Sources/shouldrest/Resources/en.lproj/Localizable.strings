@@ -206,6 +206,7 @@
 "prefs.eyeManualFinishHelp" = "When the Eye Gate timer ends, keep the overlay up until you finish it. Early dismissal stays disabled.";
 "prefs.eyeEmergencyOverride" = "Enable Emergency Exit";
 "prefs.eyeEmergencyOverrideHelp" = "First click or Esc shows confirmation inside the overlay; the second click or Esc exits and records a missed Eye Gate.";
+"prefs.eyeEmergencyOverrideDisabledHelp" = "Emergency Exit is off. During Eye Gate, quit, reset, and pause stay blocked until the timer ends or the rest is finished.";
 "prefs.enableBodyBreak" = "Enable Body Break";
 "prefs.enableBodyBreakHelp" = "Keep longer movement breaks active for posture and movement.";
 "prefs.notifyBodyBreak" = "Notify before Body Break";
@@ -566,6 +567,8 @@
 "prefs.autosaveLanguageChanged" = "Language saved; Preferences refreshed";
 "prefs.autosaveMenuBarHidden" = "Menu bar icon hidden; recovery paths shown below";
 "prefs.autosaveMenuBarShown" = "Menu bar icon restored";
+"prefs.autosaveEmergencyExitEnabled" = "Emergency Exit enabled";
+"prefs.autosaveEmergencyExitDisabled" = "Emergency Exit disabled during Eye Gate";
 "prefs.autosaveInvalid" = "Fix import text to save";
 "prefs.autosaveInvalidField" = "Fix %@ to save";
 "prefs.searchPlaceholder" = "Find a setting";

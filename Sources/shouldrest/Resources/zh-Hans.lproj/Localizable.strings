@@ -206,6 +206,7 @@
 "prefs.eyeManualFinishHelp" = "计时结束后，覆盖层会继续显示，直到你完成休息；仍然不能提前结束。";
 "prefs.eyeEmergencyOverride" = "启用紧急退出";
 "prefs.eyeEmergencyOverrideHelp" = "第一次点击或按 Esc 会在覆盖层内显示确认；第二次点击或按 Esc 退出，并记录为一次未完成护眼休息。";
+"prefs.eyeEmergencyOverrideDisabledHelp" = "紧急退出已关闭。护眼休息期间，退出、重置和暂停仍会被阻止，直到计时结束或本次休息完成。";
 "prefs.enableBodyBreak" = "启用活动休息";
 "prefs.enableBodyBreakHelp" = "保持较长的活动休息开启，用于姿势调整和身体活动。";
 "prefs.notifyBodyBreak" = "活动休息前通知";
@@ -566,6 +567,8 @@
 "prefs.autosaveLanguageChanged" = "语言已保存；偏好设置已刷新";
 "prefs.autosaveMenuBarHidden" = "菜单栏图标已隐藏；恢复方式已显示在下方";
 "prefs.autosaveMenuBarShown" = "菜单栏图标已恢复";
+"prefs.autosaveEmergencyExitEnabled" = "紧急退出已启用";
+"prefs.autosaveEmergencyExitDisabled" = "护眼休息期间紧急退出已关闭";
 "prefs.autosaveInvalid" = "修复导入文本后保存";
 "prefs.autosaveInvalidField" = "修复%@后保存";
 "prefs.searchPlaceholder" = "查找设置";

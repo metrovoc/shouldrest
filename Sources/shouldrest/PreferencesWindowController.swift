@@ -251,6 +251,8 @@ private enum PreferencesSaveStatus {
     case languageChanged
     case menuBarHidden
     case menuBarShown
+    case emergencyExitEnabled
+    case emergencyExitDisabled
     case invalid
 }
 
@@ -569,6 +571,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private weak var eyeEnabledHelpLabel: NSTextField?
     private var eyeManualFinishHelpRow: NSView?
     private var eyeEmergencyOverrideHelpRow: NSView?
+    private weak var eyeEmergencyOverrideHelpLabel: NSTextField?
     private var eyeIntervalRow: NSView?
     private var eyeDurationRow: NSView?
     private var eyeColorRow: NSView?
@@ -938,6 +941,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             identifier: "prefs.eyeEmergencyOverrideHelp"
         )
         eyeEmergencyOverrideHelpRow = eyeEmergencyOverrideHelp.row
+        eyeEmergencyOverrideHelpLabel = eyeEmergencyOverrideHelp.label
         scheduleStack.addArrangedSubview(eyeEmergencyOverrideHelp.row)
         scheduleStack.addArrangedSubview(separator())
         scheduleStack.addArrangedSubview(section(
@@ -3235,6 +3239,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         eyeEmergencyOverride.isHidden = strictPreferencesHidden || !eyeGateEnabled
         eyeEmergencyOverrideHelpRow?.isHidden = strictPreferencesHidden || !eyeGateEnabled
         eyeEmergencyOverride.isEnabled = eyeGateEnabled
+        updateEyeEmergencyOverrideHelp(
+            eyeGateEnabled: eyeGateEnabled,
+            strictPreferencesHidden: strictPreferencesHidden
+        )
 
         let bodyBreakEnabled = isOn(bodyEnabled)
         [
@@ -3415,6 +3423,17 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         setOptionalHelp(canToggleBodyBreak ? L10n.tr("prefs.enableBodyBreakHelp") : bodyBreakLastRestHelp, on: bodyEnabled)
         setInlineControlHelp(canToggleEyeGate ? L10n.tr("prefs.enableEyeGateHelp") : eyeGateLastRestHelp, on: eyeEnabledHelpLabel)
         setInlineControlHelp(canToggleBodyBreak ? L10n.tr("prefs.enableBodyBreakHelp") : bodyBreakLastRestHelp, on: bodyEnabledHelpLabel)
+    }
+
+    private func updateEyeEmergencyOverrideHelp(eyeGateEnabled: Bool, strictPreferencesHidden: Bool) {
+        let emergencyExitEnabled = eyeGateEnabled && !strictPreferencesHidden && isOn(eyeEmergencyOverride)
+        let help = emergencyExitEnabled
+            ? L10n.tr("prefs.eyeEmergencyOverrideHelp")
+            : L10n.tr("prefs.eyeEmergencyOverrideDisabledHelp")
+
+        setHelp(help, on: eyeEmergencyOverride)
+        setInlineControlHelp(help, on: eyeEmergencyOverrideHelpLabel)
+        eyeEmergencyOverrideHelpLabel?.textColor = emergencyExitEnabled ? .secondaryLabelColor : .systemOrange
     }
 
     private func setDynamicSummary(_ summary: String, on label: NSTextField) {
@@ -3767,6 +3786,9 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
         if control === showMenuBarItem {
             return isOn(showMenuBarItem) ? .menuBarShown : .menuBarHidden
+        }
+        if control === eyeEmergencyOverride {
+            return isOn(eyeEmergencyOverride) ? .emergencyExitEnabled : .emergencyExitDisabled
         }
         return nil
     }
@@ -4443,6 +4465,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             symbolName = "menubar.rectangle"
             color = .systemBlue
             title = L10n.tr("prefs.autosaveMenuBarShown")
+        case .emergencyExitEnabled:
+            symbolName = "checkmark.shield.fill"
+            color = .systemBlue
+            title = L10n.tr("prefs.autosaveEmergencyExitEnabled")
+        case .emergencyExitDisabled:
+            symbolName = "exclamationmark.triangle.fill"
+            color = .systemOrange
+            title = L10n.tr("prefs.autosaveEmergencyExitDisabled")
         case .invalid:
             symbolName = "exclamationmark.triangle.fill"
             color = .systemOrange
