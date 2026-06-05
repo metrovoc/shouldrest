@@ -90,6 +90,7 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         let body = try XCTUnwrap(view(withIdentifier: "customBodyTextEditor", in: contentView) as? PlaceholderTextView)
         let button = try XCTUnwrap(view(withIdentifier: "prefs.customBodyAddIdeaButton", in: contentView) as? NSButton)
 
+        XCTAssertEqual(title.placeholderString, L10n.tr("prefs.customBodyTitlePlaceholder"))
         XCTAssertEqual(body.placeholderString, L10n.tr("prefs.customBodyTextPlaceholder"))
         XCTAssertTrue(body.isPlaceholderVisible)
         XCTAssertEqual(body.string, "")
@@ -437,9 +438,11 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         let contentView = try XCTUnwrap(controller.window?.contentView)
 
         try selectAppearanceTab(in: contentView)
+        let title = try XCTUnwrap(view(withIdentifier: "prefs.customBodyTitleField", in: contentView) as? NSTextField)
         let body = try XCTUnwrap(view(withIdentifier: "customBodyTextEditor", in: contentView) as? NSTextView)
         let button = try XCTUnwrap(view(withIdentifier: "prefs.customBodyAddIdeaButton", in: contentView) as? NSButton)
 
+        XCTAssertEqual(title.placeholderString, L10n.tr("prefs.customBodyTitlePlaceholder"))
         body.string = "转动肩膀，放松呼吸。"
         controller.textDidChange(Notification(name: NSText.didChangeNotification, object: body))
 
@@ -449,6 +452,7 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         waitUntilSavedSettingsArrive(savedSettings)
         let ideas = try XCTUnwrap(savedSettings.value?.contentLibrary.customBodyBreakIdeas)
         XCTAssertEqual(ideas.first?.title, L10n.tr("prefs.defaultCustomIdeaTitle"))
+        XCTAssertNotEqual(ideas.first?.title, L10n.tr("prefs.customBodyTitlePlaceholder"))
         XCTAssertFalse(ideas.first?.title.contains("Custom Body Break") ?? true)
         XCTAssertEqual(
             (try view(withIdentifier: "prefs.customBodyIdeaTitle.0", in: contentView) as? NSTextField)?.stringValue,

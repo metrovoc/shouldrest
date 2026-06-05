@@ -1988,6 +1988,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     private func configureCustomBodyTextEditor() {
+        customBodyTitle.placeholderString = L10n.tr("prefs.customBodyTitlePlaceholder")
         configureTextEditor(
             customBodyTextEditor,
             in: customBodyTextScrollView,
