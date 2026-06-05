@@ -432,9 +432,9 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(englishValues.contains("Add App Rule"))
         XCTAssertTrue(englishValues.contains("Update App Rule"))
         XCTAssertTrue(englishValues.contains("Saved app rules"))
-        XCTAssertTrue(englishValues.contains("App rules import text"))
+        XCTAssertTrue(englishValues.contains("App rules import and export text"))
         XCTAssertTrue(englishValues.contains("Import or Export App Rules"))
-        XCTAssertTrue(englishValues.contains("Idea import text"))
+        XCTAssertTrue(englishValues.contains("Idea import and export text"))
         XCTAssertTrue(englishValues.contains("Import or Export Ideas"))
         XCTAssertTrue(englishValues.contains("Import text has an invalid format"))
         XCTAssertFalse(englishValues.contains("Open Advanced App Rule Editor"))
@@ -496,9 +496,9 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(simplifiedChineseValues.contains("应用规则 JSON"))
         XCTAssertFalse(simplifiedChineseValues.contains("提示 JSON"))
         XCTAssertFalse(simplifiedChineseValues.contains("JSON 数组"))
-        XCTAssertTrue(simplifiedChineseValues.contains("应用规则导入文本"))
+        XCTAssertTrue(simplifiedChineseValues.contains("应用规则导入和导出文本"))
         XCTAssertTrue(simplifiedChineseValues.contains("导入或导出应用规则"))
-        XCTAssertTrue(simplifiedChineseValues.contains("提示导入文本"))
+        XCTAssertTrue(simplifiedChineseValues.contains("提示导入和导出文本"))
         XCTAssertTrue(simplifiedChineseValues.contains("导入或导出提示"))
         XCTAssertTrue(simplifiedChineseValues.contains("导入文本格式无效"))
         XCTAssertFalse(simplifiedChineseValues.contains("打开高级应用规则编辑器"))
@@ -552,10 +552,10 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.appExclusionRules"), "Saved app rules")
         XCTAssertEqual(L10n.tr("prefs.sectionExclusion"), "App Rules")
         XCTAssertEqual(L10n.tr("prefs.enablePrimaryExclusion"), "Enable app rules")
-        XCTAssertEqual(L10n.tr("prefs.advancedRulesJSON"), "App rules import text")
+        XCTAssertEqual(L10n.tr("prefs.advancedRulesJSON"), "App rules import and export text")
         XCTAssertEqual(L10n.tr("prefs.appRulesExport"), "App Rules Export")
         XCTAssertEqual(L10n.tr("prefs.showAdvancedRules"), "Import or Export App Rules")
-        XCTAssertEqual(L10n.tr("prefs.copyBulkEditor"), "Copy Import Text")
+        XCTAssertEqual(L10n.tr("prefs.copyBulkEditor"), "Copy Import and Export Text")
         XCTAssertEqual(L10n.tr("prefs.restoreBulkEditor"), "Restore Saved Text")
         XCTAssertEqual(L10n.tr("prefs.copyAppRulesBulkEditor"), "Copy App Rules Export")
         XCTAssertEqual(L10n.tr("prefs.restoreAppRulesBulkEditor"), "Restore Saved App Rules")
@@ -573,9 +573,9 @@ final class LocalizationQualityTests: XCTestCase {
         )
         XCTAssertNotEqual(
             L10n.format("prefs.autosaveCopiedField", L10n.tr("prefs.appRulesExport")),
-            "Copied App rules import text to clipboard"
+            "Copied App rules import and export text to clipboard"
         )
-        XCTAssertEqual(L10n.tr("prefs.advancedIdeasJSON"), "Idea import text")
+        XCTAssertEqual(L10n.tr("prefs.advancedIdeasJSON"), "Idea import and export text")
         XCTAssertEqual(L10n.tr("prefs.ideasExport"), "Ideas Export")
         XCTAssertEqual(L10n.tr("prefs.showAdvancedIdeas"), "Import or Export Ideas")
         XCTAssertEqual(L10n.tr("prefs.defaultCustomIdeaTitle"), "Body Break idea")
@@ -596,12 +596,12 @@ final class LocalizationQualityTests: XCTestCase {
         )
         XCTAssertNotEqual(
             L10n.format("prefs.autosaveCopiedField", L10n.tr("prefs.ideasExport")),
-            "Copied Idea import text to clipboard"
+            "Copied Idea import and export text to clipboard"
         )
         XCTAssertEqual(L10n.tr("prefs.invalidJSONTitle"), "Import text has an invalid format")
         XCTAssertEqual(
-            L10n.format("prefs.invalidJSONBody", "App rules import text", "Missing bracket"),
-            "Fix App rules import text before settings can save. Details: Missing bracket"
+            L10n.format("prefs.invalidJSONBody", "App rules import and export text", "Missing bracket"),
+            "Fix App rules import and export text before settings can save. Details: Missing bracket"
         )
         XCTAssertEqual(L10n.tr("prefs.previewSound"), "Play Preview")
         XCTAssertEqual(L10n.tr("prefs.cancelCustomIdeaEdit"), "Cancel Edit")
@@ -761,10 +761,10 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.appExclusionRules"), "已保存应用规则")
         XCTAssertEqual(L10n.tr("prefs.sectionExclusion"), "应用规则")
         XCTAssertEqual(L10n.tr("prefs.enablePrimaryExclusion"), "启用应用规则")
-        XCTAssertEqual(L10n.tr("prefs.advancedRulesJSON"), "应用规则导入文本")
+        XCTAssertEqual(L10n.tr("prefs.advancedRulesJSON"), "应用规则导入和导出文本")
         XCTAssertEqual(L10n.tr("prefs.appRulesExport"), "应用规则导出文本")
         XCTAssertEqual(L10n.tr("prefs.showAdvancedRules"), "导入或导出应用规则")
-        XCTAssertEqual(L10n.tr("prefs.copyBulkEditor"), "复制导入文本")
+        XCTAssertEqual(L10n.tr("prefs.copyBulkEditor"), "复制导入和导出文本")
         XCTAssertEqual(L10n.tr("prefs.restoreBulkEditor"), "还原已保存文本")
         XCTAssertEqual(L10n.tr("prefs.copyAppRulesBulkEditor"), "复制应用规则导出文本")
         XCTAssertEqual(L10n.tr("prefs.restoreAppRulesBulkEditor"), "还原已保存应用规则")
@@ -782,9 +782,9 @@ final class LocalizationQualityTests: XCTestCase {
         )
         XCTAssertNotEqual(
             L10n.format("prefs.autosaveCopiedField", L10n.tr("prefs.appRulesExport")),
-            "应用规则导入文本已复制到剪贴板"
+            "应用规则导入和导出文本已复制到剪贴板"
         )
-        XCTAssertEqual(L10n.tr("prefs.advancedIdeasJSON"), "提示导入文本")
+        XCTAssertEqual(L10n.tr("prefs.advancedIdeasJSON"), "提示导入和导出文本")
         XCTAssertEqual(L10n.tr("prefs.ideasExport"), "提示导出文本")
         XCTAssertEqual(L10n.tr("prefs.showAdvancedIdeas"), "导入或导出提示")
         XCTAssertEqual(L10n.tr("prefs.defaultCustomIdeaTitle"), "活动休息提示")
@@ -805,12 +805,12 @@ final class LocalizationQualityTests: XCTestCase {
         )
         XCTAssertNotEqual(
             L10n.format("prefs.autosaveCopiedField", L10n.tr("prefs.ideasExport")),
-            "提示导入文本已复制到剪贴板"
+            "提示导入和导出文本已复制到剪贴板"
         )
         XCTAssertEqual(L10n.tr("prefs.invalidJSONTitle"), "导入文本格式无效")
         XCTAssertEqual(
-            L10n.format("prefs.invalidJSONBody", "应用规则导入文本", "缺少括号"),
-            "请先修正应用规则导入文本，才能继续保存。详情：缺少括号"
+            L10n.format("prefs.invalidJSONBody", "应用规则导入和导出文本", "缺少括号"),
+            "请先修正应用规则导入和导出文本，才能继续保存。详情：缺少括号"
         )
         XCTAssertEqual(L10n.tr("prefs.cancelCustomIdeaEdit"), "取消编辑")
         XCTAssertEqual(L10n.tr("prefs.sectionOperations"), "应用行为")
