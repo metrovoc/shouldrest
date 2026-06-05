@@ -518,7 +518,7 @@
 "prefs.pauseUntilMorningModeHelp" = "选择“暂停到早晨”使用固定时间恢复，还是按日出恢复。";
 "prefs.pauseUntilMorningHour" = "恢复时间";
 "prefs.pauseUntilMorningLocation" = "日出城市";
-"prefs.pauseUntilMorningLocationHelp" = "仅在早晨恢复设为日出时使用。";
+"prefs.pauseUntilMorningLocationHelp" = "选择用于估算“暂停到早晨”日出的城市。";
 "prefs.pauseUntilMorningLatitude" = "自定义纬度";
 "prefs.pauseUntilMorningLongitude" = "自定义经度";
 "prefs.pauseForSuspendOrLock" = "Mac 睡眠或锁屏时暂停休息";

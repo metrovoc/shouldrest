@@ -82,6 +82,36 @@ final class PreferencesWindowMorningPauseTests: XCTestCase {
         XCTAssertNotEqual(savedSettings.value?.operations.pauseUntilMorningLongitude, 0)
     }
 
+    func testSunriseLocationCopyNamesCityAndEstimatePurpose() throws {
+        defer { L10n.languageOverride = nil }
+
+        L10n.languageOverride = "en"
+        XCTAssertEqual(L10n.tr("prefs.pauseUntilMorningLocation"), "Sunrise city")
+        XCTAssertEqual(
+            L10n.tr("prefs.pauseUntilMorningLocationHelp"),
+            "Choose the city used to estimate sunrise for Pause Until Morning."
+        )
+        XCTAssertNotEqual(L10n.tr("prefs.pauseUntilMorningLocation"), "Use sunrise for")
+
+        var settings = RestSettings.defaults
+        settings.operations.pauseUntilMorningMode = .sunrise
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        try selectAdvancedTab(in: contentView)
+        let location = try XCTUnwrap(view(withIdentifier: "prefs.pauseUntilMorningLocation", in: contentView) as? NSPopUpButton)
+
+        XCTAssertEqual(location.accessibilityLabel(), L10n.tr("prefs.pauseUntilMorningLocation"))
+        XCTAssertEqual(location.accessibilityHelp(), L10n.tr("prefs.pauseUntilMorningLocationHelp"))
+        XCTAssertEqual(location.toolTip, L10n.tr("prefs.pauseUntilMorningLocationHelp"))
+
+        L10n.languageOverride = "zh-Hans"
+        XCTAssertEqual(L10n.tr("prefs.pauseUntilMorningLocation"), "日出城市")
+        XCTAssertEqual(
+            L10n.tr("prefs.pauseUntilMorningLocationHelp"),
+            "选择用于估算“暂停到早晨”日出的城市。"
+        )
+    }
+
     func testMorningPauseSummaryTracksSunrisePresetSelection() throws {
         defer { L10n.languageOverride = nil }
         L10n.languageOverride = "en"
