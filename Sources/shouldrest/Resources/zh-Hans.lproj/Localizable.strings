@@ -521,7 +521,7 @@
 "prefs.restoreUpdateSourceDisabledUpdatesOffHelp" = "先开启检查更新，才能恢复默认来源。";
 "prefs.preferencesMessage" = "偏好窗口提示";
 "prefs.preferencesMessageHelp" = "显示在偏好窗口顶部的可选说明，适合写团队、设备或当前环境的提醒。";
-"prefs.showAdminControls" = "高级支持选项";
+"prefs.showAdminControls" = "显示高级支持选项";
 "prefs.hideAdminControls" = "隐藏高级支持选项";
 "prefs.adminControlsHelp" = "仅在需要隐藏更新、文件位置或严格休息控件时，才使用这些很少改动的支持选项。";
 "prefs.autosaveReady" = "所有更改已保存";

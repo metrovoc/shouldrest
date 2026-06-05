@@ -115,6 +115,24 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         XCTAssertFalse(row.isHidden)
     }
 
+    func testAdvancedSupportControlsDisclosureUsesActionCopyWhenCollapsed() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAdvancedTab(in: contentView)
+        let supportDisclosure = try XCTUnwrap(view(withIdentifier: "adminControls", in: contentView) as? NSButton)
+
+        XCTAssertEqual(supportDisclosure.title, L10n.tr("prefs.showAdminControls"))
+        XCTAssertEqual(supportDisclosure.title, "Show advanced support controls")
+        XCTAssertEqual(supportDisclosure.toolTip, L10n.tr("prefs.adminControlsHelp"))
+        XCTAssertEqual(supportDisclosure.accessibilityLabel(), L10n.tr("prefs.showAdminControls"))
+        XCTAssertEqual(supportDisclosure.accessibilityHelp(), L10n.tr("prefs.adminControlsHelp"))
+        XCTAssertFalse(visibleTexts(in: contentView).contains("Advanced support controls"))
+    }
+
     func testAdministrativeControlsDoNotRepeatAdminPrefix() throws {
         defer { L10n.languageOverride = nil }
         L10n.languageOverride = "en"

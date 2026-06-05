@@ -521,7 +521,7 @@
 "prefs.restoreUpdateSourceDisabledUpdatesOffHelp" = "Turn on Check for updates before restoring the default source.";
 "prefs.preferencesMessage" = "Preferences banner";
 "prefs.preferencesMessageHelp" = "Optional note shown at the top of Preferences for team, device, or environment-specific guidance.";
-"prefs.showAdminControls" = "Advanced support controls";
+"prefs.showAdminControls" = "Show advanced support controls";
 "prefs.hideAdminControls" = "Hide advanced support controls";
 "prefs.adminControlsHelp" = "Use these rarely changed support options only when you need to hide update, file-location, or strict-rest controls.";
 "prefs.autosaveReady" = "All changes saved";
