@@ -1346,15 +1346,21 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             logger.log("Emergency override armed for \(session.kind.rawValue), awaiting second overlay confirmation")
             rebuildMenu()
         case .complete:
-            logger.log("Emergency override confirmed for \(session.kind.rawValue), completing immediately")
+            logger.log("Emergency override confirmed for \(session.kind.rawValue), queueing completion")
             guard engine.state.activeSession?.id == session.id else {
                 return
             }
-            completeEmergencyOverrideEyeGate(
-                session: session,
-                now: now,
-                playSound: true
-            )
+            Task { @MainActor [weak self] in
+                guard let self,
+                      self.engine.state.activeSession?.id == session.id else {
+                    return
+                }
+                self.completeEmergencyOverrideEyeGate(
+                    session: session,
+                    now: now,
+                    playSound: true
+                )
+            }
         case .unavailable:
             overlayController.update(
                 session: session,
@@ -3069,8 +3075,7 @@ final class RestOverlayView: NSView {
         case .armed:
             armEmergencyOverrideLocallyIfNeeded()
         case .complete:
-            emergencyOverrideArmed = false
-            updateEmergencyAffordanceUI()
+            clearEmergencyOverrideLocally()
         case .unavailable:
             clearEmergencyOverrideLocally()
         }

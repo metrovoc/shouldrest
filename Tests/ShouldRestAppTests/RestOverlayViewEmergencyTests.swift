@@ -727,7 +727,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .focused)
     }
 
-    func testArmedEmergencyButtonClickRequestsExitImmediately() throws {
+    func testArmedEmergencyButtonClickSubmitsExitAndClearsAffordance() throws {
         let view = configuredEyeGateOverlay(
             isArmed: true
         )
@@ -741,6 +741,8 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         button.performClick(nil)
 
         XCTAssertEqual(requestCount, 1)
+        assertHiddenEmergencyButtonIsCleared(button)
+        XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .unavailable)
     }
 
     func testArmedEmergencyIgnoresReentrantConfirmationWhileRequestIsInFlight() throws {
@@ -758,10 +760,10 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         button.performClick(nil)
 
         XCTAssertEqual(requestCount, 1)
-        XCTAssertTrue(button.isEnabled)
+        assertHiddenEmergencyButtonIsCleared(button)
     }
 
-    func testCompleteDecisionClearsEmergencyConfirmationIfOverlayStaysVisible() throws {
+    func testCompleteDecisionClearsEmergencyAffordanceIfOverlayStaysVisible() throws {
         let session = eyeGateSession()
         let view = RestOverlayView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
         view.configure(
@@ -779,12 +781,21 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             return .complete
         }
 
+        let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.panel"))
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
         button.performClick(nil)
 
         XCTAssertEqual(requestCount, 1)
-        XCTAssertTrue(button.isEnabled)
-        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverride"))
+        XCTAssertTrue(panel.isHidden)
+        XCTAssertNil(panel.toolTip)
+        XCTAssertNil(panel.accessibilityLabel())
+        XCTAssertNil(panel.accessibilityHelp())
+        assertHiddenEmergencyButtonIsCleared(button)
+        XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .unavailable)
+
+        view.performEmergencyOverrideKeyCommand()
+
+        XCTAssertEqual(requestCount, 1)
 
         view.configure(
             session: session,
