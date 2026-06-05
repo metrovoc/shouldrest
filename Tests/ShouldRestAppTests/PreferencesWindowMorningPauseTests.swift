@@ -233,6 +233,27 @@ final class PreferencesWindowMorningPauseTests: XCTestCase {
         XCTAssertEqual(savedSettings.value?.operations.pauseUntilMorningLongitude, 139.6503)
     }
 
+    func testMorningPauseControlsExposeRowTitlesAsAccessibilityLabels() throws {
+        var settings = RestSettings.defaults
+        settings.operations.pauseUntilMorningMode = .sunrise
+        settings.operations.pauseUntilMorningLatitude = 12.34
+        settings.operations.pauseUntilMorningLongitude = 56.78
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAdvancedTab(in: contentView)
+
+        let mode = try XCTUnwrap(view(withIdentifier: "prefs.pauseUntilMorningMode", in: contentView) as? NSPopUpButton)
+        let location = try XCTUnwrap(view(withIdentifier: "prefs.pauseUntilMorningLocation", in: contentView) as? NSPopUpButton)
+        let latitude = try XCTUnwrap(view(withIdentifier: "prefs.pauseUntilMorningLatitudeField", in: contentView) as? NSTextField)
+        let longitude = try XCTUnwrap(view(withIdentifier: "prefs.pauseUntilMorningLongitudeField", in: contentView) as? NSTextField)
+
+        XCTAssertEqual(mode.accessibilityLabel(), L10n.tr("prefs.pauseUntilMorningMode"))
+        XCTAssertEqual(location.accessibilityLabel(), L10n.tr("prefs.pauseUntilMorningLocation"))
+        XCTAssertEqual(latitude.accessibilityLabel(), L10n.tr("prefs.pauseUntilMorningLatitude"))
+        XCTAssertEqual(longitude.accessibilityLabel(), L10n.tr("prefs.pauseUntilMorningLongitude"))
+    }
+
     private func selectAdvancedTab(in view: NSView) throws {
         let tabView = try XCTUnwrap(firstTabView(in: view))
         tabView.selectTabViewItem(withIdentifier: L10n.tr("prefs.tabAdvanced"))

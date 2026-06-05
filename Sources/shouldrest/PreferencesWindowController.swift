@@ -5065,6 +5065,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private func row(_ title: String, _ field: NSView) -> NSStackView {
         let label = NSTextField(labelWithString: title)
         label.widthAnchor.constraint(equalToConstant: 220).isActive = true
+        applyRowAccessibilityLabel(title, to: field)
         let stack = NSStackView(views: [label, field])
         stack.orientation = .horizontal
         stack.spacing = 12
@@ -5153,6 +5154,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private func multilineRow(_ title: String, _ field: NSView) -> NSStackView {
         let label = NSTextField(labelWithString: title)
         label.widthAnchor.constraint(equalToConstant: 220).isActive = true
+        applyRowAccessibilityLabel(title, to: field)
         let stack = NSStackView(views: [label, field])
         stack.orientation = .horizontal
         stack.spacing = 12
@@ -5169,6 +5171,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     ) -> NSStackView {
         let label = NSTextField(labelWithString: title)
         label.widthAnchor.constraint(equalToConstant: 220).isActive = true
+        applyRowAccessibilityLabel(title, to: field)
 
         let guidanceLabel = NSTextField(labelWithString: guidance)
         guidanceLabel.identifier = NSUserInterfaceItemIdentifier(guidanceIdentifier)
@@ -5201,6 +5204,31 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         stack.spacing = 12
         stack.alignment = .top
         return stack
+    }
+
+    private func applyRowAccessibilityLabel(_ title: String, to view: NSView) {
+        if let popup = view as? NSPopUpButton {
+            setAccessibilityLabelIfMissing(title, on: popup)
+        } else if let button = view as? NSButton {
+            if button.title.isEmpty {
+                setAccessibilityLabelIfMissing(title, on: button)
+            }
+        } else if let textView = view as? NSTextView {
+            setAccessibilityLabelIfMissing(title, on: textView)
+        } else if let control = view as? NSControl {
+            setAccessibilityLabelIfMissing(title, on: control)
+        }
+
+        for subview in view.subviews {
+            applyRowAccessibilityLabel(title, to: subview)
+        }
+    }
+
+    private func setAccessibilityLabelIfMissing(_ title: String, on view: NSView) {
+        let current = view.accessibilityLabel()?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if current == nil || current?.isEmpty == true {
+            view.setAccessibilityLabel(title)
+        }
     }
 
     private func numberRow(

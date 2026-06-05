@@ -65,6 +65,31 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertEqual(customBodyText.accessibilityHelp(), L10n.tr("prefs.customBodyTextHelp"))
     }
 
+    func testRowBackedAppearanceControlsExposeReadableAccessibilityLabels() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+
+        let theme = try XCTUnwrap(view(withIdentifier: "prefs.theme", in: contentView) as? NSPopUpButton)
+        let language = try XCTUnwrap(view(withIdentifier: "prefs.language", in: contentView) as? NSPopUpButton)
+        let eyeStartSound = try XCTUnwrap(view(withIdentifier: "prefs.eyeStartSound", in: contentView) as? NSPopUpButton)
+        let eyeStartPreview = try XCTUnwrap(view(withIdentifier: "eyeStart", in: contentView) as? NSButton)
+        let customTitle = try XCTUnwrap(view(withIdentifier: "prefs.customBodyTitleField", in: contentView) as? NSTextField)
+        let customBodyText = try XCTUnwrap(view(withIdentifier: "customBodyTextEditor", in: contentView) as? NSTextView)
+
+        XCTAssertEqual(theme.accessibilityLabel(), L10n.tr("prefs.theme"))
+        XCTAssertEqual(language.accessibilityLabel(), L10n.tr("prefs.language"))
+        XCTAssertEqual(eyeStartSound.accessibilityLabel(), L10n.tr("prefs.eyeStartSound"))
+        XCTAssertEqual(
+            eyeStartPreview.accessibilityLabel(),
+            L10n.format("prefs.previewSoundLabel", L10n.tr("prefs.eyeStartSound"))
+        )
+        XCTAssertNotEqual(eyeStartPreview.accessibilityLabel(), L10n.tr("prefs.eyeStartSound"))
+        XCTAssertEqual(customTitle.accessibilityLabel(), L10n.tr("prefs.title"))
+        XCTAssertEqual(customBodyText.accessibilityLabel(), L10n.tr("prefs.text"))
+    }
+
     func testSilentModeCopyMatchesSoundPreviewBehavior() throws {
         defer { L10n.languageOverride = nil }
         L10n.languageOverride = "en"

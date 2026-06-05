@@ -128,6 +128,24 @@ final class PreferencesWindowDisplaySelectionTests: XCTestCase {
         )
     }
 
+    func testDisplayPopupsExposeRowTitlesAsAccessibilityLabels() throws {
+        var settings = RestSettings.defaults
+        settings.bodyBreak.enforcement.coversAllDisplays = false
+        settings.bodyBreak.enforcement.coveredDisplay = .cursor
+        settings.bodyBreak.enforcement.contentDisplay = .configured
+        settings.bodyBreak.enforcement.configuredDisplayIndex = 0
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        let coveredDisplay = try XCTUnwrap(view(withIdentifier: "prefs.bodyCoveredDisplay", in: contentView) as? NSPopUpButton)
+        let contentDisplay = try XCTUnwrap(view(withIdentifier: "prefs.bodyContentDisplay", in: contentView) as? NSPopUpButton)
+        let configuredDisplay = try XCTUnwrap(view(withIdentifier: "prefs.bodyConfiguredDisplay", in: contentView) as? NSPopUpButton)
+
+        XCTAssertEqual(coveredDisplay.accessibilityLabel(), L10n.tr("prefs.bodyCoveredDisplay"))
+        XCTAssertEqual(contentDisplay.accessibilityLabel(), L10n.tr("prefs.bodyContentDisplay"))
+        XCTAssertEqual(configuredDisplay.accessibilityLabel(), L10n.tr("prefs.configuredDisplayIndex"))
+    }
+
     private var displayPrefix: String {
         L10n.format("prefs.displayPicker.item", 1, 1, 1, "").components(separatedBy: "1").first ?? "Display"
     }
