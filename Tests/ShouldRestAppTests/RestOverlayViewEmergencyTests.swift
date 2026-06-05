@@ -449,6 +449,46 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
     }
 
+    func testWindowEventDispatchIgnoresEscapeRepeatBeforeSecondConfirmation() throws {
+        let screen = try XCTUnwrap(NSScreen.main)
+        let session = eyeGateSession()
+        let window = OverlayWindow(screen: screen, session: session, settings: .defaults)
+        defer { window.close() }
+        var requestCount = 0
+        window.overlayView.onEmergencyOverrideRequested = {
+            requestCount += 1
+            return requestCount == 1 ? .armed : .complete
+        }
+        window.overlayView.configure(
+            session: session,
+            remainingSeconds: 60,
+            settings: .defaults,
+            showsContent: true,
+            manualAwaiting: false,
+            isEmergencyOverrideAvailable: true
+        )
+        let button = try XCTUnwrap(window.overlayView.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+
+        window.sendEvent(try escapeKeyEvent(windowNumber: window.windowNumber, timestamp: 1))
+
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+
+        window.sendEvent(try escapeKeyEvent(
+            isRepeat: true,
+            windowNumber: window.windowNumber,
+            timestamp: 1.01
+        ))
+        drainMainQueue()
+
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+
+        window.sendEvent(try escapeKeyEvent(windowNumber: window.windowNumber, timestamp: 2))
+
+        XCTAssertEqual(requestCount, 2)
+    }
+
     func testOverlayWindowKeepsOverlayViewInWindowLocalCoordinates() throws {
         let screen = try XCTUnwrap(NSScreen.main)
         let window = OverlayWindow(screen: screen, session: eyeGateSession(), settings: .defaults)
