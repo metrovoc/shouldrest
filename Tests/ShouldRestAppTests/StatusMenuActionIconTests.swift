@@ -111,6 +111,7 @@ final class StatusMenuActionIconTests: XCTestCase {
 
         XCTAssertFalse(item.isEnabled)
         XCTAssertEqual(item.title, L10n.tr("menu.emergencyOverlayOnly"))
+        XCTAssertEqual(item.accessibilityLabel(), L10n.tr("menu.emergencyOverlayOnly"))
         XCTAssertEqual(item.toolTip, L10n.tr("menu.emergencyOverlayOnlyHelp"))
         XCTAssertEqual(item.accessibilityHelp(), L10n.tr("menu.emergencyOverlayOnlyHelp"))
         XCTAssertTrue(item.toolTip?.contains("This menu cannot exit") ?? false)
@@ -132,6 +133,7 @@ final class StatusMenuActionIconTests: XCTestCase {
         XCTAssertNotNil(item.image)
         XCTAssertTrue(item.image?.isTemplate ?? false)
         XCTAssertEqual(item.image?.accessibilityDescription, L10n.tr("menu.emergencyOverlayOnly"))
+        XCTAssertEqual(item.accessibilityLabel(), L10n.tr("menu.emergencyOverlayOnly"))
         XCTAssertEqual(item.toolTip, L10n.tr("menu.emergencyOverlayOnlyHelp"))
         XCTAssertEqual(item.accessibilityHelp(), L10n.tr("menu.emergencyOverlayOnlyHelp"))
     }

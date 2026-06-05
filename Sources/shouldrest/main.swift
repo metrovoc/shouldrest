@@ -368,6 +368,7 @@ enum DisabledStatusMenuItemFactory {
         let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
         item.isEnabled = false
         item.toolTip = toolTip
+        item.setAccessibilityLabel(title)
         item.setAccessibilityHelp(toolTip)
         if let symbolName {
             item.image = image(symbolName, accessibilityDescription: title)
