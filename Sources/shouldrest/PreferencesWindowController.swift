@@ -602,6 +602,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let updateFeedURL = NSTextField()
     private let restoreUpdateSourceButton = NSButton()
     private let updateSourceAdvancedButton = NSButton()
+    private var updateSectionSeparator: NSView?
+    private var updateSectionHeader: NSView?
     private var updateFeedURLRow: NSView?
     private let disableUpdateFeatures = NSButton(checkboxWithTitle: L10n.tr("prefs.adminHideUpdates"), target: nil, action: nil)
     private let hideSettingsPath = NSButton(checkboxWithTitle: L10n.tr("prefs.adminHideSettingsPath"), target: nil, action: nil)
@@ -1151,15 +1153,21 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         addTab(to: tabView, title: L10n.tr("prefs.tabShortcuts"), icon: .systemSymbol("keyboard"), stack: shortcutsStack)
 
         let advancedStack = contentStack()
-        advancedStack.addArrangedSubview(section(L10n.tr("prefs.sectionOperations"), symbolName: "gearshape"))
+        advancedStack.addArrangedSubview(section(
+            L10n.tr("prefs.sectionStartup"),
+            icon: .systemSymbol("power"),
+            identifier: "prefs.section.startup"
+        ))
         openAtLogin.identifier = NSUserInterfaceItemIdentifier("prefs.openAtLogin")
         advancedStack.addArrangedSubview(openAtLogin)
-        checkUpdates.identifier = NSUserInterfaceItemIdentifier("prefs.checkUpdates")
-        advancedStack.addArrangedSubview(checkUpdates)
-        notifyNewVersion.identifier = NSUserInterfaceItemIdentifier("prefs.notifyNewVersion")
-        advancedStack.addArrangedSubview(notifyNewVersion)
         showOnboardingNextLaunch.identifier = NSUserInterfaceItemIdentifier("prefs.showOnboardingNextLaunch")
         advancedStack.addArrangedSubview(showOnboardingNextLaunch)
+        advancedStack.addArrangedSubview(separator())
+        advancedStack.addArrangedSubview(section(
+            L10n.tr("prefs.sectionPauseBehavior"),
+            icon: .systemSymbol("moon.zzz"),
+            identifier: "prefs.section.pauseBehavior"
+        ))
         let pauseUntilMorningModeRow = row(L10n.tr("prefs.pauseUntilMorningMode"), pauseUntilMorningMode)
         pauseUntilMorningMode.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningMode")
         advancedStack.addArrangedSubview(pauseUntilMorningModeRow)
@@ -1192,6 +1200,21 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         advancedStack.addArrangedSubview(indentedControlRow(pauseUntilMorningSummaryLabel))
         pauseForSuspendOrLock.identifier = NSUserInterfaceItemIdentifier("prefs.pauseForSuspendOrLock")
         advancedStack.addArrangedSubview(pauseForSuspendOrLock)
+        let updateSectionSeparator = separator()
+        updateSectionSeparator.identifier = NSUserInterfaceItemIdentifier("prefs.section.updates.separator")
+        self.updateSectionSeparator = updateSectionSeparator
+        advancedStack.addArrangedSubview(updateSectionSeparator)
+        let updateSectionHeader = section(
+            L10n.tr("prefs.sectionUpdates"),
+            icon: .systemSymbol("arrow.triangle.2.circlepath"),
+            identifier: "prefs.section.updates"
+        )
+        self.updateSectionHeader = updateSectionHeader
+        advancedStack.addArrangedSubview(updateSectionHeader)
+        checkUpdates.identifier = NSUserInterfaceItemIdentifier("prefs.checkUpdates")
+        advancedStack.addArrangedSubview(checkUpdates)
+        notifyNewVersion.identifier = NSUserInterfaceItemIdentifier("prefs.notifyNewVersion")
+        advancedStack.addArrangedSubview(notifyNewVersion)
         advancedStack.addArrangedSubview(updateSourceAdvancedButton)
         let updateFeedURLRow = row(L10n.tr("prefs.updateFeedURL"), updateSourceRow())
         updateFeedURL.identifier = NSUserInterfaceItemIdentifier("prefs.updateFeedURLField")
@@ -1199,6 +1222,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         self.updateFeedURLRow = updateFeedURLRow
         advancedStack.addArrangedSubview(updateFeedURLRow)
         advancedStack.addArrangedSubview(separator())
+        advancedStack.addArrangedSubview(section(
+            L10n.tr("prefs.sectionSupportControls"),
+            icon: .systemSymbol("lifepreserver"),
+            identifier: "prefs.section.supportControls"
+        ))
         adminControlsStack.orientation = .vertical
         adminControlsStack.alignment = .leading
         adminControlsStack.spacing = 14
@@ -2617,6 +2645,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private func updateUpdatePreferencesVisibility() {
         let hideUpdateControls = settings.admin.disableAppUpdateFeatures
         let showUpdateDependents = !hideUpdateControls && isOn(checkUpdates)
+        updateSectionSeparator?.isHidden = hideUpdateControls
+        updateSectionHeader?.isHidden = hideUpdateControls
         checkUpdates.isHidden = hideUpdateControls
         notifyNewVersion.isHidden = !showUpdateDependents
         notifyNewVersion.isEnabled = showUpdateDependents

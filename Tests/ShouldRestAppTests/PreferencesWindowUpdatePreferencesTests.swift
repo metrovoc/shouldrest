@@ -5,6 +5,40 @@ import XCTest
 
 @MainActor
 final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
+    func testAdvancedPreferencesAreGroupedIntoScannableSections() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAdvancedTab(in: contentView)
+
+        let expectedSections: [(identifier: String, key: String)] = [
+            ("prefs.section.startup", "prefs.sectionStartup"),
+            ("prefs.section.pauseBehavior", "prefs.sectionPauseBehavior"),
+            ("prefs.section.updates", "prefs.sectionUpdates"),
+            ("prefs.section.supportControls", "prefs.sectionSupportControls")
+        ]
+
+        for section in expectedSections {
+            let sectionView = try view(withIdentifier: section.identifier, in: contentView)
+            let label = try XCTUnwrap(
+                view(withIdentifier: "\(section.identifier).label", in: contentView) as? NSTextField
+            )
+            let icon = try XCTUnwrap(
+                view(withIdentifier: "\(section.identifier).systemIcon", in: contentView) as? NSImageView
+            )
+            XCTAssertFalse(sectionView.isHidden, section.identifier)
+            XCTAssertEqual(label.stringValue, L10n.tr(section.key), section.identifier)
+            XCTAssertNotNil(icon.image, section.identifier)
+            XCTAssertEqual(icon.image?.accessibilityDescription, L10n.tr(section.key), section.identifier)
+        }
+
+        let visibleTexts = visibleTexts(in: contentView)
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.sectionStartup")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.sectionPauseBehavior")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.sectionUpdates")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.sectionSupportControls")))
+    }
+
     func testUpdateDependentPreferencesAreVisibleWhenCheckingForUpdates() throws {
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
@@ -39,6 +73,26 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.notifyNewVersion")))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.showUpdateSource")))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.updateFeedURL")))
+    }
+
+    func testHiddenUpdateFeaturesHideAdvancedUpdateSection() throws {
+        var settings = RestSettings.defaults
+        settings.admin.disableAppUpdateFeatures = true
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAdvancedTab(in: contentView)
+
+        XCTAssertTrue(try view(withIdentifier: "prefs.section.updates.separator", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.section.updates", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.checkUpdates", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.notifyNewVersion", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "updateSource", in: contentView).isHidden)
+
+        let visibleTexts = visibleTexts(in: contentView)
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.sectionUpdates")))
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.checkUpdates")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.sectionSupportControls")))
     }
 
     func testUpdateSourceDisclosureRevealsURLOnlyOnDemand() throws {

@@ -476,6 +476,10 @@
 "prefs.reset" = "重置计划";
 "prefs.resetShortcutHelp" = "确认后重置计时、暂停、已延后的休息、休息欠账和排队等待的操作。";
 "prefs.sectionOperations" = "应用行为";
+"prefs.sectionStartup" = "启动";
+"prefs.sectionPauseBehavior" = "暂停行为";
+"prefs.sectionUpdates" = "更新";
+"prefs.sectionSupportControls" = "支持选项";
 "prefs.pauseUntilMorningMode" = "早晨恢复";
 "prefs.pauseUntilMorningModeHelp" = "选择“暂停到早晨”使用固定时间恢复，还是按日出恢复。";
 "prefs.pauseUntilMorningHour" = "恢复时间";

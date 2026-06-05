@@ -476,6 +476,10 @@
 "prefs.reset" = "Reset Schedule";
 "prefs.resetShortcutHelp" = "Reset timers, pauses, delayed rests, rest debt, and queued actions after confirmation.";
 "prefs.sectionOperations" = "App behavior";
+"prefs.sectionStartup" = "Startup";
+"prefs.sectionPauseBehavior" = "Pause behavior";
+"prefs.sectionUpdates" = "Updates";
+"prefs.sectionSupportControls" = "Support controls";
 "prefs.pauseUntilMorningMode" = "Morning resume";
 "prefs.pauseUntilMorningModeHelp" = "Choose the resume time used by Pause Until Morning: a fixed time or sunrise.";
 "prefs.pauseUntilMorningHour" = "Resume at";
