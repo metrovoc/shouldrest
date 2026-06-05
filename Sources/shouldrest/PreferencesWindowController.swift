@@ -1530,7 +1530,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         stack.layer?.borderWidth = 1
         stack.layer?.backgroundColor = NSColor.systemOrange.withAlphaComponent(0.07).cgColor
         stack.layer?.borderColor = NSColor.systemOrange.withAlphaComponent(0.22).cgColor
-        stack.widthAnchor.constraint(equalToConstant: 392).isActive = true
+        stack.widthAnchor.constraint(lessThanOrEqualToConstant: 418).isActive = true
         stack.toolTip = notice
         stack.setAccessibilityLabel(notice)
         stack.setAccessibilityHelp(notice)
@@ -2390,8 +2390,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         showMenuBarItemRecoveryLabel.font = .systemFont(ofSize: 12)
         showMenuBarItemRecoveryLabel.textColor = .labelColor
         showMenuBarItemRecoveryLabel.lineBreakMode = .byWordWrapping
-        showMenuBarItemRecoveryLabel.maximumNumberOfLines = 3
-        showMenuBarItemRecoveryLabel.widthAnchor.constraint(equalToConstant: 336).isActive = true
+        showMenuBarItemRecoveryLabel.cell?.wraps = true
+        showMenuBarItemRecoveryLabel.cell?.isScrollable = false
+        showMenuBarItemRecoveryLabel.maximumNumberOfLines = 0
+        showMenuBarItemRecoveryLabel.preferredMaxLayoutWidth = 374
+        showMenuBarItemRecoveryLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        showMenuBarItemRecoveryLabel.setContentCompressionResistancePriority(.required, for: .vertical)
+        showMenuBarItemRecoveryLabel.widthAnchor.constraint(lessThanOrEqualToConstant: 374).isActive = true
         showMenuBarItemRecoveryLabel.stringValue = notice
         showMenuBarItemRecoveryLabel.toolTip = notice
         showMenuBarItemRecoveryLabel.setAccessibilityLabel(notice)

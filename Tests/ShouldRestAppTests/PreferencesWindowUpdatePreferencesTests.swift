@@ -263,6 +263,39 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         XCTAssertTrue(recoveryLabel.stringValue.contains("Open ShouldRest again"))
         XCTAssertTrue(recoveryLabel.stringValue.contains("shouldrest preferences"))
         XCTAssertTrue(recoveryLabel.stringValue.contains("shouldrest://preferences"))
+        XCTAssertEqual(recoveryLabel.lineBreakMode, .byWordWrapping)
+        XCTAssertTrue(recoveryLabel.cell?.wraps ?? false)
+        XCTAssertFalse(recoveryLabel.cell?.isScrollable ?? true)
+        XCTAssertEqual(recoveryLabel.maximumNumberOfLines, 0)
+        XCTAssertGreaterThanOrEqual(recoveryLabel.preferredMaxLayoutWidth, 360)
+        XCTAssertTrue(
+            recoveryNotice.constraints.contains { constraint in
+                constraint.firstAttribute == .width &&
+                    constraint.relation == .lessThanOrEqual &&
+                    constraint.constant >= 418
+            }
+        )
+        XCTAssertFalse(
+            recoveryNotice.constraints.contains { constraint in
+                constraint.firstAttribute == .width &&
+                    constraint.relation == .equal &&
+                    abs(constraint.constant - 392) < 0.1
+            }
+        )
+        XCTAssertTrue(
+            recoveryLabel.constraints.contains { constraint in
+                constraint.firstAttribute == .width &&
+                    constraint.relation == .lessThanOrEqual &&
+                    constraint.constant >= 374
+            }
+        )
+        XCTAssertFalse(
+            recoveryLabel.constraints.contains { constraint in
+                constraint.firstAttribute == .width &&
+                    constraint.relation == .equal &&
+                    abs(constraint.constant - 336) < 0.1
+            }
+        )
 
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(savedSettings.value?.presentation.showMenuBarItem, false)
