@@ -2710,6 +2710,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             shortcutConflictIcon.image?.accessibilityDescription = L10n.tr("prefs.shortcutConflictTitle")
             shortcutConflictIcon.setAccessibilityHelp(nil)
             shortcutConflictRow.toolTip = nil
+            shortcutConflictRow.setAccessibilityLabel(nil)
             shortcutConflictRow.setAccessibilityHelp(nil)
             shortcutConflictReviewButton.isEnabled = false
             shortcutConflictRow.isHidden = true
@@ -2724,6 +2725,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         shortcutConflictIcon.image?.accessibilityDescription = warning.message
         shortcutConflictIcon.setAccessibilityHelp(warning.message)
         shortcutConflictRow.toolTip = warning.message
+        shortcutConflictRow.setAccessibilityLabel(warning.message)
         shortcutConflictRow.setAccessibilityHelp(warning.message)
         shortcutConflictReviewButton.isEnabled = true
         shortcutConflictRow.isHidden = false
