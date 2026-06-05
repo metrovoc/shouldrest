@@ -60,7 +60,7 @@
 "menu.aboutHelp" = "打开产品和版本信息。";
 "menu.settingsFile" = "设置位置";
 "menu.settingsFileHelp" = "打开或复制 ShouldRest 保存设置的位置。";
-"menu.showSettingsFile" = "在 Finder 中显示";
+"menu.showSettingsFile" = "在 Finder 中显示设置位置";
 "menu.showSettingsFileHelp" = "在 Finder 中显示 ShouldRest 的设置位置。";
 "menu.copySettingsPath" = "复制设置位置";
 "menu.copySettingsPathHelp" = "复制 ShouldRest 的设置位置。";
