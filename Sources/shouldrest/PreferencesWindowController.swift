@@ -522,6 +522,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let soundVolume = NSTextField()
     private let soundVolumeSlider = NSSlider()
     private let soundVolumeValueLabel = NSTextField(labelWithString: "")
+    private let soundPreviewStatusRow = NSStackView()
+    private let soundPreviewStatusIcon = NSImageView()
     private let soundPreviewStatusLabel = NSTextField(labelWithString: "")
 
     private let customBodyTitle = NSTextField()
@@ -983,7 +985,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let soundVolumeControlRow = row(L10n.tr("prefs.volume"), soundVolumeRow())
         soundVolumeControlRow.identifier = NSUserInterfaceItemIdentifier("prefs.soundVolumeRow")
         appearanceStack.addArrangedSubview(soundVolumeControlRow)
-        appearanceStack.addArrangedSubview(soundPreviewStatusLabel)
+        appearanceStack.addArrangedSubview(soundPreviewStatusView())
         appearanceStack.addArrangedSubview(separator())
         appearanceStack.addArrangedSubview(section(L10n.tr("prefs.sectionCustomIdea"), symbolName: "text.bubble"))
         useBuiltInIdeas.identifier = NSUserInterfaceItemIdentifier("prefs.useBuiltInIdeas")
@@ -1576,11 +1578,41 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         soundVolumeValueLabel.textColor = .secondaryLabelColor
         soundVolumeValueLabel.alignment = .right
         soundVolumeValueLabel.widthAnchor.constraint(equalToConstant: 54).isActive = true
+
+        soundPreviewStatusIcon.identifier = NSUserInterfaceItemIdentifier("soundPreviewStatusIcon")
+        soundPreviewStatusIcon.image = NSImage(
+            systemSymbolName: "speaker.wave.2.circle.fill",
+            accessibilityDescription: L10n.tr("prefs.previewSound")
+        )
+        soundPreviewStatusIcon.symbolConfiguration = .init(pointSize: 15, weight: .semibold)
+        soundPreviewStatusIcon.contentTintColor = .controlAccentColor
+        soundPreviewStatusIcon.setAccessibilityLabel(L10n.tr("prefs.previewSound"))
+        soundPreviewStatusIcon.widthAnchor.constraint(equalToConstant: 20).isActive = true
+
         soundPreviewStatusLabel.identifier = NSUserInterfaceItemIdentifier("soundPreviewStatus")
         soundPreviewStatusLabel.textColor = .secondaryLabelColor
         soundPreviewStatusLabel.font = .systemFont(ofSize: 12)
+        soundPreviewStatusLabel.lineBreakMode = .byWordWrapping
+        soundPreviewStatusLabel.maximumNumberOfLines = 2
         soundPreviewStatusLabel.isHidden = true
-        soundPreviewStatusLabel.widthAnchor.constraint(equalToConstant: 620).isActive = true
+        soundPreviewStatusLabel.widthAnchor.constraint(equalToConstant: 594).isActive = true
+
+        soundPreviewStatusRow.identifier = NSUserInterfaceItemIdentifier("soundPreviewStatusRow")
+        soundPreviewStatusRow.orientation = .horizontal
+        soundPreviewStatusRow.spacing = 8
+        soundPreviewStatusRow.alignment = .top
+        soundPreviewStatusRow.edgeInsets = NSEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
+        soundPreviewStatusRow.wantsLayer = true
+        soundPreviewStatusRow.layer?.cornerRadius = 7
+        soundPreviewStatusRow.layer?.borderWidth = 1
+        soundPreviewStatusRow.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.08).cgColor
+        soundPreviewStatusRow.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.55).cgColor
+        soundPreviewStatusRow.widthAnchor.constraint(equalToConstant: 650).isActive = true
+        soundPreviewStatusRow.addArrangedSubview(soundPreviewStatusIcon)
+        soundPreviewStatusRow.addArrangedSubview(soundPreviewStatusLabel)
+        soundPreviewStatusRow.setAccessibilityLabel(L10n.tr("prefs.previewSound"))
+        soundPreviewStatusRow.isHidden = true
+        soundPreviewStatusIcon.isHidden = true
     }
 
     private func configureRhythmPresetButtons() {
@@ -3936,6 +3968,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     private func showSoundPreviewStatus(_ status: String) {
+        soundPreviewStatusRow.isHidden = false
+        soundPreviewStatusRow.toolTip = status
+        soundPreviewStatusRow.setAccessibilityHelp(status)
+        soundPreviewStatusIcon.isHidden = false
+        soundPreviewStatusIcon.toolTip = status
+        soundPreviewStatusIcon.setAccessibilityHelp(status)
+        soundPreviewStatusIcon.image?.accessibilityDescription = L10n.tr("prefs.previewSound")
         soundPreviewStatusLabel.stringValue = status
         soundPreviewStatusLabel.toolTip = status
         soundPreviewStatusLabel.setAccessibilityLabel(status)
@@ -3944,6 +3983,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     private func clearSoundPreviewStatus() {
+        soundPreviewStatusRow.isHidden = true
+        soundPreviewStatusRow.toolTip = nil
+        soundPreviewStatusRow.setAccessibilityHelp(nil)
+        soundPreviewStatusIcon.isHidden = true
+        soundPreviewStatusIcon.toolTip = nil
+        soundPreviewStatusIcon.setAccessibilityHelp(nil)
         soundPreviewStatusLabel.isHidden = true
         soundPreviewStatusLabel.stringValue = ""
         soundPreviewStatusLabel.toolTip = nil
@@ -5139,6 +5184,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         stack.spacing = 10
         stack.alignment = .centerY
         return stack
+    }
+
+    private func soundPreviewStatusView() -> NSStackView {
+        soundPreviewStatusRow
     }
 
     private func registerSearchTargets(in stack: NSStackView, tabIdentifier: String) {
