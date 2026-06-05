@@ -15,7 +15,7 @@
 "menu.skipBodyBreakHelp" = "Skip this Body Break when skipping is allowed.";
 "menu.emergencyOverride" = "Emergency Exit";
 "menu.emergencyOverrideHelp" = "Bring the active Eye Gate overlay forward; confirm there with two clicks or two Esc presses.";
-"menu.emergencyOverlayOnly" = "Return to overlay for Emergency Exit";
+"menu.emergencyOverlayOnly" = "Return to Overlay";
 "menu.emergencyOverlayOnlyHelp" = "This menu cannot exit an active Eye Gate. Return to the overlay, then click Emergency Exit twice or press Esc twice.";
 "menu.resume" = "Resume";
 "menu.resumeHelp" = "Resume normal rest scheduling.";
