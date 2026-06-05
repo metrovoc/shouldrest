@@ -536,6 +536,8 @@
 "prefs.autosaveCopied" = "已复制到剪贴板";
 "prefs.autosaveCopiedField" = "%@已复制到剪贴板";
 "prefs.autosaveRestored" = "已恢复默认";
+"prefs.autosaveAppRulesRestored" = "已还原保存的应用规则";
+"prefs.autosaveIdeasRestored" = "已还原保存的提示";
 "prefs.autosaveShortcutCleared" = "快捷键已清空";
 "prefs.autosaveShortcutRestored" = "默认快捷键已恢复";
 "prefs.autosaveBodyImageSelected" = "活动休息图片已选择";

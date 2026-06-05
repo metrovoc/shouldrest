@@ -234,6 +234,8 @@ private enum PreferencesSaveStatus {
     case saved
     case copied
     case restored
+    case appRulesRestored
+    case ideasRestored
     case shortcutCleared
     case shortcutRestored
     case bodyImageSelected
@@ -3836,7 +3838,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     @objc private func restoreAppRulesBulkEditorPressed(_ sender: NSButton) {
         restoreBulkEditorText(
             appExclusionsJSONEditor,
-            text: savedAppRulesBulkEditorText()
+            text: savedAppRulesBulkEditorText(),
+            completionStatus: .appRulesRestored
         ) { [weak self] in
             self?.refreshAppExclusionRuleList()
             self?.updateAppExclusionAddRuleButtonState()
@@ -3851,7 +3854,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     @objc private func restoreIdeasBulkEditorPressed(_ sender: NSButton) {
         restoreBulkEditorText(
             customBodyIdeasJSONEditor,
-            text: savedIdeasBulkEditorText()
+            text: savedIdeasBulkEditorText(),
+            completionStatus: .ideasRestored
         ) { [weak self] in
             self?.refreshCustomBodyIdeaList()
             self?.updateCustomBodyAddIdeaButtonState()
@@ -3873,6 +3877,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private func restoreBulkEditorText(
         _ editor: NSTextView,
         text: String,
+        completionStatus: PreferencesSaveStatus,
         afterRestore: () -> Void
     ) {
         guard editor.string != text else {
@@ -3882,7 +3887,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         editor.string = text
         afterRestore()
         updateAdvancedBulkEditorActionStates()
-        scheduleAutosave()
+        scheduleAutosave(completionStatus: completionStatus)
     }
 
     private func savedAppRulesBulkEditorText() -> String {
@@ -4183,6 +4188,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             symbolName = "arrow.counterclockwise.circle.fill"
             color = .systemBlue
             title = L10n.tr("prefs.autosaveRestored")
+        case .appRulesRestored:
+            symbolName = "arrow.counterclockwise.circle.fill"
+            color = .systemBlue
+            title = L10n.tr("prefs.autosaveAppRulesRestored")
+        case .ideasRestored:
+            symbolName = "arrow.counterclockwise.circle.fill"
+            color = .systemBlue
+            title = L10n.tr("prefs.autosaveIdeasRestored")
         case .shortcutCleared:
             symbolName = "xmark.circle.fill"
             color = .systemBlue

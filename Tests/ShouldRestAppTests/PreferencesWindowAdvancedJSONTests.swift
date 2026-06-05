@@ -213,6 +213,11 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertEqual(appRestore.toolTip, L10n.tr("prefs.restoreAppRulesBulkEditorDisabledNoChangesHelp"))
         XCTAssertEqual(appRestore.accessibilityHelp(), L10n.tr("prefs.restoreAppRulesBulkEditorDisabledNoChangesHelp"))
         XCTAssertTrue(controller.flushPendingAutosave(showAlerts: false))
+        assertAutosaveStatus(
+            label: statusLabel,
+            icon: statusIcon,
+            title: L10n.tr("prefs.autosaveAppRulesRestored")
+        )
         XCTAssertEqual(savedSettings.value?.appExclusions.first?.name, "Alpha")
 
         NSPasteboard.general.clearContents()
@@ -237,6 +242,11 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertEqual(ideasRestore.toolTip, L10n.tr("prefs.restoreIdeasBulkEditorDisabledNoChangesHelp"))
         XCTAssertEqual(ideasRestore.accessibilityHelp(), L10n.tr("prefs.restoreIdeasBulkEditorDisabledNoChangesHelp"))
         XCTAssertTrue(controller.flushPendingAutosave(showAlerts: false))
+        assertAutosaveStatus(
+            label: statusLabel,
+            icon: statusIcon,
+            title: L10n.tr("prefs.autosaveIdeasRestored")
+        )
         XCTAssertEqual(savedSettings.value?.contentLibrary.customBodyBreakIdeas.first?.title, "Stretch")
     }
 
