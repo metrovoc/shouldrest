@@ -532,6 +532,7 @@
 "prefs.searchMatchedIndexed" = "%d/%d · %@ · %@";
 "prefs.searchNoResults" = "没有匹配“%@”的设置";
 "prefs.searchHiddenResults" = "“%@”已被当前选项隐藏";
+"prefs.numberInputAccessibilityLabel" = "%@，%@";
 "prefs.shortcutConflictTitle" = "快捷键冲突";
 "prefs.shortcutConflict" = "快捷键冲突：%@ 同时分配给 %@。";
 "prefs.shortcutConflictReview" = "查看冲突";
@@ -570,6 +571,12 @@
 "prefs.unit.eyeGates" = "次护眼休息";
 "prefs.unit.percent" = "%";
 "prefs.unit.hour" = "点";
+"prefs.unitAccessibility.minutes" = "分钟";
+"prefs.unitAccessibility.seconds" = "秒";
+"prefs.unitAccessibility.times" = "次";
+"prefs.unitAccessibility.eyeGates" = "次护眼休息";
+"prefs.unitAccessibility.percent" = "百分比";
+"prefs.unitAccessibility.hour" = "几点";
 "prefs.restoreDefaults" = "恢复默认";
 "prefs.restoreDefaultsHelp" = "确认后用应用默认值替换当前偏好设置；欢迎窗口仍会保持已完成。";
 "prefs.restoreDefaultsDisabledDefaultHelp" = "当前偏好设置已是应用默认值。";

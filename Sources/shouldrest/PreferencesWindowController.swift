@@ -715,6 +715,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             L10n.tr("prefs.everyMinutes"),
             eyeInterval,
             unit: L10n.tr("prefs.unit.minutes"),
+            accessibilityUnit: L10n.tr("prefs.unitAccessibility.minutes"),
             min: 1,
             max: 240,
             identifier: "eyeInterval",
@@ -727,6 +728,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             L10n.tr("prefs.durationSeconds"),
             eyeDuration,
             unit: L10n.tr("prefs.unit.seconds"),
+            accessibilityUnit: L10n.tr("prefs.unitAccessibility.seconds"),
             min: 1,
             max: 300,
             identifier: "eyeDuration",
@@ -745,6 +747,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             L10n.tr("prefs.notificationLead"),
             eyeLead,
             unit: L10n.tr("prefs.unit.seconds"),
+            accessibilityUnit: L10n.tr("prefs.unitAccessibility.seconds"),
             min: 0,
             max: 3600,
             identifier: "eyeLead"
@@ -768,6 +771,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             L10n.tr("prefs.bodyIntervalMinutes"),
             bodyInterval,
             unit: L10n.tr("prefs.unit.minutes"),
+            accessibilityUnit: L10n.tr("prefs.unitAccessibility.minutes"),
             min: 1,
             max: 720,
             identifier: "bodyInterval",
@@ -780,6 +784,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             L10n.tr("prefs.durationMinutes"),
             bodyDuration,
             unit: L10n.tr("prefs.unit.minutes"),
+            accessibilityUnit: L10n.tr("prefs.unitAccessibility.minutes"),
             min: 1,
             max: 180,
             identifier: "bodyDuration",
@@ -792,6 +797,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             L10n.tr("prefs.afterEyeGates"),
             bodyAfterEyeGates,
             unit: L10n.tr("prefs.unit.eyeGates"),
+            accessibilityUnit: L10n.tr("prefs.unitAccessibility.eyeGates"),
             min: 1,
             max: 99,
             identifier: "bodyAfterEyeGates",
@@ -810,6 +816,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             L10n.tr("prefs.notificationLead"),
             bodyLead,
             unit: L10n.tr("prefs.unit.seconds"),
+            accessibilityUnit: L10n.tr("prefs.unitAccessibility.seconds"),
             min: 0,
             max: 3600,
             identifier: "bodyLead"
@@ -821,6 +828,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             L10n.tr("prefs.postponeMinutes"),
             bodyPostponeMinutes,
             unit: L10n.tr("prefs.unit.minutes"),
+            accessibilityUnit: L10n.tr("prefs.unitAccessibility.minutes"),
             min: 1,
             max: 120,
             identifier: "bodyPostponeMinutes"
@@ -832,6 +840,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             L10n.tr("prefs.maxPostpones"),
             bodyPostponeLimit,
             unit: L10n.tr("prefs.unit.times"),
+            accessibilityUnit: L10n.tr("prefs.unitAccessibility.times"),
             min: 0,
             max: 20,
             identifier: "bodyPostponeLimit"
@@ -843,6 +852,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             L10n.tr("prefs.postponeWindowPercent"),
             bodyPostponeWindowPercent,
             unit: L10n.tr("prefs.unit.percent"),
+            accessibilityUnit: L10n.tr("prefs.unitAccessibility.percent"),
             min: 0,
             max: 100,
             identifier: "bodyPostponeWindowPercent"
@@ -885,6 +895,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             L10n.tr("prefs.naturalIdleMinutes"),
             naturalIdleMinutes,
             unit: L10n.tr("prefs.unit.minutes"),
+            accessibilityUnit: L10n.tr("prefs.unitAccessibility.minutes"),
             min: 1,
             max: 120,
             identifier: "naturalIdleMinutes"
@@ -1180,6 +1191,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             L10n.tr("prefs.pauseUntilMorningHour"),
             pauseUntilMorningHour,
             unit: L10n.tr("prefs.unit.hour"),
+            accessibilityUnit: L10n.tr("prefs.unitAccessibility.hour"),
             min: 0,
             max: 23,
             identifier: "pauseUntilMorningHour"
@@ -5195,6 +5207,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         _ title: String,
         _ field: NSTextField,
         unit: String,
+        accessibilityUnit: String,
         min: Double,
         max: Double,
         identifier: String? = nil,
@@ -5231,8 +5244,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         numberInputs.append(NumberInput(field: field, stepper: stepper, slider: slider, min: min, max: max))
 
+        let accessibilityLabel = L10n.format("prefs.numberInputAccessibilityLabel", title, accessibilityUnit)
+        field.setAccessibilityLabel(accessibilityLabel)
+        stepper.setAccessibilityLabel(accessibilityLabel)
+        slider?.setAccessibilityLabel(accessibilityLabel)
+
         let unitLabel = NSTextField(labelWithString: unit)
         unitLabel.textColor = .secondaryLabelColor
+        unitLabel.setAccessibilityLabel(accessibilityUnit)
         unitLabel.widthAnchor.constraint(equalToConstant: unit.isEmpty ? 0 : 58).isActive = true
 
         var inputViews: [NSView] = [field, stepper]

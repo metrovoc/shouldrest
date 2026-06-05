@@ -532,6 +532,7 @@
 "prefs.searchMatchedIndexed" = "%d/%d · %@ · %@";
 "prefs.searchNoResults" = "No setting matches \"%@\"";
 "prefs.searchHiddenResults" = "Hidden by current options: \"%@\"";
+"prefs.numberInputAccessibilityLabel" = "%@, %@";
 "prefs.shortcutConflictTitle" = "Shortcut conflict";
 "prefs.shortcutConflict" = "Shortcut conflict: %@ is assigned to %@.";
 "prefs.shortcutConflictReview" = "Review Conflict";
@@ -570,6 +571,12 @@
 "prefs.unit.eyeGates" = "Eye Gates";
 "prefs.unit.percent" = "%";
 "prefs.unit.hour" = "hour";
+"prefs.unitAccessibility.minutes" = "minutes";
+"prefs.unitAccessibility.seconds" = "seconds";
+"prefs.unitAccessibility.times" = "times";
+"prefs.unitAccessibility.eyeGates" = "Eye Gates";
+"prefs.unitAccessibility.percent" = "percent";
+"prefs.unitAccessibility.hour" = "hour of day";
 "prefs.restoreDefaults" = "Restore Defaults";
 "prefs.restoreDefaultsHelp" = "Replace current preferences with app defaults after confirmation. The welcome window stays completed.";
 "prefs.restoreDefaultsDisabledDefaultHelp" = "Current preferences already match the app defaults.";

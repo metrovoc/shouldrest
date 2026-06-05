@@ -43,6 +43,57 @@ final class PreferencesWindowNumberSliderTests: XCTestCase {
         XCTAssertEqual(slider.doubleValue, 42)
     }
 
+    func testNumberControlsExposeReadableAccessibilityLabelsWithFullUnits() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        let expectedLabels: [(identifier: String, label: String)] = [
+            (
+                "eyeInterval",
+                L10n.format(
+                    "prefs.numberInputAccessibilityLabel",
+                    L10n.tr("prefs.everyMinutes"),
+                    L10n.tr("prefs.unitAccessibility.minutes")
+                )
+            ),
+            (
+                "eyeDuration",
+                L10n.format(
+                    "prefs.numberInputAccessibilityLabel",
+                    L10n.tr("prefs.durationSeconds"),
+                    L10n.tr("prefs.unitAccessibility.seconds")
+                )
+            ),
+            (
+                "bodyAfterEyeGates",
+                L10n.format(
+                    "prefs.numberInputAccessibilityLabel",
+                    L10n.tr("prefs.afterEyeGates"),
+                    L10n.tr("prefs.unitAccessibility.eyeGates")
+                )
+            ),
+            (
+                "bodyPostponeWindowPercent",
+                L10n.format(
+                    "prefs.numberInputAccessibilityLabel",
+                    L10n.tr("prefs.postponeWindowPercent"),
+                    L10n.tr("prefs.unitAccessibility.percent")
+                )
+            )
+        ]
+
+        for expected in expectedLabels {
+            let field = try XCTUnwrap(view(withIdentifier: "\(expected.identifier)Field", in: contentView) as? NSControl)
+            let stepper = try XCTUnwrap(view(withIdentifier: "\(expected.identifier)Stepper", in: contentView) as? NSControl)
+            XCTAssertEqual(field.accessibilityLabel(), expected.label, expected.identifier)
+            XCTAssertEqual(stepper.accessibilityLabel(), expected.label, expected.identifier)
+
+            if let slider = view(withIdentifier: "\(expected.identifier)Slider", in: contentView) as? NSControl {
+                XCTAssertEqual(slider.accessibilityLabel(), expected.label, expected.identifier)
+            }
+        }
+    }
+
     func testManualNumberEntryClampsAndSynchronizesSlider() throws {
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
