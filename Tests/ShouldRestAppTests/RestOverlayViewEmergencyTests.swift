@@ -1157,7 +1157,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(engine.state.activeSession?.id, session.id)
     }
 
-    func testWaitingAfterSingleEmergencyClickDoesNotConfirmAsLongPress() throws {
+    func testWaitingAfterSingleEmergencyClickKeepsArmedStateWithoutCompletingAsHold() throws {
         let start = Date(timeIntervalSinceReferenceDate: 7_100)
         var settings = RestSettings.defaults
         settings.eyeGate.duration = 60
@@ -1206,14 +1206,14 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         requestTime = start.addingTimeInterval(20)
         drainMainQueue()
 
-        XCTAssertFalse(coordinator.isArmed(for: session, now: requestTime))
+        XCTAssertTrue(coordinator.isArmed(for: session, now: requestTime))
         XCTAssertEqual(decisions, [.armed])
         XCTAssertEqual(engine.state.activeSession?.id, session.id)
         XCTAssertEqual(engine.state.statistics.emergencyOverrides, 0)
         XCTAssertEqual(engine.state.statistics.skippedEyeGates, 0)
     }
 
-    func testExpiredEmergencyConfirmationWithRefreshRequiresFreshTwoClickSequence() throws {
+    func testArmedEmergencyConfirmationSurvivesRefreshUntilSecondClick() throws {
         let start = Date(timeIntervalSinceReferenceDate: 7_200)
         var settings = RestSettings.defaults
         settings.eyeGate.duration = 60
@@ -1271,17 +1271,16 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         )
         drainMainQueue()
 
-        XCTAssertFalse(coordinator.isArmed(for: session, now: requestTime))
-        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverride"))
+        XCTAssertTrue(coordinator.isArmed(for: session, now: requestTime))
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
         XCTAssertEqual(engine.state.activeSession?.id, session.id)
         XCTAssertEqual(engine.state.statistics.emergencyOverrides, 0)
 
         try performEmergencyClick(on: view)
 
-        XCTAssertTrue(coordinator.isArmed(for: session, now: requestTime))
-        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
-        XCTAssertEqual(engine.state.activeSession?.id, session.id)
-        XCTAssertEqual(engine.state.statistics.emergencyOverrides, 0)
+        XCTAssertFalse(coordinator.hasArmedSession(for: session))
+        XCTAssertNil(engine.state.activeSession)
+        XCTAssertEqual(engine.state.statistics.emergencyOverrides, 1)
     }
 
     func testEmergencyConfirmationStaysInEmergencyAffordance() throws {
