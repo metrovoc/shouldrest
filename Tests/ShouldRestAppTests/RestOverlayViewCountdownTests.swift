@@ -186,12 +186,15 @@ final class RestOverlayViewCountdownTests: XCTestCase {
 
         XCTAssertTrue(title.isHidden)
         XCTAssertNil(title.toolTip)
+        XCTAssertNil(title.accessibilityLabel())
         XCTAssertNil(title.accessibilityHelp())
         XCTAssertTrue(detail.isHidden)
         XCTAssertNil(detail.toolTip)
+        XCTAssertNil(detail.accessibilityLabel())
         XCTAssertNil(detail.accessibilityHelp())
         XCTAssertTrue(countdown.isHidden)
         XCTAssertNil(countdown.toolTip)
+        XCTAssertNil(countdown.accessibilityLabel())
         XCTAssertNil(countdown.accessibilityHelp())
     }
 
@@ -287,6 +290,7 @@ final class RestOverlayViewCountdownTests: XCTestCase {
     ) {
         XCTAssertFalse(label.stringValue.isEmpty, file: file, line: line)
         XCTAssertEqual(label.toolTip, label.stringValue, file: file, line: line)
+        XCTAssertEqual(label.accessibilityLabel(), label.stringValue, file: file, line: line)
         XCTAssertEqual(label.accessibilityHelp(), label.stringValue, file: file, line: line)
     }
 }

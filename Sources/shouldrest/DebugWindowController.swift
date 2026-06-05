@@ -358,7 +358,6 @@ final class DebugWindowController: NSWindowController {
         statusLabel.identifier = NSUserInterfaceItemIdentifier("debug.status")
         statusLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         statusLabel.textColor = .secondaryLabelColor
-        statusLabel.setAccessibilityLabel(L10n.tr("debug.statusLabel"))
         setStatus(L10n.tr("debug.ready"))
     }
 
@@ -412,6 +411,7 @@ final class DebugWindowController: NSWindowController {
         statusLabel.stringValue = status
         statusLabel.textColor = color
         statusLabel.toolTip = status
+        statusLabel.setAccessibilityLabel(status)
         statusLabel.setAccessibilityHelp(status)
     }
 

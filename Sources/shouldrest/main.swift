@@ -3162,10 +3162,12 @@ final class RestOverlayView: NSView {
             let text = label.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !label.isHidden, !text.isEmpty else {
                 label.toolTip = nil
+                label.setAccessibilityLabel(nil)
                 label.setAccessibilityHelp(nil)
                 return
             }
             label.toolTip = text
+            label.setAccessibilityLabel(text)
             label.setAccessibilityHelp(text)
         }
     }

@@ -129,6 +129,7 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertEqual(control.label(forSegment: RestRhythmPreset.movement.rawValue), "More Movement")
         XCTAssertEqual(description.stringValue, RestRhythmPreset.firstRunDefault.help)
         XCTAssertEqual(description.toolTip, RestRhythmPreset.firstRunDefault.help)
+        XCTAssertEqual(description.accessibilityLabel(), RestRhythmPreset.firstRunDefault.help)
         XCTAssertEqual(description.accessibilityHelp(), RestRhythmPreset.firstRunDefault.help)
         XCTAssertEqual(control.accessibilityLabel(), L10n.tr("onboarding.rhythmTitle"))
         XCTAssertEqual(control.accessibilityHelp(), RestRhythmPreset.firstRunDefault.help)
@@ -155,6 +156,7 @@ final class OnboardingWindowTests: XCTestCase {
 
         XCTAssertEqual(description.stringValue, RestRhythmPreset.movement.help)
         XCTAssertEqual(description.toolTip, RestRhythmPreset.movement.help)
+        XCTAssertEqual(description.accessibilityLabel(), RestRhythmPreset.movement.help)
         XCTAssertEqual(description.accessibilityHelp(), RestRhythmPreset.movement.help)
         XCTAssertEqual(control.accessibilityHelp(), RestRhythmPreset.movement.help)
         XCTAssertEqual(

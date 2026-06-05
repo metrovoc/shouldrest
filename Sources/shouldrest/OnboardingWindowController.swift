@@ -462,6 +462,7 @@ final class OnboardingWindowController: NSWindowController {
     private func updateRhythmPresetSelectionUI() {
         rhythmPresetDescription.stringValue = selectedRhythmPreset.help
         rhythmPresetDescription.toolTip = selectedRhythmPreset.help
+        rhythmPresetDescription.setAccessibilityLabel(selectedRhythmPreset.help)
         rhythmPresetDescription.setAccessibilityHelp(selectedRhythmPreset.help)
         rhythmPresetControl.toolTip = selectedRhythmPreset.help
         rhythmPresetControl.setAccessibilityHelp(selectedRhythmPreset.help)

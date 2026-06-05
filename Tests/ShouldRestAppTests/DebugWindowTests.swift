@@ -88,8 +88,8 @@ final class DebugWindowTests: XCTestCase {
         XCTAssertEqual(buttons.openLog.toolTip, L10n.tr("debug.openLogHelp"))
         XCTAssertEqual(buttons.openSettings.toolTip, L10n.tr("debug.openSettingsHelp"))
         let status = try XCTUnwrap(contentView.label(withIdentifier: "debug.status"))
-        XCTAssertEqual(status.accessibilityLabel(), L10n.tr("debug.statusLabel"))
         XCTAssertEqual(status.stringValue, "Report ready")
+        XCTAssertEqual(status.accessibilityLabel(), L10n.tr("debug.ready"))
         XCTAssertEqual(status.toolTip, L10n.tr("debug.ready"))
         XCTAssertEqual(status.accessibilityHelp(), L10n.tr("debug.ready"))
 
@@ -98,6 +98,7 @@ final class DebugWindowTests: XCTestCase {
         XCTAssertEqual(NSPasteboard.general.string(forType: .string), "state=initial")
         XCTAssertEqual(status.stringValue, "Copied to clipboard")
         XCTAssertEqual(status.stringValue, L10n.tr("debug.copied"))
+        XCTAssertEqual(status.accessibilityLabel(), L10n.tr("debug.copied"))
         XCTAssertEqual(status.toolTip, L10n.tr("debug.copied"))
         XCTAssertEqual(status.accessibilityHelp(), L10n.tr("debug.copied"))
 
@@ -116,6 +117,7 @@ final class DebugWindowTests: XCTestCase {
         XCTAssertEqual(safetyIcon.accessibilityHelp(), "Updated recovery guidance")
         XCTAssertEqual(status.stringValue, "Report refreshed")
         XCTAssertEqual(status.stringValue, L10n.tr("debug.updated"))
+        XCTAssertEqual(status.accessibilityLabel(), L10n.tr("debug.updated"))
         XCTAssertEqual(status.toolTip, L10n.tr("debug.updated"))
         XCTAssertEqual(status.accessibilityHelp(), L10n.tr("debug.updated"))
     }
@@ -134,6 +136,7 @@ final class DebugWindowTests: XCTestCase {
         XCTAssertEqual(textView.selectedRange(), NSRange(location: 0, length: 5))
         XCTAssertEqual(status.stringValue, L10n.format("debug.searchMatched", 1, 2, "state"))
         XCTAssertEqual(status.toolTip, status.stringValue)
+        XCTAssertEqual(status.accessibilityLabel(), status.stringValue)
         XCTAssertEqual(status.accessibilityHelp(), status.stringValue)
 
         XCTAssertTrue(controller.control(
