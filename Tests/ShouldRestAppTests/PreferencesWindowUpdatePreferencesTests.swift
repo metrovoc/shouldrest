@@ -203,19 +203,38 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
 
         try selectAdvancedTab(in: contentView)
         let checkbox = try XCTUnwrap(view(withIdentifier: "prefs.showMenuBarItem", in: contentView) as? NSButton)
+        let recoveryRow = try view(withIdentifier: "prefs.showMenuBarItemRecoveryRow", in: contentView)
+        let recoveryLabel = try XCTUnwrap(
+            view(withIdentifier: "prefs.showMenuBarItemRecovery", in: contentView) as? NSTextField
+        )
 
         XCTAssertFalse(checkbox.isHidden)
         XCTAssertEqual(checkbox.title, L10n.tr("prefs.showMenuBarItem"))
         XCTAssertEqual(checkbox.state, .on)
         XCTAssertEqual(checkbox.toolTip, L10n.tr("prefs.showMenuBarItemHelp"))
         XCTAssertEqual(checkbox.accessibilityHelp(), L10n.tr("prefs.showMenuBarItemHelp"))
+        XCTAssertTrue(recoveryRow.isHidden)
+        XCTAssertTrue(recoveryLabel.isHidden)
 
         checkbox.state = .off
         XCTAssertTrue(sendAction(from: checkbox))
 
+        XCTAssertFalse(recoveryRow.isHidden)
+        XCTAssertFalse(recoveryLabel.isHidden)
+        XCTAssertEqual(recoveryLabel.stringValue, L10n.tr("prefs.showMenuBarItemRecovery"))
+        XCTAssertEqual(recoveryLabel.toolTip, L10n.tr("prefs.showMenuBarItemRecovery"))
+        XCTAssertEqual(recoveryLabel.accessibilityHelp(), L10n.tr("prefs.showMenuBarItemRecovery"))
+        XCTAssertTrue(recoveryLabel.stringValue.contains("shouldrest preferences"))
+        XCTAssertTrue(recoveryLabel.stringValue.contains("shouldrest://preferences"))
+
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(savedSettings.value?.presentation.showMenuBarItem, false)
         XCTAssertFalse(savedSettings.value?.presentation.resolvedShowMenuBarItem ?? true)
+
+        checkbox.state = .on
+        XCTAssertTrue(sendAction(from: checkbox))
+        XCTAssertTrue(recoveryRow.isHidden)
+        XCTAssertTrue(recoveryLabel.isHidden)
     }
 
     func testDefaultUpdateSourceRestoreButtonExplainsAlreadyDefaultState() throws {

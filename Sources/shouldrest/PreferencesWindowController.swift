@@ -626,6 +626,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private let openAtLogin = NSButton(checkboxWithTitle: L10n.tr("prefs.openAtLogin"), target: nil, action: nil)
     private let showMenuBarItem = NSButton(checkboxWithTitle: L10n.tr("prefs.showMenuBarItem"), target: nil, action: nil)
+    private let showMenuBarItemRecoveryLabel = NSTextField(labelWithString: "")
+    private var showMenuBarItemRecoveryRow: NSView?
     private let checkUpdates = NSButton(checkboxWithTitle: L10n.tr("prefs.checkUpdates"), target: nil, action: nil)
     private let notifyNewVersion = NSButton(checkboxWithTitle: L10n.tr("prefs.notifyNewVersion"), target: nil, action: nil)
     private let showOnboardingNextLaunch = NSButton(
@@ -722,6 +724,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         configureSearchField()
         configureShortcutConflictWarning()
         configureShortcutRecorders()
+        configureMenuBarRecoveryNotice()
         configurePreferenceHelp()
         configureEnablementGuards()
         configureSaveStatusControls()
@@ -1218,6 +1221,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         advancedStack.addArrangedSubview(openAtLogin)
         showMenuBarItem.identifier = NSUserInterfaceItemIdentifier("prefs.showMenuBarItem")
         advancedStack.addArrangedSubview(showMenuBarItem)
+        let showMenuBarItemRecoveryRow = indentedControlRow(showMenuBarItemRecoveryLabel)
+        showMenuBarItemRecoveryRow.identifier = NSUserInterfaceItemIdentifier("prefs.showMenuBarItemRecoveryRow")
+        self.showMenuBarItemRecoveryRow = showMenuBarItemRecoveryRow
+        advancedStack.addArrangedSubview(showMenuBarItemRecoveryRow)
         showOnboardingNextLaunch.identifier = NSUserInterfaceItemIdentifier("prefs.showOnboardingNextLaunch")
         advancedStack.addArrangedSubview(showOnboardingNextLaunch)
         advancedStack.addArrangedSubview(separator())
@@ -2345,6 +2352,20 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         shortcutEmergencyEye.requiredFallbackShortcutValue = ShortcutSettings.defaultEmergencyEyeGateOverride
     }
 
+    private func configureMenuBarRecoveryNotice() {
+        let notice = L10n.tr("prefs.showMenuBarItemRecovery")
+        showMenuBarItemRecoveryLabel.identifier = NSUserInterfaceItemIdentifier("prefs.showMenuBarItemRecovery")
+        showMenuBarItemRecoveryLabel.font = .systemFont(ofSize: 12)
+        showMenuBarItemRecoveryLabel.textColor = .systemOrange
+        showMenuBarItemRecoveryLabel.lineBreakMode = .byWordWrapping
+        showMenuBarItemRecoveryLabel.maximumNumberOfLines = 3
+        showMenuBarItemRecoveryLabel.widthAnchor.constraint(equalToConstant: 360).isActive = true
+        showMenuBarItemRecoveryLabel.stringValue = notice
+        showMenuBarItemRecoveryLabel.toolTip = notice
+        showMenuBarItemRecoveryLabel.setAccessibilityLabel(notice)
+        showMenuBarItemRecoveryLabel.setAccessibilityHelp(notice)
+    }
+
     private func configureSoundPopup(_ popup: NSPopUpButton) {
         for option in SoundOption.builtIn {
             popup.addItem(withTitle: option.title)
@@ -2719,6 +2740,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         updateUpdateSourceRestoreButtonState()
     }
 
+    private func updateMenuBarRecoveryNoticeVisibility() {
+        let shouldShowNotice = !isOn(showMenuBarItem)
+        showMenuBarItemRecoveryRow?.isHidden = !shouldShowNotice
+        showMenuBarItemRecoveryLabel.isHidden = !shouldShowNotice
+    }
+
     private func updateUpdateSourceRestoreButtonState() {
         let showUpdateDependents = !settings.admin.disableAppUpdateFeatures && isOn(checkUpdates)
         let usesDefaultSource = updateFeedURL.stringValue
@@ -3040,6 +3067,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         updateContextSummary()
 
         updateUpdatePreferencesVisibility()
+        updateMenuBarRecoveryNoticeVisibility()
 
         let morningMode = selected(MorningPauseMode.self, from: pauseUntilMorningMode, fallback: .hour)
         let usesSunrise = morningMode == .sunrise
