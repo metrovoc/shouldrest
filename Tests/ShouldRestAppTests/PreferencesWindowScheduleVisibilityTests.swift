@@ -22,6 +22,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
             L10n.format("prefs.scheduleSummary.eyeAndBody", 10, 20, 4, 5)
         )
         XCTAssertEqual(label.toolTip, label.stringValue)
+        XCTAssertEqual(label.accessibilityLabel(), label.stringValue)
         XCTAssertEqual(label.accessibilityHelp(), label.stringValue)
         XCTAssertEqual(icon.image?.accessibilityDescription, label.stringValue)
         XCTAssertEqual(icon.accessibilityHelp(), label.stringValue)
@@ -87,6 +88,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
             summary.stringValue,
             L10n.format("prefs.scheduleSummary.eyeAndBody", 10, 20, 4, 5)
         )
+        XCTAssertEqual(summary.accessibilityLabel(), summary.stringValue)
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(savedSettings.value?.eyeGate.isEnabled, true)
         XCTAssertEqual(savedSettings.value?.bodyBreak.isEnabled, true)
@@ -167,6 +169,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
             label.stringValue,
             L10n.format("prefs.scheduleSummary.eyeAndBody", 45, 20, 4, 5)
         )
+        XCTAssertEqual(label.accessibilityLabel(), label.stringValue)
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(savedSettings.value?.eyeGate.interval, 45 * 60)
     }
@@ -230,6 +233,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
             label.stringValue,
             L10n.format("prefs.scheduleSummary.eyeOnly", 10, 20)
         )
+        XCTAssertEqual(label.accessibilityLabel(), label.stringValue)
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(savedSettings.value?.bodyBreak.isEnabled, false)
 

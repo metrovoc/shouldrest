@@ -28,6 +28,9 @@ final class PreferencesWindowMorningPauseTests: XCTestCase {
                 mode: .hour
             )
         )
+        XCTAssertEqual(summary.toolTip, summary.stringValue)
+        XCTAssertEqual(summary.accessibilityLabel(), summary.stringValue)
+        XCTAssertEqual(summary.accessibilityHelp(), summary.stringValue)
         XCTAssertTrue(visibleTexts(in: contentView).contains(summary.stringValue))
     }
 
@@ -111,6 +114,7 @@ final class PreferencesWindowMorningPauseTests: XCTestCase {
                 longitude: 139.6503
             )
         )
+        XCTAssertEqual(summary.accessibilityLabel(), summary.stringValue)
     }
 
     func testSunriseCustomCoordinatesShowLatitudeAndLongitudeRows() throws {
@@ -160,6 +164,7 @@ final class PreferencesWindowMorningPauseTests: XCTestCase {
                 longitude: 56.78
             )
         )
+        XCTAssertEqual(summary.accessibilityLabel(), summary.stringValue)
 
         latitudeField.stringValue = "-33.8688"
         longitudeField.stringValue = "151.2093"
@@ -176,6 +181,7 @@ final class PreferencesWindowMorningPauseTests: XCTestCase {
                 longitude: 151.2093
             )
         )
+        XCTAssertEqual(summary.accessibilityLabel(), summary.stringValue)
     }
 
     private func fixedNow() throws -> Date {

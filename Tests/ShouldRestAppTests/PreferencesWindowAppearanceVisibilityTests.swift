@@ -150,7 +150,12 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyStartSoundRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyFinishSoundRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.localImagePathRow", in: contentView).isHidden)
-        XCTAssertTrue(try view(withIdentifier: "prefs.bodyContentSummaryLabel", in: contentView).isHidden)
+        let bodyContentSummary = try XCTUnwrap(
+            view(withIdentifier: "prefs.bodyContentSummaryLabel", in: contentView) as? NSTextField
+        )
+        XCTAssertTrue(bodyContentSummary.isHidden)
+        XCTAssertEqual(bodyContentSummary.stringValue, "")
+        XCTAssertNil(bodyContentSummary.accessibilityLabel())
         XCTAssertTrue(try view(withIdentifier: "prefs.customBodyTitleRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.customBodyTextRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.customBodyIdeasListRow", in: contentView).isHidden)
@@ -249,6 +254,7 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertFalse(summary.isHidden)
         XCTAssertEqual(summary.stringValue, "Body Breaks rotate through built-in ideas.")
         XCTAssertEqual(summary.toolTip, summary.stringValue)
+        XCTAssertEqual(summary.accessibilityLabel(), summary.stringValue)
         XCTAssertEqual(summary.accessibilityHelp(), summary.stringValue)
     }
 
@@ -273,6 +279,7 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
             summary.stringValue,
             "No ideas are enabled; Body Breaks use the default standing prompt."
         )
+        XCTAssertEqual(summary.accessibilityLabel(), summary.stringValue)
 
         title.stringValue = "Loosen neck"
         controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: title))
@@ -280,6 +287,7 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         controller.textDidChange(Notification(name: NSText.didChangeNotification, object: body))
 
         XCTAssertEqual(summary.stringValue, "Body Breaks rotate through 1 custom idea.")
+        XCTAssertEqual(summary.accessibilityLabel(), summary.stringValue)
     }
 
     func testBodyContentSummaryTracksExistingCustomIdeasAndImage() throws {
@@ -302,6 +310,7 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
             summary.stringValue,
             "Body Breaks rotate through built-in ideas plus 2 custom ideas. Image: shouldrest-break.png."
         )
+        XCTAssertEqual(summary.accessibilityLabel(), summary.stringValue)
     }
 
     func testCustomBodyIdeaAddButtonCreatesRotationEntryAndAutosaves() throws {

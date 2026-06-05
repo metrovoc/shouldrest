@@ -3059,6 +3059,20 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         setOptionalHelp(canToggleBodyBreak ? L10n.tr("prefs.enableBodyBreakHelp") : help, on: bodyEnabled)
     }
 
+    private func setDynamicSummary(_ summary: String, on label: NSTextField) {
+        label.stringValue = summary
+        label.toolTip = summary
+        label.setAccessibilityLabel(summary)
+        label.setAccessibilityHelp(summary)
+    }
+
+    private func clearDynamicSummary(on label: NSTextField) {
+        label.stringValue = ""
+        label.toolTip = nil
+        label.setAccessibilityLabel(nil)
+        label.setAccessibilityHelp(nil)
+    }
+
     private func updateScheduleSummary() {
         let eyeGateEnabled = isOn(eyeEnabled)
         let bodyBreakEnabled = isOn(bodyEnabled)
@@ -3068,8 +3082,9 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let bodyDurationMinutes = max(1, intValue(bodyDuration))
         let bodyAfterEyeGateCount = max(1, intValue(bodyAfterEyeGates))
 
+        let summary: String
         if eyeGateEnabled && bodyBreakEnabled {
-            scheduleSummaryLabel.stringValue = L10n.format(
+            summary = L10n.format(
                 "prefs.scheduleSummary.eyeAndBody",
                 eyeIntervalMinutes,
                 eyeDurationSeconds,
@@ -3077,24 +3092,23 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                 bodyDurationMinutes
             )
         } else if eyeGateEnabled {
-            scheduleSummaryLabel.stringValue = L10n.format(
+            summary = L10n.format(
                 "prefs.scheduleSummary.eyeOnly",
                 eyeIntervalMinutes,
                 eyeDurationSeconds
             )
         } else if bodyBreakEnabled {
-            scheduleSummaryLabel.stringValue = L10n.format(
+            summary = L10n.format(
                 "prefs.scheduleSummary.bodyOnly",
                 bodyIntervalMinutes,
                 bodyDurationMinutes
             )
         } else {
-            scheduleSummaryLabel.stringValue = L10n.tr("prefs.scheduleSummary.none")
+            summary = L10n.tr("prefs.scheduleSummary.none")
         }
-        scheduleSummaryLabel.toolTip = scheduleSummaryLabel.stringValue
-        scheduleSummaryLabel.setAccessibilityHelp(scheduleSummaryLabel.stringValue)
-        scheduleSummaryIcon.image?.accessibilityDescription = scheduleSummaryLabel.stringValue
-        scheduleSummaryIcon.setAccessibilityHelp(scheduleSummaryLabel.stringValue)
+        setDynamicSummary(summary, on: scheduleSummaryLabel)
+        scheduleSummaryIcon.image?.accessibilityDescription = summary
+        scheduleSummaryIcon.setAccessibilityHelp(summary)
         updateRhythmPresetButtonStates()
     }
 
@@ -4258,9 +4272,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func updateAppExclusionPreview() {
         guard isOn(appExclusionEnabled) else {
-            appExclusionPreviewLabel.stringValue = ""
-            appExclusionPreviewLabel.toolTip = nil
-            appExclusionPreviewLabel.setAccessibilityHelp(nil)
+            clearDynamicSummary(on: appExclusionPreviewLabel)
             return
         }
 
@@ -4280,9 +4292,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             }
         }
 
-        appExclusionPreviewLabel.stringValue = preview
-        appExclusionPreviewLabel.toolTip = preview
-        appExclusionPreviewLabel.setAccessibilityHelp(preview)
+        setDynamicSummary(preview, on: appExclusionPreviewLabel)
     }
 
     private func updateAppExclusionActionButtonPresentation() {
@@ -4345,9 +4355,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             contextWorkingHoursSummary(),
             contextAppRulesSummary()
         ].joined(separator: " ")
-        contextSummaryLabel.stringValue = summary
-        contextSummaryLabel.toolTip = summary
-        contextSummaryLabel.setAccessibilityHelp(summary)
+        setDynamicSummary(summary, on: contextSummaryLabel)
         contextSummaryIcon.image?.accessibilityDescription = summary
         contextSummaryIcon.setAccessibilityHelp(summary)
     }
@@ -4704,9 +4712,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func updateBodyContentSummary() {
         guard isOn(bodyEnabled) else {
-            bodyContentSummaryLabel.stringValue = ""
-            bodyContentSummaryLabel.toolTip = nil
-            bodyContentSummaryLabel.setAccessibilityHelp(nil)
+            clearDynamicSummary(on: bodyContentSummaryLabel)
             return
         }
 
@@ -4736,9 +4742,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         } else {
             summary = baseSummary
         }
-        bodyContentSummaryLabel.stringValue = summary
-        bodyContentSummaryLabel.toolTip = summary
-        bodyContentSummaryLabel.setAccessibilityHelp(summary)
+        setDynamicSummary(summary, on: bodyContentSummaryLabel)
     }
 
     private func activeCustomBodyIdeaCount() -> Int {
@@ -5925,9 +5929,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             ruleSummary,
             formattedMorningPauseTarget(pauseUntilMorningTargetDate())
         )
-        pauseUntilMorningSummaryLabel.stringValue = summary
-        pauseUntilMorningSummaryLabel.toolTip = summary
-        pauseUntilMorningSummaryLabel.setAccessibilityHelp(summary)
+        setDynamicSummary(summary, on: pauseUntilMorningSummaryLabel)
     }
 
     private func pauseUntilMorningTargetDate() -> Date {
@@ -5979,9 +5981,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                 : L10n.format("prefs.bodyDisplaySummary.contentTargetMirrored", display)
         }
         let summary = "\(coverage) \(content)"
-        bodyDisplaySummaryLabel.stringValue = summary
-        bodyDisplaySummaryLabel.toolTip = summary
-        bodyDisplaySummaryLabel.setAccessibilityHelp(summary)
+        setDynamicSummary(summary, on: bodyDisplaySummaryLabel)
     }
 
     private func displaySelectionTitle(_ selection: DisplaySelection) -> String {

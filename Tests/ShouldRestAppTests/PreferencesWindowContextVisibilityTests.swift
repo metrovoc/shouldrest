@@ -33,6 +33,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
                 "No app-specific rules."
         )
         XCTAssertEqual(summary.toolTip, summary.stringValue)
+        XCTAssertEqual(summary.accessibilityLabel(), summary.stringValue)
         XCTAssertEqual(summary.accessibilityHelp(), summary.stringValue)
         XCTAssertTrue(visibleTexts(in: contentView).contains(summary.stringValue))
     }
@@ -111,6 +112,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
                 "1 app rule can pause rests during selected apps or limit rests to those apps."
             )
         )
+        XCTAssertEqual(summary.accessibilityLabel(), summary.stringValue)
     }
 
     func testAppExclusionRuleSummariesUseSingleCharacterEllipsisWhenTruncated() throws {
@@ -226,7 +228,12 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertTrue(try view(withIdentifier: "prefs.appExclusionModeRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.appExclusionAppliesEye", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.appExclusionAppliesBody", in: contentView).isHidden)
-        XCTAssertTrue(try view(withIdentifier: "prefs.appExclusionPreviewLabel", in: contentView).isHidden)
+        let preview = try XCTUnwrap(
+            view(withIdentifier: "prefs.appExclusionPreviewLabel", in: contentView) as? NSTextField
+        )
+        XCTAssertTrue(preview.isHidden)
+        XCTAssertEqual(preview.stringValue, "")
+        XCTAssertNil(preview.accessibilityLabel())
         XCTAssertTrue(try view(withIdentifier: "appExclusions", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.appExclusionsJSONRow", in: contentView).isHidden)
 
@@ -423,6 +430,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertFalse(preview.isHidden)
         XCTAssertEqual(preview.stringValue, "Choose Add Running App or type an app name to preview this rule.")
         XCTAssertEqual(preview.toolTip, preview.stringValue)
+        XCTAssertEqual(preview.accessibilityLabel(), preview.stringValue)
         XCTAssertEqual(preview.accessibilityHelp(), preview.stringValue)
         XCTAssertFalse(actionButton.isEnabled)
         XCTAssertEqual(actionButton.toolTip, L10n.tr("prefs.addAppExclusionRuleDisabledEmptyHelp"))
@@ -487,6 +495,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: terms))
 
         XCTAssertEqual(preview.stringValue, "Pause Body Break during Zoom, us.zoom.xos.")
+        XCTAssertEqual(preview.accessibilityLabel(), preview.stringValue)
 
         selectPopup(mode, representedObject: AppExclusionRule.Mode.resumeOnlyWhenMatched.rawValue)
         XCTAssertTrue(sendAction(from: mode))
@@ -497,18 +506,21 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
             preview.stringValue,
             "Run Eye Gate and Body Break only during Zoom, us.zoom.xos."
         )
+        XCTAssertEqual(preview.accessibilityLabel(), preview.stringValue)
 
         let name = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionNameField", in: contentView) as? NSTextField)
         name.stringValue = "Zoom"
         controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: name))
 
         XCTAssertEqual(preview.stringValue, "Run Eye Gate and Body Break only during Zoom.")
+        XCTAssertEqual(preview.accessibilityLabel(), preview.stringValue)
 
         name.stringValue = "Zoom"
         terms.objectValue = ["Zoom", "Notion"]
         controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: terms))
 
         XCTAssertEqual(preview.stringValue, "Run Eye Gate and Body Break only during Zoom, Notion.")
+        XCTAssertEqual(preview.accessibilityLabel(), preview.stringValue)
     }
 
     func testEnabledAppExclusionOffersRunningAppPicker() throws {

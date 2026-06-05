@@ -17,6 +17,9 @@ final class PreferencesWindowDisplaySelectionTests: XCTestCase {
             summary.stringValue,
             "\(L10n.tr("prefs.bodyDisplaySummary.coverAll")) \(L10n.tr("prefs.bodyDisplaySummary.contentAll"))"
         )
+        XCTAssertEqual(summary.toolTip, summary.stringValue)
+        XCTAssertEqual(summary.accessibilityLabel(), summary.stringValue)
+        XCTAssertEqual(summary.accessibilityHelp(), summary.stringValue)
         XCTAssertTrue(visibleTexts(in: contentView).contains(summary.stringValue))
     }
 
@@ -59,6 +62,7 @@ final class PreferencesWindowDisplaySelectionTests: XCTestCase {
             "\(L10n.format("prefs.bodyDisplaySummary.coverOne", L10n.tr("prefs.display.cursor"))) " +
                 L10n.format("prefs.bodyDisplaySummary.contentTargetBlank", L10n.tr("prefs.display.primary"))
         )
+        XCTAssertEqual(summary.accessibilityLabel(), summary.stringValue)
     }
 
     func testBodyDisplaySummaryUpdatesWhenContentDisplayChanges() throws {
@@ -77,6 +81,7 @@ final class PreferencesWindowDisplaySelectionTests: XCTestCase {
             summary.stringValue,
             "\(L10n.tr("prefs.bodyDisplaySummary.coverAll")) \(L10n.tr("prefs.bodyDisplaySummary.contentNone"))"
         )
+        XCTAssertEqual(summary.accessibilityLabel(), summary.stringValue)
     }
 
     func testCoveredDisplaySpecificChoiceStaysHiddenWhileCoveringAllDisplays() throws {
