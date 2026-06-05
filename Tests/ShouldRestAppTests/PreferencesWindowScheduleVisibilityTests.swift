@@ -286,6 +286,16 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertEqual(bodyEnabled.accessibilityHelp(), L10n.tr("prefs.cannotDisableBodyBreakLastRest"))
     }
 
+    func testCannotDisableBothRestsAlertExplainsRecoveryAction() {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+
+        let alert = controller.makeCannotDisableBothRestsAlert()
+
+        XCTAssertEqual(alert.messageText, L10n.tr("prefs.cannotDisableBothRests"))
+        XCTAssertEqual(alert.informativeText, L10n.tr("prefs.cannotDisableBothRestsHelp"))
+        XCTAssertEqual(alert.alertStyle, .warning)
+    }
+
     func testDisabledEyeGateHidesDependentScheduleRows() throws {
         var settings = RestSettings.defaults
         settings.eyeGate.isEnabled = false

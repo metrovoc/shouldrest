@@ -190,6 +190,7 @@
 "prefs.enableEyeGate" = "启用护眼休息";
 "prefs.enableEyeGateHelp" = "保持高频短护眼休息开启。日常使用中，护眼休息保持不可跳过。";
 "prefs.cannotDisableBothRests" = "至少需要保留一种休息类型。";
+"prefs.cannotDisableBothRestsHelp" = "请先启用另一种休息，再关闭当前这种。";
 "prefs.cannotDisableEyeGateLastRest" = "请先启用活动休息，再关闭护眼休息。";
 "prefs.cannotDisableBodyBreakLastRest" = "请先启用护眼休息，再关闭活动休息。";
 "prefs.notifyEyeGate" = "护眼休息前通知";

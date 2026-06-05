@@ -3355,7 +3355,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         sender.state = .on
         showCannotDisableBothRestsAlert()
         updateDependentControlEnablement()
-        scheduleAutosave()
     }
 
     @objc private func controlChanged(_ sender: Any) {
@@ -4138,10 +4137,15 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     private func showCannotDisableBothRestsAlert() {
+        makeCannotDisableBothRestsAlert().runModal()
+    }
+
+    func makeCannotDisableBothRestsAlert() -> NSAlert {
         let alert = NSAlert()
         alert.messageText = L10n.tr("prefs.cannotDisableBothRests")
+        alert.informativeText = L10n.tr("prefs.cannotDisableBothRestsHelp")
         alert.alertStyle = .warning
-        alert.runModal()
+        return alert
     }
 
     private func savedAppExclusions() -> [AppExclusionRule] {

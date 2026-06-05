@@ -110,6 +110,10 @@ final class LocalizationQualityTests: XCTestCase {
 
         L10n.languageOverride = "en"
         XCTAssertEqual(
+            L10n.tr("prefs.cannotDisableBothRestsHelp"),
+            "Turn one rest type on before turning the other off."
+        )
+        XCTAssertEqual(
             L10n.tr("prefs.cannotDisableEyeGateLastRest"),
             "Turn on Body Break before turning off Eye Gate."
         )
@@ -119,6 +123,10 @@ final class LocalizationQualityTests: XCTestCase {
         )
 
         L10n.languageOverride = "zh-Hans"
+        XCTAssertEqual(
+            L10n.tr("prefs.cannotDisableBothRestsHelp"),
+            "请先启用另一种休息，再关闭当前这种。"
+        )
         XCTAssertEqual(
             L10n.tr("prefs.cannotDisableEyeGateLastRest"),
             "请先启用活动休息，再关闭护眼休息。"

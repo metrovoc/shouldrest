@@ -190,6 +190,7 @@
 "prefs.enableEyeGate" = "Enable Eye Gate";
 "prefs.enableEyeGateHelp" = "Keep frequent short eye rests active. Eye Gate stays non-skippable during normal use.";
 "prefs.cannotDisableBothRests" = "At least one rest type must stay enabled.";
+"prefs.cannotDisableBothRestsHelp" = "Turn one rest type on before turning the other off.";
 "prefs.cannotDisableEyeGateLastRest" = "Turn on Body Break before turning off Eye Gate.";
 "prefs.cannotDisableBodyBreakLastRest" = "Turn on Eye Gate before turning off Body Break.";
 "prefs.notifyEyeGate" = "Notify before Eye Gate";
