@@ -2133,6 +2133,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         shortcutConflictLabel.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutConflictLabel")
         shortcutConflictLabel.textColor = .systemOrange
         shortcutConflictLabel.lineBreakMode = .byWordWrapping
+        shortcutConflictLabel.maximumNumberOfLines = 3
         shortcutConflictLabel.widthAnchor.constraint(equalToConstant: 510).isActive = true
 
         shortcutConflictReviewButton.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutConflictReviewButton")
@@ -2151,10 +2152,17 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             on: shortcutConflictReviewButton
         )
 
+        shortcutConflictRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutConflictRow")
         shortcutConflictRow.orientation = .horizontal
         shortcutConflictRow.alignment = .top
         shortcutConflictRow.spacing = 8
-        shortcutConflictRow.edgeInsets = NSEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        shortcutConflictRow.edgeInsets = NSEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
+        shortcutConflictRow.wantsLayer = true
+        shortcutConflictRow.layer?.cornerRadius = 7
+        shortcutConflictRow.layer?.borderWidth = 1
+        shortcutConflictRow.layer?.backgroundColor = NSColor.systemOrange.withAlphaComponent(0.08).cgColor
+        shortcutConflictRow.layer?.borderColor = NSColor.systemOrange.withAlphaComponent(0.28).cgColor
+        shortcutConflictRow.widthAnchor.constraint(equalToConstant: 650).isActive = true
         shortcutConflictRow.addArrangedSubview(shortcutConflictIcon)
         shortcutConflictRow.addArrangedSubview(shortcutConflictLabel)
         shortcutConflictRow.addArrangedSubview(shortcutConflictReviewButton)
@@ -2558,6 +2566,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             shortcutConflictLabel.setAccessibilityHelp(nil)
             shortcutConflictIcon.image?.accessibilityDescription = L10n.tr("prefs.shortcutConflictTitle")
             shortcutConflictIcon.setAccessibilityHelp(nil)
+            shortcutConflictRow.toolTip = nil
+            shortcutConflictRow.setAccessibilityHelp(nil)
             shortcutConflictReviewButton.isEnabled = false
             shortcutConflictRow.isHidden = true
             return
@@ -2569,6 +2579,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         shortcutConflictLabel.setAccessibilityHelp(warning.message)
         shortcutConflictIcon.image?.accessibilityDescription = warning.message
         shortcutConflictIcon.setAccessibilityHelp(warning.message)
+        shortcutConflictRow.toolTip = warning.message
+        shortcutConflictRow.setAccessibilityHelp(warning.message)
         shortcutConflictReviewButton.isEnabled = true
         shortcutConflictRow.isHidden = false
         warning.recorders.forEach { $0.validationWarning = warning.message }
