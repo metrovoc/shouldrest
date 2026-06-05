@@ -84,9 +84,9 @@
 "status.pausedIndefinitely" = "Paused indefinitely";
 "status.pausedUntil" = "Paused until %@";
 "status.pauseResumesIn" = "Resumes in %@";
-"status.pauseResumeManual" = "Resume from this menu when ready";
+"status.pauseResumeManual" = "Resume from the menu, a shortcut, or shouldrest resume when ready";
 "status.pauseResumesInWithReason" = "%@ · resumes in %@";
-"status.pauseResumeManualWithReason" = "%@ · resume from this menu when ready";
+"status.pauseResumeManualWithReason" = "%@ · resume from menu, shortcut, or shouldrest resume";
 "status.pauseReason.user" = "Paused by you";
 "status.pauseReason.untilMorning" = "Until morning";
 "status.pauseReason.suspendOrLock" = "Sleep or lock";
@@ -188,7 +188,7 @@
 "debug.summaryBodyReadyBody" = "Finish from the status menu or overlay when you are ready to return.";
 "debug.summaryBodyReadyBodyMenuHidden" = "Finish from the overlay when you are ready to return. The menu bar icon is hidden, but ShouldRest is still running.";
 "debug.summaryPausedTitle" = "Rests are paused";
-"debug.summaryPausedBody" = "Resume from the status menu when you want ShouldRest to schedule rests again.";
+"debug.summaryPausedBody" = "Resume from the status menu, a shortcut, or shouldrest resume when you want ShouldRest to schedule rests again.";
 "debug.summaryPausedBodyMenuHidden" = "Rests are paused and the menu bar icon is hidden. Open ShouldRest from Applications, run shouldrest resume, or use shouldrest://resume to resume scheduling.";
 "debug.summaryDeferredTitle" = "%@ is delayed";
 "debug.summaryDeferredBody" = "Reason: %@.";

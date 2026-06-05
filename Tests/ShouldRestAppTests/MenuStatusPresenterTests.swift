@@ -195,9 +195,12 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         XCTAssertEqual(lines, [
             "Paused indefinitely",
-            "Paused by you · resume from this menu when ready"
+            "Paused by you · resume from menu, shortcut, or shouldrest resume"
         ])
-        XCTAssertEqual(content.secondary, "Paused by you · resume from this menu when ready")
+        XCTAssertEqual(content.secondary, "Paused by you · resume from menu, shortcut, or shouldrest resume")
+        XCTAssertFalse(content.secondary?.localizedCaseInsensitiveContains("this menu") ?? true)
+        XCTAssertTrue(content.secondary?.localizedCaseInsensitiveContains("shortcut") ?? false)
+        XCTAssertTrue(content.secondary?.localizedCaseInsensitiveContains("shouldrest resume") ?? false)
     }
 
     func testPauseStatusNamesNonManualPauseReasons() {
@@ -218,7 +221,7 @@ final class MenuStatusPresenterTests: XCTestCase {
         )
         XCTAssertEqual(
             MenuStatusPresenter.lines(state: sleepOrLock, settings: .defaults, now: start)[1],
-            "Sleep or lock · resume from this menu when ready"
+            "Sleep or lock · resume from menu, shortcut, or shouldrest resume"
         )
     }
 

@@ -90,6 +90,11 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(L10n.tr("pause.indefiniteConfirmBody").contains("until you resume it from the menu"))
         XCTAssertTrue(L10n.tr("menu.pauseIndefinitelyHelp").contains("Pause or resume shortcut"))
         XCTAssertTrue(L10n.tr("menu.pauseIndefinitelyHelp").contains("shouldrest resume"))
+        XCTAssertTrue(L10n.tr("status.pauseResumeManual").localizedCaseInsensitiveContains("shortcut"))
+        XCTAssertTrue(L10n.tr("status.pauseResumeManual").localizedCaseInsensitiveContains("shouldrest resume"))
+        XCTAssertFalse(L10n.tr("status.pauseResumeManual").localizedCaseInsensitiveContains("this menu"))
+        XCTAssertTrue(L10n.format("status.pauseResumeManualWithReason", "Paused by you").localizedCaseInsensitiveContains("shortcut"))
+        XCTAssertTrue(L10n.format("status.pauseResumeManualWithReason", "Paused by you").localizedCaseInsensitiveContains("shouldrest resume"))
     }
 
     func testSimplifiedChinesePauseCopyNamesRecoveryPaths() {
@@ -106,6 +111,11 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(L10n.tr("pause.indefiniteConfirmBody").contains("从菜单手动恢复"))
         XCTAssertTrue(L10n.tr("menu.pauseIndefinitelyHelp").contains("暂停或恢复快捷键"))
         XCTAssertTrue(L10n.tr("menu.pauseIndefinitelyHelp").contains("shouldrest resume"))
+        XCTAssertTrue(L10n.tr("status.pauseResumeManual").contains("快捷键"))
+        XCTAssertTrue(L10n.tr("status.pauseResumeManual").contains("shouldrest resume"))
+        XCTAssertFalse(L10n.tr("status.pauseResumeManual").contains("从此菜单恢复"))
+        XCTAssertTrue(L10n.format("status.pauseResumeManualWithReason", "你已暂停").contains("快捷键"))
+        XCTAssertTrue(L10n.format("status.pauseResumeManualWithReason", "你已暂停").contains("shouldrest resume"))
     }
 
     func testPreferenceSearchCopyDistinguishesMissingHiddenAndCollapsibleSettings() {
@@ -705,13 +715,15 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("debug.updated"), "Report refreshed")
         XCTAssertEqual(
             L10n.tr("debug.summaryPausedBody"),
-            "Resume from the status menu when you want ShouldRest to schedule rests again."
+            "Resume from the status menu, a shortcut, or shouldrest resume when you want ShouldRest to schedule rests again."
         )
         XCTAssertEqual(
             L10n.tr("debug.summaryPausedBodyMenuHidden"),
             "Rests are paused and the menu bar icon is hidden. Open ShouldRest from Applications, run shouldrest resume, or use shouldrest://resume to resume scheduling."
         )
         XCTAssertFalse(L10n.tr("debug.summaryPausedBody").localizedCaseInsensitiveContains("automation"))
+        XCTAssertTrue(L10n.tr("debug.summaryPausedBody").localizedCaseInsensitiveContains("shortcut"))
+        XCTAssertTrue(L10n.tr("debug.summaryPausedBody").localizedCaseInsensitiveContains("shouldrest resume"))
         XCTAssertFalse(L10n.tr("debug.summaryPausedBodyMenuHidden").localizedCaseInsensitiveContains("status menu"))
         XCTAssertEqual(L10n.tr("debug.openLog"), "Show Log Location in Finder")
         XCTAssertEqual(L10n.tr("debug.openSettings"), "Show Settings Location in Finder")
@@ -956,12 +968,17 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("debug.ready"), "报告就绪")
         XCTAssertEqual(L10n.tr("debug.copied"), "已复制到剪贴板")
         XCTAssertEqual(L10n.tr("debug.updated"), "报告已刷新")
-        XCTAssertEqual(L10n.tr("debug.summaryPausedBody"), "需要重新开始安排休息时，可从状态菜单恢复。")
+        XCTAssertEqual(
+            L10n.tr("debug.summaryPausedBody"),
+            "需要重新开始安排休息时，可从状态菜单、快捷键或 shouldrest resume 恢复。"
+        )
         XCTAssertEqual(
             L10n.tr("debug.summaryPausedBodyMenuHidden"),
             "休息已暂停，且菜单栏图标已隐藏。可从“应用程序”打开 ShouldRest，或使用 shouldrest resume、shouldrest://resume 恢复调度。"
         )
         XCTAssertFalse(L10n.tr("debug.summaryPausedBody").contains("自动化"))
+        XCTAssertTrue(L10n.tr("debug.summaryPausedBody").contains("快捷键"))
+        XCTAssertTrue(L10n.tr("debug.summaryPausedBody").contains("shouldrest resume"))
         XCTAssertFalse(L10n.tr("debug.summaryPausedBodyMenuHidden").contains("状态菜单"))
         XCTAssertEqual(L10n.tr("debug.openLog"), "在 Finder 中显示日志位置")
         XCTAssertEqual(L10n.tr("debug.openSettings"), "在 Finder 中显示设置位置")
