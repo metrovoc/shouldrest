@@ -35,10 +35,10 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertFalse(coordinator.hasArmedSession(for: session))
     }
 
-    func testOverlayEmergencyActivationIsAvailableWhenAffordanceVisible() {
+    func testOverlayEmergencyFocusIsAvailableWhenAffordanceVisible() {
         let view = configuredEyeGateOverlay()
 
-        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
+        XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .focused)
     }
 
     func testOverlayKeyboardCommandRequestsEmergencyFromInsideOverlay() {
@@ -80,7 +80,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         XCTAssertEqual(requestCount, 1)
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
-        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
+        XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .focused)
     }
 
     func testFocusingEmergencyAffordanceDoesNotSpendFirstConfirmation() throws {
@@ -93,7 +93,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
 
-        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
+        XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .focused)
         XCTAssertEqual(requestCount, 0)
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverride"))
 
@@ -436,7 +436,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         XCTAssertEqual(requestCount, 1)
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
-        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
+        XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .focused)
 
         drainMainQueue()
         view.keyDown(with: event)
@@ -471,7 +471,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
     func testAvailableEmergencyAllowsFirstConfirmationClick() {
         let view = configuredEyeGateOverlay()
 
-        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
+        XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .focused)
     }
 
     func testAvailableEmergencyLooksActionable() throws {
@@ -584,7 +584,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         XCTAssertEqual(requestCount, 1)
         XCTAssertTrue(button.isHidden)
-        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .unavailable)
+        XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .unavailable)
     }
 
     func testArmedEmergencyShowsInternalSecondClickConfirmation() throws {
@@ -598,7 +598,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
         XCTAssertLessThanOrEqual(button.attributedTitle.size().width + 24, panel.frame.width)
-        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
+        XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .focused)
     }
 
     func testArmedEmergencyButtonClickRequestsExitImmediately() throws {
@@ -717,7 +717,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
-        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
+        XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .focused)
         button.performClick(nil)
 
         XCTAssertEqual(requestCount, 1)
@@ -758,7 +758,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         XCTAssertEqual(requestCount, 1)
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
-        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
+        XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .focused)
 
         drainMainQueue()
         try performEmergencyClick(on: view)
@@ -828,7 +828,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         )
         view.layoutSubtreeIfNeeded()
 
-        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
+        XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .focused)
         XCTAssertFalse(coordinator.hasArmedSession(for: session))
 
         var decisions: [EmergencyOverrideDecision] = []
@@ -1043,6 +1043,62 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(engine.state.activeSession?.id, session.id)
     }
 
+    func testWaitingAfterSingleEmergencyClickDoesNotConfirmAsLongPress() throws {
+        let start = Date(timeIntervalSinceReferenceDate: 7_100)
+        var settings = RestSettings.defaults
+        settings.eyeGate.duration = 60
+        settings.eyeGate.emergencyOverride = EmergencyOverridePolicy(
+            isEnabled: true,
+            confirmationSteps: 1
+        )
+        var engine = RestEngine(settings: settings, now: start)
+        guard case .started(let session) = engine.takeNow(.eyeGate, now: start) else {
+            return XCTFail("Expected Eye Gate to start")
+        }
+
+        let view = RestOverlayView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
+        var coordinator = EmergencyOverrideCoordinator()
+        var requestTime = start.addingTimeInterval(1)
+        view.configure(
+            session: session,
+            remainingSeconds: 59,
+            settings: settings,
+            showsContent: true,
+            manualAwaiting: false,
+            isEmergencyOverrideAvailable: true,
+            emergencyOverrideArmed: false
+        )
+        var decisions: [EmergencyOverrideDecision] = []
+        view.onEmergencyOverrideRequested = {
+            let decision = coordinator.request(
+                session: session,
+                policy: settings.eyeGate.emergencyOverride,
+                now: requestTime
+            )
+            decisions.append(decision)
+            if case .complete = decision {
+                _ = engine.emergencyOverride(now: requestTime)
+            }
+            return decision
+        }
+
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        button.performClick(nil)
+
+        XCTAssertEqual(decisions, [.armed])
+        XCTAssertEqual(engine.state.activeSession?.id, session.id)
+        XCTAssertEqual(engine.state.statistics.emergencyOverrides, 0)
+
+        requestTime = start.addingTimeInterval(20)
+        drainMainQueue()
+
+        XCTAssertFalse(coordinator.isArmed(for: session, now: requestTime))
+        XCTAssertEqual(decisions, [.armed])
+        XCTAssertEqual(engine.state.activeSession?.id, session.id)
+        XCTAssertEqual(engine.state.statistics.emergencyOverrides, 0)
+        XCTAssertEqual(engine.state.statistics.skippedEyeGates, 0)
+    }
+
     func testExpiredEmergencyConfirmationWithRefreshRequiresFreshTwoClickSequence() throws {
         let start = Date(timeIntervalSinceReferenceDate: 7_200)
         var settings = RestSettings.defaults
@@ -1124,7 +1180,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertFalse(panel.isHidden)
         XCTAssertNil(view.descendant(withIdentifier: "overlay.emergency.hint"))
 
-        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
+        XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .focused)
 
         view.layoutSubtreeIfNeeded()
         XCTAssertFalse(panel.isHidden)
@@ -1138,7 +1194,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         view.layoutSubtreeIfNeeded()
         XCTAssertFalse(view.hitTest(NSPoint(x: 400, y: 300)) === view)
 
-        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
+        XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .focused)
         view.layoutSubtreeIfNeeded()
 
         XCTAssertFalse(view.hitTest(NSPoint(x: 400, y: 300)) === view)
@@ -1196,10 +1252,10 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertTrue(view.acceptsFirstMouse(for: nil))
     }
 
-    func testEmergencyActivationDoesNotDependOnLegacyConfirmationStepCount() {
+    func testEmergencyFocusDoesNotDependOnLegacyConfirmationStepCount() {
         let view = configuredEyeGateOverlay()
 
-        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
+        XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .focused)
     }
 
     func testOverlayEmergencyConfirmationIsUnavailableWhenButtonIsHidden() {
@@ -1222,7 +1278,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             isEmergencyOverrideAvailable: false
         )
 
-        XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .unavailable)
+        XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .unavailable)
     }
 
     private func configuredEyeGateOverlay(

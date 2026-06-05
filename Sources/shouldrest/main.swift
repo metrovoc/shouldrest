@@ -1234,7 +1234,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        _ = overlayController.activateEmergencyOverrideIfAvailable()
+        _ = overlayController.focusEmergencyOverrideAffordanceIfAvailable()
         logger.log("Blocked \(actionName) request focused Emergency Exit without counting as confirmation")
         rebuildMenu()
     }
@@ -2188,9 +2188,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 }
 
-enum EmergencyOverlayActivationResult: Equatable {
+enum EmergencyOverlayFocusResult: Equatable {
     case unavailable
-    case activated
+    case focused
 }
 
 struct BodyOverlayActions {
@@ -2344,14 +2344,14 @@ final class OverlayController {
         }
     }
 
-    fileprivate func activateEmergencyOverrideIfAvailable() -> EmergencyOverlayActivationResult {
+    fileprivate func focusEmergencyOverrideAffordanceIfAvailable() -> EmergencyOverlayFocusResult {
         for window in windows.values {
-            switch window.overlayView.activateEmergencyOverrideIfAvailable() {
-            case .activated:
+            switch window.overlayView.focusEmergencyOverrideAffordanceIfAvailable() {
+            case .focused:
                 window.makeKeyAndOrderFront(nil)
                 window.orderFrontRegardless()
                 window.makeFirstResponder(window.overlayView)
-                return .activated
+                return .focused
             case .unavailable:
                 break
             }
@@ -2911,7 +2911,7 @@ final class RestOverlayView: NSView {
         guard !emergencyOverrideRequestInFlight else {
             return
         }
-        guard case .activated = activateEmergencyOverrideIfAvailable() else {
+        guard case .focused = focusEmergencyOverrideAffordanceIfAvailable() else {
             return
         }
 
@@ -2975,13 +2975,13 @@ final class RestOverlayView: NSView {
         bodyFinishPressed()
     }
 
-    func activateEmergencyOverrideIfAvailable() -> EmergencyOverlayActivationResult {
+    func focusEmergencyOverrideAffordanceIfAvailable() -> EmergencyOverlayFocusResult {
         guard !emergencyButton.isHidden,
               isEmergencyOverrideAvailable else {
             return .unavailable
         }
 
-        return .activated
+        return .focused
     }
 
     private func armEmergencyOverrideLocallyIfNeeded() {
