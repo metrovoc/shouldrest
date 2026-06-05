@@ -236,6 +236,8 @@ private enum PreferencesSaveStatus {
     case restored
     case shortcutCleared
     case shortcutRestored
+    case bodyImageSelected
+    case bodyImageCleared
     case invalid
 }
 
@@ -4189,6 +4191,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             symbolName = "arrow.counterclockwise.circle.fill"
             color = .systemBlue
             title = L10n.tr("prefs.autosaveShortcutRestored")
+        case .bodyImageSelected:
+            symbolName = "photo.badge.checkmark"
+            color = .systemBlue
+            title = L10n.tr("prefs.autosaveBodyImageSelected")
+        case .bodyImageCleared:
+            symbolName = "photo.badge.minus"
+            color = .systemBlue
+            title = L10n.tr("prefs.autosaveBodyImageCleared")
         case .invalid:
             symbolName = "exclamationmark.triangle.fill"
             color = .systemOrange
@@ -4314,14 +4324,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         localImagePath.stringValue = ""
         updateLocalImagePreview()
         updateDependentControlEnablement()
-        scheduleAutosave()
+        scheduleAutosave(completionStatus: .bodyImageCleared)
     }
 
     private func applyLocalImageURL(_ url: URL) {
         localImagePath.stringValue = url.standardizedFileURL.path
         updateLocalImagePreview()
         updateDependentControlEnablement()
-        scheduleAutosave()
+        scheduleAutosave(completionStatus: .bodyImageSelected)
     }
 
     @objc private func numberStepperChanged(_ sender: NSStepper) {

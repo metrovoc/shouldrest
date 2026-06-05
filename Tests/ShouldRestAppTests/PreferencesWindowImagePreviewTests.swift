@@ -134,6 +134,7 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
         let preview = try XCTUnwrap(view(withIdentifier: "localImagePreview", in: contentView) as? LocalImagePreviewView)
         let label = try XCTUnwrap(view(withIdentifier: "localImagePreviewLabel", in: contentView) as? NSTextField)
         let clearButton = try XCTUnwrap(button(withTitle: L10n.tr("prefs.clear"), in: contentView))
+        let statusLabel = try XCTUnwrap(view(withIdentifier: "autosaveStatusLabel", in: contentView) as? NSTextField)
 
         XCTAssertTrue(preview.acceptImageDrop(url: imageURL))
         waitUntilSavedSettingsArrive(savedSettings)
@@ -144,6 +145,10 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
         XCTAssertEqual(preview.image?.accessibilityDescription, "dropped-body-preview.png")
         XCTAssertEqual(savedSettings.value?.contentLibrary.localImagePaths, [imageURL.standardizedFileURL.path])
         XCTAssertEqual(savedSettings.value?.bodyBreak.content, .localImage)
+        XCTAssertEqual(statusLabel.stringValue, L10n.tr("prefs.autosaveBodyImageSelected"))
+        XCTAssertEqual(statusLabel.toolTip, L10n.tr("prefs.autosaveBodyImageSelected"))
+        XCTAssertEqual(statusLabel.accessibilityLabel(), L10n.tr("prefs.autosaveBodyImageSelected"))
+        XCTAssertEqual(statusLabel.accessibilityHelp(), L10n.tr("prefs.autosaveBodyImageSelected"))
         XCTAssertTrue(clearButton.isEnabled)
     }
 
@@ -190,6 +195,7 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
         try selectAppearanceTab(in: contentView)
         let label = try XCTUnwrap(view(withIdentifier: "localImagePreviewLabel", in: contentView) as? NSTextField)
         let clearButton = try XCTUnwrap(button(withTitle: L10n.tr("prefs.clear"), in: contentView))
+        let statusLabel = try XCTUnwrap(view(withIdentifier: "autosaveStatusLabel", in: contentView) as? NSTextField)
 
         XCTAssertEqual(label.stringValue, "clearable-body-preview.png")
         XCTAssertTrue(clearButton.isEnabled)
@@ -207,6 +213,10 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
         XCTAssertEqual(clearButton.accessibilityHelp(), L10n.tr("prefs.clearBodyImageDisabledEmptyHelp"))
         XCTAssertEqual(savedSettings.value?.contentLibrary.localImagePaths, [])
         XCTAssertEqual(savedSettings.value?.bodyBreak.content, .richRestIdea)
+        XCTAssertEqual(statusLabel.stringValue, L10n.tr("prefs.autosaveBodyImageCleared"))
+        XCTAssertEqual(statusLabel.toolTip, L10n.tr("prefs.autosaveBodyImageCleared"))
+        XCTAssertEqual(statusLabel.accessibilityLabel(), L10n.tr("prefs.autosaveBodyImageCleared"))
+        XCTAssertEqual(statusLabel.accessibilityHelp(), L10n.tr("prefs.autosaveBodyImageCleared"))
     }
 
     func testDroppingNonImageIntoPreviewIsIgnored() throws {

@@ -538,6 +538,8 @@
 "prefs.autosaveRestored" = "Defaults restored";
 "prefs.autosaveShortcutCleared" = "Shortcut cleared";
 "prefs.autosaveShortcutRestored" = "Default shortcut restored";
+"prefs.autosaveBodyImageSelected" = "Body Break image selected";
+"prefs.autosaveBodyImageCleared" = "Body Break image cleared";
 "prefs.autosaveInvalid" = "Fix import text to save";
 "prefs.autosaveInvalidField" = "Fix %@ to save";
 "prefs.searchPlaceholder" = "Find a setting";

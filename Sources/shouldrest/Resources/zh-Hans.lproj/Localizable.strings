@@ -538,6 +538,8 @@
 "prefs.autosaveRestored" = "已恢复默认";
 "prefs.autosaveShortcutCleared" = "快捷键已清空";
 "prefs.autosaveShortcutRestored" = "默认快捷键已恢复";
+"prefs.autosaveBodyImageSelected" = "活动休息图片已选择";
+"prefs.autosaveBodyImageCleared" = "活动休息图片已清空";
 "prefs.autosaveInvalid" = "修复导入文本后保存";
 "prefs.autosaveInvalidField" = "修复%@后保存";
 "prefs.searchPlaceholder" = "查找设置";
