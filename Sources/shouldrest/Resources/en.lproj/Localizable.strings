@@ -162,9 +162,13 @@
 "debug.refreshHelp" = "Refresh the visible support report";
 "debug.openLog" = "Show Log in Finder";
 "debug.openLogHelp" = "Show the ShouldRest log in Finder.";
+"debug.openLogHidden" = "Log Location Hidden";
+"debug.openLogHiddenHelp" = "Log file access is hidden in Preferences.";
 "debug.openSettings" = "Show Settings in Finder";
 "debug.openSettingsHelp" = "Show the ShouldRest settings in Finder.";
-"debug.pathHidden" = "Location access is hidden in Preferences.";
+"debug.openSettingsHidden" = "Settings Location Hidden";
+"debug.openSettingsHiddenHelp" = "Settings file access is hidden in Preferences.";
+"debug.pathHidden" = "File locations are hidden in Preferences.";
 "debug.statusLabel" = "Support report status";
 "debug.ready" = "Report ready";
 "debug.copied" = "Copied to clipboard";

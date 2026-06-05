@@ -363,13 +363,44 @@ final class DebugWindowController: NSWindowController {
     }
 
     private func updatePathButtons() {
-        openLogButton.isEnabled = logURL != nil
-        openSettingsButton.isEnabled = settingsURL != nil
-        setButtonHelp(openLogButton, logURL == nil ? L10n.tr("debug.pathHidden") : L10n.tr("debug.openLogHelp"))
-        setButtonHelp(
-            openSettingsButton,
-            settingsURL == nil ? L10n.tr("debug.pathHidden") : L10n.tr("debug.openSettingsHelp")
+        updatePathButton(
+            openLogButton,
+            isAvailable: logURL != nil,
+            availableTitle: L10n.tr("debug.openLog"),
+            availableSymbol: "doc.text.magnifyingglass",
+            availableHelp: L10n.tr("debug.openLogHelp"),
+            hiddenTitle: L10n.tr("debug.openLogHidden"),
+            hiddenHelp: L10n.tr("debug.openLogHiddenHelp")
         )
+        updatePathButton(
+            openSettingsButton,
+            isAvailable: settingsURL != nil,
+            availableTitle: L10n.tr("debug.openSettings"),
+            availableSymbol: "gearshape",
+            availableHelp: L10n.tr("debug.openSettingsHelp"),
+            hiddenTitle: L10n.tr("debug.openSettingsHidden"),
+            hiddenHelp: L10n.tr("debug.openSettingsHiddenHelp")
+        )
+    }
+
+    private func updatePathButton(
+        _ button: NSButton,
+        isAvailable: Bool,
+        availableTitle: String,
+        availableSymbol: String,
+        availableHelp: String,
+        hiddenTitle: String,
+        hiddenHelp: String
+    ) {
+        let title = isAvailable ? availableTitle : hiddenTitle
+        let help = isAvailable ? availableHelp : hiddenHelp
+        let symbol = isAvailable ? availableSymbol : "lock"
+
+        button.isEnabled = isAvailable
+        button.title = title
+        button.image = symbolImage(symbol, accessibilityDescription: title)
+        button.setAccessibilityLabel(title)
+        setButtonHelp(button, help)
     }
 
     private func setButtonHelp(_ button: NSButton, _ help: String) {

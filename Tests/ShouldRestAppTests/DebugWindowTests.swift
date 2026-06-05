@@ -186,10 +186,16 @@ final class DebugWindowTests: XCTestCase {
 
         XCTAssertFalse(buttons.openLog.isEnabled)
         XCTAssertFalse(buttons.openSettings.isEnabled)
-        XCTAssertEqual(buttons.openLog.toolTip, L10n.tr("debug.pathHidden"))
-        XCTAssertEqual(buttons.openSettings.toolTip, L10n.tr("debug.pathHidden"))
-        XCTAssertEqual(buttons.openLog.accessibilityHelp(), L10n.tr("debug.pathHidden"))
-        XCTAssertEqual(buttons.openSettings.accessibilityHelp(), L10n.tr("debug.pathHidden"))
+        XCTAssertEqual(buttons.openLog.title, L10n.tr("debug.openLogHidden"))
+        XCTAssertEqual(buttons.openSettings.title, L10n.tr("debug.openSettingsHidden"))
+        XCTAssertEqual(buttons.openLog.image?.accessibilityDescription, L10n.tr("debug.openLogHidden"))
+        XCTAssertEqual(buttons.openSettings.image?.accessibilityDescription, L10n.tr("debug.openSettingsHidden"))
+        XCTAssertEqual(buttons.openLog.accessibilityLabel(), L10n.tr("debug.openLogHidden"))
+        XCTAssertEqual(buttons.openSettings.accessibilityLabel(), L10n.tr("debug.openSettingsHidden"))
+        XCTAssertEqual(buttons.openLog.toolTip, L10n.tr("debug.openLogHiddenHelp"))
+        XCTAssertEqual(buttons.openSettings.toolTip, L10n.tr("debug.openSettingsHiddenHelp"))
+        XCTAssertEqual(buttons.openLog.accessibilityHelp(), L10n.tr("debug.openLogHiddenHelp"))
+        XCTAssertEqual(buttons.openSettings.accessibilityHelp(), L10n.tr("debug.openSettingsHiddenHelp"))
     }
 
     private func actionButtons(in view: NSView) throws -> DebugActionButtons {
