@@ -105,6 +105,30 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.format("prefs.searchHiddenResults", "任何设置"), "“任何设置”已被当前选项隐藏")
     }
 
+    func testLastRestTypeGuardCopyNamesTheUnlockingAction() {
+        defer { L10n.languageOverride = nil }
+
+        L10n.languageOverride = "en"
+        XCTAssertEqual(
+            L10n.tr("prefs.cannotDisableEyeGateLastRest"),
+            "Turn on Body Break before turning off Eye Gate."
+        )
+        XCTAssertEqual(
+            L10n.tr("prefs.cannotDisableBodyBreakLastRest"),
+            "Turn on Eye Gate before turning off Body Break."
+        )
+
+        L10n.languageOverride = "zh-Hans"
+        XCTAssertEqual(
+            L10n.tr("prefs.cannotDisableEyeGateLastRest"),
+            "请先启用活动休息，再关闭护眼休息。"
+        )
+        XCTAssertEqual(
+            L10n.tr("prefs.cannotDisableBodyBreakLastRest"),
+            "请先启用护眼休息，再关闭活动休息。"
+        )
+    }
+
     func testSimplifiedChineseVisibleValuesAvoidUntranslatedCoreTerms() throws {
         let values = try simplifiedChineseLocalizedValues().joined(separator: "\n")
 

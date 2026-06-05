@@ -270,8 +270,8 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
 
         XCTAssertFalse(eyeEnabled.isEnabled)
         XCTAssertTrue(bodyEnabled.isEnabled)
-        XCTAssertEqual(eyeEnabled.toolTip, L10n.tr("prefs.cannotDisableBothRests"))
-        XCTAssertEqual(eyeEnabled.accessibilityHelp(), L10n.tr("prefs.cannotDisableBothRests"))
+        XCTAssertEqual(eyeEnabled.toolTip, L10n.tr("prefs.cannotDisableEyeGateLastRest"))
+        XCTAssertEqual(eyeEnabled.accessibilityHelp(), L10n.tr("prefs.cannotDisableEyeGateLastRest"))
 
         bodyEnabled.state = .on
         XCTAssertTrue(sendAction(from: bodyEnabled))
@@ -282,8 +282,8 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertFalse(bodyEnabled.isEnabled)
         XCTAssertEqual(eyeEnabled.toolTip, L10n.tr("prefs.enableEyeGateHelp"))
         XCTAssertEqual(eyeEnabled.accessibilityHelp(), L10n.tr("prefs.enableEyeGateHelp"))
-        XCTAssertEqual(bodyEnabled.toolTip, L10n.tr("prefs.cannotDisableBothRests"))
-        XCTAssertEqual(bodyEnabled.accessibilityHelp(), L10n.tr("prefs.cannotDisableBothRests"))
+        XCTAssertEqual(bodyEnabled.toolTip, L10n.tr("prefs.cannotDisableBodyBreakLastRest"))
+        XCTAssertEqual(bodyEnabled.accessibilityHelp(), L10n.tr("prefs.cannotDisableBodyBreakLastRest"))
     }
 
     func testDisabledEyeGateHidesDependentScheduleRows() throws {

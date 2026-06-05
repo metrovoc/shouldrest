@@ -3052,12 +3052,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let bodyBreakEnabled = isOn(bodyEnabled)
         let canToggleEyeGate = !eyeGateEnabled || bodyBreakEnabled
         let canToggleBodyBreak = !bodyBreakEnabled || eyeGateEnabled
-        let help = L10n.tr("prefs.cannotDisableBothRests")
+        let eyeGateLastRestHelp = L10n.tr("prefs.cannotDisableEyeGateLastRest")
+        let bodyBreakLastRestHelp = L10n.tr("prefs.cannotDisableBodyBreakLastRest")
 
         eyeEnabled.isEnabled = canToggleEyeGate
         bodyEnabled.isEnabled = canToggleBodyBreak
-        setOptionalHelp(canToggleEyeGate ? L10n.tr("prefs.enableEyeGateHelp") : help, on: eyeEnabled)
-        setOptionalHelp(canToggleBodyBreak ? L10n.tr("prefs.enableBodyBreakHelp") : help, on: bodyEnabled)
+        setOptionalHelp(canToggleEyeGate ? L10n.tr("prefs.enableEyeGateHelp") : eyeGateLastRestHelp, on: eyeEnabled)
+        setOptionalHelp(canToggleBodyBreak ? L10n.tr("prefs.enableBodyBreakHelp") : bodyBreakLastRestHelp, on: bodyEnabled)
     }
 
     private func setDynamicSummary(_ summary: String, on label: NSTextField) {
