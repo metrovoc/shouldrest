@@ -1051,6 +1051,28 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertFalse(coordinator.hasArmedSession(for: session))
     }
 
+    func testOverlayControllerUpdateCreatesFocusableEmergencyAffordanceForBlockedAction() {
+        let session = eyeGateSession()
+        let controller = OverlayController()
+        defer { controller.dismiss() }
+        var requestCount = 0
+
+        controller.update(
+            session: session,
+            settings: .defaults,
+            now: session.startedAt.addingTimeInterval(1),
+            manualAwaiting: false,
+            emergencyOverrideAction: {
+                requestCount += 1
+                return .armed
+            },
+            emergencyOverrideArmed: false
+        )
+
+        XCTAssertEqual(controller.focusEmergencyOverrideAffordanceIfAvailable(), .focused)
+        XCTAssertEqual(requestCount, 0)
+    }
+
     func testRefreshKeepsEmergencyConfirmationWhenCoordinatorStillArmed() throws {
         let session = eyeGateSession()
         let view = RestOverlayView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))

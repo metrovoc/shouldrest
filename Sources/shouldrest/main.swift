@@ -1240,8 +1240,22 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        _ = overlayController.focusEmergencyOverrideAffordanceIfAvailable()
-        logger.log("Blocked \(actionName) request focused Emergency Exit without counting as confirmation")
+        overlayController.update(
+            session: active,
+            settings: overlaySettings(for: active),
+            now: now,
+            manualAwaiting: false,
+            emergencyOverrideAction: overlayEmergencyOverrideAction(for: active, now: now),
+            emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: active, now: now),
+            bodyActions: nil
+        )
+        let focusResult = overlayController.focusEmergencyOverrideAffordanceIfAvailable()
+        switch focusResult {
+        case .focused:
+            logger.log("Blocked \(actionName) request focused Emergency Exit without counting as confirmation")
+        case .unavailable:
+            logger.log("Blocked \(actionName) request refreshed overlay but Emergency Exit focus was unavailable")
+        }
         rebuildMenu()
     }
 
@@ -2280,7 +2294,6 @@ final class OverlayController {
         self.emergencyOverrideAction = emergencyOverrideAction
         self.bodyActions = bodyActions
         NSApp.activate(ignoringOtherApps: true)
-        reconcile()
         update(
             session: session,
             settings: settings,
@@ -2309,9 +2322,10 @@ final class OverlayController {
         self.settings = settings
         self.emergencyOverrideAction = emergencyOverrideAction
         self.bodyActions = bodyActions
-        let remaining = max(0, Int(session.duration - now.timeIntervalSince(session.startedAt)))
         let contentScreen = selectedContentScreen(for: session, settings: settings)
         let screens = coveredScreens(for: session, settings: settings, contentScreen: contentScreen)
+        reconcileWindows(for: screens, session: session, settings: settings)
+        let remaining = max(0, Int(session.duration - now.timeIntervalSince(session.startedAt)))
         let canUseEmergencyOverride: Bool
         if emergencyOverrideAction == nil {
             canUseEmergencyOverride = false
@@ -2348,7 +2362,7 @@ final class OverlayController {
         }
     }
 
-    fileprivate func focusEmergencyOverrideAffordanceIfAvailable() -> EmergencyOverlayFocusResult {
+    func focusEmergencyOverrideAffordanceIfAvailable() -> EmergencyOverlayFocusResult {
         for window in windows.values {
             switch window.overlayView.focusEmergencyOverrideAffordanceIfAvailable() {
             case .focused:
@@ -2368,6 +2382,10 @@ final class OverlayController {
 
         let contentScreen = selectedContentScreen(for: session, settings: settings)
         let screens = coveredScreens(for: session, settings: settings, contentScreen: contentScreen)
+        reconcileWindows(for: screens, session: session, settings: settings)
+    }
+
+    private func reconcileWindows(for screens: [NSScreen], session: RestSession, settings: RestSettings) {
         let targetIDs = Set(screens.map(\.displayID))
         for (id, window) in windows where !targetIDs.contains(id) {
             window.close()
@@ -3014,7 +3032,10 @@ final class RestOverlayView: NSView {
             return .unavailable
         }
 
-        _ = window?.makeFirstResponder(emergencyButton)
+        if let window,
+           !window.makeFirstResponder(emergencyButton) {
+            return .unavailable
+        }
         return .focused
     }
 
