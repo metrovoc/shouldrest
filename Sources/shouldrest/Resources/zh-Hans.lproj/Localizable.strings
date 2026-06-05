@@ -536,6 +536,8 @@
 "prefs.autosaveCopied" = "已复制到剪贴板";
 "prefs.autosaveCopiedField" = "%@已复制到剪贴板";
 "prefs.autosaveRestored" = "已恢复默认";
+"prefs.autosaveShortcutCleared" = "快捷键已清空";
+"prefs.autosaveShortcutRestored" = "默认快捷键已恢复";
 "prefs.autosaveInvalid" = "修复导入文本后保存";
 "prefs.autosaveInvalidField" = "修复%@后保存";
 "prefs.searchPlaceholder" = "查找设置";

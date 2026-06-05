@@ -115,12 +115,16 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.autosaveReady"), "All changes saved")
         XCTAssertEqual(L10n.tr("prefs.autosaveCopied"), "Copied to clipboard")
         XCTAssertEqual(L10n.format("prefs.autosaveCopiedField", "App Rules Export"), "Copied App Rules Export to clipboard")
+        XCTAssertEqual(L10n.tr("prefs.autosaveShortcutCleared"), "Shortcut cleared")
+        XCTAssertEqual(L10n.tr("prefs.autosaveShortcutRestored"), "Default shortcut restored")
         XCTAssertEqual(L10n.tr("prefs.restoreDefaultsDisabledDefaultHelp"), "Current preferences already match the app defaults.")
 
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(L10n.tr("prefs.autosaveReady"), "所有更改已保存")
         XCTAssertEqual(L10n.tr("prefs.autosaveCopied"), "已复制到剪贴板")
         XCTAssertEqual(L10n.format("prefs.autosaveCopiedField", "应用规则导出文本"), "应用规则导出文本已复制到剪贴板")
+        XCTAssertEqual(L10n.tr("prefs.autosaveShortcutCleared"), "快捷键已清空")
+        XCTAssertEqual(L10n.tr("prefs.autosaveShortcutRestored"), "默认快捷键已恢复")
         XCTAssertEqual(L10n.tr("prefs.restoreDefaultsDisabledDefaultHelp"), "当前偏好设置已是应用默认值。")
     }
 

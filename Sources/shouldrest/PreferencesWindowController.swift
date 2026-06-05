@@ -234,6 +234,8 @@ private enum PreferencesSaveStatus {
     case saved
     case copied
     case restored
+    case shortcutCleared
+    case shortcutRestored
     case invalid
 }
 
@@ -451,6 +453,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private var hasPendingAutosave = false
     private var autosaveGeneration = 0
     private var autosaveTask: Task<Void, Never>?
+    private var pendingSuccessfulSaveStatus: PreferencesSaveStatus?
     private var saveStatusInvalidFieldName: String?
     private var saveStatusInvalidDetail: String?
     private var numberInputs: [NumberInput] = []
@@ -2363,9 +2366,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             shortcutEndBody, shortcutEmergencyEye, shortcutReset
         ].forEach { recorder in
             recorder.onChange = { [weak self] in
-                self?.updateShortcutConflictWarning()
-                self?.updateShortcutClearButtons()
-                self?.scheduleAutosave()
+                self?.handleShortcutChange()
             }
         }
     }
@@ -2781,7 +2782,9 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         settings = next
         applyAdminVisibility()
         onSave(next)
-        setSaveStatus(.saved)
+        let successfulSaveStatus = pendingSuccessfulSaveStatus ?? .saved
+        pendingSuccessfulSaveStatus = nil
+        setSaveStatus(successfulSaveStatus)
         updateAdvancedBulkEditorActionStates()
         updateRestoreDefaultsButtonState()
         return true
@@ -2933,6 +2936,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             )
             setIconOnlyActionHelp(label: label, help: help, on: pair.button)
         }
+    }
+
+    private func handleShortcutChange(completionStatus: PreferencesSaveStatus? = nil) {
+        updateShortcutConflictWarning()
+        updateShortcutClearButtons()
+        scheduleAutosave(completionStatus: completionStatus)
     }
 
     private struct ShortcutPreferenceEntry {
@@ -3780,8 +3789,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             updateShortcutClearButtons()
             return
         }
+        let completionStatus: PreferencesSaveStatus = pair.recorder.requiredFallbackShortcutValue == nil
+            ? .shortcutCleared
+            : .shortcutRestored
         pair.recorder.shortcutValue = nextValue
-        pair.recorder.onChange?()
+        handleShortcutChange(completionStatus: completionStatus)
     }
 
     @objc private func toggleAdvancedDisclosure(_ sender: NSButton) {
@@ -4076,9 +4088,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         scheduleAutosave()
     }
 
-    private func scheduleAutosave() {
+    private func scheduleAutosave(completionStatus: PreferencesSaveStatus? = nil) {
         guard !isLoadingSettings else { return }
         hasPendingAutosave = true
+        pendingSuccessfulSaveStatus = completionStatus
         autosaveGeneration += 1
         let generation = autosaveGeneration
         autosaveTask?.cancel()
@@ -4168,6 +4181,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             symbolName = "arrow.counterclockwise.circle.fill"
             color = .systemBlue
             title = L10n.tr("prefs.autosaveRestored")
+        case .shortcutCleared:
+            symbolName = "xmark.circle.fill"
+            color = .systemBlue
+            title = L10n.tr("prefs.autosaveShortcutCleared")
+        case .shortcutRestored:
+            symbolName = "arrow.counterclockwise.circle.fill"
+            color = .systemBlue
+            title = L10n.tr("prefs.autosaveShortcutRestored")
         case .invalid:
             symbolName = "exclamationmark.triangle.fill"
             color = .systemOrange
