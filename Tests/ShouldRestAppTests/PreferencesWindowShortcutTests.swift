@@ -317,7 +317,20 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(warningRow.layer?.borderWidth, 1)
         XCTAssertNotNil(warningRow.layer?.backgroundColor)
         XCTAssertNotNil(warningRow.layer?.borderColor)
-        XCTAssertGreaterThanOrEqual(warningRow.constraints.first { $0.firstAttribute == .width }?.constant ?? 0, 650)
+        XCTAssertTrue(
+            warningRow.constraints.contains { constraint in
+                constraint.firstAttribute == .width &&
+                    constraint.relation == .lessThanOrEqual &&
+                    constraint.constant >= 650
+            }
+        )
+        XCTAssertFalse(
+            warningRow.constraints.contains { constraint in
+                constraint.firstAttribute == .width &&
+                    constraint.relation == .equal &&
+                    abs(constraint.constant - 650) < 0.1
+            }
+        )
         XCTAssertEqual(warningRow.toolTip, warning)
         XCTAssertEqual(warningRow.accessibilityLabel(), warning)
         XCTAssertEqual(warningRow.accessibilityHelp(), warning)
@@ -327,7 +340,25 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(warningLabel.toolTip, warning)
         XCTAssertEqual(warningLabel.accessibilityLabel(), warning)
         XCTAssertEqual(warningLabel.accessibilityHelp(), warning)
-        XCTAssertGreaterThanOrEqual(warningLabel.maximumNumberOfLines, 3)
+        XCTAssertEqual(warningLabel.lineBreakMode, .byWordWrapping)
+        XCTAssertTrue(warningLabel.cell?.wraps ?? false)
+        XCTAssertFalse(warningLabel.cell?.isScrollable ?? true)
+        XCTAssertEqual(warningLabel.maximumNumberOfLines, 0)
+        XCTAssertGreaterThanOrEqual(warningLabel.preferredMaxLayoutWidth, 500)
+        XCTAssertTrue(
+            warningLabel.constraints.contains { constraint in
+                constraint.firstAttribute == .width &&
+                    constraint.relation == .lessThanOrEqual &&
+                    constraint.constant >= 510
+            }
+        )
+        XCTAssertFalse(
+            warningLabel.constraints.contains { constraint in
+                constraint.firstAttribute == .width &&
+                    constraint.relation == .equal &&
+                    abs(constraint.constant - 510) < 0.1
+            }
+        )
         XCTAssertEqual(warningIcon.image?.accessibilityDescription, warning)
         XCTAssertEqual(warningIcon.accessibilityHelp(), warning)
         let reviewButton = try XCTUnwrap(control(withIdentifier: "prefs.shortcutConflictReviewButton", in: contentView) as? NSButton)
@@ -344,6 +375,35 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertTrue(isFirstResponder(eyeNow, in: window))
         XCTAssertWarningTint(eyeNow)
         XCTAssertWarningTint(bodyNow)
+    }
+
+    func testShortcutConflictWarningWrapsManyActionNamesWithoutTruncation() throws {
+        var settings = RestSettings.defaults
+        settings.shortcuts.pauseToggle = "Cmd+1"
+        settings.shortcuts.pauseFor30Minutes = "Command+1"
+        settings.shortcuts.pauseFor1Hour = "Cmd+1"
+        settings.shortcuts.pauseFor2Hours = "Cmd+1"
+        settings.shortcuts.takeEyeGateNow = "Cmd+1"
+        settings.shortcuts.takeBodyBreakNow = "Cmd+1"
+        settings.shortcuts.reset = "Cmd+1"
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectShortcutsTab(in: contentView)
+
+        let warningLabel = try XCTUnwrap(view(withIdentifier: "prefs.shortcutConflictLabel", in: contentView) as? NSTextField)
+        let warning = warningLabel.stringValue
+
+        XCTAssertTrue(warning.contains(L10n.tr("prefs.pauseToggle")))
+        XCTAssertTrue(warning.contains(L10n.tr("prefs.pause30Shortcut")))
+        XCTAssertTrue(warning.contains(L10n.tr("prefs.pause1hShortcut")))
+        XCTAssertTrue(warning.contains(L10n.tr("prefs.pause2hShortcut")))
+        XCTAssertTrue(warning.contains(L10n.tr("prefs.eyeGateNow")))
+        XCTAssertTrue(warning.contains(L10n.tr("prefs.bodyBreakNow")))
+        XCTAssertTrue(warning.contains(L10n.tr("prefs.reset")))
+        XCTAssertEqual(warningLabel.maximumNumberOfLines, 0)
+        XCTAssertEqual(warningLabel.toolTip, warning)
+        XCTAssertEqual(warningLabel.accessibilityHelp(), warning)
     }
 
     func testDistinctShortcutsHideConflictWarning() throws {

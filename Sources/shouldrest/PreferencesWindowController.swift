@@ -2333,8 +2333,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         shortcutConflictLabel.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutConflictLabel")
         shortcutConflictLabel.textColor = .systemOrange
         shortcutConflictLabel.lineBreakMode = .byWordWrapping
-        shortcutConflictLabel.maximumNumberOfLines = 3
-        shortcutConflictLabel.widthAnchor.constraint(equalToConstant: 510).isActive = true
+        shortcutConflictLabel.cell?.wraps = true
+        shortcutConflictLabel.cell?.isScrollable = false
+        shortcutConflictLabel.maximumNumberOfLines = 0
+        shortcutConflictLabel.preferredMaxLayoutWidth = 510
+        shortcutConflictLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        shortcutConflictLabel.setContentCompressionResistancePriority(.required, for: .vertical)
+        shortcutConflictLabel.widthAnchor.constraint(lessThanOrEqualToConstant: 510).isActive = true
 
         shortcutConflictReviewButton.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutConflictReviewButton")
         shortcutConflictReviewButton.title = L10n.tr("prefs.shortcutConflictReview")
@@ -2344,6 +2349,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         )
         shortcutConflictReviewButton.imagePosition = .imageLeading
         shortcutConflictReviewButton.bezelStyle = .rounded
+        shortcutConflictReviewButton.setContentCompressionResistancePriority(.required, for: .horizontal)
         shortcutConflictReviewButton.target = self
         shortcutConflictReviewButton.action = #selector(reviewShortcutConflictPressed(_:))
         setTextButtonHelp(
@@ -2362,7 +2368,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         shortcutConflictRow.layer?.borderWidth = 1
         shortcutConflictRow.layer?.backgroundColor = NSColor.systemOrange.withAlphaComponent(0.08).cgColor
         shortcutConflictRow.layer?.borderColor = NSColor.systemOrange.withAlphaComponent(0.28).cgColor
-        shortcutConflictRow.widthAnchor.constraint(equalToConstant: 650).isActive = true
+        shortcutConflictRow.widthAnchor.constraint(lessThanOrEqualToConstant: 650).isActive = true
         shortcutConflictRow.addArrangedSubview(shortcutConflictIcon)
         shortcutConflictRow.addArrangedSubview(shortcutConflictLabel)
         shortcutConflictRow.addArrangedSubview(shortcutConflictReviewButton)
