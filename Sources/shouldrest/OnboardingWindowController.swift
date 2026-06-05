@@ -16,6 +16,7 @@ final class OnboardingWindowController: NSWindowController {
     private let rhythmPresetDescription = NSTextField(labelWithString: "")
     private let rhythmPresetRationale = NSTextField(labelWithString: "")
     private let rhythmPresetRationaleIcon = NSImageView()
+    private let rhythmPresetRecommendation = NSTextField(labelWithString: "")
     private let rhythmMetricEyeInterval = NSTextField(labelWithString: "")
     private let rhythmMetricEyeDuration = NSTextField(labelWithString: "")
     private let rhythmMetricBodyAfter = NSTextField(labelWithString: "")
@@ -251,6 +252,9 @@ final class OnboardingWindowController: NSWindowController {
         title.font = .systemFont(ofSize: 13, weight: .semibold)
         titleRow.addArrangedSubview(title)
 
+        configureRhythmPresetRecommendation()
+        titleRow.addArrangedSubview(rhythmPresetRecommendation)
+
         configureRhythmPresetControl()
         configureRhythmPresetDescription()
 
@@ -385,6 +389,19 @@ final class OnboardingWindowController: NSWindowController {
         rhythmPresetDescription.maximumNumberOfLines = 2
         rhythmPresetDescription.widthAnchor.constraint(lessThanOrEqualToConstant: 560).isActive = true
         updateRhythmPresetSelectionUI()
+    }
+
+    private func configureRhythmPresetRecommendation() {
+        let title = L10n.format("onboarding.recommendedPresetBadge", RestRhythmPreset.firstRunDefault.title)
+        rhythmPresetRecommendation.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmPresetRecommendation")
+        rhythmPresetRecommendation.stringValue = title
+        rhythmPresetRecommendation.font = .systemFont(ofSize: 11, weight: .semibold)
+        rhythmPresetRecommendation.textColor = .controlAccentColor
+        rhythmPresetRecommendation.lineBreakMode = .byTruncatingTail
+        rhythmPresetRecommendation.maximumNumberOfLines = 1
+        rhythmPresetRecommendation.toolTip = title
+        rhythmPresetRecommendation.setAccessibilityLabel(title)
+        rhythmPresetRecommendation.setAccessibilityHelp(title)
     }
 
     private func rhythmPresetRationaleRow() -> NSView {
@@ -597,7 +614,10 @@ final class OnboardingWindowController: NSWindowController {
     }
 
     private func primaryActionTitle(for preset: RestRhythmPreset) -> String {
-        L10n.format("onboarding.useSelectedWithPreset", preset.title)
+        if preset == .firstRunDefault {
+            return L10n.tr("onboarding.useRecommended")
+        }
+        return L10n.format("onboarding.useSelectedWithPreset", preset.title)
     }
 
     @objc private func useSelectedPreset() {

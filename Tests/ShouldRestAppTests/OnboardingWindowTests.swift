@@ -28,6 +28,7 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.feature.body"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetPanel"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetControl"))
+        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetRecommendation"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetDescription"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetRationaleRow"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetRationaleIcon"))
@@ -55,6 +56,7 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.emergencyFeatureTitle")))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.bodyFeatureTitle")))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.rhythmTitle")))
+        XCTAssertTrue(texts.contains(L10n.format("onboarding.recommendedPresetBadge", RestRhythmPreset.firstRunDefault.title)))
         XCTAssertTrue(texts.contains(RestRhythmPreset.firstRunDefault.help))
         XCTAssertTrue(texts.contains(RestRhythmPreset.firstRunDefault.onboardingRationale))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.metric.eyeInterval")))
@@ -86,10 +88,7 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertEqual(learnMore.toolTip, L10n.tr("onboarding.learnMoreHelp"))
         XCTAssertEqual(preferences.title, L10n.tr("onboarding.preferences"))
         XCTAssertEqual(preferences.toolTip, L10n.tr("onboarding.preferencesHelp"))
-        XCTAssertEqual(
-            useSelected.title,
-            L10n.format("onboarding.useSelectedWithPreset", RestRhythmPreset.firstRunDefault.title)
-        )
+        XCTAssertEqual(useSelected.title, L10n.tr("onboarding.useRecommended"))
         XCTAssertEqual(useSelected.toolTip, L10n.tr("onboarding.useSelectedHelp"))
         XCTAssertEqual(useSelected.keyEquivalent, "\r")
         XCTAssertEqual(useSelected.bezelStyle, .rounded)
@@ -117,6 +116,9 @@ final class OnboardingWindowTests: XCTestCase {
         )
         let rationale = try XCTUnwrap(
             contentView.descendant(withIdentifier: "onboarding.rhythmPresetRationale") as? NSTextField
+        )
+        let recommendation = try XCTUnwrap(
+            contentView.descendant(withIdentifier: "onboarding.rhythmPresetRecommendation") as? NSTextField
         )
         let eyeInterval = try XCTUnwrap(
             contentView.descendant(withIdentifier: "onboarding.metric.eyeInterval.value") as? NSTextField
@@ -165,6 +167,11 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertEqual(rationale.accessibilityHelp(), RestRhythmPreset.firstRunDefault.onboardingRationale)
         XCTAssertEqual(rationaleIcon.image?.accessibilityDescription, RestRhythmPreset.firstRunDefault.onboardingRationale)
         XCTAssertEqual(rationaleIcon.accessibilityLabel(), RestRhythmPreset.firstRunDefault.onboardingRationale)
+        let recommendationText = L10n.format("onboarding.recommendedPresetBadge", RestRhythmPreset.firstRunDefault.title)
+        XCTAssertEqual(recommendation.stringValue, recommendationText)
+        XCTAssertEqual(recommendation.toolTip, recommendationText)
+        XCTAssertEqual(recommendation.accessibilityLabel(), recommendationText)
+        XCTAssertEqual(recommendation.accessibilityHelp(), recommendationText)
         XCTAssertEqual(eyeInterval.stringValue, L10n.format("onboarding.metric.eyeIntervalValue", 10))
         XCTAssertEqual(eyeDuration.stringValue, L10n.format("onboarding.metric.eyeDurationValue", 20))
         XCTAssertEqual(bodyAfter.stringValue, L10n.format("onboarding.metric.bodyAfterValue", 4))
@@ -173,10 +180,7 @@ final class OnboardingWindowTests: XCTestCase {
         assertMetricHelp(eyeDuration, titleKey: "onboarding.metric.eyeDuration")
         assertMetricHelp(bodyAfter, titleKey: "onboarding.metric.bodyAfter")
         assertMetricHelp(bodyDuration, titleKey: "onboarding.metric.bodyDuration")
-        XCTAssertEqual(
-            useSelected.title,
-            L10n.format("onboarding.useSelectedWithPreset", RestRhythmPreset.firstRunDefault.title)
-        )
+        XCTAssertEqual(useSelected.title, L10n.tr("onboarding.useRecommended"))
 
         control.selectedSegment = RestRhythmPreset.movement.rawValue
         XCTAssertTrue(control.sendAction(control.action, to: control.target))
@@ -226,6 +230,8 @@ final class OnboardingWindowTests: XCTestCase {
         )
         let contentView = try XCTUnwrap(controller.window?.contentView)
         let useSelected = try XCTUnwrap(button(withIdentifier: "onboarding.useSelectedButton", in: contentView))
+
+        XCTAssertEqual(useSelected.title, L10n.tr("onboarding.useRecommended"))
 
         useSelected.performClick(nil)
 

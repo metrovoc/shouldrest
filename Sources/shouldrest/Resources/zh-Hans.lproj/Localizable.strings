@@ -684,6 +684,7 @@
 "onboarding.bodyFeatureTitle" = "活动休息可配置";
 "onboarding.bodyFeatureBody" = "更长的活动休息支持推迟、图片、显示器规则，并可等你完成后再关闭。";
 "onboarding.rhythmTitle" = "选择初始休息节奏";
+"onboarding.recommendedPresetBadge" = "推荐：%@";
 "onboarding.rhythmPreset.recommendedRationale" = "较轻节奏：护眼休息仍然严格，但出现频率更低。";
 "onboarding.rhythmPreset.frequentEyeRationale" = "首次推荐：频繁的 20 秒护眼休息，比少数大块休息更能保护习惯。";
 "onboarding.rhythmPreset.movementRationale" = "偏重活动：保留严格护眼休息，同时给姿势和活动更多时间。";
@@ -699,6 +700,7 @@
 "onboarding.learnMoreHelp" = "打开产品信息和项目链接。";
 "onboarding.useSelected" = "使用这个节奏开始";
 "onboarding.useSelectedHelp" = "应用当前选择的节奏并开始使用 ShouldRest。";
+"onboarding.useRecommended" = "使用推荐节奏开始";
 "onboarding.preferences" = "在偏好设置中自定义";
 "onboarding.preferencesHelp" = "先应用当前选择的节奏，再打开偏好设置，让你开始前调整细节。";
 "onboarding.useSelectedWithPreset" = "使用%@开始";

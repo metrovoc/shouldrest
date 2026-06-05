@@ -684,6 +684,7 @@
 "onboarding.bodyFeatureTitle" = "Configurable Body Breaks";
 "onboarding.bodyFeatureBody" = "Longer movement breaks can use postpones, images, display rules, and wait for you to finish.";
 "onboarding.rhythmTitle" = "Choose your starting rhythm";
+"onboarding.recommendedPresetBadge" = "Recommended: %@";
 "onboarding.rhythmPreset.recommendedRationale" = "Lighter rhythm: Eye Gates stay strict, but arrive less often.";
 "onboarding.rhythmPreset.frequentEyeRationale" = "Recommended first: frequent 20-second Eye Gates protect the habit better than fewer large breaks.";
 "onboarding.rhythmPreset.movementRationale" = "Movement-focused: keep strict Eye Gates while giving posture more time.";
@@ -699,6 +700,7 @@
 "onboarding.learnMoreHelp" = "Open product details and project links.";
 "onboarding.useSelected" = "Start With This Rhythm";
 "onboarding.useSelectedHelp" = "Apply the selected rhythm and start ShouldRest.";
+"onboarding.useRecommended" = "Start Recommended Rhythm";
 "onboarding.preferences" = "Customize in Preferences";
 "onboarding.preferencesHelp" = "Apply the selected rhythm, then open Preferences so you can adjust the details before starting.";
 "onboarding.useSelectedWithPreset" = "Start With %@";
