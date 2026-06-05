@@ -533,6 +533,7 @@
 "prefs.restoreUpdateSourceDisabledUpdatesOffHelp" = "先开启检查更新，才能恢复默认来源。";
 "prefs.invalidUpdateFeedURL" = "请输入完整的 http:// 或 https:// 更新来源，或留空。";
 "prefs.preferencesMessage" = "偏好窗口提示";
+"prefs.preferencesMessagePlaceholder" = "显示在每个标签页上方的团队或设备提示";
 "prefs.preferencesMessageHelp" = "显示在偏好窗口顶部的可选说明，适合写团队、设备或当前环境的提醒。";
 "prefs.showAdminControls" = "显示高级支持选项";
 "prefs.hideAdminControls" = "隐藏高级支持选项";

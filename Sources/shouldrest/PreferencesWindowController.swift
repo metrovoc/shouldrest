@@ -728,6 +728,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         configurePopups()
         configureFieldWidths()
+        configureAdminMessageField()
         configureImagePickerControls()
         configureAdvancedDisclosureButtons()
         configureTimePickers()
@@ -1376,7 +1377,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         hideStrictPreferences.identifier = NSUserInterfaceItemIdentifier("prefs.adminHideStrict")
         adminControlsStack.addArrangedSubview(hideStrictPreferences)
         customPreferencesMessage.identifier = NSUserInterfaceItemIdentifier("prefs.preferencesMessageField")
-        adminControlsStack.addArrangedSubview(row(L10n.tr("prefs.preferencesMessage"), customPreferencesMessage))
+        adminControlsStack.addArrangedSubview(multilineRow(L10n.tr("prefs.preferencesMessage"), customPreferencesMessage))
         advancedStack.addArrangedSubview(adminControlsAdvancedButton)
         advancedStack.addArrangedSubview(adminControlsStack)
         addTab(to: tabView, title: L10n.tr("prefs.tabAdvanced"), icon: .systemSymbol("gearshape"), stack: advancedStack)
@@ -1741,6 +1742,16 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             customPreferencesMessage
         ]
         wideFields.forEach { $0.widthAnchor.constraint(equalToConstant: 360).isActive = true }
+    }
+
+    private func configureAdminMessageField() {
+        customPreferencesMessage.placeholderString = L10n.tr("prefs.preferencesMessagePlaceholder")
+        customPreferencesMessage.lineBreakMode = .byWordWrapping
+        customPreferencesMessage.maximumNumberOfLines = 3
+        customPreferencesMessage.cell?.wraps = true
+        customPreferencesMessage.cell?.isScrollable = false
+        customPreferencesMessage.cell?.usesSingleLineMode = false
+        customPreferencesMessage.heightAnchor.constraint(greaterThanOrEqualToConstant: 58).isActive = true
     }
 
     private func configureAdvancedDisclosureButtons() {
