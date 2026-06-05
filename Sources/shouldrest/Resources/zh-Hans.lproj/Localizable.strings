@@ -522,6 +522,7 @@
 "prefs.pauseForSuspendOrLock" = "Mac 睡眠或锁屏时暂停休息";
 "prefs.pauseForSuspendOrLockHelp" = "Mac 睡眠或锁屏期间暂停后续休息，回来后继续。";
 "prefs.updateFeedURL" = "更新来源";
+"prefs.updateFeedURLPlaceholder" = "https://example.com/releases/latest";
 "prefs.updateFeedURLHelp" = "ShouldRest 查找新版本的位置；如果自行管理更新，可以留空。";
 "prefs.showUpdateSource" = "自定义更新来源";
 "prefs.hideUpdateSource" = "隐藏自定义更新来源";

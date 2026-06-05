@@ -2272,6 +2272,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         setHelp(L10n.tr("prefs.pauseUntilMorningModeHelp"), on: pauseUntilMorningMode)
         setHelp(L10n.tr("prefs.pauseUntilMorningLocationHelp"), on: pauseUntilMorningLocation)
         setHelp(L10n.tr("prefs.pauseForSuspendOrLockHelp"), on: pauseForSuspendOrLock)
+        updateFeedURL.placeholderString = L10n.tr("prefs.updateFeedURLPlaceholder")
         setHelp(L10n.tr("prefs.updateFeedURLHelp"), on: updateFeedURL)
         setHelp(L10n.tr("prefs.adminHideUpdatesHelp"), on: disableUpdateFeatures)
         setHelp(L10n.tr("prefs.adminHideSettingsPathHelp"), on: hideSettingsPath)

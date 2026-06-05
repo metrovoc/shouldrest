@@ -103,10 +103,12 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
 
         let disclosure = try XCTUnwrap(view(withIdentifier: "updateSource", in: contentView) as? NSButton)
         let row = try view(withIdentifier: "prefs.updateFeedURLRow", in: contentView)
+        let field = try XCTUnwrap(view(withIdentifier: "prefs.updateFeedURLField", in: contentView) as? NSTextField)
 
         XCTAssertEqual(disclosure.title, L10n.tr("prefs.showUpdateSource"))
         XCTAssertEqual(disclosure.toolTip, L10n.tr("prefs.updateSourceDisclosureHelp"))
         XCTAssertEqual(disclosure.accessibilityHelp(), L10n.tr("prefs.updateSourceDisclosureHelp"))
+        XCTAssertEqual(field.placeholderString, L10n.tr("prefs.updateFeedURLPlaceholder"))
         XCTAssertTrue(row.isHidden)
 
         XCTAssertTrue(sendAction(from: disclosure))

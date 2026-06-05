@@ -522,6 +522,7 @@
 "prefs.pauseForSuspendOrLock" = "Pause rests while Mac sleeps or locks";
 "prefs.pauseForSuspendOrLockHelp" = "Pause upcoming rests while your Mac sleeps or is locked, then resume when you return.";
 "prefs.updateFeedURL" = "Update source";
+"prefs.updateFeedURLPlaceholder" = "https://example.com/releases/latest";
 "prefs.updateFeedURLHelp" = "Where ShouldRest looks for new releases. Leave blank if you manage updates yourself.";
 "prefs.showUpdateSource" = "Custom update source";
 "prefs.hideUpdateSource" = "Hide custom update source";
