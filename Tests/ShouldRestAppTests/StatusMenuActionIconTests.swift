@@ -99,6 +99,27 @@ final class StatusMenuActionIconTests: XCTestCase {
         }
     }
 
+    func testSettingsLocationMenuIconsUseVisibleTitlesAsAccessibleDescriptions() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+        let target = StatusMenuActionTestTarget()
+        let item = StatusMenuSettingsLocationMenuItemFactory.make(
+            target: target,
+            showAction: #selector(StatusMenuActionTestTarget.showSettingsFile),
+            copyAction: #selector(StatusMenuActionTestTarget.copySettingsPath),
+            imageProvider: { symbolName in
+                NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
+            }
+        )
+        let submenu = try XCTUnwrap(item.submenu)
+        let showItem = try XCTUnwrap(submenu.items.first)
+        let copyItem = try XCTUnwrap(submenu.items.last)
+
+        XCTAssertEqual(item.image?.accessibilityDescription, item.title)
+        XCTAssertEqual(showItem.image?.accessibilityDescription, showItem.title)
+        XCTAssertEqual(copyItem.image?.accessibilityDescription, copyItem.title)
+    }
+
     func testUnknownMenuActionsDoNotClaimHelp() {
         XCTAssertNil(StatusMenuActionHelp.help(forActionName: "notARealMenuAction"))
     }

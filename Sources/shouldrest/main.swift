@@ -418,6 +418,7 @@ enum StatusMenuSettingsLocationMenuItemFactory {
     ) -> NSMenuItem {
         let item = NSMenuItem(title: L10n.tr("menu.settingsFile"), action: nil, keyEquivalent: "")
         item.image = imageProvider("folder")
+        item.image?.accessibilityDescription = item.title
         setHelp(L10n.tr("menu.settingsFileHelp"), on: item)
 
         let submenu = NSMenu()
@@ -448,6 +449,7 @@ enum StatusMenuSettingsLocationMenuItemFactory {
         item.target = target
         if let symbolName = StatusMenuActionIcon.symbolName(for: action) {
             item.image = imageProvider(symbolName)
+            item.image?.accessibilityDescription = title
         }
         setHelp(StatusMenuActionHelp.help(for: action), on: item)
         return item
@@ -810,7 +812,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 #selector(pauseIndefinitely)
             ))
             let pauseItem = NSMenuItem(title: L10n.tr("menu.pause"), action: nil, keyEquivalent: "")
-            pauseItem.image = menuItemImage("pause.circle")
+            pauseItem.image = menuItemImage("pause.circle", accessibilityDescription: pauseItem.title)
             setMenuItemHelp(L10n.tr("menu.pauseHelp"), on: pauseItem)
             pauseItem.submenu = pauseMenu
             menu.addItem(pauseItem)
@@ -854,7 +856,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             quitItem.toolTip = L10n.tr("menu.quitHelp")
         }
         quitItem.setAccessibilityHelp(quitItem.toolTip)
-        quitItem.image = menuItemImage("power")
+        quitItem.image = menuItemImage("power", accessibilityDescription: quitItem.title)
         return quitItem
     }
 
@@ -922,11 +924,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         return image
     }
 
-    private func menuItemImage(_ symbolName: String) -> NSImage? {
+    private func menuItemImage(_ symbolName: String, accessibilityDescription: String? = nil) -> NSImage? {
         let configuration = NSImage.SymbolConfiguration(pointSize: 13, weight: .regular)
-        let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?
+        let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: accessibilityDescription)?
             .withSymbolConfiguration(configuration)
         image?.isTemplate = true
+        image?.accessibilityDescription = accessibilityDescription
         return image
     }
 
@@ -939,13 +942,15 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             target: self,
             showAction: #selector(showSettingsFile),
             copyAction: #selector(copySettingsPath),
-            imageProvider: menuItemImage
+            imageProvider: { symbolName in
+                self.menuItemImage(symbolName)
+            }
         )
     }
 
     private func supportMenuItem() -> NSMenuItem {
         let item = NSMenuItem(title: L10n.tr("menu.support"), action: nil, keyEquivalent: "")
-        item.image = menuItemImage("questionmark.circle")
+        item.image = menuItemImage("questionmark.circle", accessibilityDescription: item.title)
         setMenuItemHelp(L10n.tr("menu.supportHelp"), on: item)
 
         let submenu = NSMenu()
@@ -968,7 +973,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
         item.target = self
         if let symbolName = StatusMenuActionIcon.symbolName(for: action) {
-            item.image = menuItemImage(symbolName)
+            item.image = menuItemImage(symbolName, accessibilityDescription: title)
         }
         setMenuItemHelp(StatusMenuActionHelp.help(for: action), on: item)
         return item
