@@ -981,6 +981,64 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertTrue(didComplete)
     }
 
+    func testRepeatedExternalFocusNeverSpendsEmergencyConfirmations() throws {
+        let start = Date(timeIntervalSinceReferenceDate: 4_100)
+        let session = RestSession(
+            kind: .eyeGate,
+            startedAt: start,
+            scheduledAt: start,
+            duration: 60,
+            manualFinishEnabled: false
+        )
+        let policy = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 1)
+        var coordinator = EmergencyOverrideCoordinator()
+        let view = RestOverlayView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
+        view.configure(
+            session: session,
+            remainingSeconds: 60,
+            settings: .defaults,
+            showsContent: true,
+            manualAwaiting: false,
+            isEmergencyOverrideAvailable: true,
+            emergencyOverrideArmed: false
+        )
+        view.layoutSubtreeIfNeeded()
+
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        for _ in 0..<3 {
+            XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .focused)
+            XCTAssertFalse(coordinator.hasArmedSession(for: session))
+            XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverride"))
+        }
+
+        var decisions: [EmergencyOverrideDecision] = []
+        view.onEmergencyOverrideRequested = {
+            let decision = coordinator.request(
+                session: session,
+                policy: policy,
+                now: start.addingTimeInterval(TimeInterval(decisions.count + 1))
+            )
+            decisions.append(decision)
+            return decision
+        }
+
+        try performEmergencyClick(on: view)
+
+        XCTAssertEqual(decisions, [.armed])
+        XCTAssertTrue(coordinator.hasArmedSession(for: session))
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+
+        XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .focused)
+        XCTAssertEqual(decisions, [.armed])
+        XCTAssertTrue(coordinator.hasArmedSession(for: session))
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+
+        try performEmergencyClick(on: view)
+
+        XCTAssertEqual(decisions, [.armed, .complete])
+        XCTAssertFalse(coordinator.hasArmedSession(for: session))
+    }
+
     func testRefreshKeepsEmergencyConfirmationWhenCoordinatorStillArmed() throws {
         let session = eyeGateSession()
         let view = RestOverlayView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
