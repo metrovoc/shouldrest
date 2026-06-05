@@ -491,9 +491,17 @@ final class DebugWindowController: NSWindowController {
         let summary = safetySummaryProvider()
         safetyTitleLabel.stringValue = summary.title
         safetyBodyLabel.stringValue = summary.body
+        safetyTitleLabel.toolTip = summary.title
+        safetyTitleLabel.setAccessibilityLabel(summary.title)
+        safetyTitleLabel.setAccessibilityHelp(summary.body)
+        safetyBodyLabel.toolTip = summary.body
+        safetyBodyLabel.setAccessibilityLabel(summary.body)
+        safetyBodyLabel.setAccessibilityHelp(summary.body)
         safetyIcon.image = symbolImage(summary.symbolName, accessibilityDescription: summary.title)
         safetyIcon.setAccessibilityLabel(summary.title)
         safetyIcon.setAccessibilityHelp(summary.body)
+        safetyPanel.setAccessibilityLabel(summary.title)
+        safetyPanel.setAccessibilityHelp(summary.body)
 
         let tint: NSColor
         switch summary.severity {

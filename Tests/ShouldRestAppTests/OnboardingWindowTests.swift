@@ -247,6 +247,7 @@ private func assertMetricHelp(
 ) {
     let expectedHelp = "\(L10n.tr(titleKey)): \(label.stringValue)"
     XCTAssertEqual(label.toolTip, expectedHelp, file: file, line: line)
+    XCTAssertEqual(label.accessibilityLabel(), expectedHelp, file: file, line: line)
     XCTAssertEqual(label.accessibilityHelp(), expectedHelp, file: file, line: line)
 }
 

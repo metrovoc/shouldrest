@@ -520,6 +520,7 @@ final class OnboardingWindowController: NSWindowController {
     private func updateRhythmMetricAccessibility(title: String, valueLabel: NSTextField) {
         let help = "\(title): \(valueLabel.stringValue)"
         valueLabel.toolTip = help
+        valueLabel.setAccessibilityLabel(help)
         valueLabel.setAccessibilityHelp(help)
     }
 
