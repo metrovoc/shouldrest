@@ -127,6 +127,10 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertEqual(control.label(forSegment: RestRhythmPreset.recommended.rawValue), "Balanced")
         XCTAssertEqual(control.label(forSegment: RestRhythmPreset.frequentEye.rawValue), "More Eye Rests")
         XCTAssertEqual(control.label(forSegment: RestRhythmPreset.movement.rawValue), "More Movement")
+        for preset in RestRhythmPreset.allCases {
+            XCTAssertEqual(control.image(forSegment: preset.rawValue)?.accessibilityDescription, preset.title)
+            XCTAssertEqual(control.toolTip(forSegment: preset.rawValue), preset.help)
+        }
         XCTAssertEqual(description.stringValue, RestRhythmPreset.firstRunDefault.help)
         XCTAssertEqual(description.toolTip, RestRhythmPreset.firstRunDefault.help)
         XCTAssertEqual(description.accessibilityLabel(), RestRhythmPreset.firstRunDefault.help)

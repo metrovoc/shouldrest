@@ -365,6 +365,10 @@ final class OnboardingWindowController: NSWindowController {
 
         for preset in RestRhythmPreset.allCases {
             rhythmPresetControl.setLabel(preset.title, forSegment: preset.rawValue)
+            rhythmPresetControl.setImage(
+                rhythmPresetSegmentImage(for: preset),
+                forSegment: preset.rawValue
+            )
             rhythmPresetControl.setWidth(176, forSegment: preset.rawValue)
             rhythmPresetControl.setToolTip(preset.help, forSegment: preset.rawValue)
         }
@@ -466,7 +470,7 @@ final class OnboardingWindowController: NSWindowController {
         rhythmPresetDescription.setAccessibilityHelp(selectedRhythmPreset.help)
         rhythmPresetControl.toolTip = selectedRhythmPreset.help
         rhythmPresetControl.setAccessibilityHelp(selectedRhythmPreset.help)
-        rhythmPresetIcon.image?.accessibilityDescription = rhythmPresetAccessibilityTitle()
+        rhythmPresetIcon.image = rhythmPresetHeaderImage(for: selectedRhythmPreset)
         rhythmPresetIcon.setAccessibilityHelp(selectedRhythmPreset.help)
         rhythmMetricEyeInterval.stringValue = L10n.format(
             "onboarding.metric.eyeIntervalValue",
@@ -496,6 +500,18 @@ final class OnboardingWindowController: NSWindowController {
 
     private func rhythmPresetAccessibilityTitle() -> String {
         "\(L10n.tr("onboarding.rhythmTitle")): \(selectedRhythmPreset.title)"
+    }
+
+    private func rhythmPresetHeaderImage(for preset: RestRhythmPreset) -> NSImage {
+        symbolImage(preset.symbolName, accessibilityDescription: rhythmPresetAccessibilityTitle(for: preset))
+    }
+
+    private func rhythmPresetSegmentImage(for preset: RestRhythmPreset) -> NSImage {
+        symbolImage(preset.symbolName, accessibilityDescription: preset.title)
+    }
+
+    private func rhythmPresetAccessibilityTitle(for preset: RestRhythmPreset) -> String {
+        "\(L10n.tr("onboarding.rhythmTitle")): \(preset.title)"
     }
 
     private func updateRhythmMetricAccessibility() {
