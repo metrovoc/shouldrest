@@ -96,6 +96,36 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         XCTAssertNil(savedSettings.value)
     }
 
+    func testPreferenceSearchHeaderUsesReadableFlexibleWidth() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let searchField = try XCTUnwrap(view(withIdentifier: "prefs.searchField", in: contentView) as? NSSearchField)
+        let searchStatus = try XCTUnwrap(view(withIdentifier: "prefs.searchStatusLabel", in: contentView) as? NSTextField)
+        let constraints = allConstraints(in: contentView)
+
+        XCTAssertTrue(constraints.contains {
+            $0.firstItem === searchField &&
+                $0.firstAttribute == .width &&
+                $0.relation == .greaterThanOrEqual &&
+                $0.secondItem == nil &&
+                $0.constant == 240
+        })
+        XCTAssertTrue(constraints.contains {
+            $0.firstItem === searchField &&
+                $0.firstAttribute == .width &&
+                $0.relation == .lessThanOrEqual &&
+                $0.secondItem == nil &&
+                $0.constant == 320
+        })
+        XCTAssertTrue(constraints.contains {
+            (($0.firstItem === searchStatus && $0.secondItem === searchField) ||
+                ($0.firstItem === searchField && $0.secondItem === searchStatus)) &&
+                $0.firstAttribute == .width &&
+                $0.secondAttribute == .width &&
+                $0.relation == .equal
+        })
+    }
+
     func testPreferenceSearchHighlightsMatchedTextFieldWithoutStealingFocusOrAutosave() throws {
         let savedSettings = SavedSettingsBox()
         let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
@@ -472,6 +502,10 @@ final class PreferencesWindowNavigationTests: XCTestCase {
             candidate = current.superview
         }
         return nil
+    }
+
+    private func allConstraints(in view: NSView) -> [NSLayoutConstraint] {
+        view.constraints + view.subviews.flatMap { allConstraints(in: $0) }
     }
 
     private func keyEvent(

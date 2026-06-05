@@ -1310,8 +1310,9 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         searchStack.orientation = .vertical
         searchStack.spacing = 2
         searchStack.alignment = .leading
-        searchStack.setContentHuggingPriority(.required, for: .horizontal)
+        searchStack.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         searchStack.setContentCompressionResistancePriority(.required, for: .horizontal)
+        searchStatusLabel.widthAnchor.constraint(equalTo: searchField.widthAnchor).isActive = true
 
         let spacer = NSView()
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
@@ -1728,13 +1729,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         searchField.delegate = self
         searchField.target = self
         searchField.action = #selector(preferencesSearchChanged(_:))
-        searchField.widthAnchor.constraint(equalToConstant: 190).isActive = true
+        searchField.widthAnchor.constraint(greaterThanOrEqualToConstant: 240).isActive = true
+        searchField.widthAnchor.constraint(lessThanOrEqualToConstant: 320).isActive = true
 
         searchStatusLabel.identifier = NSUserInterfaceItemIdentifier("prefs.searchStatusLabel")
         searchStatusLabel.font = .systemFont(ofSize: 11)
         searchStatusLabel.textColor = .secondaryLabelColor
         searchStatusLabel.lineBreakMode = .byTruncatingTail
-        searchStatusLabel.widthAnchor.constraint(equalToConstant: 190).isActive = true
         searchStatusLabel.isHidden = true
     }
 
