@@ -626,6 +626,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private let openAtLogin = NSButton(checkboxWithTitle: L10n.tr("prefs.openAtLogin"), target: nil, action: nil)
     private let showMenuBarItem = NSButton(checkboxWithTitle: L10n.tr("prefs.showMenuBarItem"), target: nil, action: nil)
+    private let showMenuBarItemRecoveryIcon = NSImageView()
     private let showMenuBarItemRecoveryLabel = NSTextField(labelWithString: "")
     private var showMenuBarItemRecoveryRow: NSView?
     private let checkUpdates = NSButton(checkboxWithTitle: L10n.tr("prefs.checkUpdates"), target: nil, action: nil)
@@ -1221,7 +1222,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         advancedStack.addArrangedSubview(openAtLogin)
         showMenuBarItem.identifier = NSUserInterfaceItemIdentifier("prefs.showMenuBarItem")
         advancedStack.addArrangedSubview(showMenuBarItem)
-        let showMenuBarItemRecoveryRow = indentedControlRow(showMenuBarItemRecoveryLabel)
+        let showMenuBarItemRecoveryRow = indentedControlRow(menuBarRecoveryNoticeView())
         showMenuBarItemRecoveryRow.identifier = NSUserInterfaceItemIdentifier("prefs.showMenuBarItemRecoveryRow")
         self.showMenuBarItemRecoveryRow = showMenuBarItemRecoveryRow
         advancedStack.addArrangedSubview(showMenuBarItemRecoveryRow)
@@ -1514,6 +1515,26 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         adminMessageBanner.setAccessibilityLabel(L10n.tr("prefs.preferencesMessage"))
         adminMessageBanner.isHidden = true
         return adminMessageBanner
+    }
+
+    private func menuBarRecoveryNoticeView() -> NSStackView {
+        let notice = L10n.tr("prefs.showMenuBarItemRecovery")
+        let stack = NSStackView(views: [showMenuBarItemRecoveryIcon, showMenuBarItemRecoveryLabel])
+        stack.identifier = NSUserInterfaceItemIdentifier("prefs.showMenuBarItemRecoveryNotice")
+        stack.orientation = .horizontal
+        stack.spacing = 8
+        stack.alignment = .top
+        stack.edgeInsets = NSEdgeInsets(top: 7, left: 10, bottom: 7, right: 10)
+        stack.wantsLayer = true
+        stack.layer?.cornerRadius = 7
+        stack.layer?.borderWidth = 1
+        stack.layer?.backgroundColor = NSColor.systemOrange.withAlphaComponent(0.07).cgColor
+        stack.layer?.borderColor = NSColor.systemOrange.withAlphaComponent(0.22).cgColor
+        stack.widthAnchor.constraint(equalToConstant: 392).isActive = true
+        stack.toolTip = notice
+        stack.setAccessibilityLabel(notice)
+        stack.setAccessibilityHelp(notice)
+        return stack
     }
 
     private func rhythmPresetRow() -> NSStackView {
@@ -2354,12 +2375,23 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func configureMenuBarRecoveryNotice() {
         let notice = L10n.tr("prefs.showMenuBarItemRecovery")
+        showMenuBarItemRecoveryIcon.identifier = NSUserInterfaceItemIdentifier("prefs.showMenuBarItemRecoveryIcon")
+        showMenuBarItemRecoveryIcon.image = NSImage(
+            systemSymbolName: "exclamationmark.triangle.fill",
+            accessibilityDescription: notice
+        )
+        showMenuBarItemRecoveryIcon.symbolConfiguration = .init(pointSize: 13, weight: .semibold)
+        showMenuBarItemRecoveryIcon.contentTintColor = .systemOrange
+        showMenuBarItemRecoveryIcon.setAccessibilityLabel(notice)
+        showMenuBarItemRecoveryIcon.setAccessibilityHelp(notice)
+        showMenuBarItemRecoveryIcon.widthAnchor.constraint(equalToConstant: 16).isActive = true
+
         showMenuBarItemRecoveryLabel.identifier = NSUserInterfaceItemIdentifier("prefs.showMenuBarItemRecovery")
         showMenuBarItemRecoveryLabel.font = .systemFont(ofSize: 12)
-        showMenuBarItemRecoveryLabel.textColor = .systemOrange
+        showMenuBarItemRecoveryLabel.textColor = .labelColor
         showMenuBarItemRecoveryLabel.lineBreakMode = .byWordWrapping
         showMenuBarItemRecoveryLabel.maximumNumberOfLines = 3
-        showMenuBarItemRecoveryLabel.widthAnchor.constraint(equalToConstant: 360).isActive = true
+        showMenuBarItemRecoveryLabel.widthAnchor.constraint(equalToConstant: 336).isActive = true
         showMenuBarItemRecoveryLabel.stringValue = notice
         showMenuBarItemRecoveryLabel.toolTip = notice
         showMenuBarItemRecoveryLabel.setAccessibilityLabel(notice)
@@ -2743,6 +2775,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private func updateMenuBarRecoveryNoticeVisibility() {
         let shouldShowNotice = !isOn(showMenuBarItem)
         showMenuBarItemRecoveryRow?.isHidden = !shouldShowNotice
+        showMenuBarItemRecoveryIcon.isHidden = !shouldShowNotice
         showMenuBarItemRecoveryLabel.isHidden = !shouldShowNotice
     }
 

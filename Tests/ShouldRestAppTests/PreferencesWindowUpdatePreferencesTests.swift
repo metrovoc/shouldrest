@@ -204,6 +204,12 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         try selectAdvancedTab(in: contentView)
         let checkbox = try XCTUnwrap(view(withIdentifier: "prefs.showMenuBarItem", in: contentView) as? NSButton)
         let recoveryRow = try view(withIdentifier: "prefs.showMenuBarItemRecoveryRow", in: contentView)
+        let recoveryNotice = try XCTUnwrap(
+            view(withIdentifier: "prefs.showMenuBarItemRecoveryNotice", in: contentView) as? NSStackView
+        )
+        let recoveryIcon = try XCTUnwrap(
+            view(withIdentifier: "prefs.showMenuBarItemRecoveryIcon", in: contentView) as? NSImageView
+        )
         let recoveryLabel = try XCTUnwrap(
             view(withIdentifier: "prefs.showMenuBarItemRecovery", in: contentView) as? NSTextField
         )
@@ -213,14 +219,23 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         XCTAssertEqual(checkbox.state, .on)
         XCTAssertEqual(checkbox.toolTip, L10n.tr("prefs.showMenuBarItemHelp"))
         XCTAssertEqual(checkbox.accessibilityHelp(), L10n.tr("prefs.showMenuBarItemHelp"))
+        XCTAssertEqual(recoveryNotice.toolTip, L10n.tr("prefs.showMenuBarItemRecovery"))
+        XCTAssertEqual(recoveryNotice.accessibilityHelp(), L10n.tr("prefs.showMenuBarItemRecovery"))
+        XCTAssertNotNil(recoveryNotice.layer?.backgroundColor)
+        XCTAssertNotNil(recoveryNotice.layer?.borderColor)
         XCTAssertTrue(recoveryRow.isHidden)
+        XCTAssertTrue(recoveryIcon.isHidden)
         XCTAssertTrue(recoveryLabel.isHidden)
 
         checkbox.state = .off
         XCTAssertTrue(sendAction(from: checkbox))
 
         XCTAssertFalse(recoveryRow.isHidden)
+        XCTAssertFalse(recoveryIcon.isHidden)
         XCTAssertFalse(recoveryLabel.isHidden)
+        XCTAssertNotNil(recoveryIcon.image)
+        XCTAssertEqual(recoveryIcon.accessibilityHelp(), L10n.tr("prefs.showMenuBarItemRecovery"))
+        XCTAssertEqual(recoveryIcon.image?.accessibilityDescription, L10n.tr("prefs.showMenuBarItemRecovery"))
         XCTAssertEqual(recoveryLabel.stringValue, L10n.tr("prefs.showMenuBarItemRecovery"))
         XCTAssertEqual(recoveryLabel.toolTip, L10n.tr("prefs.showMenuBarItemRecovery"))
         XCTAssertEqual(recoveryLabel.accessibilityHelp(), L10n.tr("prefs.showMenuBarItemRecovery"))
@@ -234,6 +249,7 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         checkbox.state = .on
         XCTAssertTrue(sendAction(from: checkbox))
         XCTAssertTrue(recoveryRow.isHidden)
+        XCTAssertTrue(recoveryIcon.isHidden)
         XCTAssertTrue(recoveryLabel.isHidden)
     }
 
