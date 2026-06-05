@@ -161,11 +161,11 @@
 "debug.copyHelp" = "Copy the visible support report";
 "debug.refresh" = "Refresh Report";
 "debug.refreshHelp" = "Refresh the visible support report";
-"debug.openLog" = "Show Log Location in Finder";
+"debug.openLog" = "Logs";
 "debug.openLogHelp" = "Show the ShouldRest log location in Finder.";
 "debug.openLogHidden" = "Log Location Hidden";
 "debug.openLogHiddenHelp" = "Log location is hidden in Preferences.";
-"debug.openSettings" = "Show Settings Location in Finder";
+"debug.openSettings" = "Settings";
 "debug.openSettingsHelp" = "Show the ShouldRest settings location in Finder.";
 "debug.openSettingsHidden" = "Settings Location Hidden";
 "debug.openSettingsHiddenHelp" = "Settings location is hidden in Preferences.";

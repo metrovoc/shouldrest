@@ -161,11 +161,11 @@
 "debug.copyHelp" = "复制当前可见的支持报告";
 "debug.refresh" = "刷新报告";
 "debug.refreshHelp" = "刷新当前可见的支持报告";
-"debug.openLog" = "在 Finder 中显示日志位置";
+"debug.openLog" = "日志";
 "debug.openLogHelp" = "在 Finder 中显示 ShouldRest 日志位置。";
 "debug.openLogHidden" = "日志位置已隐藏";
 "debug.openLogHiddenHelp" = "偏好设置中已隐藏日志位置。";
-"debug.openSettings" = "在 Finder 中显示设置位置";
+"debug.openSettings" = "设置";
 "debug.openSettingsHelp" = "在 Finder 中显示 ShouldRest 设置位置。";
 "debug.openSettingsHidden" = "设置位置已隐藏";
 "debug.openSettingsHiddenHelp" = "偏好设置中已隐藏设置位置。";
