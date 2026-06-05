@@ -544,9 +544,9 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(clearButton.imagePosition, .imageOnly)
         XCTAssertFalse(clearButton.isEnabled)
         XCTAssertEqual(clearButton.toolTip, L10n.tr("shortcut.clearButtonDisabledEmptyHelp"))
-        XCTAssertEqual(clearButton.accessibilityLabel(), L10n.tr("shortcut.clearButtonDisabledEmptyHelp"))
+        XCTAssertEqual(clearButton.accessibilityLabel(), L10n.tr("shortcut.clearButton"))
         XCTAssertEqual(clearButton.accessibilityHelp(), L10n.tr("shortcut.clearButtonDisabledEmptyHelp"))
-        XCTAssertEqual(clearButton.image?.accessibilityDescription, L10n.tr("shortcut.clearButtonDisabledEmptyHelp"))
+        XCTAssertEqual(clearButton.image?.accessibilityDescription, L10n.tr("shortcut.clearButton"))
 
         let restoreButton = try XCTUnwrap(control(withIdentifier: "shortcut.emergencyEye.clear", in: contentView) as? NSButton)
         XCTAssertEqual(restoreButton.title, "")
@@ -554,11 +554,11 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(restoreButton.imagePosition, .imageOnly)
         XCTAssertFalse(restoreButton.isEnabled)
         XCTAssertEqual(restoreButton.toolTip, L10n.tr("shortcut.restoreDefaultButtonDisabledDefaultHelp"))
-        XCTAssertEqual(restoreButton.accessibilityLabel(), L10n.tr("shortcut.restoreDefaultButtonDisabledDefaultHelp"))
+        XCTAssertEqual(restoreButton.accessibilityLabel(), L10n.tr("shortcut.restoreDefaultButton"))
         XCTAssertEqual(restoreButton.accessibilityHelp(), L10n.tr("shortcut.restoreDefaultButtonDisabledDefaultHelp"))
         XCTAssertEqual(
             restoreButton.image?.accessibilityDescription,
-            L10n.tr("shortcut.restoreDefaultButtonDisabledDefaultHelp")
+            L10n.tr("shortcut.restoreDefaultButton")
         )
     }
 
@@ -575,9 +575,9 @@ final class PreferencesWindowShortcutTests: XCTestCase {
 
         XCTAssertTrue(clearButton.isEnabled)
         XCTAssertEqual(clearButton.toolTip, L10n.tr("shortcut.clearButtonHelp"))
-        XCTAssertEqual(clearButton.accessibilityLabel(), L10n.tr("shortcut.clearButtonHelp"))
+        XCTAssertEqual(clearButton.accessibilityLabel(), L10n.tr("shortcut.clearButton"))
         XCTAssertEqual(clearButton.accessibilityHelp(), L10n.tr("shortcut.clearButtonHelp"))
-        XCTAssertEqual(clearButton.image?.accessibilityDescription, L10n.tr("shortcut.clearButtonHelp"))
+        XCTAssertEqual(clearButton.image?.accessibilityDescription, L10n.tr("shortcut.clearButton"))
         clearButton.performClick(nil)
         waitUntilSavedSettingsArrive(savedSettings)
 
@@ -586,9 +586,9 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(savedSettings.value?.shortcuts.pauseFor30Minutes, "")
         XCTAssertFalse(clearButton.isEnabled)
         XCTAssertEqual(clearButton.toolTip, L10n.tr("shortcut.clearButtonDisabledEmptyHelp"))
-        XCTAssertEqual(clearButton.accessibilityLabel(), L10n.tr("shortcut.clearButtonDisabledEmptyHelp"))
+        XCTAssertEqual(clearButton.accessibilityLabel(), L10n.tr("shortcut.clearButton"))
         XCTAssertEqual(clearButton.accessibilityHelp(), L10n.tr("shortcut.clearButtonDisabledEmptyHelp"))
-        XCTAssertEqual(clearButton.image?.accessibilityDescription, L10n.tr("shortcut.clearButtonDisabledEmptyHelp"))
+        XCTAssertEqual(clearButton.image?.accessibilityDescription, L10n.tr("shortcut.clearButton"))
     }
 
     func testRequiredShortcutClearButtonRestoresDefaultAndAutosaves() throws {
@@ -603,7 +603,7 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         let restoreButton = try XCTUnwrap(control(withIdentifier: "shortcut.emergencyEye.clear", in: contentView) as? NSButton)
 
         XCTAssertEqual(restoreButton.toolTip, L10n.tr("shortcut.restoreDefaultButtonHelp"))
-        XCTAssertEqual(restoreButton.accessibilityLabel(), L10n.tr("shortcut.restoreDefaultButtonHelp"))
+        XCTAssertEqual(restoreButton.accessibilityLabel(), L10n.tr("shortcut.restoreDefaultButton"))
         XCTAssertEqual(restoreButton.accessibilityHelp(), L10n.tr("shortcut.restoreDefaultButtonHelp"))
         XCTAssertTrue(restoreButton.isEnabled)
         restoreButton.performClick(nil)
@@ -614,11 +614,11 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(savedSettings.value?.shortcuts.emergencyEyeGateOverride, ShortcutSettings.defaultEmergencyEyeGateOverride)
         XCTAssertFalse(restoreButton.isEnabled)
         XCTAssertEqual(restoreButton.toolTip, L10n.tr("shortcut.restoreDefaultButtonDisabledDefaultHelp"))
-        XCTAssertEqual(restoreButton.accessibilityLabel(), L10n.tr("shortcut.restoreDefaultButtonDisabledDefaultHelp"))
+        XCTAssertEqual(restoreButton.accessibilityLabel(), L10n.tr("shortcut.restoreDefaultButton"))
         XCTAssertEqual(restoreButton.accessibilityHelp(), L10n.tr("shortcut.restoreDefaultButtonDisabledDefaultHelp"))
         XCTAssertEqual(
             restoreButton.image?.accessibilityDescription,
-            L10n.tr("shortcut.restoreDefaultButtonDisabledDefaultHelp")
+            L10n.tr("shortcut.restoreDefaultButton")
         )
     }
 

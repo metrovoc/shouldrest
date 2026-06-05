@@ -2741,11 +2741,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             let isRequired = fallback != nil
             let canClear = isRequired ? value != (fallback ?? "") : !value.isEmpty
             let help: String
+            let label: String
             if isRequired {
+                label = L10n.tr("shortcut.restoreDefaultButton")
                 help = canClear
                     ? L10n.tr("shortcut.restoreDefaultButtonHelp")
                     : L10n.tr("shortcut.restoreDefaultButtonDisabledDefaultHelp")
             } else {
+                label = L10n.tr("shortcut.clearButton")
                 help = canClear
                     ? L10n.tr("shortcut.clearButtonHelp")
                     : L10n.tr("shortcut.clearButtonDisabledEmptyHelp")
@@ -2754,9 +2757,9 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             pair.button.contentTintColor = canClear ? .secondaryLabelColor : .tertiaryLabelColor
             pair.button.image = NSImage(
                 systemSymbolName: isRequired ? "arrow.counterclockwise" : "xmark.circle",
-                accessibilityDescription: help
+                accessibilityDescription: label
             )
-            setIconOnlyActionHelp(help, on: pair.button)
+            setIconOnlyActionHelp(label: label, help: help, on: pair.button)
         }
     }
 
