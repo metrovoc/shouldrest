@@ -158,9 +158,37 @@ final class StatusMenuActionIconTests: XCTestCase {
         XCTAssertEqual(item.toolTip, L10n.tr("menu.emergencyOverlayOnlyHelp"))
         XCTAssertEqual(item.accessibilityHelp(), L10n.tr("menu.emergencyOverlayOnlyHelp"))
     }
+
+    func testOverlayEmergencyFocusMenuItemIsEnabledButDoesNotExitFromMenu() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+        let target = StatusMenuActionTestTarget()
+        let item = StatusMenuOverlayFocusItemFactory.make(
+            target: target,
+            action: #selector(StatusMenuActionTestTarget.emergencyOverrideEyeGate),
+            imageProvider: { symbolName in
+                NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
+            }
+        )
+
+        XCTAssertTrue(item.isEnabled)
+        XCTAssertTrue(item.target === target)
+        XCTAssertEqual(item.action, #selector(StatusMenuActionTestTarget.emergencyOverrideEyeGate))
+        XCTAssertEqual(item.title, L10n.tr("menu.emergencyOverlayOnly"))
+        XCTAssertEqual(item.toolTip, L10n.tr("menu.emergencyOverlayOnlyHelp"))
+        XCTAssertEqual(item.accessibilityLabel(), item.title)
+        XCTAssertEqual(item.accessibilityHelp(), item.toolTip)
+        XCTAssertTrue(item.image?.isTemplate ?? false)
+        XCTAssertEqual(item.image?.accessibilityDescription, item.title)
+        XCTAssertTrue(item.toolTip?.contains("This menu cannot exit") ?? false)
+        XCTAssertTrue(item.toolTip?.contains("Return to the overlay") ?? false)
+        XCTAssertTrue(item.toolTip?.contains("Emergency Exit twice") ?? false)
+        XCTAssertTrue(item.toolTip?.contains("Esc twice") ?? false)
+    }
 }
 
 private final class StatusMenuActionTestTarget: NSObject {
     @objc func showSettingsFile() {}
     @objc func copySettingsPath() {}
+    @objc func emergencyOverrideEyeGate() {}
 }

@@ -242,7 +242,7 @@ enum StatusMenuPolicy {
         state.activeSession?.kind == .eyeGate
     }
 
-    static func showsOverlayOnlyNotice(state: RestEngineState, canEmergencyExit: Bool) -> Bool {
+    static func showsOverlayReturnAction(state: RestEngineState, canEmergencyExit: Bool) -> Bool {
         state.activeSession?.kind == .eyeGate && canEmergencyExit
     }
 }
@@ -383,6 +383,24 @@ enum DisabledStatusMenuItemFactory {
         image?.isTemplate = true
         image?.accessibilityDescription = accessibilityDescription
         return image
+    }
+}
+
+enum StatusMenuOverlayFocusItemFactory {
+    static func make(
+        target: AnyObject?,
+        action: Selector,
+        imageProvider: (String) -> NSImage? = { _ in nil }
+    ) -> NSMenuItem {
+        let item = NSMenuItem(title: L10n.tr("menu.emergencyOverlayOnly"), action: action, keyEquivalent: "")
+        item.target = target
+        item.image = imageProvider("exclamationmark.triangle")
+        item.image?.isTemplate = true
+        item.image?.accessibilityDescription = item.title
+        item.toolTip = L10n.tr("menu.emergencyOverlayOnlyHelp")
+        item.setAccessibilityLabel(item.title)
+        item.setAccessibilityHelp(item.toolTip)
+        return item
     }
 }
 
@@ -762,12 +780,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
         if let active = engine.state.activeSession, active.kind == .eyeGate {
             let canEmergencyExit = canEmergencyOverrideEyeGate(active, now: now)
-            if StatusMenuPolicy.showsOverlayOnlyNotice(state: engine.state, canEmergencyExit: canEmergencyExit) {
-                menu.addItem(disabledItem(
-                    L10n.tr("menu.emergencyOverlayOnly"),
-                    symbolName: "info.circle",
-                    toolTip: L10n.tr("menu.emergencyOverlayOnlyHelp")
-                ))
+            if StatusMenuPolicy.showsOverlayReturnAction(state: engine.state, canEmergencyExit: canEmergencyExit) {
+                menu.addItem(overlayEmergencyFocusMenuItem())
                 menu.addItem(.separator())
             }
             if !showsOrdinaryControls {
@@ -942,6 +956,16 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             target: self,
             showAction: #selector(showSettingsFile),
             copyAction: #selector(copySettingsPath),
+            imageProvider: { symbolName in
+                self.menuItemImage(symbolName)
+            }
+        )
+    }
+
+    private func overlayEmergencyFocusMenuItem() -> NSMenuItem {
+        StatusMenuOverlayFocusItemFactory.make(
+            target: self,
+            action: #selector(emergencyOverrideEyeGate),
             imageProvider: { symbolName in
                 self.menuItemImage(symbolName)
             }
