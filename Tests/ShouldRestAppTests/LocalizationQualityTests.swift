@@ -695,6 +695,18 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(L10n.tr("debug.summaryEyeActiveBody").localizedCaseInsensitiveContains("Emergency Exit twice"))
         XCTAssertTrue(L10n.tr("debug.summaryEyeActiveBody").localizedCaseInsensitiveContains("Esc twice"))
         XCTAssertFalse(L10n.tr("debug.summaryEyeActiveBody").localizedCaseInsensitiveContains("Esc once"))
+        XCTAssertEqual(
+            L10n.tr("debug.summaryBodyActiveBody"),
+            "Use available status menu or overlay controls to postpone, skip, or finish based on the current Body Break settings."
+        )
+        XCTAssertEqual(L10n.tr("debug.summaryBodyReadyTitle"), "Body Break is ready to finish")
+        XCTAssertEqual(
+            L10n.tr("debug.summaryBodyReadyBody"),
+            "Finish from the status menu or overlay when you are ready to return."
+        )
+        XCTAssertFalse(L10n.tr("debug.summaryBodyActiveBody").localizedCaseInsensitiveContains("overlay buttons"))
+        XCTAssertFalse(L10n.tr("debug.summaryBodyReadyBody").localizedCaseInsensitiveContains("postpone"))
+        XCTAssertFalse(L10n.tr("debug.summaryBodyReadyBody").localizedCaseInsensitiveContains("skip"))
         XCTAssertEqual(L10n.tr("about.debug"), "Support Report")
         XCTAssertEqual(
             L10n.tr("about.body"),
@@ -907,6 +919,15 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(L10n.tr("debug.summaryEyeActiveBody").contains("紧急退出两次"))
         XCTAssertTrue(L10n.tr("debug.summaryEyeActiveBody").contains("两次 Esc"))
         XCTAssertFalse(L10n.tr("debug.summaryEyeActiveBody").contains("按一次 Esc"))
+        XCTAssertEqual(
+            L10n.tr("debug.summaryBodyActiveBody"),
+            "请根据当前活动休息设置，使用状态菜单或覆盖层里的可用按钮推迟、跳过或完成。"
+        )
+        XCTAssertEqual(L10n.tr("debug.summaryBodyReadyTitle"), "活动休息可以完成了")
+        XCTAssertEqual(L10n.tr("debug.summaryBodyReadyBody"), "准备好返回时，可从状态菜单或覆盖层完成。")
+        XCTAssertFalse(L10n.tr("debug.summaryBodyActiveBody").contains("覆盖层内的推迟、跳过或完成按钮"))
+        XCTAssertFalse(L10n.tr("debug.summaryBodyReadyBody").contains("推迟"))
+        XCTAssertFalse(L10n.tr("debug.summaryBodyReadyBody").contains("跳过"))
         XCTAssertEqual(L10n.tr("about.debug"), "支持报告")
         XCTAssertEqual(
             L10n.tr("about.body"),

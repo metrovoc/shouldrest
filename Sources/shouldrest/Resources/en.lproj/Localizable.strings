@@ -181,7 +181,9 @@
 "debug.summaryEyeReadyTitle" = "Eye Gate duration is complete";
 "debug.summaryEyeReadyBody" = "Finish from the overlay when ready. Emergency Exit remains available only for real interruptions and records a missed rest.";
 "debug.summaryBodyActiveTitle" = "Body Break is active";
-"debug.summaryBodyActiveBody" = "Use the overlay buttons to postpone, skip, or finish based on the current Body Break settings.";
+"debug.summaryBodyActiveBody" = "Use available status menu or overlay controls to postpone, skip, or finish based on the current Body Break settings.";
+"debug.summaryBodyReadyTitle" = "Body Break is ready to finish";
+"debug.summaryBodyReadyBody" = "Finish from the status menu or overlay when you are ready to return.";
 "debug.summaryPausedTitle" = "Rests are paused";
 "debug.summaryPausedBody" = "Resume from the status menu when you want ShouldRest to schedule rests again.";
 "debug.summaryDeferredTitle" = "%@ is delayed";

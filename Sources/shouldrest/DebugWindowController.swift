@@ -1,7 +1,7 @@
 import AppKit
 import Foundation
 
-enum DebugSafetySeverity {
+enum DebugSafetySeverity: Equatable {
     case ready
     case active
     case warning
