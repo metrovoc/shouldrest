@@ -745,23 +745,14 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
 
         if engine.state.activeSession == nil {
-            var addedManualRestAction = false
-            if settings.eyeGate.isEnabled {
-                menu.addItem(actionItem(L10n.tr("menu.takeEyeGateNow"), #selector(takeEyeGateNow)))
-                addedManualRestAction = true
+            let startActions = StatusMenuStartActionPlanner.actions(
+                state: engine.state,
+                settings: settings
+            )
+            for startAction in startActions {
+                menu.addItem(statusMenuStartActionItem(startAction))
             }
-            if settings.bodyBreak.isEnabled {
-                menu.addItem(actionItem(L10n.tr("menu.takeBodyBreakNow"), #selector(takeBodyBreakNow)))
-                addedManualRestAction = true
-            }
-            if let scheduled = engine.state.scheduled {
-                menu.addItem(actionItem(
-                    StatusMenuActionCopy.nextScheduledRestTitle(kind: scheduled.kind),
-                    #selector(takeNextScheduledRestNow)
-                ))
-                addedManualRestAction = true
-            }
-            if addedManualRestAction {
+            if !startActions.isEmpty {
                 menu.addItem(.separator())
             }
         }
@@ -884,6 +875,17 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             )
         )
         return item
+    }
+
+    private func statusMenuStartActionItem(_ startAction: StatusMenuStartAction) -> NSMenuItem {
+        switch startAction {
+        case .nextScheduled:
+            return actionItem(startAction.title, #selector(takeNextScheduledRestNow))
+        case .eyeGate:
+            return actionItem(startAction.title, #selector(takeEyeGateNow))
+        case .bodyBreak:
+            return actionItem(startAction.title, #selector(takeBodyBreakNow))
+        }
     }
 
     private func updateMenuBarImage(on item: NSStatusItem, accessibilityDescription: String) {
