@@ -255,6 +255,8 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         let recoveryLabel = try XCTUnwrap(
             view(withIdentifier: "prefs.showMenuBarItemRecovery", in: contentView) as? NSTextField
         )
+        let statusIcon = try XCTUnwrap(view(withIdentifier: "autosaveStatusIcon", in: contentView) as? NSImageView)
+        let statusLabel = try XCTUnwrap(view(withIdentifier: "autosaveStatusLabel", in: contentView) as? NSTextField)
 
         XCTAssertFalse(checkbox.isHidden)
         XCTAssertEqual(checkbox.title, L10n.tr("prefs.showMenuBarItem"))
@@ -324,12 +326,21 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(savedSettings.value?.presentation.showMenuBarItem, false)
         XCTAssertFalse(savedSettings.value?.presentation.resolvedShowMenuBarItem ?? true)
+        XCTAssertEqual(statusLabel.stringValue, L10n.tr("prefs.autosaveMenuBarHidden"))
+        XCTAssertEqual(statusLabel.toolTip, L10n.tr("prefs.autosaveMenuBarHidden"))
+        XCTAssertEqual(statusLabel.accessibilityHelp(), L10n.tr("prefs.autosaveMenuBarHidden"))
+        XCTAssertEqual(statusIcon.image?.accessibilityDescription, L10n.tr("prefs.autosaveMenuBarHidden"))
 
+        savedSettings.value = nil
         checkbox.state = .on
         XCTAssertTrue(sendAction(from: checkbox))
         XCTAssertTrue(recoveryRow.isHidden)
         XCTAssertTrue(recoveryIcon.isHidden)
         XCTAssertTrue(recoveryLabel.isHidden)
+        waitUntilSavedSettingsArrive(savedSettings)
+        XCTAssertEqual(savedSettings.value?.presentation.showMenuBarItem, true)
+        XCTAssertEqual(statusLabel.stringValue, L10n.tr("prefs.autosaveMenuBarShown"))
+        XCTAssertEqual(statusIcon.image?.accessibilityDescription, L10n.tr("prefs.autosaveMenuBarShown"))
     }
 
     func testDefaultUpdateSourceRestoreButtonExplainsAlreadyDefaultState() throws {

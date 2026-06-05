@@ -186,6 +186,11 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
             L10n.tr("prefs.autosaveLanguageChanged"),
             "Language saved; Preferences refreshed"
         )
+        XCTAssertEqual(
+            L10n.tr("prefs.autosaveMenuBarHidden"),
+            "Menu bar icon hidden; recovery paths shown below"
+        )
+        XCTAssertEqual(L10n.tr("prefs.autosaveMenuBarShown"), "Menu bar icon restored")
         XCTAssertEqual(L10n.tr("prefs.restoreDefaultsDisabledDefaultHelp"), "Current preferences already match the app defaults.")
 
         L10n.languageOverride = "zh-Hans"
@@ -207,6 +212,8 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.autosaveBodyImageSelected"), "活动休息图片已选择")
         XCTAssertEqual(L10n.tr("prefs.autosaveBodyImageCleared"), "活动休息图片已清空")
         XCTAssertEqual(L10n.tr("prefs.autosaveLanguageChanged"), "语言已保存；偏好设置已刷新")
+        XCTAssertEqual(L10n.tr("prefs.autosaveMenuBarHidden"), "菜单栏图标已隐藏；恢复方式已显示在下方")
+        XCTAssertEqual(L10n.tr("prefs.autosaveMenuBarShown"), "菜单栏图标已恢复")
         XCTAssertEqual(L10n.tr("prefs.restoreDefaultsDisabledDefaultHelp"), "当前偏好设置已是应用默认值。")
     }
 

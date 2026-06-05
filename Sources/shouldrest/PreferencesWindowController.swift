@@ -249,6 +249,8 @@ private enum PreferencesSaveStatus {
     case bodyImageSelected
     case bodyImageCleared
     case languageChanged
+    case menuBarHidden
+    case menuBarShown
     case invalid
 }
 
@@ -3754,8 +3756,19 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             updateAppExclusionAddRuleButtonState()
             return
         }
-        let completionStatus: PreferencesSaveStatus? = (sender as? NSControl) === languageIdentifier ? .languageChanged : nil
+        let completionStatus = completionStatus(forChangedControl: sender)
         scheduleAutosave(completionStatus: completionStatus)
+    }
+
+    private func completionStatus(forChangedControl sender: Any) -> PreferencesSaveStatus? {
+        guard let control = sender as? NSControl else { return nil }
+        if control === languageIdentifier {
+            return .languageChanged
+        }
+        if control === showMenuBarItem {
+            return isOn(showMenuBarItem) ? .menuBarShown : .menuBarHidden
+        }
+        return nil
     }
 
     @objc private func rhythmPresetPressed(_ sender: NSButton) {
@@ -4422,6 +4435,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             symbolName = "textformat"
             color = .systemBlue
             title = L10n.tr("prefs.autosaveLanguageChanged")
+        case .menuBarHidden:
+            symbolName = "menubar.rectangle"
+            color = .systemOrange
+            title = L10n.tr("prefs.autosaveMenuBarHidden")
+        case .menuBarShown:
+            symbolName = "menubar.rectangle"
+            color = .systemBlue
+            title = L10n.tr("prefs.autosaveMenuBarShown")
         case .invalid:
             symbolName = "exclamationmark.triangle.fill"
             color = .systemOrange

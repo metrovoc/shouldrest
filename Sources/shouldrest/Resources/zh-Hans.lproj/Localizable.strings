@@ -564,6 +564,8 @@
 "prefs.autosaveBodyImageSelected" = "活动休息图片已选择";
 "prefs.autosaveBodyImageCleared" = "活动休息图片已清空";
 "prefs.autosaveLanguageChanged" = "语言已保存；偏好设置已刷新";
+"prefs.autosaveMenuBarHidden" = "菜单栏图标已隐藏；恢复方式已显示在下方";
+"prefs.autosaveMenuBarShown" = "菜单栏图标已恢复";
 "prefs.autosaveInvalid" = "修复导入文本后保存";
 "prefs.autosaveInvalidField" = "修复%@后保存";
 "prefs.searchPlaceholder" = "查找设置";

@@ -564,6 +564,8 @@
 "prefs.autosaveBodyImageSelected" = "Body Break image selected";
 "prefs.autosaveBodyImageCleared" = "Body Break image cleared";
 "prefs.autosaveLanguageChanged" = "Language saved; Preferences refreshed";
+"prefs.autosaveMenuBarHidden" = "Menu bar icon hidden; recovery paths shown below";
+"prefs.autosaveMenuBarShown" = "Menu bar icon restored";
 "prefs.autosaveInvalid" = "Fix import text to save";
 "prefs.autosaveInvalidField" = "Fix %@ to save";
 "prefs.searchPlaceholder" = "Find a setting";
