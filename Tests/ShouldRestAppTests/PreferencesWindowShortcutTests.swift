@@ -126,6 +126,41 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertTrue(visibleTexts.contains("⌘⌥E"))
     }
 
+    func testShortcutTabGroupsActionsIntoScannableSections() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectShortcutsTab(in: contentView)
+
+        try assertShortcutGroup("prefs.shortcutGroupPause", in: contentView)
+        try assertShortcutGroup("prefs.shortcutGroupStart", in: contentView)
+        try assertShortcutGroup("prefs.shortcutGroupDuringRest", in: contentView)
+        try assertShortcutGroup("prefs.shortcutGroupMaintenance", in: contentView)
+
+        let visibleTexts = visibleTexts(in: contentView)
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.shortcutGroupPause")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.shortcutGroupStart")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.shortcutGroupDuringRest")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.shortcutGroupMaintenance")))
+    }
+
+    func testDuringRestShortcutGroupHidesWhenNoDuringRestShortcutApplies() throws {
+        var settings = RestSettings.defaults
+        settings.bodyBreak.isEnabled = false
+        settings.eyeGate.manualFinishEnabled = false
+        settings.eyeGate.emergencyOverride.isEnabled = false
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectShortcutsTab(in: contentView)
+
+        let group = try XCTUnwrap(view(withIdentifier: "prefs.shortcutGroupDuringRest", in: contentView) as? NSStackView)
+        XCTAssertTrue(group.isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.shortcutEndBodyRow", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.shortcutEmergencyEyeRow", in: contentView).isHidden)
+        XCTAssertFalse(visibleTexts(in: contentView).contains(L10n.tr("prefs.shortcutGroupDuringRest")))
+    }
+
     func testPauseShortcutUsesActionCopyInsteadOfImplementationTerm() throws {
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
@@ -659,6 +694,37 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertGreaterThan(color?.redComponent ?? 0, 0.85, file: file, line: line)
         XCTAssertGreaterThan(color?.greenComponent ?? 0, 0.25, file: file, line: line)
         XCTAssertLessThan(color?.blueComponent ?? 1, 0.25, file: file, line: line)
+    }
+
+    private func assertShortcutGroup(
+        _ identifier: String,
+        in contentView: NSView,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) throws {
+        let group = try XCTUnwrap(
+            view(withIdentifier: identifier, in: contentView) as? NSStackView,
+            file: file,
+            line: line
+        )
+        let icon = try XCTUnwrap(
+            view(withIdentifier: "\(identifier).icon", in: contentView) as? NSImageView,
+            file: file,
+            line: line
+        )
+        let label = try XCTUnwrap(
+            view(withIdentifier: "\(identifier).label", in: contentView) as? NSTextField,
+            file: file,
+            line: line
+        )
+        XCTAssertFalse(group.isHidden, file: file, line: line)
+        XCTAssertEqual(group.orientation, .horizontal, file: file, line: line)
+        XCTAssertEqual(group.edgeInsets.top, 10, file: file, line: line)
+        XCTAssertEqual(group.accessibilityLabel(), L10n.tr(identifier), file: file, line: line)
+        XCTAssertNotNil(icon.image, file: file, line: line)
+        XCTAssertEqual(icon.image?.accessibilityDescription, L10n.tr(identifier), file: file, line: line)
+        XCTAssertEqual(label.stringValue, L10n.tr(identifier), file: file, line: line)
+        XCTAssertEqual(label.textColor, .secondaryLabelColor, file: file, line: line)
     }
 
     private func keyEvent(

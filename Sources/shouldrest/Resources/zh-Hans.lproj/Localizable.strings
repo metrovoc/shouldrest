@@ -520,6 +520,10 @@
 "prefs.shortcutConflictReview" = "查看冲突";
 "prefs.shortcutConflictReviewHelp" = "跳到第一个冲突的快捷键。";
 "prefs.shortcutUnsupported" = "不支持的快捷键：%@（%@）。";
+"prefs.shortcutGroupPause" = "暂停控制";
+"prefs.shortcutGroupStart" = "开始休息";
+"prefs.shortcutGroupDuringRest" = "休息进行中";
+"prefs.shortcutGroupMaintenance" = "维护操作";
 "prefs.display.all" = "所有显示器";
 "prefs.display.primary" = "主显示器";
 "prefs.display.cursor" = "鼠标所在显示器";

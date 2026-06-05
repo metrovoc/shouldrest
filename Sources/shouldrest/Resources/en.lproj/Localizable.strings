@@ -520,6 +520,10 @@
 "prefs.shortcutConflictReview" = "Review Conflict";
 "prefs.shortcutConflictReviewHelp" = "Jump to the first shortcut in conflict.";
 "prefs.shortcutUnsupported" = "Unsupported shortcut: %@ for %@.";
+"prefs.shortcutGroupPause" = "Pause controls";
+"prefs.shortcutGroupStart" = "Start rests";
+"prefs.shortcutGroupDuringRest" = "During a rest";
+"prefs.shortcutGroupMaintenance" = "Maintenance";
 "prefs.display.all" = "All displays";
 "prefs.display.primary" = "Primary display";
 "prefs.display.cursor" = "Display with pointer";

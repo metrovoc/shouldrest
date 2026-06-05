@@ -571,6 +571,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private var shortcutEndBodyRow: NSView?
     private weak var shortcutEndBodyLabel: NSTextField?
     private var shortcutEmergencyEyeRow: NSView?
+    private var shortcutDuringRestGroupHeader: NSView?
     private let shortcutReset = ShortcutRecorderButton()
     private var shortcutClearControls: [(recorder: ShortcutRecorderButton, button: NSButton)] = []
     private let shortcutConflictRow = NSStackView()
@@ -1041,6 +1042,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         shortcutEndBody.identifier = NSUserInterfaceItemIdentifier("shortcut.endBody")
         shortcutEmergencyEye.identifier = NSUserInterfaceItemIdentifier("shortcut.emergencyEye")
         shortcutReset.identifier = NSUserInterfaceItemIdentifier("shortcut.reset")
+        shortcutsStack.addArrangedSubview(shortcutGroupHeader(
+            L10n.tr("prefs.shortcutGroupPause"),
+            symbolName: "pause.circle",
+            identifier: "prefs.shortcutGroupPause"
+        ))
         shortcutsStack.addArrangedSubview(shortcutRow(
             L10n.tr("prefs.pauseToggle"),
             shortcutPauseToggle,
@@ -1071,6 +1077,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             shortcutPauseUntilMorning,
             help: L10n.tr("prefs.pauseUntilMorningShortcutHelp")
         ))
+        shortcutsStack.addArrangedSubview(shortcutGroupHeader(
+            L10n.tr("prefs.shortcutGroupStart"),
+            symbolName: "play.circle",
+            identifier: "prefs.shortcutGroupStart"
+        ))
         shortcutsStack.addArrangedSubview(shortcutRow(
             L10n.tr("prefs.nextScheduledRest"),
             shortcutNextScheduled,
@@ -1092,6 +1103,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         shortcutBodyNowRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutBodyNowRow")
         self.shortcutBodyNowRow = shortcutBodyNowRow
         shortcutsStack.addArrangedSubview(shortcutBodyNowRow)
+        let shortcutDuringRestGroupHeader = shortcutGroupHeader(
+            L10n.tr("prefs.shortcutGroupDuringRest"),
+            symbolName: "rectangle.inset.filled.and.person.filled",
+            identifier: "prefs.shortcutGroupDuringRest"
+        )
+        self.shortcutDuringRestGroupHeader = shortcutDuringRestGroupHeader
+        shortcutsStack.addArrangedSubview(shortcutDuringRestGroupHeader)
         let shortcutEndBodyRow = shortcutRow(
             activeRestShortcutTitle(
                 eyeGateEnabled: settings.eyeGate.isEnabled,
@@ -1120,6 +1138,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         shortcutEmergencyEyeRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutEmergencyEyeRow")
         self.shortcutEmergencyEyeRow = shortcutEmergencyEyeRow
         shortcutsStack.addArrangedSubview(shortcutEmergencyEyeRow)
+        shortcutsStack.addArrangedSubview(shortcutGroupHeader(
+            L10n.tr("prefs.shortcutGroupMaintenance"),
+            symbolName: "arrow.counterclockwise.circle",
+            identifier: "prefs.shortcutGroupMaintenance"
+        ))
         shortcutsStack.addArrangedSubview(shortcutRow(
             L10n.tr("prefs.reset"),
             shortcutReset,
@@ -3091,6 +3114,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let emergencyVisible = eyeGateEnabled && !strictPreferencesHidden && isOn(eyeEmergencyOverride)
         shortcutEmergencyEyeRow?.isHidden = !emergencyVisible
         shortcutEmergencyEye.isEnabled = emergencyVisible
+        shortcutDuringRestGroupHeader?.isHidden = !canEndActiveRest && !emergencyVisible
         updateShortcutConflictWarning()
     }
 
@@ -5049,6 +5073,34 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         stack.orientation = .horizontal
         stack.spacing = 12
         stack.alignment = .centerY
+        return stack
+    }
+
+    private func shortcutGroupHeader(_ title: String, symbolName: String, identifier: String) -> NSStackView {
+        let icon = NSImageView()
+        icon.identifier = NSUserInterfaceItemIdentifier("\(identifier).icon")
+        icon.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: title)
+        icon.symbolConfiguration = .init(pointSize: 12, weight: .medium)
+        icon.contentTintColor = .tertiaryLabelColor
+        icon.widthAnchor.constraint(equalToConstant: 18).isActive = true
+
+        let label = NSTextField(labelWithString: title)
+        label.identifier = NSUserInterfaceItemIdentifier("\(identifier).label")
+        label.font = .systemFont(ofSize: 12, weight: .semibold)
+        label.textColor = .secondaryLabelColor
+        label.setContentHuggingPriority(.required, for: .horizontal)
+
+        let divider = NSBox()
+        divider.boxType = .separator
+        divider.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+        let stack = NSStackView(views: [icon, label, divider])
+        stack.identifier = NSUserInterfaceItemIdentifier(identifier)
+        stack.orientation = .horizontal
+        stack.spacing = 8
+        stack.alignment = .centerY
+        stack.edgeInsets = NSEdgeInsets(top: 10, left: 0, bottom: 2, right: 0)
+        stack.setAccessibilityLabel(title)
         return stack
     }
 
