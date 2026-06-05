@@ -237,6 +237,12 @@ private enum PreferencesSaveStatus {
     case appRulesRestored
     case ideasRestored
     case updateSourceRestored
+    case appRuleAdded
+    case appRuleUpdated
+    case appRuleRemoved
+    case customIdeaAdded
+    case customIdeaUpdated
+    case customIdeaRemoved
     case shortcutCleared
     case shortcutRestored
     case bodyImageSelected
@@ -3687,11 +3693,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         do {
             clearArmedRemovalState()
             var ideas = try decodedAdvancedCustomIdeas() ?? []
+            let completionStatus: PreferencesSaveStatus
             if let editingCustomBodyIdeaID,
                let index = ideas.firstIndex(where: { $0.id == editingCustomBodyIdeaID }) {
                 ideas[index] = idea
+                completionStatus = .customIdeaUpdated
             } else {
                 ideas.append(idea)
+                completionStatus = .customIdeaAdded
             }
             customBodyIdeasJSONEditor.string = encodedCustomIdeasForEditor(ideas)
             setAdvancedDisclosure(row: customBodyIdeasJSONRow, button: customBodyIdeasAdvancedButton, expanded: false)
@@ -3700,7 +3709,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             clearCustomBodyIdeaEditState()
             refreshCustomBodyIdeaList()
             updateCustomBodyAddIdeaButtonState()
-            scheduleAutosave()
+            scheduleAutosave(completionStatus: completionStatus)
         } catch {
             showInvalidJSONAlert(error)
             setInvalidSaveStatus(error)
@@ -3749,7 +3758,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             setAdvancedDisclosure(row: customBodyIdeasJSONRow, button: customBodyIdeasAdvancedButton, expanded: false)
             refreshCustomBodyIdeaList()
             updateCustomBodyAddIdeaButtonState()
-            scheduleAutosave()
+            scheduleAutosave(completionStatus: .customIdeaRemoved)
         } catch {
             showInvalidJSONAlert(error)
             setInvalidSaveStatus(error)
@@ -3780,7 +3789,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             refreshAppExclusionRuleList()
             updateDependentControlEnablement()
             updateAppExclusionAddRuleButtonState()
-            scheduleAutosave()
+            scheduleAutosave(completionStatus: .appRuleRemoved)
         } catch {
             showInvalidJSONAlert(error)
             setInvalidSaveStatus(error)
@@ -4201,6 +4210,30 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             symbolName = "arrow.counterclockwise.circle.fill"
             color = .systemBlue
             title = L10n.tr("prefs.autosaveUpdateSourceRestored")
+        case .appRuleAdded:
+            symbolName = "plus.circle.fill"
+            color = .systemBlue
+            title = L10n.tr("prefs.autosaveAppRuleAdded")
+        case .appRuleUpdated:
+            symbolName = "pencil.circle.fill"
+            color = .systemBlue
+            title = L10n.tr("prefs.autosaveAppRuleUpdated")
+        case .appRuleRemoved:
+            symbolName = "minus.circle.fill"
+            color = .systemBlue
+            title = L10n.tr("prefs.autosaveAppRuleRemoved")
+        case .customIdeaAdded:
+            symbolName = "plus.circle.fill"
+            color = .systemBlue
+            title = L10n.tr("prefs.autosaveCustomIdeaAdded")
+        case .customIdeaUpdated:
+            symbolName = "pencil.circle.fill"
+            color = .systemBlue
+            title = L10n.tr("prefs.autosaveCustomIdeaUpdated")
+        case .customIdeaRemoved:
+            symbolName = "minus.circle.fill"
+            color = .systemBlue
+            title = L10n.tr("prefs.autosaveCustomIdeaRemoved")
         case .shortcutCleared:
             symbolName = "xmark.circle.fill"
             color = .systemBlue
@@ -4468,11 +4501,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         do {
             clearArmedRemovalState()
             var rules = try decodedAdvancedAppExclusions() ?? []
+            let completionStatus: PreferencesSaveStatus
             if let replacingID,
                let index = rules.firstIndex(where: { $0.id == replacingID }) {
                 rules[index] = rule
+                completionStatus = .appRuleUpdated
             } else {
                 rules.append(rule)
+                completionStatus = .appRuleAdded
             }
             appExclusionsJSONEditor.string = encodedAppExclusionsForEditor(rules)
             setAdvancedDisclosure(row: appExclusionsJSONRow, button: appExclusionsAdvancedButton, expanded: false)
@@ -4483,7 +4519,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             refreshAppExclusionRuleList()
             updateDependentControlEnablement()
             updateAppExclusionAddRuleButtonState()
-            scheduleAutosave()
+            scheduleAutosave(completionStatus: completionStatus)
         } catch {
             showInvalidJSONAlert(error)
             setInvalidSaveStatus(error)

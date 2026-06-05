@@ -781,6 +781,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         let rule = try XCTUnwrap(savedSettings.value?.appExclusions.first)
         XCTAssertEqual(rule.name, "Zoom")
         XCTAssertEqual(rule.matchTerms, ["Zoom", "us.zoom.xos"])
+        try assertAutosaveStatus("prefs.autosaveAppRuleAdded", in: contentView)
         let body = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionRuleBody.0", in: contentView) as? NSTextField)
         XCTAssertEqual(body.stringValue, "Pause Body Break during Zoom.")
         XCTAssertFalse(body.stringValue.contains("us.zoom.xos"))
@@ -876,6 +877,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         let rules = try XCTUnwrap(savedSettings.value?.appExclusions)
         XCTAssertEqual(rules.count, 1)
         XCTAssertEqual(rules.first?.id, "secondary")
+        try assertAutosaveStatus("prefs.autosaveAppRuleRemoved", in: contentView)
         XCTAssertTrue(try view(withIdentifier: "prefs.appExclusionsJSONRow", in: contentView).isHidden)
     }
 
@@ -972,6 +974,7 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertEqual(rules[1].matchTerms, ["teams"])
         XCTAssertEqual(rules[1].mode, .resumeOnlyWhenMatched)
         XCTAssertEqual(rules[1].appliesTo, Set([RestKind.eyeGate]))
+        try assertAutosaveStatus("prefs.autosaveAppRuleUpdated", in: contentView)
         XCTAssertEqual(name.stringValue, "")
         XCTAssertEqual(terms.objectValue as? [String] ?? [], [])
         XCTAssertTrue(cancelButton.isHidden)
@@ -1253,6 +1256,31 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         while settings.value == nil && Date() < deadline {
             RunLoop.current.run(until: Date().addingTimeInterval(0.05))
         }
+    }
+
+    private func assertAutosaveStatus(
+        _ key: String,
+        in rootView: NSView,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) throws {
+        let text = L10n.tr(key)
+        let label = try XCTUnwrap(
+            view(withIdentifier: "autosaveStatusLabel", in: rootView) as? NSTextField,
+            file: file,
+            line: line
+        )
+        let icon = try XCTUnwrap(
+            view(withIdentifier: "autosaveStatusIcon", in: rootView) as? NSImageView,
+            file: file,
+            line: line
+        )
+
+        XCTAssertEqual(label.stringValue, text, file: file, line: line)
+        XCTAssertEqual(label.toolTip, text, file: file, line: line)
+        XCTAssertEqual(label.accessibilityHelp(), text, file: file, line: line)
+        XCTAssertEqual(icon.image?.accessibilityDescription, text, file: file, line: line)
+        XCTAssertEqual(icon.accessibilityHelp(), text, file: file, line: line)
     }
 
     private func visibleTexts(in view: NSView, ancestorHidden: Bool = false) -> [String] {

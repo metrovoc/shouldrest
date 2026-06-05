@@ -539,6 +539,12 @@
 "prefs.autosaveAppRulesRestored" = "已还原保存的应用规则";
 "prefs.autosaveIdeasRestored" = "已还原保存的提示";
 "prefs.autosaveUpdateSourceRestored" = "默认更新来源已恢复";
+"prefs.autosaveAppRuleAdded" = "应用规则已添加";
+"prefs.autosaveAppRuleUpdated" = "应用规则已更新";
+"prefs.autosaveAppRuleRemoved" = "应用规则已移除";
+"prefs.autosaveCustomIdeaAdded" = "活动休息提示已添加";
+"prefs.autosaveCustomIdeaUpdated" = "活动休息提示已更新";
+"prefs.autosaveCustomIdeaRemoved" = "活动休息提示已移除";
 "prefs.autosaveShortcutCleared" = "快捷键已清空";
 "prefs.autosaveShortcutRestored" = "默认快捷键已恢复";
 "prefs.autosaveBodyImageSelected" = "活动休息图片已选择";

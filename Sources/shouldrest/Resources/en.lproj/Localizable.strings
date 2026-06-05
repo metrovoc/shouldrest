@@ -539,6 +539,12 @@
 "prefs.autosaveAppRulesRestored" = "Saved app rules restored";
 "prefs.autosaveIdeasRestored" = "Saved ideas restored";
 "prefs.autosaveUpdateSourceRestored" = "Default update source restored";
+"prefs.autosaveAppRuleAdded" = "App rule added";
+"prefs.autosaveAppRuleUpdated" = "App rule updated";
+"prefs.autosaveAppRuleRemoved" = "App rule removed";
+"prefs.autosaveCustomIdeaAdded" = "Body Break idea added";
+"prefs.autosaveCustomIdeaUpdated" = "Body Break idea updated";
+"prefs.autosaveCustomIdeaRemoved" = "Body Break idea removed";
 "prefs.autosaveShortcutCleared" = "Shortcut cleared";
 "prefs.autosaveShortcutRestored" = "Default shortcut restored";
 "prefs.autosaveBodyImageSelected" = "Body Break image selected";
