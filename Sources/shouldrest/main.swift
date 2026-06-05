@@ -2537,6 +2537,22 @@ final class OverlayActionButton: NSButton {
     }
 }
 
+final class OverlayClickPanel: NSView {
+    var onClick: (() -> Void)?
+
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+        true
+    }
+
+    override func mouseDown(with event: NSEvent) {
+        guard let onClick else {
+            super.mouseDown(with: event)
+            return
+        }
+        onClick()
+    }
+}
+
 private struct EmergencyOverlayVisualStyle {
     var buttonAlpha: CGFloat
     var tintAlpha: CGFloat
@@ -2654,7 +2670,7 @@ final class RestOverlayView: NSView {
     private let detailLabel = NSTextField(labelWithString: "")
     private let countdownLabel = NSTextField(labelWithString: "")
     private let imageView = NSImageView()
-    private let emergencyPanel = NSView()
+    private let emergencyPanel = OverlayClickPanel()
     private let emergencyButton = OverlayActionButton()
     private let bodyActionPanel = NSView()
     private let bodyActionStack = NSStackView()
@@ -2717,6 +2733,9 @@ final class RestOverlayView: NSView {
         emergencyPanel.layer?.borderWidth = 1
         emergencyPanel.alphaValue = 0.72
         emergencyPanel.isHidden = true
+        emergencyPanel.onClick = { [weak self] in
+            self?.requestEmergencyOverride()
+        }
         addSubview(emergencyPanel)
 
         emergencyButton.identifier = NSUserInterfaceItemIdentifier("overlay.emergency.button")

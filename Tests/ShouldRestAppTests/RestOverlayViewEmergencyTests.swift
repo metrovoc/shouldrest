@@ -1131,7 +1131,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertTrue(button.isEnabled)
     }
 
-    func testEmergencyPanelBackgroundDoesNotSpendConfirmationClick() throws {
+    func testEmergencyPanelBackgroundUsesSameTwoStepConfirmation() throws {
         let view = configuredEyeGateOverlay()
         view.layoutSubtreeIfNeeded()
         var requestCount = 0
@@ -1143,20 +1143,16 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.panel"))
         let panelOnlyPoint = NSPoint(x: panel.frame.minX + 4, y: panel.frame.midY)
 
-        view.mouseDown(with: try mouseEvent(at: panelOnlyPoint, clickCount: 1))
-        view.mouseUp(with: try mouseUpEvent(at: panelOnlyPoint, clickCount: 1))
+        XCTAssertTrue(view.hitTest(panelOnlyPoint) === panel)
+
+        try performRoutedMouseClick(on: view, at: panelOnlyPoint)
         drainMainQueue()
 
-        XCTAssertEqual(requestCount, 0)
-        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverride"))
-        XCTAssertTrue(button.isEnabled)
-
-        button.performClick(nil)
         XCTAssertEqual(requestCount, 1)
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+        XCTAssertTrue(button.isEnabled)
 
-        drainMainQueue()
-        button.performClick(nil)
+        try performRoutedMouseClick(on: view, at: panelOnlyPoint)
         drainMainQueue()
 
         XCTAssertEqual(requestCount, 2)
@@ -1392,8 +1388,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
         let hiddenCornerPoint = NSPoint(x: 798, y: 2)
 
-        view.mouseDown(with: try mouseEvent(at: hiddenCornerPoint, clickCount: 1))
-        view.mouseUp(with: try mouseUpEvent(at: hiddenCornerPoint, clickCount: 1))
+        try performRoutedMouseClick(on: view, at: hiddenCornerPoint)
 
         XCTAssertEqual(requestCount, 0)
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverride"))
@@ -1410,8 +1405,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
         let hiddenEscapeZonePoint = NSPoint(x: 460, y: 132)
 
-        view.mouseDown(with: try mouseEvent(at: hiddenEscapeZonePoint, clickCount: 1))
-        view.mouseUp(with: try mouseUpEvent(at: hiddenEscapeZonePoint, clickCount: 1))
+        try performRoutedMouseClick(on: view, at: hiddenEscapeZonePoint)
 
         XCTAssertEqual(requestCount, 0)
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverride"))
@@ -1549,6 +1543,12 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
     private func performEmergencyClick(on view: RestOverlayView) throws {
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
         button.performClick(nil)
+    }
+
+    private func performRoutedMouseClick(on view: NSView, at point: NSPoint) throws {
+        let target = try XCTUnwrap(view.hitTest(point))
+        target.mouseDown(with: try mouseEvent(at: point, clickCount: 1))
+        target.mouseUp(with: try mouseUpEvent(at: point, clickCount: 1))
     }
 
     private func mouseEvent(
