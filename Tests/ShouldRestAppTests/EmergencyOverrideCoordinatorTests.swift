@@ -158,6 +158,25 @@ final class EmergencyOverrideCoordinatorTests: XCTestCase {
         XCTAssertTrue(coordinator.isArmed(for: session, now: start.addingTimeInterval(30)))
     }
 
+    func testWaitingInsideEyeGateNeverCompletesWithoutSecondExplicitRequest() {
+        let session = eyeGateSession(duration: 120)
+        let policy = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 1)
+        var coordinator = EmergencyOverrideCoordinator()
+
+        XCTAssertEqual(
+            coordinator.request(session: session, policy: policy, now: start.addingTimeInterval(1)),
+            .armed
+        )
+
+        XCTAssertTrue(EmergencyOverrideCoordinator.isAvailable(
+            session: session,
+            policy: policy,
+            now: start.addingTimeInterval(90)
+        ))
+        XCTAssertTrue(coordinator.hasArmedSession(for: session))
+        XCTAssertTrue(coordinator.isArmed(for: session, now: start.addingTimeInterval(90)))
+    }
+
     func testEmergencyIsUnavailableAfterEyeGateDurationHasBeenSatisfied() {
         let session = eyeGateSession(duration: 20)
         let policy = EmergencyOverridePolicy(isEnabled: true, confirmationSteps: 0)
