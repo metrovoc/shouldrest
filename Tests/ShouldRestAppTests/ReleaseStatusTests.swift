@@ -17,6 +17,25 @@ final class ReleaseStatusTests: XCTestCase {
         XCTAssertEqual(AppVersion.current, version)
     }
 
+    func testStretchlyCapabilityDocsDoNotReintroduceLongMenuBarStatusStyles() throws {
+        let root = repositoryRoot()
+        let contract = try String(
+            contentsOf: root.appendingPathComponent("docs/stretchly-capability-contract.md"),
+            encoding: .utf8
+        )
+        let audit = try String(
+            contentsOf: root.appendingPathComponent("docs/stretchly-feature-audit.md"),
+            encoding: .utf8
+        )
+
+        XCTAssertTrue(contract.contains("compact icon-only menu bar"))
+        XCTAssertTrue(contract.contains("legacy tray style values decode for compatibility"))
+        XCTAssertTrue(audit.contains("compact icon-only menu bar"))
+        XCTAssertTrue(audit.contains("legacy tray style values decode for compatibility only"))
+        XCTAssertFalse(contract.contains("Tray/menu-bar status styles: default, time-to-break, and progress"))
+        XCTAssertFalse(audit.contains("Tray style: default, time-to-break, progress"))
+    }
+
     private func repositoryRoot() -> URL {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()

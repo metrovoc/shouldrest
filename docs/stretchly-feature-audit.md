@@ -50,7 +50,7 @@ These Stretchly behaviors are design divergences, not missing features.
 | Regular/focusable break windows. | Enforced breaks use native overlay windows, not ordinary document-like windows. | Ordinary windows lose stacking authority and invite interaction. |
 | Percentage-sized active break windows (`breakWindowWidth` / `breakWindowHeight`). | Enforced rests cover the targeted display area; Body Break instead supports display targeting, content-display selection, and secondary blanking. | Partial active windows leave enough visual access to continue working. |
 | Tray/menu actions during strict mini breaks (`showTrayMenuInStrictMode`). | Eye Gate exposes only a frictional emergency override while active. | Ordinary menu actions collapse strict mode back into habitual dismissal. |
-| Monochrome/inverted tray icon variants. | ShouldRest uses Mac-native status text styles: default, time-to-break, and progress. | Brand/status clarity is more useful than copying Stretchly's icon-color matrix. |
+| Monochrome/inverted tray icon variants and text/progress tray styles. | ShouldRest keeps the menu bar item compact and icon-only; status lives in the tooltip, menu header, and optional rest-debt badge. | Long status-item text creates menu bar occupancy problems and was explicitly rejected. |
 | Configurable app-exclusion polling interval. | ShouldRest evaluates context on a fixed low-latency native loop. | This avoids exposing a performance tuning knob that is not part of the rest behavior. |
 | DND/Focus globally pauses all breaks. | Focus defers Body Break by default, not Eye Gate. | Meetings should not erase the frequent eye-rest constraint. |
 | Contributor-only preferences. | No paywall or contributor gate for core controls. | The safety-critical control surface should be coherent and available. |
@@ -119,7 +119,7 @@ It is intended to catch gaps that are easy to miss when a behavior is exposed on
 | `isFirstRun` | Implemented as onboarding completion plus "show welcome on next launch". |
 | `posLatitude` | Implemented for sunrise-based pause-until-morning. |
 | `posLongitude` | Implemented for sunrise-based pause-until-morning. |
-| `useMonochromeTrayIcon` | Explicit divergence: ShouldRest uses Mac-native menu-bar text/status styles instead of Stretchly icon variants. |
+| `useMonochromeTrayIcon` | Explicit divergence: ShouldRest uses a compact icon-only menu bar item instead of Stretchly icon-color variants. |
 | `useMonochromeInvertedTrayIcon` | Explicit divergence: same as `useMonochromeTrayIcon`. |
 | `silentNotifications` | Implemented across rest notifications, update notifications, and configured start/finish sounds. |
 | `monitorDnd` | Implemented as Focus/DND monitoring, with Eye Gate not globally cancelled by default. |
@@ -225,7 +225,7 @@ ShouldRest must implement or exceed these Stretchly capabilities except where ex
 - System/light/dark theme.
 - Configurable colors.
 - Start/finish sounds and volume.
-- Tray style: default, time-to-break, progress.
+- Compact icon-only menu bar presentation with tooltip/header status and optional rest-debt badge; legacy tray style values decode for compatibility only.
 - Built-in Body Break ideas.
 - Custom Body Break text and local images.
 - Localization-ready strings.
@@ -262,7 +262,7 @@ Implemented now:
 - UserNotifications-based pre-break notifications.
 - Start/finish sound playback.
 - Copyable diagnostics snapshot from the menu and CLI/URL automation.
-- Native preferences window for core cadence, enablement, Focus policy, and tray style.
+- Native preferences window for core cadence, enablement, Focus policy, and compact menu-bar visibility/recovery.
 - Expanded preferences for notification lead times, overlay colors, sounds, Body Break interval/postpone/skip policy, natural break settings, working hours, primary app exclusion, custom Body Break idea, shortcuts, update settings, and admin controls.
 - CLI command surface for help, version, settings/log paths, pause/resume/reset, take-now, preferences, and diagnostics requests; the settings-path command respects admin path hiding.
 - Stretchly-compatible `toggle`, `mini`, and `long` command aliases, delayed take-now automation, and `body`/`long` one-shot Body Break title, text, wait, and noskip options.

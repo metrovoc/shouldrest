@@ -16,7 +16,7 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 - No regular/focusable break window mode for enforced breaks.
 - No percentage-sized partial active break windows for enforced rests; Body Break uses display targeting and optional secondary blanking instead.
 - No ordinary tray/menu actions during Eye Gate beyond the frictional emergency override.
-- No Stretchly icon-color variants as a core setting; the Mac app uses brand/status text styles instead.
+- No Stretchly icon-color variants or text/progress tray styles as core settings; the Mac app keeps a compact icon-only menu bar item with status in the tooltip and menu header.
 - No user-tunable app-exclusion polling interval; the native app uses a fixed low-latency context evaluation loop.
 - Do Not Disturb does not globally cancel Eye Gate.
 - No contributor-gated preferences.
@@ -72,7 +72,7 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 - Configurable colors for rest surfaces.
 - Optional sounds at start and finish, including Stretchly-compatible built-in sound choices and preference-level preview.
 - Configurable sound volume.
-- Tray/menu-bar status styles: default, time-to-break, and progress.
+- Compact icon-only menu bar presentation with tooltip/header status and an optional rest-debt badge; legacy tray style values decode for compatibility but never lengthen the status item.
 - Optional current time during Body Break.
 - Break health / danger indicator that escalates after deferrals and relaxes after completed rests.
 
