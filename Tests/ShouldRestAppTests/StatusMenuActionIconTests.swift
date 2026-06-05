@@ -90,6 +90,8 @@ final class StatusMenuActionIconTests: XCTestCase {
         XCTAssertEqual(showItem.accessibilityLabel(), L10n.tr("menu.showSettingsFile"))
         XCTAssertEqual(showItem.accessibilityHelp(), L10n.tr("menu.showSettingsFileHelp"))
         XCTAssertEqual(copyItem.title, L10n.tr("menu.copySettingsPath"))
+        XCTAssertEqual(copyItem.title, "Copy Settings Location")
+        XCTAssertNotEqual(copyItem.title, "Copy Location")
         XCTAssertEqual(copyItem.toolTip, L10n.tr("menu.copySettingsPathHelp"))
         XCTAssertEqual(copyItem.accessibilityLabel(), L10n.tr("menu.copySettingsPath"))
         XCTAssertEqual(copyItem.accessibilityHelp(), L10n.tr("menu.copySettingsPathHelp"))

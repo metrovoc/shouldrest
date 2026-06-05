@@ -62,7 +62,7 @@
 "menu.settingsFileHelp" = "Open or copy where ShouldRest keeps its settings.";
 "menu.showSettingsFile" = "Show in Finder";
 "menu.showSettingsFileHelp" = "Show the ShouldRest settings location in Finder.";
-"menu.copySettingsPath" = "Copy Location";
+"menu.copySettingsPath" = "Copy Settings Location";
 "menu.copySettingsPathHelp" = "Copy the ShouldRest settings location.";
 "menu.copySettingsPathDone" = "Settings location copied to the clipboard.";
 "menu.quit" = "Quit ShouldRest";
