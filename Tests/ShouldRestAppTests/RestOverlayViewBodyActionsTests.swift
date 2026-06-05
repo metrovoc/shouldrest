@@ -39,10 +39,38 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
 
         XCTAssertFalse(postponeButton.isEnabled)
         XCTAssertFalse(skipButton.isEnabled)
+        XCTAssertEqual(postponeButton.attributedTitle.string, L10n.tr("overlay.bodyPostponePending"))
+        XCTAssertEqual(postponeButton.image?.accessibilityDescription, L10n.tr("overlay.bodyPostponePending"))
+        XCTAssertEqual(postponeButton.toolTip, L10n.tr("overlay.bodyPostponePendingHelp"))
+        XCTAssertEqual(postponeButton.accessibilityHelp(), L10n.tr("overlay.bodyPostponePendingHelp"))
+        XCTAssertEqual(skipButton.attributedTitle.string, L10n.tr("overlay.bodySkip"))
+        XCTAssertEqual(skipButton.toolTip, L10n.tr("overlay.bodyActionPendingHelp"))
+        XCTAssertEqual(skipButton.accessibilityHelp(), L10n.tr("overlay.bodyActionPendingHelp"))
         view.performBodySkipAction()
         XCTAssertTrue(invokedActions.isEmpty)
         drainMainQueue()
         XCTAssertEqual(invokedActions, ["postpone"])
+    }
+
+    func testEachPendingBodyOverlayActionShowsSpecificProgressFeedback() throws {
+        try assertPendingBodyActionFeedback(
+            action: .postpone,
+            expectedPendingTitle: L10n.tr("overlay.bodyPostponePending"),
+            expectedPendingHelp: L10n.tr("overlay.bodyPostponePendingHelp"),
+            expectedLockedButtonIdentifier: "overlay.bodySkip.button"
+        )
+        try assertPendingBodyActionFeedback(
+            action: .skip,
+            expectedPendingTitle: L10n.tr("overlay.bodySkipPending"),
+            expectedPendingHelp: L10n.tr("overlay.bodySkipPendingHelp"),
+            expectedLockedButtonIdentifier: "overlay.bodyPostpone.button"
+        )
+        try assertPendingBodyActionFeedback(
+            action: .finish,
+            expectedPendingTitle: L10n.tr("overlay.bodyFinishPending"),
+            expectedPendingHelp: L10n.tr("overlay.bodyFinishPendingHelp"),
+            expectedLockedButtonIdentifier: nil
+        )
     }
 
     func testAvailableBodyOverlayActionsUseStableActionRailAffordances() throws {
@@ -203,6 +231,61 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
         case postpone
         case skip
         case finish
+    }
+
+    private func assertPendingBodyActionFeedback(
+        action: BodyActionUnderTest,
+        expectedPendingTitle: String,
+        expectedPendingHelp: String,
+        expectedLockedButtonIdentifier: String?,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) throws {
+        let view = configuredBodyOverlay(
+            actions: BodyOverlayActions(
+                canPostpone: action != .finish,
+                canFinish: action == .finish,
+                canSkip: action != .finish,
+                postpone: {},
+                finish: {},
+                skip: {}
+            )
+        )
+        let pendingButtonIdentifier: String
+        switch action {
+        case .postpone:
+            pendingButtonIdentifier = "overlay.bodyPostpone.button"
+            view.performBodyPostponeAction()
+        case .skip:
+            pendingButtonIdentifier = "overlay.bodySkip.button"
+            view.performBodySkipAction()
+        case .finish:
+            pendingButtonIdentifier = "overlay.bodyFinish.button"
+            view.performBodyFinishAction()
+        }
+
+        let pendingButton = try XCTUnwrap(
+            view.descendant(withIdentifier: pendingButtonIdentifier) as? NSButton,
+            file: file,
+            line: line
+        )
+        XCTAssertFalse(pendingButton.isEnabled, file: file, line: line)
+        XCTAssertEqual(pendingButton.attributedTitle.string, expectedPendingTitle, file: file, line: line)
+        XCTAssertEqual(pendingButton.image?.accessibilityDescription, expectedPendingTitle, file: file, line: line)
+        XCTAssertEqual(pendingButton.toolTip, expectedPendingHelp, file: file, line: line)
+        XCTAssertEqual(pendingButton.accessibilityLabel(), expectedPendingTitle, file: file, line: line)
+        XCTAssertEqual(pendingButton.accessibilityHelp(), expectedPendingHelp, file: file, line: line)
+
+        if let expectedLockedButtonIdentifier {
+            let lockedButton = try XCTUnwrap(
+                view.descendant(withIdentifier: expectedLockedButtonIdentifier) as? NSButton,
+                file: file,
+                line: line
+            )
+            XCTAssertFalse(lockedButton.isEnabled, file: file, line: line)
+            XCTAssertEqual(lockedButton.toolTip, L10n.tr("overlay.bodyActionPendingHelp"), file: file, line: line)
+            XCTAssertEqual(lockedButton.accessibilityHelp(), L10n.tr("overlay.bodyActionPendingHelp"), file: file, line: line)
+        }
     }
 
     private func assertBodyActionDefersUntilNextMainQueueTurn(

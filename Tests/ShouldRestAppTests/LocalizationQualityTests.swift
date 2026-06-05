@@ -32,10 +32,18 @@ final class LocalizationQualityTests: XCTestCase {
         L10n.languageOverride = "en"
         XCTAssertEqual(L10n.tr("overlay.bodySkipHelp"), "Skip this Body Break when skipping is allowed.")
         XCTAssertFalse(L10n.tr("overlay.bodySkipHelp").localizedCaseInsensitiveContains("postpon"))
+        XCTAssertEqual(L10n.tr("overlay.bodyPostponePending"), "Postponing…")
+        XCTAssertEqual(L10n.tr("overlay.bodySkipPending"), "Skipping…")
+        XCTAssertEqual(L10n.tr("overlay.bodyFinishPending"), "Finishing…")
+        XCTAssertTrue(L10n.tr("overlay.bodyActionPendingHelp").localizedCaseInsensitiveContains("already being applied"))
 
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(L10n.tr("overlay.bodySkipHelp"), "在允许跳过时，跳过这次活动休息。")
         XCTAssertFalse(L10n.tr("overlay.bodySkipHelp").contains("推迟"))
+        XCTAssertEqual(L10n.tr("overlay.bodyPostponePending"), "正在推迟…")
+        XCTAssertEqual(L10n.tr("overlay.bodySkipPending"), "正在跳过…")
+        XCTAssertEqual(L10n.tr("overlay.bodyFinishPending"), "正在完成…")
+        XCTAssertTrue(L10n.tr("overlay.bodyActionPendingHelp").contains("正在处理"))
     }
 
     func testBodyPostponeWindowLabelIsStandaloneInSearchAndAccessibility() {

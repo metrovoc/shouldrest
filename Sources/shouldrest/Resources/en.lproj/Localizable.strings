@@ -140,6 +140,13 @@
 "overlay.bodyPostponeHelp" = "Postpone this Body Break while it is still inside the allowed postpone window.";
 "overlay.bodySkipHelp" = "Skip this Body Break when skipping is allowed.";
 "overlay.bodyFinishHelp" = "Finish this rest after the required duration.";
+"overlay.bodyPostponePending" = "Postponing…";
+"overlay.bodySkipPending" = "Skipping…";
+"overlay.bodyFinishPending" = "Finishing…";
+"overlay.bodyPostponePendingHelp" = "Postponing this Body Break now.";
+"overlay.bodySkipPendingHelp" = "Skipping this Body Break now.";
+"overlay.bodyFinishPendingHelp" = "Finishing this rest now.";
+"overlay.bodyActionPendingHelp" = "A Body Break action is already being applied.";
 "preferences.title" = "ShouldRest Preferences";
 "debug.title" = "ShouldRest Support Report";
 "debug.heading" = "Support Report";

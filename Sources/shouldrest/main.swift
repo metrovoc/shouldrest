@@ -2559,6 +2559,67 @@ private struct EmergencyOverlayVisualStyle {
     }
 }
 
+private enum BodyOverlayActionKind {
+    case postpone
+    case skip
+    case finish
+
+    var title: String {
+        switch self {
+        case .postpone:
+            return L10n.tr("overlay.bodyPostpone")
+        case .skip:
+            return L10n.tr("overlay.bodySkip")
+        case .finish:
+            return L10n.tr("overlay.bodyFinish")
+        }
+    }
+
+    var help: String {
+        switch self {
+        case .postpone:
+            return L10n.tr("overlay.bodyPostponeHelp")
+        case .skip:
+            return L10n.tr("overlay.bodySkipHelp")
+        case .finish:
+            return L10n.tr("overlay.bodyFinishHelp")
+        }
+    }
+
+    var symbolName: String {
+        switch self {
+        case .postpone:
+            return "clock.arrow.circlepath"
+        case .skip:
+            return "forward.end"
+        case .finish:
+            return "checkmark.circle"
+        }
+    }
+
+    var pendingTitle: String {
+        switch self {
+        case .postpone:
+            return L10n.tr("overlay.bodyPostponePending")
+        case .skip:
+            return L10n.tr("overlay.bodySkipPending")
+        case .finish:
+            return L10n.tr("overlay.bodyFinishPending")
+        }
+    }
+
+    var pendingHelp: String {
+        switch self {
+        case .postpone:
+            return L10n.tr("overlay.bodyPostponePendingHelp")
+        case .skip:
+            return L10n.tr("overlay.bodySkipPendingHelp")
+        case .finish:
+            return L10n.tr("overlay.bodyFinishPendingHelp")
+        }
+    }
+}
+
 enum OverlayCountdownFormatter {
     static func remainingText(seconds: Int) -> String {
         let clampedSeconds = max(0, seconds)
@@ -2602,10 +2663,12 @@ final class RestOverlayView: NSView {
     private var emergencyPanelWidthConstraint: NSLayoutConstraint?
     private var emergencyPanelHeightConstraint: NSLayoutConstraint?
     private var bodyActionRequestPending = false
+    private var pendingBodyAction: BodyOverlayActionKind?
     var onEmergencyOverrideRequested: (() -> EmergencyOverrideDecision)?
     var bodyActions: BodyOverlayActions? {
         didSet {
             bodyActionRequestPending = false
+            pendingBodyAction = nil
             updateBodyActionButtons()
         }
     }
@@ -2667,25 +2730,19 @@ final class RestOverlayView: NSView {
         configureBodyActionButton(
             bodyPostponeButton,
             identifier: "overlay.bodyPostpone.button",
-            title: L10n.tr("overlay.bodyPostpone"),
-            symbolName: "clock.arrow.circlepath",
-            toolTip: L10n.tr("overlay.bodyPostponeHelp"),
+            kind: .postpone,
             action: #selector(bodyPostponePressed)
         )
         configureBodyActionButton(
             bodySkipButton,
             identifier: "overlay.bodySkip.button",
-            title: L10n.tr("overlay.bodySkip"),
-            symbolName: "forward.end",
-            toolTip: L10n.tr("overlay.bodySkipHelp"),
+            kind: .skip,
             action: #selector(bodySkipPressed)
         )
         configureBodyActionButton(
             bodyFinishButton,
             identifier: "overlay.bodyFinish.button",
-            title: L10n.tr("overlay.bodyFinish"),
-            symbolName: "checkmark.circle",
-            toolTip: L10n.tr("overlay.bodyFinishHelp"),
+            kind: .finish,
             action: #selector(bodyFinishPressed)
         )
         bodyActionPanel.identifier = NSUserInterfaceItemIdentifier("overlay.bodyActions.panel")
@@ -2877,24 +2934,25 @@ final class RestOverlayView: NSView {
     }
 
     @objc private func bodyPostponePressed() {
-        requestBodyActionIfAvailable(bodyActions?.canPostpone == true, action: bodyActions?.postpone)
+        requestBodyActionIfAvailable(.postpone, isAvailable: bodyActions?.canPostpone == true, action: bodyActions?.postpone)
     }
 
     @objc private func bodySkipPressed() {
-        requestBodyActionIfAvailable(bodyActions?.canSkip == true, action: bodyActions?.skip)
+        requestBodyActionIfAvailable(.skip, isAvailable: bodyActions?.canSkip == true, action: bodyActions?.skip)
     }
 
     @objc private func bodyFinishPressed() {
-        requestBodyActionIfAvailable(bodyActions?.canFinish == true, action: bodyActions?.finish)
+        requestBodyActionIfAvailable(.finish, isAvailable: bodyActions?.canFinish == true, action: bodyActions?.finish)
     }
 
-    private func requestBodyActionIfAvailable(_ isAvailable: Bool, action: (() -> Void)?) {
+    private func requestBodyActionIfAvailable(_ kind: BodyOverlayActionKind, isAvailable: Bool, action: (() -> Void)?) {
         guard isAvailable,
               let action,
               !bodyActionRequestPending else {
             return
         }
         bodyActionRequestPending = true
+        pendingBodyAction = kind
         updateBodyActionButtons()
         DispatchQueue.main.async {
             action()
@@ -3022,21 +3080,15 @@ final class RestOverlayView: NSView {
     private func configureBodyActionButton(
         _ button: OverlayActionButton,
         identifier: String,
-        title: String,
-        symbolName: String,
-        toolTip: String,
+        kind: BodyOverlayActionKind,
         action: Selector
     ) {
         button.identifier = NSUserInterfaceItemIdentifier(identifier)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.bezelStyle = .inline
         button.isBordered = false
-        button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: title)
         button.imagePosition = .imageLeading
         button.contentTintColor = NSColor.white.withAlphaComponent(0.72)
-        button.toolTip = toolTip
-        button.setAccessibilityLabel(title)
-        button.setAccessibilityHelp(toolTip)
         button.target = self
         button.action = action
         button.alphaValue = 0.78
@@ -3044,13 +3096,7 @@ final class RestOverlayView: NSView {
         button.setContentCompressionResistancePriority(.required, for: .horizontal)
         button.widthAnchor.constraint(greaterThanOrEqualToConstant: 112).isActive = true
         button.heightAnchor.constraint(equalToConstant: 34).isActive = true
-        button.attributedTitle = NSAttributedString(
-            string: title,
-            attributes: [
-                .foregroundColor: NSColor.white.withAlphaComponent(0.82),
-                .font: NSFont.systemFont(ofSize: 13, weight: .medium)
-            ]
-        )
+        updateBodyActionButtonPresentation(button, kind: kind)
     }
 
     private func updateBodyActionButtons() {
@@ -3058,12 +3104,43 @@ final class RestOverlayView: NSView {
         bodyPostponeButton.isHidden = !(actions?.canPostpone ?? false)
         bodySkipButton.isHidden = !(actions?.canSkip ?? false)
         bodyFinishButton.isHidden = !(actions?.canFinish ?? false)
-        [bodyPostponeButton, bodySkipButton, bodyFinishButton].forEach { button in
+        [
+            (bodyPostponeButton, BodyOverlayActionKind.postpone),
+            (bodySkipButton, BodyOverlayActionKind.skip),
+            (bodyFinishButton, BodyOverlayActionKind.finish)
+        ].forEach { button, kind in
             button.isEnabled = !button.isHidden && !bodyActionRequestPending
             button.alphaValue = bodyActionRequestPending ? 0.42 : 0.78
+            updateBodyActionButtonPresentation(button, kind: kind)
         }
         bodyActionStack.isHidden = bodyPostponeButton.isHidden && bodySkipButton.isHidden && bodyFinishButton.isHidden
         bodyActionPanel.isHidden = bodyActionStack.isHidden
+    }
+
+    private func updateBodyActionButtonPresentation(_ button: OverlayActionButton, kind: BodyOverlayActionKind) {
+        let isPendingButton = bodyActionRequestPending && pendingBodyAction == kind
+        let title = isPendingButton ? kind.pendingTitle : kind.title
+        let help: String
+        if isPendingButton {
+            help = kind.pendingHelp
+        } else if bodyActionRequestPending {
+            help = L10n.tr("overlay.bodyActionPendingHelp")
+        } else {
+            help = kind.help
+        }
+        let symbolName = isPendingButton ? "hourglass" : kind.symbolName
+
+        button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: title)
+        button.toolTip = help
+        button.setAccessibilityLabel(title)
+        button.setAccessibilityHelp(help)
+        button.attributedTitle = NSAttributedString(
+            string: title,
+            attributes: [
+                .foregroundColor: NSColor.white.withAlphaComponent(0.82),
+                .font: NSFont.systemFont(ofSize: 13, weight: .medium)
+            ]
+        )
     }
 
     private func localBodyBreakImage(settings: RestSettings) -> NSImage? {
