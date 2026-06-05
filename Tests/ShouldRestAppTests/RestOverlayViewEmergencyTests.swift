@@ -637,8 +637,12 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
     func testEmergencyAffordanceAccessibilityTracksConfirmationState() throws {
         let view = configuredEyeGateOverlay()
         view.onEmergencyOverrideRequested = { .armed }
+        let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.panel"))
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
 
+        XCTAssertEqual(panel.accessibilityLabel(), L10n.tr("overlay.emergencyOverride"))
+        XCTAssertEqual(panel.accessibilityHelp(), L10n.tr("overlay.emergencyOverrideHelp"))
+        XCTAssertEqual(panel.toolTip, L10n.tr("overlay.emergencyOverrideHelp"))
         XCTAssertEqual(button.accessibilityLabel(), L10n.tr("overlay.emergencyOverride"))
         XCTAssertEqual(button.accessibilityHelp(), L10n.tr("overlay.emergencyOverrideHelp"))
         XCTAssertEqual(button.toolTip, L10n.tr("overlay.emergencyOverrideHelp"))
@@ -647,6 +651,9 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         button.performClick(nil)
 
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+        XCTAssertEqual(panel.accessibilityLabel(), L10n.tr("overlay.emergencyOverrideConfirm"))
+        XCTAssertEqual(panel.accessibilityHelp(), L10n.tr("overlay.emergencyOverrideConfirmHelp"))
+        XCTAssertEqual(panel.toolTip, L10n.tr("overlay.emergencyOverrideConfirmHelp"))
         XCTAssertEqual(button.accessibilityLabel(), L10n.tr("overlay.emergencyOverrideConfirm"))
         XCTAssertEqual(button.accessibilityHelp(), L10n.tr("overlay.emergencyOverrideConfirmHelp"))
         XCTAssertEqual(button.toolTip, L10n.tr("overlay.emergencyOverrideConfirmHelp"))
@@ -690,12 +697,17 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             requestCount += 1
             return .unavailable
         }
+        let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.panel"))
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
 
         button.performClick(nil)
         drainMainQueue()
 
         XCTAssertEqual(requestCount, 1)
+        XCTAssertTrue(panel.isHidden)
+        XCTAssertNil(panel.toolTip)
+        XCTAssertNil(panel.accessibilityLabel())
+        XCTAssertNil(panel.accessibilityHelp())
         XCTAssertTrue(button.isHidden)
         assertHiddenEmergencyButtonIsCleared(button)
         XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .unavailable)

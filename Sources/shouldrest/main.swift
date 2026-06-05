@@ -3042,6 +3042,7 @@ final class RestOverlayView: NSView {
         emergencyOverrideRequestInFlight = false
         emergencyPanel.isHidden = true
         emergencyButton.isHidden = true
+        clearEmergencyPanelPresentation()
         clearEmergencyButtonPresentation()
     }
 
@@ -3063,6 +3064,7 @@ final class RestOverlayView: NSView {
             emergencyOverrideRequestInFlight = false
             emergencyPanel.isHidden = true
             emergencyButton.isHidden = true
+            clearEmergencyPanelPresentation()
             clearEmergencyButtonPresentation()
             return
         }
@@ -3104,11 +3106,24 @@ final class RestOverlayView: NSView {
         } else {
             help = L10n.tr("overlay.emergencyOverrideHelp")
         }
+        setEmergencyPanelAccessibility(title: title, help: help)
         setEmergencyButtonTitle(
             title,
             help: help,
             style: style
         )
+    }
+
+    private func setEmergencyPanelAccessibility(title: String, help: String) {
+        emergencyPanel.toolTip = help
+        emergencyPanel.setAccessibilityLabel(title)
+        emergencyPanel.setAccessibilityHelp(help)
+    }
+
+    private func clearEmergencyPanelPresentation() {
+        emergencyPanel.toolTip = nil
+        emergencyPanel.setAccessibilityLabel(nil)
+        emergencyPanel.setAccessibilityHelp(nil)
     }
 
     private func setEmergencyButtonTitle(_ title: String, help: String, style: EmergencyOverlayVisualStyle) {
