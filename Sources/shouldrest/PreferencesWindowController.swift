@@ -1061,6 +1061,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         appearanceStack.addArrangedSubview(breakHealth)
         silentNotifications.identifier = NSUserInterfaceItemIdentifier("prefs.silentNotifications")
         appearanceStack.addArrangedSubview(silentNotifications)
+        appearanceStack.addArrangedSubview(inlineControlHelpRow(
+            L10n.tr("prefs.silentNotificationsHelp"),
+            identifier: "prefs.silentNotificationsInlineHelp"
+        ).row)
         let eyeStartSoundRow = row(L10n.tr("prefs.eyeStartSound"), soundPickerRow(eyeStartSound, eyeStartSoundPreview))
         eyeStartSound.identifier = NSUserInterfaceItemIdentifier("prefs.eyeStartSound")
         eyeStartSoundRow.identifier = NSUserInterfaceItemIdentifier("prefs.eyeStartSoundRow")
@@ -1084,6 +1088,11 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let soundVolumeControlRow = row(L10n.tr("prefs.volume"), soundVolumeRow())
         soundVolumeControlRow.identifier = NSUserInterfaceItemIdentifier("prefs.soundVolumeRow")
         appearanceStack.addArrangedSubview(soundVolumeControlRow)
+        appearanceStack.addArrangedSubview(inlineControlHelpRow(
+            L10n.tr("prefs.soundVolumeHelp"),
+            identifier: "prefs.soundVolumeInlineHelp",
+            leadingWidth: 220
+        ).row)
         appearanceStack.addArrangedSubview(soundPreviewStatusView())
         appearanceStack.addArrangedSubview(separator())
         appearanceStack.addArrangedSubview(section(L10n.tr("prefs.sectionCustomIdea"), symbolName: "text.bubble"))
@@ -5279,9 +5288,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         return stack
     }
 
-    private func inlineControlHelpRow(_ text: String, identifier: String) -> (row: NSStackView, label: NSTextField) {
+    private func inlineControlHelpRow(
+        _ text: String,
+        identifier: String,
+        leadingWidth: CGFloat = 22
+    ) -> (row: NSStackView, label: NSTextField) {
         let spacer = NSView()
-        spacer.widthAnchor.constraint(equalToConstant: 22).isActive = true
+        spacer.widthAnchor.constraint(equalToConstant: leadingWidth).isActive = true
 
         let label = NSTextField(labelWithString: text)
         label.identifier = NSUserInterfaceItemIdentifier(identifier)

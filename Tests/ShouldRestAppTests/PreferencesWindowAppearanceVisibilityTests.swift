@@ -48,8 +48,21 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
             XCTAssertEqual(control.toolTip, L10n.tr(expectation.helpKey), expectation.identifier)
             XCTAssertEqual(control.accessibilityHelp(), L10n.tr(expectation.helpKey), expectation.identifier)
         }
-        XCTAssertFalse(visibleTexts(in: contentView).contains(L10n.tr("prefs.themeHelp")))
-        XCTAssertFalse(visibleTexts(in: contentView).contains(L10n.tr("prefs.soundVolumeHelp")))
+        let visibleHelpTexts = visibleTexts(in: contentView)
+        XCTAssertFalse(visibleHelpTexts.contains(L10n.tr("prefs.themeHelp")))
+        XCTAssertFalse(visibleHelpTexts.contains(L10n.tr("prefs.languageHelp")))
+        XCTAssertTrue(visibleHelpTexts.contains(L10n.tr("prefs.silentNotificationsHelp")))
+        XCTAssertTrue(visibleHelpTexts.contains(L10n.tr("prefs.soundVolumeHelp")))
+        try assertInlineHelp(
+            "prefs.silentNotificationsInlineHelp",
+            text: L10n.tr("prefs.silentNotificationsHelp"),
+            in: contentView
+        )
+        try assertInlineHelp(
+            "prefs.soundVolumeInlineHelp",
+            text: L10n.tr("prefs.soundVolumeHelp"),
+            in: contentView
+        )
 
         let soundVolumeSlider = try XCTUnwrap(view(withIdentifier: "prefs.soundVolumeSlider", in: contentView) as? NSSlider)
         let soundVolumeValue = try XCTUnwrap(view(withIdentifier: "prefs.soundVolumeValue", in: contentView) as? NSTextField)
@@ -103,6 +116,11 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertEqual(
             toggle.toolTip,
             "Keep notifications visible but mute notification sounds, rest sounds, and sound previews."
+        )
+        XCTAssertTrue(
+            visibleTexts(in: contentView).contains(
+                "Keep notifications visible but mute notification sounds, rest sounds, and sound previews."
+            )
         )
         XCTAssertFalse(visibleTexts(in: contentView).contains("Silent notifications"))
 
@@ -750,6 +768,22 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
 
     private func view(withIdentifier identifier: String, in rootView: NSView) throws -> NSView {
         try XCTUnwrap(findView(withIdentifier: identifier, in: rootView))
+    }
+
+    private func assertInlineHelp(_ identifier: String, text: String, in rootView: NSView) throws {
+        let label = try XCTUnwrap(view(withIdentifier: identifier, in: rootView) as? NSTextField)
+        XCTAssertFalse(label.isHidden)
+        XCTAssertEqual(label.stringValue, text)
+        XCTAssertEqual(label.toolTip, text)
+        XCTAssertEqual(label.accessibilityLabel(), text)
+        XCTAssertEqual(label.accessibilityHelp(), text)
+        XCTAssertEqual(label.maximumNumberOfLines, 2)
+        XCTAssertEqual(label.lineBreakMode, .byWordWrapping)
+
+        let row = try view(withIdentifier: "\(identifier)Row", in: rootView)
+        XCTAssertFalse(row.isHidden)
+        XCTAssertEqual(row.toolTip, text)
+        XCTAssertEqual(row.accessibilityHelp(), text)
     }
 
     private func findView(withIdentifier identifier: String, in view: NSView) -> NSView? {
