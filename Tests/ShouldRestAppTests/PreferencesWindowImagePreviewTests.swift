@@ -77,11 +77,32 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
         XCTAssertEqual(imageView.image?.accessibilityDescription, "body-preview.png")
         XCTAssertEqual(label.stringValue, "body-preview.png")
         XCTAssertEqual(label.toolTip, imageURL.path)
+        XCTAssertEqual(label.accessibilityLabel(), "body-preview.png")
         XCTAssertEqual(label.accessibilityHelp(), imageURL.path)
         XCTAssertFalse(visibleTexts(in: contentView).contains(imageURL.path))
         XCTAssertTrue(clearButton.isEnabled)
         XCTAssertEqual(clearButton.toolTip, L10n.tr("prefs.clearBodyImageHelp"))
         XCTAssertEqual(clearButton.accessibilityHelp(), L10n.tr("prefs.clearBodyImageHelp"))
+    }
+
+    func testImagePreviewHidesSelectedImageLocationWhenFileLocationsAreHidden() throws {
+        let imageURL = try makeTemporaryPNG(named: "private-body-preview.png")
+        var settings = RestSettings.defaults
+        settings.admin.hideSettingsFileLocation = true
+        settings.contentLibrary.localImagePaths = [imageURL.path]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+
+        let label = try XCTUnwrap(view(withIdentifier: "localImagePreviewLabel", in: contentView) as? NSTextField)
+        XCTAssertEqual(label.stringValue, "private-body-preview.png")
+        XCTAssertEqual(label.accessibilityLabel(), "private-body-preview.png")
+        XCTAssertEqual(label.toolTip, L10n.tr("prefs.imagePathHiddenHelp"))
+        XCTAssertEqual(label.accessibilityHelp(), L10n.tr("prefs.imagePathHiddenHelp"))
+        XCTAssertFalse(label.toolTip?.contains(imageURL.path) ?? true)
+        XCTAssertFalse(label.accessibilityHelp()?.contains(imageURL.path) ?? true)
+        XCTAssertFalse(visibleTexts(in: contentView).contains(imageURL.path))
     }
 
     func testImagePreviewShowsUnavailableStateForMissingImage() throws {
@@ -124,6 +145,37 @@ final class PreferencesWindowImagePreviewTests: XCTestCase {
         XCTAssertEqual(savedSettings.value?.contentLibrary.localImagePaths, [imageURL.standardizedFileURL.path])
         XCTAssertEqual(savedSettings.value?.bodyBreak.content, .localImage)
         XCTAssertTrue(clearButton.isEnabled)
+    }
+
+    func testImagePreviewLocationHelpUpdatesWhenFileLocationHidingChanges() throws {
+        let imageURL = try makeTemporaryPNG(named: "toggle-hidden-body-preview.png")
+        var settings = RestSettings.defaults
+        settings.contentLibrary.localImagePaths = [imageURL.path]
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+        let label = try XCTUnwrap(view(withIdentifier: "localImagePreviewLabel", in: contentView) as? NSTextField)
+        let tabView = try XCTUnwrap(firstTabView(in: contentView))
+        XCTAssertEqual(label.toolTip, imageURL.path)
+
+        tabView.selectTabViewItem(withIdentifier: L10n.tr("prefs.tabAdvanced"))
+        let hidePath = try XCTUnwrap(view(withIdentifier: "prefs.adminHideSettingsPath", in: contentView) as? NSButton)
+        hidePath.state = .on
+        XCTAssertTrue(sendAction(from: hidePath))
+
+        tabView.selectTabViewItem(withIdentifier: L10n.tr("prefs.tabAppearance"))
+        XCTAssertEqual(label.stringValue, "toggle-hidden-body-preview.png")
+        XCTAssertEqual(label.toolTip, L10n.tr("prefs.imagePathHiddenHelp"))
+        XCTAssertEqual(label.accessibilityHelp(), L10n.tr("prefs.imagePathHiddenHelp"))
+
+        tabView.selectTabViewItem(withIdentifier: L10n.tr("prefs.tabAdvanced"))
+        hidePath.state = .off
+        XCTAssertTrue(sendAction(from: hidePath))
+
+        tabView.selectTabViewItem(withIdentifier: L10n.tr("prefs.tabAppearance"))
+        XCTAssertEqual(label.toolTip, imageURL.path)
+        XCTAssertEqual(label.accessibilityHelp(), imageURL.path)
     }
 
     func testClearingSelectedImageReturnsToEmptyPreviewAndAutosaves() throws {

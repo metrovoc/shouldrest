@@ -2620,6 +2620,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private func applyAdminVisibility() {
         updateAdminMessageLabel(settings.admin.customPreferencesMessage)
         updateDependentControlEnablement()
+        updateLocalImagePreview()
 
         updateUpdatePreferencesVisibility()
         updateShortcutConflictWarning()
@@ -3342,6 +3343,9 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             } else if popup === pauseUntilMorningLocation {
                 applySelectedSunriseLocationPreset()
             }
+        }
+        if let button = sender as? NSButton, button === hideSettingsPath {
+            updateLocalImagePreview()
         }
         updateDependentControlEnablement()
         if isAppExclusionDraftControl(sender), hasAppExclusionRuleList {
@@ -5722,20 +5726,29 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                 accessibilityDescription: description
             )
             localImagePreview.contentTintColor = .systemOrange
-            setLocalImagePreviewLabel(description, help: path)
+            setLocalImagePreviewLabel(description, help: localImagePreviewLocationHelp(path: path))
             return
         }
 
         image.accessibilityDescription = url.lastPathComponent
         localImagePreview.image = image
         localImagePreview.contentTintColor = nil
-        setLocalImagePreviewLabel(url.lastPathComponent, help: path)
+        setLocalImagePreviewLabel(url.lastPathComponent, help: localImagePreviewLocationHelp(path: path))
     }
 
     private func setLocalImagePreviewLabel(_ text: String, help: String) {
         localImagePreviewLabel.stringValue = text
         localImagePreviewLabel.toolTip = help
+        localImagePreviewLabel.setAccessibilityLabel(text)
         localImagePreviewLabel.setAccessibilityHelp(help)
+    }
+
+    private func localImagePreviewLocationHelp(path: String) -> String {
+        fileLocationsHiddenForCurrentPreferences ? L10n.tr("prefs.imagePathHiddenHelp") : path
+    }
+
+    private var fileLocationsHiddenForCurrentPreferences: Bool {
+        isLoadingSettings ? settings.admin.hideSettingsFileLocation : isOn(hideSettingsPath)
     }
 
     private func separator() -> NSBox {
