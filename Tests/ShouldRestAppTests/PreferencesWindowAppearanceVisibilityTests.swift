@@ -486,8 +486,9 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
 
         XCTAssertNil(savedSettings.value)
         XCTAssertEqual(removeWalk.toolTip, L10n.tr("prefs.removeCustomIdeaConfirmHelp"))
-        XCTAssertEqual(removeWalk.accessibilityLabel(), L10n.tr("prefs.removeCustomIdea"))
+        XCTAssertEqual(removeWalk.accessibilityLabel(), L10n.tr("prefs.confirmRemoveCustomIdea"))
         XCTAssertEqual(removeWalk.accessibilityHelp(), L10n.tr("prefs.removeCustomIdeaConfirmHelp"))
+        XCTAssertEqual(removeWalk.image?.accessibilityDescription, L10n.tr("prefs.confirmRemoveCustomIdea"))
         let armedTint = try XCTUnwrap(removeWalk.contentTintColor?.usingColorSpace(.sRGB))
         XCTAssertGreaterThan(armedTint.redComponent, armedTint.greenComponent)
         XCTAssertGreaterThan(armedTint.redComponent, armedTint.blueComponent)

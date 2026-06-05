@@ -5129,6 +5129,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                 control.button,
                 isArmed: isArmed,
                 label: L10n.tr("prefs.removeAppExclusionRule"),
+                armedLabel: L10n.tr("prefs.confirmRemoveAppExclusionRule"),
                 help: isArmed ?
                     L10n.tr("prefs.removeAppExclusionRuleConfirmHelp") :
                     L10n.tr("prefs.removeAppExclusionRuleHelp")
@@ -5143,6 +5144,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                 control.button,
                 isArmed: isArmed,
                 label: L10n.tr("prefs.removeCustomIdea"),
+                armedLabel: L10n.tr("prefs.confirmRemoveCustomIdea"),
                 help: isArmed ?
                     L10n.tr("prefs.removeCustomIdeaConfirmHelp") :
                     L10n.tr("prefs.removeCustomIdeaHelp")
@@ -5154,14 +5156,16 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         _ button: NSButton,
         isArmed: Bool,
         label: String,
+        armedLabel: String,
         help: String
     ) {
+        let effectiveLabel = isArmed ? armedLabel : label
         button.image = NSImage(
-            systemSymbolName: isArmed ? "trash.fill" : "trash",
-            accessibilityDescription: label
+            systemSymbolName: isArmed ? "checkmark.circle.fill" : "trash",
+            accessibilityDescription: effectiveLabel
         )
         button.contentTintColor = isArmed ? .systemRed : .secondaryLabelColor
-        setIconOnlyActionHelp(label: label, help: help, on: button)
+        setIconOnlyActionHelp(label: effectiveLabel, help: help, on: button)
     }
 
     private func removeArrangedSubviews(from stack: NSStackView) {

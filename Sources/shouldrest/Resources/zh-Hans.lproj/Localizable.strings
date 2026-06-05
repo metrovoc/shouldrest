@@ -345,6 +345,7 @@
 "prefs.editAppExclusionRule" = "编辑应用规则";
 "prefs.editAppExclusionRuleHelp" = "编辑这条应用规则。";
 "prefs.removeAppExclusionRule" = "移除应用规则";
+"prefs.confirmRemoveAppExclusionRule" = "确认移除应用规则";
 "prefs.removeAppExclusionRuleHelp" = "移除此条应用规则。";
 "prefs.removeAppExclusionRuleConfirmHelp" = "再次点击即可移除此条应用规则。";
 "prefs.appExclusionAppliesEyeBody" = "护眼休息和活动休息";
@@ -437,6 +438,7 @@
 "prefs.editCustomIdea" = "编辑提示";
 "prefs.editCustomIdeaHelp" = "编辑这条活动休息提示。";
 "prefs.removeCustomIdea" = "移除提示";
+"prefs.confirmRemoveCustomIdea" = "确认移除提示";
 "prefs.removeCustomIdeaHelp" = "移除此条活动休息提示。";
 "prefs.removeCustomIdeaConfirmHelp" = "再次点击即可移除此条活动休息提示。";
 "prefs.customIdeaEmptyBody" = "无正文";

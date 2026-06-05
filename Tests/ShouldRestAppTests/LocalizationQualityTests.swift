@@ -550,6 +550,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.updateAppExclusionRule"), "Update App Rule")
         XCTAssertEqual(L10n.tr("prefs.cancelAppExclusionRuleEdit"), "Cancel Edit")
         XCTAssertEqual(L10n.tr("prefs.appExclusionRules"), "Saved app rules")
+        XCTAssertEqual(L10n.tr("prefs.confirmRemoveAppExclusionRule"), "Confirm Remove App Rule")
         XCTAssertEqual(L10n.tr("prefs.sectionExclusion"), "App Rules")
         XCTAssertEqual(L10n.tr("prefs.enablePrimaryExclusion"), "Enable app rules")
         XCTAssertEqual(L10n.tr("prefs.advancedRulesJSON"), "App rules import and export text")
@@ -580,6 +581,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.showAdvancedIdeas"), "Import or Export Ideas")
         XCTAssertEqual(L10n.tr("prefs.defaultCustomIdeaTitle"), "Body Break idea")
         XCTAssertNotEqual(L10n.tr("prefs.defaultCustomIdeaTitle"), "Custom Body Break")
+        XCTAssertEqual(L10n.tr("prefs.confirmRemoveCustomIdea"), "Confirm Remove Idea")
         XCTAssertEqual(L10n.tr("prefs.copyIdeasBulkEditor"), "Copy Ideas Export")
         XCTAssertEqual(L10n.tr("prefs.restoreIdeasBulkEditor"), "Restore Saved Ideas")
         XCTAssertEqual(
@@ -763,6 +765,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.updateAppExclusionRule"), "更新应用规则")
         XCTAssertEqual(L10n.tr("prefs.cancelAppExclusionRuleEdit"), "取消编辑")
         XCTAssertEqual(L10n.tr("prefs.appExclusionRules"), "已保存应用规则")
+        XCTAssertEqual(L10n.tr("prefs.confirmRemoveAppExclusionRule"), "确认移除应用规则")
         XCTAssertEqual(L10n.tr("prefs.sectionExclusion"), "应用规则")
         XCTAssertEqual(L10n.tr("prefs.enablePrimaryExclusion"), "启用应用规则")
         XCTAssertEqual(L10n.tr("prefs.advancedRulesJSON"), "应用规则导入和导出文本")
@@ -793,6 +796,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.showAdvancedIdeas"), "导入或导出提示")
         XCTAssertEqual(L10n.tr("prefs.defaultCustomIdeaTitle"), "活动休息提示")
         XCTAssertNotEqual(L10n.tr("prefs.defaultCustomIdeaTitle"), "Custom Body Break")
+        XCTAssertEqual(L10n.tr("prefs.confirmRemoveCustomIdea"), "确认移除提示")
         XCTAssertEqual(L10n.tr("prefs.copyIdeasBulkEditor"), "复制提示导出文本")
         XCTAssertEqual(L10n.tr("prefs.restoreIdeasBulkEditor"), "还原已保存提示")
         XCTAssertEqual(
