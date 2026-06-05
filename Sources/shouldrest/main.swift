@@ -1346,21 +1346,15 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             logger.log("Emergency override armed for \(session.kind.rawValue), awaiting second overlay confirmation")
             rebuildMenu()
         case .complete:
-            logger.log("Emergency override confirmed for \(session.kind.rawValue), queueing completion")
+            logger.log("Emergency override confirmed for \(session.kind.rawValue), completing immediately")
             guard engine.state.activeSession?.id == session.id else {
                 return
             }
-            Task { @MainActor [weak self] in
-                guard let self,
-                      self.engine.state.activeSession?.id == session.id else {
-                    return
-                }
-                self.completeEmergencyOverrideEyeGate(
-                    session: session,
-                    now: now,
-                    playSound: true
-                )
-            }
+            completeEmergencyOverrideEyeGate(
+                session: session,
+                now: now,
+                playSound: true
+            )
         case .unavailable:
             overlayController.update(
                 session: session,
