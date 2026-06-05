@@ -1346,15 +1346,18 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             logger.log("Emergency override armed for \(session.kind.rawValue), awaiting second overlay confirmation")
             rebuildMenu()
         case .complete:
-            logger.log("Emergency override confirmed for \(session.kind.rawValue), completing immediately")
+            logger.log("Emergency override confirmed for \(session.kind.rawValue), completing after overlay event dispatch")
             guard engine.state.activeSession?.id == session.id else {
                 return
             }
-            completeEmergencyOverrideEyeGate(
-                session: session,
-                now: now,
-                playSound: true
-            )
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                self.completeEmergencyOverrideEyeGate(
+                    session: session,
+                    now: now,
+                    playSound: true
+                )
+            }
         case .unavailable:
             overlayController.update(
                 session: session,
@@ -1375,6 +1378,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         now: Date,
         playSound shouldPlaySound: Bool
     ) {
+        guard engine.state.activeSession?.id == session.id else {
+            logger.log("Emergency override completion skipped because active session changed")
+            emergencyOverrideCoordinator.clear(sessionID: session.id)
+            rebuildMenu()
+            return
+        }
         logger.log("Emergency override completing for \(session.kind.rawValue)")
         let result = engine.emergencyOverride(now: now)
         logger.log("Emergency override engine result=\(result)")
