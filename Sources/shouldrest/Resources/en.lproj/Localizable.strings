@@ -222,8 +222,8 @@
 "prefs.openAtLogin" = "Open at login";
 "prefs.openAtLoginHelp" = "Start ShouldRest automatically after you sign in.";
 "prefs.showMenuBarItem" = "Show menu bar icon";
-"prefs.showMenuBarItemHelp" = "Keep ShouldRest visible in the menu bar. If you hide it, reopen Preferences with the shouldrest preferences command or shouldrest://preferences URL.";
-"prefs.showMenuBarItemRecovery" = "Menu bar access will disappear. Reopen Preferences with shouldrest preferences or shouldrest://preferences.";
+"prefs.showMenuBarItemHelp" = "Keep ShouldRest visible in the menu bar. If you hide it, open ShouldRest again from Applications to reopen Preferences. You can also use shouldrest preferences or shouldrest://preferences.";
+"prefs.showMenuBarItemRecovery" = "Menu bar access will disappear. Open ShouldRest again from Applications to reopen Preferences; shouldrest preferences and shouldrest://preferences also work.";
 "prefs.checkUpdates" = "Check for updates";
 "prefs.checkUpdatesHelp" = "Check for new releases when ShouldRest launches and periodically while it runs.";
 "prefs.notifyNewVersion" = "Notify when a new version is found";

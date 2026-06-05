@@ -82,6 +82,24 @@ enum TerminationPolicy {
     }
 }
 
+enum ApplicationReopenPolicy {
+    enum Action: Equatable {
+        case allowSystemReopen
+        case openPreferences
+        case restoreActiveOverlay
+    }
+
+    static func action(state: RestEngineState, hasVisibleWindows: Bool) -> Action {
+        if hasVisibleWindows {
+            return .allowSystemReopen
+        }
+        if state.activeSession != nil {
+            return .restoreActiveOverlay
+        }
+        return .openPreferences
+    }
+}
+
 enum StrictRestBlockedActionPolicy {
     enum Feedback: Equatable {
         case focusEyeGateEmergencyInOverlay
@@ -609,6 +627,20 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
         rebuildMenu()
         return .terminateCancel
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        switch ApplicationReopenPolicy.action(state: engine.state, hasVisibleWindows: flag) {
+        case .allowSystemReopen:
+            return true
+        case .openPreferences:
+            openPreferences()
+            logger.log("Application reopen opened Preferences")
+            return false
+        case .restoreActiveOverlay:
+            restoreActiveOverlayForReopen()
+            return false
+        }
     }
 
     @objc private func screenParametersChanged() {
@@ -1355,6 +1387,38 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         } else {
             logger.log("Emergency override denied result=\(result)")
         }
+        rebuildMenu()
+    }
+
+    private func restoreActiveOverlayForReopen() {
+        guard let active = engine.state.activeSession else {
+            openPreferences()
+            logger.log("Application reopen had no active overlay; opened Preferences")
+            return
+        }
+
+        let now = Date()
+        let manualAwaiting = now.timeIntervalSince(active.startedAt) >= active.duration && active.manualFinishEnabled
+        overlayController.update(
+            session: active,
+            settings: overlaySettings(for: active),
+            now: now,
+            manualAwaiting: manualAwaiting,
+            emergencyOverrideAction: overlayEmergencyOverrideAction(for: active, now: now),
+            emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: active, now: now),
+            bodyActions: overlayBodyActions(for: active, now: now)
+        )
+        if active.kind == .eyeGate,
+           !manualAwaiting,
+           EmergencyOverrideCoordinator.isAvailable(
+               session: active,
+               policy: settings.eyeGate.emergencyOverride,
+               now: now
+           ) {
+            _ = overlayController.focusEmergencyOverrideAffordanceIfAvailable()
+        }
+        NSApp.activate(ignoringOtherApps: true)
+        logger.log("Application reopen restored active \(active.kind.rawValue) overlay")
         rebuildMenu()
     }
 

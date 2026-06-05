@@ -207,6 +207,8 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         XCTAssertFalse(visibleTexts.contains("Hide administrative controls"))
         XCTAssertFalse(L10n.tr("prefs.adminControlsHelp").localizedCaseInsensitiveContains("deployment"))
         XCTAssertFalse(L10n.tr("prefs.preferencesMessageHelp").localizedCaseInsensitiveContains("managed setup"))
+        XCTAssertTrue(L10n.tr("prefs.showMenuBarItemHelp").contains("Applications"))
+        XCTAssertTrue(L10n.tr("prefs.showMenuBarItemHelp").contains("open ShouldRest again"))
         XCTAssertTrue(L10n.tr("prefs.showMenuBarItemHelp").contains("shouldrest preferences"))
         XCTAssertTrue(L10n.tr("prefs.showMenuBarItemHelp").contains("shouldrest://preferences"))
         XCTAssertFalse(visibleTexts.contains("Pause scheduler on sleep or lock"))
@@ -257,6 +259,8 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         XCTAssertEqual(recoveryLabel.stringValue, L10n.tr("prefs.showMenuBarItemRecovery"))
         XCTAssertEqual(recoveryLabel.toolTip, L10n.tr("prefs.showMenuBarItemRecovery"))
         XCTAssertEqual(recoveryLabel.accessibilityHelp(), L10n.tr("prefs.showMenuBarItemRecovery"))
+        XCTAssertTrue(recoveryLabel.stringValue.contains("Applications"))
+        XCTAssertTrue(recoveryLabel.stringValue.contains("Open ShouldRest again"))
         XCTAssertTrue(recoveryLabel.stringValue.contains("shouldrest preferences"))
         XCTAssertTrue(recoveryLabel.stringValue.contains("shouldrest://preferences"))
 
