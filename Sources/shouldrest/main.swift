@@ -2338,9 +2338,7 @@ final class OverlayController {
             windows[id]?.level = level
             windows[id]?.makeKeyAndOrderFront(nil)
             windows[id]?.orderFrontRegardless()
-            if let window = windows[id] {
-                window.makeFirstResponder(window.overlayView)
-            }
+            windows[id]?.overlayView.ensureOverlayKeyboardFocusIfNeeded()
         }
     }
 
@@ -2379,9 +2377,7 @@ final class OverlayController {
             windows[id]?.setFrame(screen.frame, display: true)
             windows[id]?.makeKeyAndOrderFront(nil)
             windows[id]?.orderFrontRegardless()
-            if let window = windows[id] {
-                window.makeFirstResponder(window.overlayView)
-            }
+            windows[id]?.overlayView.ensureOverlayKeyboardFocusIfNeeded()
         }
     }
 
@@ -2987,6 +2983,16 @@ final class RestOverlayView: NSView {
 
         _ = window?.makeFirstResponder(emergencyButton)
         return .focused
+    }
+
+    func ensureOverlayKeyboardFocusIfNeeded() {
+        guard let window else { return }
+        if let focusedView = window.firstResponder as? NSView,
+           (focusedView === self || focusedView.isDescendant(of: self)),
+           !focusedView.isHidden {
+            return
+        }
+        _ = window.makeFirstResponder(self)
     }
 
     private func armEmergencyOverrideLocallyIfNeeded() {

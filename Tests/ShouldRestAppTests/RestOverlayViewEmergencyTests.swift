@@ -388,6 +388,39 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverride"))
     }
 
+    func testOverlayRefreshKeepsFocusedEmergencyButtonAsFirstResponder() throws {
+        let screen = try XCTUnwrap(NSScreen.main)
+        let session = eyeGateSession()
+        let window = OverlayWindow(screen: screen, session: session, settings: .defaults)
+        defer { window.close() }
+        window.overlayView.configure(
+            session: session,
+            remainingSeconds: 60,
+            settings: .defaults,
+            showsContent: true,
+            manualAwaiting: false,
+            isEmergencyOverrideAvailable: true
+        )
+        let button = try XCTUnwrap(window.overlayView.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+
+        XCTAssertEqual(window.overlayView.focusEmergencyOverrideAffordanceIfAvailable(), .focused)
+        XCTAssertTrue(window.firstResponder === button)
+
+        window.overlayView.configure(
+            session: session,
+            remainingSeconds: 59,
+            settings: .defaults,
+            showsContent: true,
+            manualAwaiting: false,
+            isEmergencyOverrideAvailable: true,
+            emergencyOverrideArmed: true
+        )
+        window.overlayView.ensureOverlayKeyboardFocusIfNeeded()
+
+        XCTAssertTrue(window.firstResponder === button)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+    }
+
     func testFocusedEmergencyButtonStillRoutesEscapeThroughWindowEventDispatch() throws {
         let screen = try XCTUnwrap(NSScreen.main)
         let session = eyeGateSession()
