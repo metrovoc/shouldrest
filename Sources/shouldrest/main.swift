@@ -2804,6 +2804,7 @@ final class RestOverlayView: NSView {
     private var emergencyPanelHeightConstraint: NSLayoutConstraint?
     private var bodyActionRequestPending = false
     private var pendingBodyAction: BodyOverlayActionKind?
+    var emergencyFocusAttemptForTesting: (() -> EmergencyOverlayFocusResult)?
     var onEmergencyOverrideRequested: (() -> EmergencyOverrideDecision)?
     var bodyActions: BodyOverlayActions? {
         didSet {
@@ -3054,9 +3055,11 @@ final class RestOverlayView: NSView {
         guard !emergencyOverrideRequestInFlight else {
             return
         }
-        guard case .focused = focusEmergencyOverrideAffordanceIfAvailable() else {
+        guard isEmergencyOverrideAvailable,
+              !emergencyButton.isHidden else {
             return
         }
+        _ = emergencyFocusAttemptForTesting?() ?? focusEmergencyOverrideAffordanceIfAvailable()
 
         emergencyOverrideRequestInFlight = true
         let decision = request()
