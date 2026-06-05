@@ -243,6 +243,7 @@ private enum PreferencesSaveStatus {
     case customIdeaAdded
     case customIdeaUpdated
     case customIdeaRemoved
+    case shortcutSet
     case shortcutCleared
     case shortcutRestored
     case bodyImageSelected
@@ -2377,7 +2378,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             shortcutEndBody, shortcutEmergencyEye, shortcutReset
         ].forEach { recorder in
             recorder.onChange = { [weak self] in
-                self?.handleShortcutChange()
+                self?.handleShortcutChange(completionStatus: .shortcutSet)
             }
         }
     }
@@ -4234,6 +4235,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             symbolName = "minus.circle.fill"
             color = .systemBlue
             title = L10n.tr("prefs.autosaveCustomIdeaRemoved")
+        case .shortcutSet:
+            symbolName = "keyboard.badge.checkmark"
+            color = .systemBlue
+            title = L10n.tr("prefs.autosaveShortcutSet")
         case .shortcutCleared:
             symbolName = "xmark.circle.fill"
             color = .systemBlue

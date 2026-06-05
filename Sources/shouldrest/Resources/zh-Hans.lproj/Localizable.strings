@@ -545,6 +545,7 @@
 "prefs.autosaveCustomIdeaAdded" = "活动休息提示已添加";
 "prefs.autosaveCustomIdeaUpdated" = "活动休息提示已更新";
 "prefs.autosaveCustomIdeaRemoved" = "活动休息提示已移除";
+"prefs.autosaveShortcutSet" = "快捷键已设置";
 "prefs.autosaveShortcutCleared" = "快捷键已清空";
 "prefs.autosaveShortcutRestored" = "默认快捷键已恢复";
 "prefs.autosaveBodyImageSelected" = "活动休息图片已选择";

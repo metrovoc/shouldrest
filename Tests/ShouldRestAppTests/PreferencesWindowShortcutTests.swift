@@ -708,6 +708,34 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(clearButton.image?.accessibilityDescription, L10n.tr("shortcut.clearButton"))
     }
 
+    func testShortcutRecorderSetsShortcutAndShowsSpecificAutosaveStatus() throws {
+        var settings = RestSettings.defaults
+        settings.shortcuts.pauseFor30Minutes = ""
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectShortcutsTab(in: contentView)
+        let recorder = try XCTUnwrap(control(withIdentifier: "shortcut.pause30", in: contentView) as? ShortcutRecorderButton)
+        let statusLabel = try XCTUnwrap(view(withIdentifier: "autosaveStatusLabel", in: contentView) as? NSTextField)
+
+        recorder.performClick(nil)
+        recorder.keyDown(with: try keyEvent(
+            keyCode: kVK_ANSI_1,
+            characters: "1",
+            modifierFlags: [.command]
+        ))
+        waitUntilSavedSettingsArrive(savedSettings)
+
+        XCTAssertEqual(recorder.shortcutValue, "Cmd+1")
+        XCTAssertEqual(recorder.title, "⌘1")
+        XCTAssertEqual(savedSettings.value?.shortcuts.pauseFor30Minutes, "Cmd+1")
+        XCTAssertEqual(statusLabel.stringValue, L10n.tr("prefs.autosaveShortcutSet"))
+        XCTAssertEqual(statusLabel.toolTip, L10n.tr("prefs.autosaveShortcutSet"))
+        XCTAssertEqual(statusLabel.accessibilityLabel(), L10n.tr("prefs.autosaveShortcutSet"))
+        XCTAssertEqual(statusLabel.accessibilityHelp(), L10n.tr("prefs.autosaveShortcutSet"))
+    }
+
     func testRequiredShortcutClearButtonRestoresDefaultAndAutosaves() throws {
         var settings = RestSettings.defaults
         settings.shortcuts.emergencyEyeGateOverride = "Cmd+1"
