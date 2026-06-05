@@ -198,10 +198,13 @@ public struct PostponePolicy: Codable, Equatable, Sendable {
 }
 
 public struct EmergencyOverridePolicy: Codable, Equatable, Sendable {
+    /// Current design is fixed at two explicit in-overlay requests.
+    /// Stored confirmation-step values are kept only for settings compatibility.
     public static let inOverlayRequestCount = 2
     public static let currentDesignConfirmationSteps = inOverlayRequestCount - 1
 
     public var isEnabled: Bool
+    /// Compatibility field: this does not configure long-press timing or extra confirmation UI.
     public var confirmationSteps: Int
 
     public init(isEnabled: Bool, confirmationSteps: Int) {
