@@ -592,8 +592,10 @@
 "shortcut.record" = "Record Shortcut";
 "shortcut.recording" = "Recording…";
 "shortcut.recordingInvalid" = "Use ⌘, ⌃, or ⌥";
+"shortcut.recordingCanceled" = "Canceled";
 "shortcut.recordHelp" = "Click, then press Command, Control, or Option with a key.";
 "shortcut.recordingHelp" = "Press Command, Control, or Option with a key. Esc cancels; Delete clears.";
+"shortcut.recordingCanceledHelp" = "Shortcut recording was canceled. Click again to record a shortcut.";
 "shortcut.clearHelp" = "Click to replace this shortcut. Use the clear button to remove it.";
 "shortcut.requiredHelp" = "Click to replace this shortcut. Use the restore button to return to the default.";
 "shortcut.requiredRecordingHelp" = "Press Command, Control, or Option with a key. Esc cancels; Delete restores the default.";

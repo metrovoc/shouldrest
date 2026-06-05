@@ -6312,6 +6312,7 @@ final class ShortcutRecorderButton: NSButton {
     }
     var onChange: (() -> Void)?
     private var isRecording = false
+    private var transientDisplayToken = 0
 
     convenience init() {
         self.init(frame: .zero)
@@ -6348,6 +6349,7 @@ final class ShortcutRecorderButton: NSButton {
     }
 
     @objc private func beginRecording() {
+        transientDisplayToken += 1
         isRecording = true
         applyDisplayState(.recording)
         window?.makeFirstResponder(self)
@@ -6361,7 +6363,7 @@ final class ShortcutRecorderButton: NSButton {
 
         switch Int(event.keyCode) {
         case kVK_Escape:
-            finishRecording(didChange: false)
+            finishRecording(didChange: false, showCanceledFeedback: true)
         case kVK_Delete, kVK_ForwardDelete:
             shortcutValue = requiredFallbackShortcutValue ?? ""
             finishRecording(didChange: true)
@@ -6376,12 +6378,30 @@ final class ShortcutRecorderButton: NSButton {
         }
     }
 
-    private func finishRecording(didChange: Bool) {
+    private func finishRecording(didChange: Bool, showCanceledFeedback: Bool = false) {
         isRecording = false
-        updateDisplay()
+        if showCanceledFeedback {
+            showCanceledRecordingFeedback()
+        } else {
+            updateDisplay()
+        }
         window?.makeFirstResponder(nil)
         if didChange {
             onChange?()
+        }
+    }
+
+    private func showCanceledRecordingFeedback() {
+        transientDisplayToken += 1
+        let token = transientDisplayToken
+        applyDisplayState(.recordingCanceled)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.9) { [weak self] in
+            guard let self,
+                  self.transientDisplayToken == token,
+                  !self.isRecording else {
+                return
+            }
+            self.updateDisplay()
         }
     }
 
@@ -6412,6 +6432,7 @@ final class ShortcutRecorderButton: NSButton {
         case unset
         case recording
         case recordingRejected
+        case recordingCanceled
         case assigned(String)
     }
 
@@ -6438,6 +6459,11 @@ final class ShortcutRecorderButton: NSButton {
             toolTip = combinedHelp(with: interactionHelp)
             contentTintColor = .systemOrange
             setSymbol("exclamationmark.triangle.fill", fallback: "exclamationmark.triangle")
+        case .recordingCanceled:
+            title = L10n.tr("shortcut.recordingCanceled")
+            toolTip = combinedHelp(with: L10n.tr("shortcut.recordingCanceledHelp"))
+            contentTintColor = .secondaryLabelColor
+            setSymbol("xmark.circle", fallback: "xmark")
         case .assigned(let display):
             title = display
             let interactionHelp = requiredFallbackShortcutValue == nil
@@ -6456,7 +6482,7 @@ final class ShortcutRecorderButton: NSButton {
 
     private func shouldApplySavedValidationWarning(for state: DisplayState) -> Bool {
         switch state {
-        case .recording, .recordingRejected:
+        case .recording, .recordingRejected, .recordingCanceled:
             return false
         case .unset, .assigned:
             return true

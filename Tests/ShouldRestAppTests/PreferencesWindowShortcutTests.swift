@@ -85,6 +85,32 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertNil(savedSettings.value)
     }
 
+    func testShortcutRecorderEscapeShowsCanceledFeedbackWithoutSaving() throws {
+        let button = ShortcutRecorderButton()
+        button.shortcutValue = "Cmd+1"
+        var changeCount = 0
+        button.onChange = { changeCount += 1 }
+
+        button.performClick(nil)
+        button.keyDown(with: try keyEvent(keyCode: kVK_Escape))
+
+        XCTAssertEqual(button.shortcutValue, "Cmd+1")
+        XCTAssertEqual(changeCount, 0)
+        XCTAssertEqual(button.title, L10n.tr("shortcut.recordingCanceled"))
+        XCTAssertEqual(button.toolTip, L10n.tr("shortcut.recordingCanceledHelp"))
+        XCTAssertEqual(button.accessibilityLabel(), L10n.tr("shortcut.recordingCanceled"))
+        XCTAssertEqual(button.accessibilityHelp(), L10n.tr("shortcut.recordingCanceledHelp"))
+        XCTAssertEqual(button.image?.accessibilityDescription, L10n.tr("shortcut.recordingCanceled"))
+
+        RunLoop.current.run(until: Date().addingTimeInterval(1.0))
+
+        XCTAssertEqual(button.title, "⌘1")
+        XCTAssertEqual(button.toolTip, L10n.tr("shortcut.clearHelp"))
+        XCTAssertEqual(button.accessibilityLabel(), "⌘1")
+        XCTAssertEqual(button.accessibilityHelp(), L10n.tr("shortcut.clearHelp"))
+        XCTAssertEqual(button.image?.accessibilityDescription, "⌘1")
+    }
+
     func testRequiredShortcutRecorderRestoresFallbackInsteadOfClearing() throws {
         let button = ShortcutRecorderButton()
         button.requiredFallbackShortcutValue = ShortcutSettings.defaultEmergencyEyeGateOverride
