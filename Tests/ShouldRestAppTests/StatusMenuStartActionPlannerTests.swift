@@ -67,9 +67,12 @@ final class StatusMenuStartActionPlannerTests: XCTestCase {
         defer { L10n.languageOverride = nil }
         L10n.languageOverride = "en"
 
-        XCTAssertEqual(StatusMenuStartAction.nextScheduled(.eyeGate).title, "Start Next Eye Gate Now")
-        XCTAssertEqual(StatusMenuStartAction.eyeGate.title, "Start Eye Gate Now")
-        XCTAssertEqual(StatusMenuStartAction.bodyBreak.title, "Start Body Break Now")
+        XCTAssertEqual(StatusMenuStartAction.nextScheduled(.eyeGate).title, "Start Next Eye Gate")
+        XCTAssertEqual(StatusMenuStartAction.eyeGate.title, "Start Eye Gate")
+        XCTAssertEqual(StatusMenuStartAction.bodyBreak.title, "Start Body Break")
+        XCTAssertFalse(StatusMenuStartAction.nextScheduled(.eyeGate).title.contains(" Now"))
+        XCTAssertFalse(StatusMenuStartAction.eyeGate.title.contains(" Now"))
+        XCTAssertFalse(StatusMenuStartAction.bodyBreak.title.contains(" Now"))
         XCTAssertFalse(StatusMenuStartAction.nextScheduled(.eyeGate).title.contains("takeNextScheduledRestNow"))
     }
 }

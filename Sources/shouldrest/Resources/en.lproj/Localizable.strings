@@ -1,10 +1,10 @@
 "app.name" = "ShouldRest";
-"menu.takeEyeGateNow" = "Start Eye Gate Now";
+"menu.takeEyeGateNow" = "Start Eye Gate";
 "menu.takeEyeGateNowHelp" = "Start a short eye rest immediately.";
-"menu.takeBodyBreakNow" = "Start Body Break Now";
+"menu.takeBodyBreakNow" = "Start Body Break";
 "menu.takeBodyBreakNowHelp" = "Start a movement break immediately.";
-"menu.takeNextScheduledRestNow" = "Start Next Rest Now";
-"menu.takeNextScheduledRestNowWithKind" = "Start Next %@ Now";
+"menu.takeNextScheduledRestNow" = "Start Next Rest";
+"menu.takeNextScheduledRestNowWithKind" = "Start Next %@";
 "menu.takeNextScheduledRestNowHelp" = "Start the rest that is currently scheduled next.";
 "menu.postponeBodyBreak" = "Postpone Body Break";
 "menu.postponeBodyBreakHelp" = "Move this Body Break later while postponing is still available.";

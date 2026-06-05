@@ -61,12 +61,13 @@ final class MenuStatusPresenterTests: XCTestCase {
     func testNextScheduledRestMenuActionNamesConcreteRestKind() {
         XCTAssertEqual(
             StatusMenuActionCopy.nextScheduledRestTitle(kind: .eyeGate),
-            "Start Next Eye Gate Now"
+            "Start Next Eye Gate"
         )
         XCTAssertEqual(
             StatusMenuActionCopy.nextScheduledRestTitle(kind: .bodyBreak),
-            "Start Next Body Break Now"
+            "Start Next Body Break"
         )
+        XCTAssertFalse(StatusMenuActionCopy.nextScheduledRestTitle(kind: .eyeGate).contains(" Now"))
         XCTAssertNotEqual(
             StatusMenuActionCopy.nextScheduledRestTitle(kind: .eyeGate),
             L10n.tr("menu.takeNextScheduledRestNow")
@@ -75,12 +76,13 @@ final class MenuStatusPresenterTests: XCTestCase {
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(
             StatusMenuActionCopy.nextScheduledRestTitle(kind: .eyeGate),
-            "立即开始下一项护眼休息"
+            "开始下一项护眼休息"
         )
         XCTAssertEqual(
             StatusMenuActionCopy.nextScheduledRestTitle(kind: .bodyBreak),
-            "立即开始下一项活动休息"
+            "开始下一项活动休息"
         )
+        XCTAssertFalse(StatusMenuActionCopy.nextScheduledRestTitle(kind: .eyeGate).contains("立即"))
         L10n.languageOverride = "en"
     }
 

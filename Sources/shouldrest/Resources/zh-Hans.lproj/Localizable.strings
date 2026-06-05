@@ -1,10 +1,10 @@
 "app.name" = "ShouldRest";
-"menu.takeEyeGateNow" = "立即开始护眼休息";
+"menu.takeEyeGateNow" = "开始护眼休息";
 "menu.takeEyeGateNowHelp" = "立即开始一次短时护眼休息。";
-"menu.takeBodyBreakNow" = "立即开始活动休息";
+"menu.takeBodyBreakNow" = "开始活动休息";
 "menu.takeBodyBreakNowHelp" = "立即开始一次活动休息。";
-"menu.takeNextScheduledRestNow" = "立即开始下一项休息";
-"menu.takeNextScheduledRestNowWithKind" = "立即开始下一项%@";
+"menu.takeNextScheduledRestNow" = "开始下一项休息";
+"menu.takeNextScheduledRestNowWithKind" = "开始下一项%@";
 "menu.takeNextScheduledRestNowHelp" = "立即开始当前计划中的下一项休息。";
 "menu.postponeBodyBreak" = "推迟活动休息";
 "menu.postponeBodyBreakHelp" = "在仍可推迟时，将这次活动休息移到稍后。";
