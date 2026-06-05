@@ -212,8 +212,13 @@ final class LocalizationQualityTests: XCTestCase {
             "Click, then press Command, Control, or Option with a key."
         )
         XCTAssertTrue(L10n.tr("shortcut.recordHelp").contains("Command, Control, or Option"))
-        XCTAssertEqual(L10n.tr("shortcut.recordingInvalid"), "Use ⌘, ⌃, or ⌥")
+        XCTAssertEqual(L10n.tr("shortcut.recordingInvalid"), "Add ⌘, ⌃, or ⌥")
         XCTAssertNotEqual(L10n.tr("shortcut.recordHelp"), "Click, then press a shortcut.")
+        XCTAssertFalse(L10n.tr("prefs.shortcutUnsupported").localizedCaseInsensitiveContains("unsupported shortcut"))
+        XCTAssertTrue(L10n.tr("prefs.shortcutUnsupported").contains("Record another shortcut"))
+        XCTAssertFalse(L10n.tr("prefs.shortcutConflict").localizedCaseInsensitiveContains("shortcut conflict:"))
+        XCTAssertFalse(L10n.tr("prefs.shortcutConflict").localizedCaseInsensitiveContains("assigned to"))
+        XCTAssertTrue(L10n.tr("prefs.shortcutConflict").localizedCaseInsensitiveContains("choose a different shortcut"))
         XCTAssertTrue(L10n.tr("shortcut.requiredHelp").localizedCaseInsensitiveContains("restore button"))
         XCTAssertEqual(
             L10n.format("shortcut.requiredHelpWithValue", "⌘⌥E"),
@@ -239,8 +244,13 @@ final class LocalizationQualityTests: XCTestCase {
             "点击后按 Command、Control 或 Option 加一个按键。"
         )
         XCTAssertTrue(L10n.tr("shortcut.recordHelp").contains("Command、Control 或 Option"))
-        XCTAssertEqual(L10n.tr("shortcut.recordingInvalid"), "使用 ⌘、⌃ 或 ⌥")
+        XCTAssertEqual(L10n.tr("shortcut.recordingInvalid"), "请加 ⌘、⌃ 或 ⌥")
         XCTAssertNotEqual(L10n.tr("shortcut.recordHelp"), "点击后按快捷键。")
+        XCTAssertFalse(L10n.tr("prefs.shortcutUnsupported").contains("不支持的快捷键"))
+        XCTAssertTrue(L10n.tr("prefs.shortcutUnsupported").contains("请重新录制"))
+        XCTAssertFalse(L10n.tr("prefs.shortcutConflict").contains("快捷键冲突："))
+        XCTAssertFalse(L10n.tr("prefs.shortcutConflict").contains("同时分配"))
+        XCTAssertTrue(L10n.tr("prefs.shortcutConflict").contains("换一个快捷键"))
         XCTAssertTrue(L10n.tr("shortcut.requiredHelp").contains("恢复按钮"))
         XCTAssertEqual(
             L10n.format("shortcut.requiredHelpWithValue", "⌘⌥E"),

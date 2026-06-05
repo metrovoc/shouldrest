@@ -579,10 +579,10 @@
 "prefs.searchHiddenResults" = "“%@”已被当前选项隐藏";
 "prefs.numberInputAccessibilityLabel" = "%@，%@";
 "prefs.shortcutConflictTitle" = "快捷键冲突";
-"prefs.shortcutConflict" = "快捷键冲突：%@ 同时分配给 %@。";
+"prefs.shortcutConflict" = "%@ 已同时用于 %@。请为其中一项换一个快捷键。";
 "prefs.shortcutConflictReview" = "查看冲突";
 "prefs.shortcutConflictReviewHelp" = "跳到第一个冲突的快捷键。";
-"prefs.shortcutUnsupported" = "不支持的快捷键：%@（%@）。";
+"prefs.shortcutUnsupported" = "%@ 不能用于%@。请重新录制一个包含 Command、Control 或 Option 的快捷键。";
 "prefs.shortcutGroupPause" = "暂停控制";
 "prefs.shortcutGroupStart" = "开始休息";
 "prefs.shortcutGroupDuringRest" = "休息进行中";
@@ -633,7 +633,7 @@
 "shortcut.add" = "设置快捷键";
 "shortcut.record" = "录制快捷键";
 "shortcut.recording" = "录制中…";
-"shortcut.recordingInvalid" = "使用 ⌘、⌃ 或 ⌥";
+"shortcut.recordingInvalid" = "请加 ⌘、⌃ 或 ⌥";
 "shortcut.recordingCanceled" = "已取消";
 "shortcut.recordHelp" = "点击后按 Command、Control 或 Option 加一个按键。";
 "shortcut.recordingHelp" = "按 Command、Control 或 Option 加一个按键。Esc 取消；Delete 清空。";

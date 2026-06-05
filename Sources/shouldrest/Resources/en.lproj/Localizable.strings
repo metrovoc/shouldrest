@@ -579,10 +579,10 @@
 "prefs.searchHiddenResults" = "Hidden by current options: \"%@\"";
 "prefs.numberInputAccessibilityLabel" = "%@, %@";
 "prefs.shortcutConflictTitle" = "Shortcut conflict";
-"prefs.shortcutConflict" = "Shortcut conflict: %@ is assigned to %@.";
+"prefs.shortcutConflict" = "%@ is used by %@. Choose a different shortcut for one of them.";
 "prefs.shortcutConflictReview" = "Review Conflict";
 "prefs.shortcutConflictReviewHelp" = "Jump to the first shortcut in conflict.";
-"prefs.shortcutUnsupported" = "Unsupported shortcut: %@ for %@.";
+"prefs.shortcutUnsupported" = "%@ cannot be used for %@. Record another shortcut with Command, Control, or Option.";
 "prefs.shortcutGroupPause" = "Pause controls";
 "prefs.shortcutGroupStart" = "Start rests";
 "prefs.shortcutGroupDuringRest" = "During a rest";
@@ -633,7 +633,7 @@
 "shortcut.add" = "Set Shortcut";
 "shortcut.record" = "Record Shortcut";
 "shortcut.recording" = "Recording…";
-"shortcut.recordingInvalid" = "Use ⌘, ⌃, or ⌥";
+"shortcut.recordingInvalid" = "Add ⌘, ⌃, or ⌥";
 "shortcut.recordingCanceled" = "Canceled";
 "shortcut.recordHelp" = "Click, then press Command, Control, or Option with a key.";
 "shortcut.recordingHelp" = "Press Command, Control, or Option with a key. Esc cancels; Delete clears.";

@@ -303,6 +303,9 @@ final class PreferencesWindowShortcutTests: XCTestCase {
             }
         )
         XCTAssertFalse(warning.localizedCaseInsensitiveContains("end active rest"))
+        XCTAssertFalse(warning.localizedCaseInsensitiveContains("shortcut conflict:"))
+        XCTAssertFalse(warning.localizedCaseInsensitiveContains("assigned to"))
+        XCTAssertTrue(warning.localizedCaseInsensitiveContains("choose a different shortcut"))
         XCTAssertTrue(warning.contains("⌘1"))
     }
 
@@ -319,6 +322,9 @@ final class PreferencesWindowShortcutTests: XCTestCase {
 
         let warning = try XCTUnwrap(visibleTexts.first { $0.contains(L10n.tr("prefs.eyeGateNow")) && $0.contains(L10n.tr("prefs.bodyBreakNow")) })
         XCTAssertTrue(warning.contains("⌘1"))
+        XCTAssertFalse(warning.localizedCaseInsensitiveContains("shortcut conflict:"))
+        XCTAssertFalse(warning.localizedCaseInsensitiveContains("assigned to"))
+        XCTAssertTrue(warning.localizedCaseInsensitiveContains("choose a different shortcut"))
 
         let eyeNow = try XCTUnwrap(control(withIdentifier: "shortcut.eyeNow", in: contentView) as? ShortcutRecorderButton)
         let bodyNow = try XCTUnwrap(control(withIdentifier: "shortcut.bodyNow", in: contentView) as? ShortcutRecorderButton)
