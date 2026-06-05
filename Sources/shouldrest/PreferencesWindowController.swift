@@ -625,6 +625,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private var shortcutConflictRecorders: [ShortcutRecorderButton] = []
 
     private let openAtLogin = NSButton(checkboxWithTitle: L10n.tr("prefs.openAtLogin"), target: nil, action: nil)
+    private let showMenuBarItem = NSButton(checkboxWithTitle: L10n.tr("prefs.showMenuBarItem"), target: nil, action: nil)
     private let checkUpdates = NSButton(checkboxWithTitle: L10n.tr("prefs.checkUpdates"), target: nil, action: nil)
     private let notifyNewVersion = NSButton(checkboxWithTitle: L10n.tr("prefs.notifyNewVersion"), target: nil, action: nil)
     private let showOnboardingNextLaunch = NSButton(
@@ -1215,6 +1216,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         ))
         openAtLogin.identifier = NSUserInterfaceItemIdentifier("prefs.openAtLogin")
         advancedStack.addArrangedSubview(openAtLogin)
+        showMenuBarItem.identifier = NSUserInterfaceItemIdentifier("prefs.showMenuBarItem")
+        advancedStack.addArrangedSubview(showMenuBarItem)
         showOnboardingNextLaunch.identifier = NSUserInterfaceItemIdentifier("prefs.showOnboardingNextLaunch")
         advancedStack.addArrangedSubview(showOnboardingNextLaunch)
         advancedStack.addArrangedSubview(separator())
@@ -2147,6 +2150,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         setHelp(L10n.tr("prefs.appExclusionTermsHelp"), on: appExclusionTerms)
         setHelp(L10n.tr("prefs.appExclusionModeHelp"), on: appExclusionMode)
         setHelp(L10n.tr("prefs.openAtLoginHelp"), on: openAtLogin)
+        setHelp(L10n.tr("prefs.showMenuBarItemHelp"), on: showMenuBarItem)
         setHelp(L10n.tr("prefs.checkUpdatesHelp"), on: checkUpdates)
         setHelp(L10n.tr("prefs.notifyNewVersionHelp"), on: notifyNewVersion)
         setHelp(L10n.tr("prefs.showOnboardingNextLaunchHelp"), on: showOnboardingNextLaunch)
@@ -2264,7 +2268,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             appExclusionEnabled, appExclusionMode, appExclusionAppliesEye, appExclusionAppliesBody, themeSource,
             languageIdentifier, currentTimeInBodyBreak, breakHealth, silentNotifications,
             eyeStartSound, eyeFinishSound, bodyStartSound, bodyFinishSound, useBuiltInIdeas, openAtLogin,
-            checkUpdates, notifyNewVersion, showOnboardingNextLaunch, pauseUntilMorningMode,
+            showMenuBarItem, checkUpdates, notifyNewVersion, showOnboardingNextLaunch, pauseUntilMorningMode,
             pauseUntilMorningLocation, pauseForSuspendOrLock,
             disableUpdateFeatures, hideSettingsPath, hideStrictPreferences, bodyCoveredDisplay, bodyContentDisplay,
             bodyConfiguredDisplay, workingStartPicker, workingEndPicker, soundVolumeSlider
@@ -2501,6 +2505,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         shortcutReset.shortcutValue = settings.shortcuts.reset
 
         openAtLogin.state = state(settings.operations.openAtLogin)
+        showMenuBarItem.state = state(settings.presentation.resolvedShowMenuBarItem)
         checkUpdates.state = state(settings.operations.checkForUpdates)
         notifyNewVersion.state = state(settings.operations.notifyNewVersion)
         showOnboardingNextLaunch.state = state(settings.operations.resolvedShowOnboardingOnNextLaunch)
@@ -2607,7 +2612,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         next.appExclusions = appExclusionsEnabled ? (advancedAppExclusions ?? savedAppExclusions()) : []
         next.presentation.themeSource = selected(ThemeSource.self, from: themeSource, fallback: .system)
         next.presentation.trayIconStyle = .default
-        next.presentation.showMenuBarItem = true
+        next.presentation.showMenuBarItem = isOn(showMenuBarItem)
         next.presentation.languageIdentifier = selectedLanguageOption().identifier
         next.presentation.showCurrentTimeDuringBodyBreak = isOn(currentTimeInBodyBreak)
         next.presentation.breakHealthMode = isOn(breakHealth)

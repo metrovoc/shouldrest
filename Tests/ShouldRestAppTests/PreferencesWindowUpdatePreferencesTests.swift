@@ -156,6 +156,7 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
 
         let expectedHelp: [(identifier: String, helpKey: String)] = [
             ("prefs.openAtLogin", "prefs.openAtLoginHelp"),
+            ("prefs.showMenuBarItem", "prefs.showMenuBarItemHelp"),
             ("prefs.checkUpdates", "prefs.checkUpdatesHelp"),
             ("prefs.notifyNewVersion", "prefs.notifyNewVersionHelp"),
             ("prefs.showOnboardingNextLaunch", "prefs.showOnboardingNextLaunchHelp"),
@@ -188,7 +189,33 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         XCTAssertFalse(visibleTexts.contains("Hide administrative controls"))
         XCTAssertFalse(L10n.tr("prefs.adminControlsHelp").localizedCaseInsensitiveContains("deployment"))
         XCTAssertFalse(L10n.tr("prefs.preferencesMessageHelp").localizedCaseInsensitiveContains("managed setup"))
+        XCTAssertTrue(L10n.tr("prefs.showMenuBarItemHelp").contains("shouldrest preferences"))
+        XCTAssertTrue(L10n.tr("prefs.showMenuBarItemHelp").contains("shouldrest://preferences"))
         XCTAssertFalse(visibleTexts.contains("Pause scheduler on sleep or lock"))
+    }
+
+    func testMenuBarVisibilityPreferenceDefaultsVisibleAndAutosavesHiddenChoice() throws {
+        let savedSettings = SavedSettingsBox()
+        var settings = RestSettings.defaults
+        settings.presentation.showMenuBarItem = nil
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAdvancedTab(in: contentView)
+        let checkbox = try XCTUnwrap(view(withIdentifier: "prefs.showMenuBarItem", in: contentView) as? NSButton)
+
+        XCTAssertFalse(checkbox.isHidden)
+        XCTAssertEqual(checkbox.title, L10n.tr("prefs.showMenuBarItem"))
+        XCTAssertEqual(checkbox.state, .on)
+        XCTAssertEqual(checkbox.toolTip, L10n.tr("prefs.showMenuBarItemHelp"))
+        XCTAssertEqual(checkbox.accessibilityHelp(), L10n.tr("prefs.showMenuBarItemHelp"))
+
+        checkbox.state = .off
+        XCTAssertTrue(sendAction(from: checkbox))
+
+        waitUntilSavedSettingsArrive(savedSettings)
+        XCTAssertEqual(savedSettings.value?.presentation.showMenuBarItem, false)
+        XCTAssertFalse(savedSettings.value?.presentation.resolvedShowMenuBarItem ?? true)
     }
 
     func testDefaultUpdateSourceRestoreButtonExplainsAlreadyDefaultState() throws {

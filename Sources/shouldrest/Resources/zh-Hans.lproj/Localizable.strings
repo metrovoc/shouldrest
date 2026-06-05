@@ -221,6 +221,8 @@
 "prefs.silentNotificationsHelp" = "通知仍会显示，但不播放通知声音、休息声音和声音试听。";
 "prefs.openAtLogin" = "登录时打开";
 "prefs.openAtLoginHelp" = "登录后自动启动 ShouldRest。";
+"prefs.showMenuBarItem" = "显示菜单栏图标";
+"prefs.showMenuBarItemHelp" = "让 ShouldRest 保持显示在菜单栏中。如果隐藏，可用 shouldrest preferences 命令或 shouldrest://preferences URL 重新打开偏好设置。";
 "prefs.checkUpdates" = "检查更新";
 "prefs.checkUpdatesHelp" = "ShouldRest 启动时并在运行期间定期检查新版本。";
 "prefs.notifyNewVersion" = "发现新版本时通知";

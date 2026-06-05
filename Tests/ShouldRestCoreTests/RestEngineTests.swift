@@ -486,8 +486,8 @@ final class RestEngineTests: XCTestCase {
         XCTAssertTrue(presentation.resolvedShowMenuBarItem)
     }
 
-    func testPresentationSettingsKeepsMenuBarVisibleEvenForLegacyHiddenValue() throws {
-        let legacyJSON = #"""
+    func testPresentationSettingsHonorsHiddenMenuBarVisibility() throws {
+        let hiddenJSON = #"""
         {
           "themeSource": "system",
           "trayIconStyle": "default",
@@ -497,10 +497,10 @@ final class RestEngineTests: XCTestCase {
         }
         """#.data(using: .utf8)!
 
-        let presentation = try JSONDecoder().decode(PresentationSettings.self, from: legacyJSON)
+        let presentation = try JSONDecoder().decode(PresentationSettings.self, from: hiddenJSON)
 
         XCTAssertEqual(presentation.showMenuBarItem, false)
-        XCTAssertTrue(presentation.resolvedShowMenuBarItem)
+        XCTAssertFalse(presentation.resolvedShowMenuBarItem)
     }
 
     func testSettingsStoreRoundTripsDefaults() throws {

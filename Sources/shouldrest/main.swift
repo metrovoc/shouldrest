@@ -257,6 +257,12 @@ enum StrictRestStatusMenuPolicy {
     }
 }
 
+enum MenuBarVisibilityPolicy {
+    static func showsStatusItem(settings: RestSettings) -> Bool {
+        settings.presentation.resolvedShowMenuBarItem
+    }
+}
+
 enum StatusMenuActionIcon {
     static func symbolName(forActionName actionName: String) -> String? {
         switch actionName.replacingOccurrences(of: ":", with: "") {
@@ -617,7 +623,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func applyMenuBarVisibility() {
-        if settings.presentation.resolvedShowMenuBarItem {
+        if MenuBarVisibilityPolicy.showsStatusItem(settings: settings) {
             createStatusItem()
         } else if let statusItem {
             NSStatusBar.system.removeStatusItem(statusItem)

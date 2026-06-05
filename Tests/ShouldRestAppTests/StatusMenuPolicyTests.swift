@@ -61,6 +61,19 @@ final class StatusMenuPolicyTests: XCTestCase {
         ))
     }
 
+    func testMenuBarVisibilityPolicyHonorsUserPreference() {
+        var settings = RestSettings.defaults
+
+        settings.presentation.showMenuBarItem = nil
+        XCTAssertTrue(MenuBarVisibilityPolicy.showsStatusItem(settings: settings))
+
+        settings.presentation.showMenuBarItem = true
+        XCTAssertTrue(MenuBarVisibilityPolicy.showsStatusItem(settings: settings))
+
+        settings.presentation.showMenuBarItem = false
+        XCTAssertFalse(MenuBarVisibilityPolicy.showsStatusItem(settings: settings))
+    }
+
     private func session(kind: RestKind) -> RestSession {
         RestSession(
             kind: kind,
