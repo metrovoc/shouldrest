@@ -167,6 +167,9 @@ final class TerminationPolicyTests: XCTestCase {
 
         XCTAssertEqual(alert.messageText, L10n.tr("pause.indefiniteConfirmTitle"))
         XCTAssertEqual(alert.informativeText, L10n.tr("pause.indefiniteConfirmBody"))
+        XCTAssertTrue(alert.informativeText.localizedCaseInsensitiveContains("Pause or resume shortcut"))
+        XCTAssertTrue(alert.informativeText.localizedCaseInsensitiveContains("shouldrest resume"))
+        XCTAssertFalse(alert.informativeText.localizedCaseInsensitiveContains("resume it from the menu"))
         XCTAssertEqual(alert.alertStyle, .warning)
         XCTAssertEqual(alert.buttons.map(\.title), [
             L10n.tr("pause.indefiniteConfirmCancel"),

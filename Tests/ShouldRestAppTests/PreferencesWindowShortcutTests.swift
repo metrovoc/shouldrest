@@ -193,9 +193,12 @@ final class PreferencesWindowShortcutTests: XCTestCase {
 
         try selectShortcutsTab(in: contentView)
         let visibleTexts = visibleTexts(in: contentView)
+        let recorder = try XCTUnwrap(control(withIdentifier: "shortcut.pauseToggle", in: contentView) as? ShortcutRecorderButton)
 
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.pauseToggle")))
         XCTAssertEqual(L10n.tr("prefs.pauseToggle"), "Pause or resume")
+        XCTAssertEqual(recorder.toolTip, shortcutHelp("prefs.pauseToggleShortcutHelp", "shortcut.recordHelp"))
+        XCTAssertTrue(recorder.toolTip?.localizedCaseInsensitiveContains("menu bar icon") ?? false)
         XCTAssertFalse(visibleTexts.contains("Pause toggle"))
     }
 

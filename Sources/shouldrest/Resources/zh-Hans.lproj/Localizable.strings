@@ -32,11 +32,11 @@
 "menu.pauseUntilMorningHelp" = "暂停休息到已配置的早晨恢复时间。";
 "menu.pauseIndefinitely" = "无限期暂停";
 "menu.pauseIndefinitelyConfirming" = "无限期暂停…";
-"menu.pauseIndefinitelyHelp" = "暂停休息，直到你手动恢复。";
+"menu.pauseIndefinitelyHelp" = "暂停休息，直到你从菜单、暂停或恢复快捷键，或 shouldrest resume 恢复。";
 "menu.reset" = "重置计划";
 "menu.resetHelp" = "确认后重置计时、暂停、已延后的休息、休息欠账和排队等待的操作。";
 "pause.indefiniteConfirmTitle" = "无限期暂停？";
-"pause.indefiniteConfirmBody" = "ShouldRest 会停止安排休息，直到你从菜单手动恢复。只需要短暂中断时，请优先使用定时暂停。";
+"pause.indefiniteConfirmBody" = "ShouldRest 会停止安排休息，直到你从菜单、暂停或恢复快捷键，或 shouldrest resume 恢复。只需要短暂中断时，请优先使用定时暂停。";
 "pause.indefiniteConfirmAction" = "无限期暂停";
 "pause.indefiniteConfirmCancel" = "取消";
 "reset.confirmTitle" = "重置计划？";
@@ -479,7 +479,7 @@
 "prefs.imagePathHiddenHelp" = "图片位置已在偏好设置中隐藏。";
 "prefs.sectionShortcuts" = "全局快捷键";
 "prefs.pauseToggle" = "暂停或恢复";
-"prefs.pauseToggleShortcutHelp" = "运行中会无限期暂停休息；已暂停时会恢复休息。";
+"prefs.pauseToggleShortcutHelp" = "运行中会无限期暂停休息；已暂停时会恢复休息。隐藏菜单栏图标后，这个快捷键仍然有用。";
 "prefs.pause30Shortcut" = "暂停 30 分钟";
 "prefs.pause30ShortcutHelp" = "暂停休息 30 分钟。";
 "prefs.pause1hShortcut" = "暂停 1 小时";

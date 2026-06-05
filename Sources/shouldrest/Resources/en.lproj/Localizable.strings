@@ -32,11 +32,11 @@
 "menu.pauseUntilMorningHelp" = "Pause rests until the configured morning resume time.";
 "menu.pauseIndefinitely" = "Indefinitely";
 "menu.pauseIndefinitelyConfirming" = "Indefinitely…";
-"menu.pauseIndefinitelyHelp" = "Pause rests until you resume them manually.";
+"menu.pauseIndefinitelyHelp" = "Pause rests until you resume from the menu, a Pause or resume shortcut, or shouldrest resume.";
 "menu.reset" = "Reset Schedule";
 "menu.resetHelp" = "Reset timers, pauses, delayed rests, rest debt, and queued actions after confirmation.";
 "pause.indefiniteConfirmTitle" = "Pause Indefinitely?";
-"pause.indefiniteConfirmBody" = "ShouldRest will stop scheduling rests until you resume it from the menu. Use a timed pause when you only need a short interruption.";
+"pause.indefiniteConfirmBody" = "ShouldRest will stop scheduling rests until you resume from the menu, a Pause or resume shortcut, or shouldrest resume. Use a timed pause when you only need a short interruption.";
 "pause.indefiniteConfirmAction" = "Pause Indefinitely";
 "pause.indefiniteConfirmCancel" = "Cancel";
 "reset.confirmTitle" = "Reset Schedule?";
@@ -479,7 +479,7 @@
 "prefs.imagePathHiddenHelp" = "Image location is hidden in Preferences.";
 "prefs.sectionShortcuts" = "Global Shortcuts";
 "prefs.pauseToggle" = "Pause or resume";
-"prefs.pauseToggleShortcutHelp" = "Pause rests indefinitely when running, or resume them when already paused.";
+"prefs.pauseToggleShortcutHelp" = "Pause rests indefinitely when running, or resume them when already paused. This stays useful if you hide the menu bar icon.";
 "prefs.pause30Shortcut" = "Pause 30 minutes";
 "prefs.pause30ShortcutHelp" = "Pause rests for 30 minutes.";
 "prefs.pause1hShortcut" = "Pause 1 hour";

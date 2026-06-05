@@ -65,8 +65,9 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("notification.resumingBreaks"), "Resuming rests")
         XCTAssertEqual(
             L10n.tr("prefs.pauseToggleShortcutHelp"),
-            "Pause rests indefinitely when running, or resume them when already paused."
+            "Pause rests indefinitely when running, or resume them when already paused. This stays useful if you hide the menu bar icon."
         )
+        XCTAssertTrue(L10n.tr("prefs.pauseToggleShortcutHelp").localizedCaseInsensitiveContains("menu bar icon"))
         XCTAssertEqual(L10n.tr("prefs.pause30ShortcutHelp"), "Pause rests for 30 minutes.")
         XCTAssertEqual(L10n.tr("prefs.pause1hShortcutHelp"), "Pause rests for 1 hour.")
         XCTAssertEqual(L10n.tr("prefs.pause2hShortcutHelp"), "Pause rests for 2 hours.")
@@ -83,6 +84,28 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(help.contains("Pause breaks"))
         XCTAssertFalse(help.contains("Resume breaks"))
         XCTAssertFalse(help.contains("Pause or resume breaks"))
+
+        XCTAssertTrue(L10n.tr("pause.indefiniteConfirmBody").contains("Pause or resume shortcut"))
+        XCTAssertTrue(L10n.tr("pause.indefiniteConfirmBody").contains("shouldrest resume"))
+        XCTAssertFalse(L10n.tr("pause.indefiniteConfirmBody").contains("until you resume it from the menu"))
+        XCTAssertTrue(L10n.tr("menu.pauseIndefinitelyHelp").contains("Pause or resume shortcut"))
+        XCTAssertTrue(L10n.tr("menu.pauseIndefinitelyHelp").contains("shouldrest resume"))
+    }
+
+    func testSimplifiedChinesePauseCopyNamesRecoveryPaths() {
+        L10n.languageOverride = "zh-Hans"
+        defer { L10n.languageOverride = nil }
+
+        XCTAssertEqual(
+            L10n.tr("prefs.pauseToggleShortcutHelp"),
+            "运行中会无限期暂停休息；已暂停时会恢复休息。隐藏菜单栏图标后，这个快捷键仍然有用。"
+        )
+        XCTAssertTrue(L10n.tr("prefs.pauseToggleShortcutHelp").contains("隐藏菜单栏图标"))
+        XCTAssertTrue(L10n.tr("pause.indefiniteConfirmBody").contains("暂停或恢复快捷键"))
+        XCTAssertTrue(L10n.tr("pause.indefiniteConfirmBody").contains("shouldrest resume"))
+        XCTAssertFalse(L10n.tr("pause.indefiniteConfirmBody").contains("从菜单手动恢复"))
+        XCTAssertTrue(L10n.tr("menu.pauseIndefinitelyHelp").contains("暂停或恢复快捷键"))
+        XCTAssertTrue(L10n.tr("menu.pauseIndefinitelyHelp").contains("shouldrest resume"))
     }
 
     func testPreferenceSearchCopyDistinguishesMissingHiddenAndCollapsibleSettings() {
