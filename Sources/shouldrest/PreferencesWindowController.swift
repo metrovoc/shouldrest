@@ -297,6 +297,9 @@ private struct PreferencesHighlightSnapshot {
     var borderColor: CGColor?
     var borderWidth: CGFloat
     var cornerRadius: CGFloat
+    var toolTip: String?
+    var accessibilityLabel: String?
+    var accessibilityHelp: String?
 }
 
 struct AppExclusionApplicationCandidate: Equatable {
@@ -5810,17 +5813,18 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         preferencesTabView?.selectTabViewItem(withIdentifier: target.tabIdentifier)
         target.view.scrollToVisible(target.view.bounds)
-        highlightSearchTarget(target.view)
+        let statusText = searchStatusText(
+            target: target,
+            index: targetIndex,
+            count: matches.count
+        )
+        highlightSearchTarget(target.view, accessibilitySummary: statusText)
         if keepsSearchFocused {
             focusSearchFieldIfNeeded()
         } else {
             focusSearchTarget(target.view)
         }
-        setSearchStatus(searchStatusText(
-            target: target,
-            index: targetIndex,
-            count: matches.count
-        ))
+        setSearchStatus(statusText)
     }
 
     private func setSearchStatus(
@@ -5978,20 +5982,26 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         return false
     }
 
-    private func highlightSearchTarget(_ view: NSView) {
+    private func highlightSearchTarget(_ view: NSView, accessibilitySummary: String) {
         highlightedSearchTarget = PreferencesHighlightSnapshot(
             view: view,
             wantsLayer: view.wantsLayer,
             backgroundColor: view.layer?.backgroundColor,
             borderColor: view.layer?.borderColor,
             borderWidth: view.layer?.borderWidth ?? 0,
-            cornerRadius: view.layer?.cornerRadius ?? 0
+            cornerRadius: view.layer?.cornerRadius ?? 0,
+            toolTip: view.toolTip,
+            accessibilityLabel: view.accessibilityLabel(),
+            accessibilityHelp: view.accessibilityHelp()
         )
         view.wantsLayer = true
         view.layer?.cornerRadius = 7
         view.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.14).cgColor
         view.layer?.borderColor = NSColor.controlAccentColor.withAlphaComponent(0.36).cgColor
         view.layer?.borderWidth = 1
+        view.toolTip = accessibilitySummary
+        view.setAccessibilityLabel(accessibilitySummary)
+        view.setAccessibilityHelp(accessibilitySummary)
     }
 
     private func clearHighlightedSearchTarget() {
@@ -6005,6 +6015,9 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         view.layer?.borderWidth = highlightedSearchTarget.borderWidth
         view.layer?.cornerRadius = highlightedSearchTarget.cornerRadius
         view.wantsLayer = highlightedSearchTarget.wantsLayer
+        view.toolTip = highlightedSearchTarget.toolTip
+        view.setAccessibilityLabel(highlightedSearchTarget.accessibilityLabel)
+        view.setAccessibilityHelp(highlightedSearchTarget.accessibilityHelp)
         self.highlightedSearchTarget = nil
     }
 
