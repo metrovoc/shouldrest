@@ -3018,6 +3018,7 @@ final class RestOverlayView: NSView {
         emergencyOverrideRequestInFlight = false
         emergencyPanel.isHidden = true
         emergencyButton.isHidden = true
+        clearEmergencyButtonPresentation()
     }
 
     private func configureEmergencyButton(
@@ -3038,6 +3039,7 @@ final class RestOverlayView: NSView {
             emergencyOverrideRequestInFlight = false
             emergencyPanel.isHidden = true
             emergencyButton.isHidden = true
+            clearEmergencyButtonPresentation()
             return
         }
 
@@ -3086,15 +3088,27 @@ final class RestOverlayView: NSView {
     }
 
     private func setEmergencyButtonTitle(_ title: String, help: String, style: EmergencyOverlayVisualStyle) {
+        emergencyButton.image = NSImage(
+            systemSymbolName: "exclamationmark.triangle",
+            accessibilityDescription: title
+        )
         emergencyButton.setAccessibilityLabel(title)
         emergencyButton.setAccessibilityHelp(help)
         emergencyButton.toolTip = help
-        emergencyButton.image?.accessibilityDescription = title
         let attributes: [NSAttributedString.Key: Any] = [
             .foregroundColor: NSColor.systemRed.withAlphaComponent(style.titleAlpha),
             .font: NSFont.systemFont(ofSize: 13, weight: .medium)
         ]
         emergencyButton.attributedTitle = NSAttributedString(string: title, attributes: attributes)
+    }
+
+    private func clearEmergencyButtonPresentation() {
+        emergencyButton.image = nil
+        emergencyButton.toolTip = nil
+        emergencyButton.setAccessibilityLabel(nil)
+        emergencyButton.setAccessibilityHelp(nil)
+        emergencyButton.title = ""
+        emergencyButton.attributedTitle = NSAttributedString(string: "")
     }
 
     private func configureBodyActionButton(

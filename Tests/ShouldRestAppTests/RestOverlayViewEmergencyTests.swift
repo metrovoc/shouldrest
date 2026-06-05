@@ -697,6 +697,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         XCTAssertEqual(requestCount, 1)
         XCTAssertTrue(button.isHidden)
+        assertHiddenEmergencyButtonIsCleared(button)
         XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .unavailable)
     }
 
@@ -1391,7 +1392,46 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             isEmergencyOverrideAvailable: false
         )
 
+        let button = view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton
+        XCTAssertNotNil(button)
+        if let button {
+            assertHiddenEmergencyButtonIsCleared(button)
+        }
         XCTAssertEqual(view.focusEmergencyOverrideAffordanceIfAvailable(), .unavailable)
+    }
+
+    func testHiddenEmergencyAffordanceRestoresPresentationWhenAvailableAgain() throws {
+        let session = eyeGateSession()
+        let view = RestOverlayView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
+        view.configure(
+            session: session,
+            remainingSeconds: 60,
+            settings: .defaults,
+            showsContent: true,
+            manualAwaiting: false,
+            isEmergencyOverrideAvailable: false
+        )
+
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        assertHiddenEmergencyButtonIsCleared(button)
+
+        view.configure(
+            session: session,
+            remainingSeconds: 59,
+            settings: .defaults,
+            showsContent: true,
+            manualAwaiting: false,
+            isEmergencyOverrideAvailable: true
+        )
+
+        XCTAssertFalse(button.isHidden)
+        XCTAssertTrue(button.isEnabled)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverride"))
+        XCTAssertNotNil(button.image)
+        XCTAssertEqual(button.image?.accessibilityDescription, L10n.tr("overlay.emergencyOverride"))
+        XCTAssertEqual(button.toolTip, L10n.tr("overlay.emergencyOverrideHelp"))
+        XCTAssertEqual(button.accessibilityLabel(), L10n.tr("overlay.emergencyOverride"))
+        XCTAssertEqual(button.accessibilityHelp(), L10n.tr("overlay.emergencyOverrideHelp"))
     }
 
     private func configuredEyeGateOverlay(
@@ -1433,6 +1473,20 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         }
         let result = XCTWaiter().wait(for: [expectation], timeout: 1)
         XCTAssertEqual(result, .completed, file: file, line: line)
+    }
+
+    private func assertHiddenEmergencyButtonIsCleared(
+        _ button: NSButton,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        XCTAssertTrue(button.isHidden, file: file, line: line)
+        XCTAssertEqual(button.title, "", file: file, line: line)
+        XCTAssertEqual(button.attributedTitle.string, "", file: file, line: line)
+        XCTAssertNil(button.image, file: file, line: line)
+        XCTAssertNil(button.toolTip, file: file, line: line)
+        XCTAssertNil(button.accessibilityLabel(), file: file, line: line)
+        XCTAssertNil(button.accessibilityHelp(), file: file, line: line)
     }
 
     private func performEmergencyClick(on view: RestOverlayView) throws {
