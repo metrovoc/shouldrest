@@ -257,6 +257,7 @@
 "prefs.rhythmPreset.recommended" = "均衡";
 "prefs.rhythmPreset.recommendedHelp" = "护眼休息每 20 分钟 20 秒；活动休息每 2 次护眼后 5 分钟。";
 "prefs.rhythmPreset.frequentEye" = "更多护眼";
+"prefs.rhythmPreset.frequentEyeRecommended" = "更多护眼（推荐）";
 "prefs.rhythmPreset.frequentEyeHelp" = "护眼休息每 10 分钟 20 秒；活动休息每 4 次护眼后 5 分钟。";
 "prefs.rhythmPreset.movement" = "更多活动";
 "prefs.rhythmPreset.movementHelp" = "护眼休息每 20 分钟 20 秒；活动休息每 2 次护眼后 8 分钟。";

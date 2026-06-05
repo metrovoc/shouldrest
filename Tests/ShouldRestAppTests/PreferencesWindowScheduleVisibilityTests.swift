@@ -41,7 +41,8 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
 
         XCTAssertFalse(row.isHidden)
         XCTAssertEqual(recommended.title, L10n.tr("prefs.rhythmPreset.recommended"))
-        XCTAssertEqual(frequentEye.title, L10n.tr("prefs.rhythmPreset.frequentEye"))
+        XCTAssertEqual(frequentEye.title, L10n.tr("prefs.rhythmPreset.frequentEyeRecommended"))
+        XCTAssertTrue(frequentEye.title.contains("Recommended"))
         XCTAssertEqual(movement.title, L10n.tr("prefs.rhythmPreset.movement"))
         [recommended, frequentEye, movement].forEach { button in
             XCTAssertNotNil(button.image)
@@ -61,7 +62,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
             frequentEye.toolTip,
             L10n.format(
                 "prefs.rhythmPreset.selectedHelp",
-                RestRhythmPreset.frequentEye.title,
+                L10n.tr("prefs.rhythmPreset.frequentEyeRecommended"),
                 RestRhythmPreset.frequentEye.help
             )
         )

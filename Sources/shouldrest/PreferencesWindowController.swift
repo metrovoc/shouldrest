@@ -1939,16 +1939,17 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         _ button: NSButton,
         preset: RestRhythmPreset
     ) {
+        let title = rhythmPresetButtonTitle(for: preset)
         button.identifier = NSUserInterfaceItemIdentifier("prefs.rhythmPreset.\(preset.identifier)")
-        button.title = preset.title
-        button.image = NSImage(systemSymbolName: preset.symbolName, accessibilityDescription: preset.title)
+        button.title = title
+        button.image = NSImage(systemSymbolName: preset.symbolName, accessibilityDescription: title)
         button.imagePosition = .imageLeading
         button.imageHugsTitle = true
         button.bezelStyle = .rounded
         button.setButtonType(.toggle)
         button.allowsMixedState = false
         button.toolTip = rhythmPresetButtonHelp(for: preset, isSelected: false)
-        button.setAccessibilityLabel(preset.title)
+        button.setAccessibilityLabel(title)
         button.setAccessibilityHelp(button.toolTip)
         button.tag = preset.rawValue
         button.target = self
@@ -3495,7 +3496,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func rhythmPresetButtonHelp(for preset: RestRhythmPreset, isSelected: Bool) -> String {
         let key = isSelected ? "prefs.rhythmPreset.selectedHelp" : "prefs.rhythmPreset.applyHelp"
-        return L10n.format(key, preset.title, preset.help)
+        return L10n.format(key, rhythmPresetButtonTitle(for: preset), preset.help)
+    }
+
+    private func rhythmPresetButtonTitle(for preset: RestRhythmPreset) -> String {
+        guard preset == RestRhythmPreset.firstRunDefault else {
+            return preset.title
+        }
+        return L10n.tr("prefs.rhythmPreset.frequentEyeRecommended")
     }
 
     private func updateShortcutPreferenceVisibility(

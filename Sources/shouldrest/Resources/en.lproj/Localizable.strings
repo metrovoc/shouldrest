@@ -257,6 +257,7 @@
 "prefs.rhythmPreset.recommended" = "Balanced";
 "prefs.rhythmPreset.recommendedHelp" = "Eye Gate every 20 min for 20 sec; Body Break after 2 Eye Gates for 5 min.";
 "prefs.rhythmPreset.frequentEye" = "More Eye Rests";
+"prefs.rhythmPreset.frequentEyeRecommended" = "More Eye Rests (Recommended)";
 "prefs.rhythmPreset.frequentEyeHelp" = "Eye Gate every 10 min for 20 sec; Body Break after 4 Eye Gates for 5 min.";
 "prefs.rhythmPreset.movement" = "More Movement";
 "prefs.rhythmPreset.movementHelp" = "Eye Gate every 20 min for 20 sec; Body Break after 2 Eye Gates for 8 min.";
