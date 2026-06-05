@@ -460,6 +460,57 @@ private final class PreferencesWindow: NSWindow {
     }
 }
 
+final class PlaceholderTextView: NSTextView {
+    var placeholderString: String = "" {
+        didSet { needsDisplay = true }
+    }
+
+    var placeholderTextColor: NSColor = .placeholderTextColor {
+        didSet { needsDisplay = true }
+    }
+
+    var isPlaceholderVisible: Bool {
+        string.isEmpty && !placeholderString.isEmpty
+    }
+
+    override var string: String {
+        get {
+            super.string
+        }
+        set {
+            super.string = newValue
+            needsDisplay = true
+        }
+    }
+
+    override func didChangeText() {
+        super.didChangeText()
+        needsDisplay = true
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        super.draw(dirtyRect)
+
+        guard isPlaceholderVisible else { return }
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineBreakMode = .byWordWrapping
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: font ?? NSFont.systemFont(ofSize: NSFont.systemFontSize),
+            .foregroundColor: placeholderTextColor,
+            .paragraphStyle: paragraphStyle
+        ]
+        let padding = textContainer?.lineFragmentPadding ?? 5
+        let origin = textContainerOrigin
+        let rect = NSRect(
+            x: origin.x + padding,
+            y: origin.y,
+            width: max(0, bounds.width - origin.x - padding - textContainerInset.width),
+            height: max(0, bounds.height - origin.y - textContainerInset.height)
+        )
+        placeholderString.draw(in: rect, withAttributes: attributes)
+    }
+}
+
 @MainActor
 final class PreferencesWindowController: NSWindowController, NSWindowDelegate, NSTextFieldDelegate, NSSearchFieldDelegate, NSTextViewDelegate, PreferencesWindowKeyboardDelegate {
     private static let defaultUpdateFeedURL = RestSettings.defaults.operations.updateFeedURL
@@ -619,7 +670,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let soundPreviewStatusLabel = NSTextField(labelWithString: "")
 
     private let customBodyTitle = NSTextField()
-    private let customBodyTextEditor = NSTextView()
+    private let customBodyTextEditor = PlaceholderTextView()
     private let customBodyTextScrollView = NSScrollView()
     private let customBodyIdeasJSONEditor = NSTextView()
     private let customBodyIdeasJSONScrollView = NSScrollView()
@@ -1945,6 +1996,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             height: 96,
             help: L10n.tr("prefs.customBodyTextHelp")
         )
+        customBodyTextEditor.placeholderString = L10n.tr("prefs.customBodyTextPlaceholder")
         configureTextEditor(
             appExclusionsJSONEditor,
             in: appExclusionsJSONScrollView,

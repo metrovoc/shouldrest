@@ -433,6 +433,7 @@
 "prefs.customBodyTitleHelp" = "Short title shown in the Body Break overlay and custom ideas list.";
 "prefs.text" = "Body text";
 "prefs.customBodyTextHelp" = "Plain text shown in the Body Break overlay for this custom idea.";
+"prefs.customBodyTextPlaceholder" = "Describe the stretch, posture cue, or movement prompt shown during Body Breaks.";
 "prefs.addCustomIdea" = "Add Idea";
 "prefs.addCustomIdeaHelp" = "Add the current title and body text as a Body Break idea.";
 "prefs.addCustomIdeaDisabledBodyOffHelp" = "Turn on Body Break before adding custom ideas.";

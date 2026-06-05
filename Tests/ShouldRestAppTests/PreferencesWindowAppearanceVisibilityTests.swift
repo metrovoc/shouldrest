@@ -78,6 +78,40 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertEqual(customBodyText.accessibilityHelp(), L10n.tr("prefs.customBodyTextHelp"))
     }
 
+    func testCustomBodyTextEditorUsesVisiblePlaceholderWithoutSavingItAsBodyText() throws {
+        var settings = RestSettings.defaults
+        settings.contentLibrary.customBodyBreakIdeas = []
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+        let title = try XCTUnwrap(view(withIdentifier: "prefs.customBodyTitleField", in: contentView) as? NSTextField)
+        let body = try XCTUnwrap(view(withIdentifier: "customBodyTextEditor", in: contentView) as? PlaceholderTextView)
+        let button = try XCTUnwrap(view(withIdentifier: "prefs.customBodyAddIdeaButton", in: contentView) as? NSButton)
+
+        XCTAssertEqual(body.placeholderString, L10n.tr("prefs.customBodyTextPlaceholder"))
+        XCTAssertTrue(body.isPlaceholderVisible)
+        XCTAssertEqual(body.string, "")
+
+        body.string = "Roll shoulders and breathe."
+        XCTAssertFalse(body.isPlaceholderVisible)
+
+        body.string = ""
+        XCTAssertTrue(body.isPlaceholderVisible)
+        title.stringValue = "Loosen neck"
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: title))
+
+        XCTAssertTrue(button.isEnabled)
+        XCTAssertTrue(sendAction(from: button))
+
+        waitUntilSavedSettingsArrive(savedSettings)
+        let ideas = try XCTUnwrap(savedSettings.value?.contentLibrary.customBodyBreakIdeas)
+        XCTAssertEqual(ideas.first?.title, "Loosen neck")
+        XCTAssertEqual(ideas.first?.body, "")
+        XCTAssertNotEqual(ideas.first?.body, L10n.tr("prefs.customBodyTextPlaceholder"))
+    }
+
     func testRowBackedAppearanceControlsExposeReadableAccessibilityLabels() throws {
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
