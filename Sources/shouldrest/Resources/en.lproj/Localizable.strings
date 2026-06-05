@@ -389,7 +389,7 @@
 "prefs.theme.light" = "Light";
 "prefs.theme.dark" = "Dark";
 "prefs.language" = "Interface language";
-"prefs.languageHelp" = "Choose the language used by ShouldRest windows, menus, and overlay copy.";
+"prefs.languageHelp" = "Menus, overlays, and newly opened windows use this language after autosave. Reopen Preferences to refresh this window.";
 "prefs.language.system" = "System language";
 "prefs.language.english" = "English";
 "prefs.language.simplifiedChinese" = "Simplified Chinese";

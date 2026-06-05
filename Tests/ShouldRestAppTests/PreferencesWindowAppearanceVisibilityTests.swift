@@ -50,9 +50,14 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         }
         let visibleHelpTexts = visibleTexts(in: contentView)
         XCTAssertFalse(visibleHelpTexts.contains(L10n.tr("prefs.themeHelp")))
-        XCTAssertFalse(visibleHelpTexts.contains(L10n.tr("prefs.languageHelp")))
+        XCTAssertTrue(visibleHelpTexts.contains(L10n.tr("prefs.languageHelp")))
         XCTAssertTrue(visibleHelpTexts.contains(L10n.tr("prefs.silentNotificationsHelp")))
         XCTAssertTrue(visibleHelpTexts.contains(L10n.tr("prefs.soundVolumeHelp")))
+        try assertInlineHelp(
+            "prefs.languageInlineHelp",
+            text: L10n.tr("prefs.languageHelp"),
+            in: contentView
+        )
         try assertInlineHelp(
             "prefs.silentNotificationsInlineHelp",
             text: L10n.tr("prefs.silentNotificationsHelp"),

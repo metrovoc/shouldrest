@@ -389,7 +389,7 @@
 "prefs.theme.light" = "浅色";
 "prefs.theme.dark" = "深色";
 "prefs.language" = "界面语言";
-"prefs.languageHelp" = "选择 ShouldRest 窗口、菜单和覆盖层文案使用的语言。";
+"prefs.languageHelp" = "自动保存后，菜单、覆盖层和新打开的窗口会使用此语言。重新打开偏好设置可刷新当前窗口。";
 "prefs.language.system" = "跟随系统语言";
 "prefs.language.english" = "英语";
 "prefs.language.simplifiedChinese" = "简体中文";

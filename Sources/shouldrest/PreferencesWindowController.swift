@@ -1151,6 +1151,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.theme"), themeSource))
         languageIdentifier.identifier = NSUserInterfaceItemIdentifier("prefs.language")
         appearanceStack.addArrangedSubview(row(L10n.tr("prefs.language"), languageIdentifier))
+        appearanceStack.addArrangedSubview(inlineControlHelpRow(
+            L10n.tr("prefs.languageHelp"),
+            identifier: "prefs.languageInlineHelp"
+        ).row)
         currentTimeInBodyBreak.identifier = NSUserInterfaceItemIdentifier("prefs.currentTimeBody")
         appearanceStack.addArrangedSubview(currentTimeInBodyBreak)
         breakHealth.identifier = NSUserInterfaceItemIdentifier("prefs.breakHealth")
