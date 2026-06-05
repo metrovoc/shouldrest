@@ -133,6 +133,7 @@
 "overlay.emergencyOverrideConfirm" = "Click again · Esc again";
 "overlay.emergencyOverrideArmed" = "Click again · Esc again";
 "overlay.emergencyOverrideHelp" = "Use only for a genuine interruption. Confirm with a second click or Esc inside the overlay; it counts as a missed Eye Gate.";
+"overlay.emergencyOverrideConfirmHelp" = "Click Emergency Exit again or press Esc again to exit this Eye Gate; it will count as a missed rest.";
 "overlay.bodyPostpone" = "Postpone";
 "overlay.bodySkip" = "Skip";
 "overlay.bodyFinish" = "Finish";

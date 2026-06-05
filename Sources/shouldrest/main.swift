@@ -2969,7 +2969,6 @@ final class RestOverlayView: NSView {
         emergencyButton.isHidden = false
         emergencyButton.isEnabled = true
         updateEmergencyAffordanceUI()
-        emergencyButton.toolTip = L10n.tr("overlay.emergencyOverrideHelp")
     }
 
     private func updateEmergencyAffordanceUI() {
@@ -2995,15 +2994,23 @@ final class RestOverlayView: NSView {
         } else {
             title = L10n.tr("overlay.emergencyOverride")
         }
+        let help: String
+        if emergencyOverrideArmed {
+            help = L10n.tr("overlay.emergencyOverrideConfirmHelp")
+        } else {
+            help = L10n.tr("overlay.emergencyOverrideHelp")
+        }
         setEmergencyButtonTitle(
             title,
+            help: help,
             style: style
         )
     }
 
-    private func setEmergencyButtonTitle(_ title: String, style: EmergencyOverlayVisualStyle) {
+    private func setEmergencyButtonTitle(_ title: String, help: String, style: EmergencyOverlayVisualStyle) {
         emergencyButton.setAccessibilityLabel(title)
-        emergencyButton.setAccessibilityHelp(L10n.tr("overlay.emergencyOverrideHelp"))
+        emergencyButton.setAccessibilityHelp(help)
+        emergencyButton.toolTip = help
         emergencyButton.image?.accessibilityDescription = title
         let attributes: [NSAttributedString.Key: Any] = [
             .foregroundColor: NSColor.systemRed.withAlphaComponent(style.titleAlpha),

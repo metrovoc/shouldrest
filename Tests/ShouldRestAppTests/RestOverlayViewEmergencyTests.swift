@@ -528,13 +528,15 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
         XCTAssertEqual(button.accessibilityLabel(), L10n.tr("overlay.emergencyOverride"))
         XCTAssertEqual(button.accessibilityHelp(), L10n.tr("overlay.emergencyOverrideHelp"))
+        XCTAssertEqual(button.toolTip, L10n.tr("overlay.emergencyOverrideHelp"))
         XCTAssertEqual(button.image?.accessibilityDescription, L10n.tr("overlay.emergencyOverride"))
 
         button.performClick(nil)
 
         XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
         XCTAssertEqual(button.accessibilityLabel(), L10n.tr("overlay.emergencyOverrideConfirm"))
-        XCTAssertEqual(button.accessibilityHelp(), L10n.tr("overlay.emergencyOverrideHelp"))
+        XCTAssertEqual(button.accessibilityHelp(), L10n.tr("overlay.emergencyOverrideConfirmHelp"))
+        XCTAssertEqual(button.toolTip, L10n.tr("overlay.emergencyOverrideConfirmHelp"))
         XCTAssertEqual(button.image?.accessibilityDescription, L10n.tr("overlay.emergencyOverrideConfirm"))
     }
 
