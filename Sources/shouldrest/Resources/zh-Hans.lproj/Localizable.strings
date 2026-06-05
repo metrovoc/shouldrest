@@ -54,7 +54,7 @@
 "menu.copyDebug" = "复制支持报告";
 "menu.copyDebugHelp" = "复制当前休息状态、设置摘要和排查问题所需信息。";
 "menu.copyDebugDone" = "支持报告已复制到剪贴板。";
-"menu.debugPanel" = "支持报告…";
+"menu.debugPanel" = "打开支持报告…";
 "menu.debugPanelHelp" = "打开支持报告窗口。";
 "menu.about" = "关于 ShouldRest…";
 "menu.aboutHelp" = "打开产品和版本信息。";

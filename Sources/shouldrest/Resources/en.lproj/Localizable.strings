@@ -54,7 +54,7 @@
 "menu.copyDebug" = "Copy Support Report";
 "menu.copyDebugHelp" = "Copy the current rest state, settings summary, and troubleshooting details.";
 "menu.copyDebugDone" = "Support report copied to the clipboard.";
-"menu.debugPanel" = "Support Report…";
+"menu.debugPanel" = "Open Support Report…";
 "menu.debugPanelHelp" = "Open the support report window.";
 "menu.about" = "About ShouldRest…";
 "menu.aboutHelp" = "Open product and version information.";
