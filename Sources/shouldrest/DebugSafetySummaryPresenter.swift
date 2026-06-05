@@ -4,9 +4,11 @@ import ShouldRestCore
 enum DebugSafetySummaryPresenter {
     static func summary(
         state: RestEngineState,
-        settings _: RestSettings,
+        settings: RestSettings,
         now: Date = Date()
     ) -> DebugSafetySummary {
+        let isMenuBarVisible = settings.presentation.resolvedShowMenuBarItem
+
         if let active = state.activeSession {
             switch active.kind {
             case .eyeGate:
@@ -28,14 +30,22 @@ enum DebugSafetySummaryPresenter {
                 if active.manualFinishEnabled && now.timeIntervalSince(active.startedAt) >= active.duration {
                     return DebugSafetySummary(
                         title: L10n.tr("debug.summaryBodyReadyTitle"),
-                        body: L10n.tr("debug.summaryBodyReadyBody"),
+                        body: L10n.tr(
+                            isMenuBarVisible
+                                ? "debug.summaryBodyReadyBody"
+                                : "debug.summaryBodyReadyBodyMenuHidden"
+                        ),
                         symbolName: "checkmark.circle",
                         severity: .warning
                     )
                 }
                 return DebugSafetySummary(
                     title: L10n.tr("debug.summaryBodyActiveTitle"),
-                    body: L10n.tr("debug.summaryBodyActiveBody"),
+                    body: L10n.tr(
+                        isMenuBarVisible
+                            ? "debug.summaryBodyActiveBody"
+                            : "debug.summaryBodyActiveBodyMenuHidden"
+                    ),
                     symbolName: "figure.walk.circle",
                     severity: .warning
                 )
@@ -45,7 +55,11 @@ enum DebugSafetySummaryPresenter {
         if state.pause != nil {
             return DebugSafetySummary(
                 title: L10n.tr("debug.summaryPausedTitle"),
-                body: L10n.tr("debug.summaryPausedBody"),
+                body: L10n.tr(
+                    isMenuBarVisible
+                        ? "debug.summaryPausedBody"
+                        : "debug.summaryPausedBodyMenuHidden"
+                ),
                 symbolName: "pause.circle",
                 severity: .warning
             )
@@ -73,6 +87,14 @@ enum DebugSafetySummaryPresenter {
             )
         }
 
-        return .ready
+        if isMenuBarVisible {
+            return .ready
+        }
+        return DebugSafetySummary(
+            title: L10n.tr("debug.summaryReadyTitle"),
+            body: L10n.tr("debug.summaryReadyBodyMenuHidden"),
+            symbolName: "checkmark.shield",
+            severity: .ready
+        )
     }
 }

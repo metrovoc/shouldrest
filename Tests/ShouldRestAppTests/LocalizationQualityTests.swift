@@ -613,8 +613,12 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.sectionUpdates"), "Updates")
         XCTAssertEqual(L10n.tr("prefs.sectionSupportControls"), "Support controls")
         XCTAssertTrue(L10n.tr("prefs.showMenuBarItemHelp").contains("Applications"))
+        XCTAssertTrue(L10n.tr("prefs.showMenuBarItemHelp").contains("ShouldRest keeps running"))
+        XCTAssertTrue(L10n.tr("prefs.showMenuBarItemHelp").contains("rests still appear"))
         XCTAssertTrue(L10n.tr("prefs.showMenuBarItemHelp").contains("open ShouldRest again"))
         XCTAssertTrue(L10n.tr("prefs.showMenuBarItemRecovery").contains("Applications"))
+        XCTAssertTrue(L10n.tr("prefs.showMenuBarItemRecovery").contains("ShouldRest keeps running"))
+        XCTAssertTrue(L10n.tr("prefs.showMenuBarItemRecovery").contains("rests still appear"))
         XCTAssertTrue(L10n.tr("prefs.showMenuBarItemRecovery").contains("Open ShouldRest again"))
         XCTAssertEqual(L10n.tr("prefs.pauseUntilMorningMode"), "Morning resume")
         XCTAssertEqual(L10n.tr("prefs.pauseUntilMorningHour"), "Resume at")
@@ -680,7 +684,12 @@ final class LocalizationQualityTests: XCTestCase {
             L10n.tr("debug.summaryPausedBody"),
             "Resume from the status menu when you want ShouldRest to schedule rests again."
         )
+        XCTAssertEqual(
+            L10n.tr("debug.summaryPausedBodyMenuHidden"),
+            "Rests are paused and the menu bar icon is hidden. Open ShouldRest from Applications, run shouldrest resume, or use shouldrest://resume to resume scheduling."
+        )
         XCTAssertFalse(L10n.tr("debug.summaryPausedBody").localizedCaseInsensitiveContains("automation"))
+        XCTAssertFalse(L10n.tr("debug.summaryPausedBodyMenuHidden").localizedCaseInsensitiveContains("status menu"))
         XCTAssertEqual(L10n.tr("debug.openLog"), "Show Log Location in Finder")
         XCTAssertEqual(L10n.tr("debug.openSettings"), "Show Settings Location in Finder")
         XCTAssertNotEqual(L10n.tr("debug.openLog"), "Show Log in Finder")
@@ -692,6 +701,11 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(L10n.tr("debug.openLogHiddenHelp").localizedCaseInsensitiveContains("access"))
         XCTAssertFalse(L10n.tr("debug.openSettingsHiddenHelp").localizedCaseInsensitiveContains("access"))
         XCTAssertFalse(L10n.tr("debug.pathHidden").localizedCaseInsensitiveContains("access"))
+        XCTAssertEqual(
+            L10n.tr("debug.summaryReadyBodyMenuHidden"),
+            "The menu bar icon is hidden. ShouldRest is still running; open ShouldRest from Applications, run shouldrest preferences, or use shouldrest://preferences to reopen Preferences."
+        )
+        XCTAssertFalse(L10n.tr("debug.summaryReadyBodyMenuHidden").localizedCaseInsensitiveContains("Menu actions"))
         XCTAssertTrue(L10n.tr("debug.summaryEyeActiveBody").localizedCaseInsensitiveContains("Emergency Exit twice"))
         XCTAssertTrue(L10n.tr("debug.summaryEyeActiveBody").localizedCaseInsensitiveContains("Esc twice"))
         XCTAssertFalse(L10n.tr("debug.summaryEyeActiveBody").localizedCaseInsensitiveContains("Esc once"))
@@ -699,14 +713,26 @@ final class LocalizationQualityTests: XCTestCase {
             L10n.tr("debug.summaryBodyActiveBody"),
             "Use available status menu or overlay controls to postpone, skip, or finish based on the current Body Break settings."
         )
+        XCTAssertEqual(
+            L10n.tr("debug.summaryBodyActiveBodyMenuHidden"),
+            "Use the overlay controls to postpone, skip, or finish. The menu bar icon is hidden, but ShouldRest is still running."
+        )
         XCTAssertEqual(L10n.tr("debug.summaryBodyReadyTitle"), "Body Break is ready to finish")
         XCTAssertEqual(
             L10n.tr("debug.summaryBodyReadyBody"),
             "Finish from the status menu or overlay when you are ready to return."
         )
+        XCTAssertEqual(
+            L10n.tr("debug.summaryBodyReadyBodyMenuHidden"),
+            "Finish from the overlay when you are ready to return. The menu bar icon is hidden, but ShouldRest is still running."
+        )
         XCTAssertFalse(L10n.tr("debug.summaryBodyActiveBody").localizedCaseInsensitiveContains("overlay buttons"))
+        XCTAssertFalse(L10n.tr("debug.summaryBodyActiveBodyMenuHidden").localizedCaseInsensitiveContains("status menu"))
         XCTAssertFalse(L10n.tr("debug.summaryBodyReadyBody").localizedCaseInsensitiveContains("postpone"))
         XCTAssertFalse(L10n.tr("debug.summaryBodyReadyBody").localizedCaseInsensitiveContains("skip"))
+        XCTAssertFalse(L10n.tr("debug.summaryBodyReadyBodyMenuHidden").localizedCaseInsensitiveContains("status menu"))
+        XCTAssertFalse(L10n.tr("debug.summaryBodyReadyBodyMenuHidden").localizedCaseInsensitiveContains("postpone"))
+        XCTAssertFalse(L10n.tr("debug.summaryBodyReadyBodyMenuHidden").localizedCaseInsensitiveContains("skip"))
         XCTAssertEqual(L10n.tr("about.debug"), "Support Report")
         XCTAssertEqual(
             L10n.tr("about.body"),
@@ -839,8 +865,12 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.sectionUpdates"), "更新")
         XCTAssertEqual(L10n.tr("prefs.sectionSupportControls"), "支持选项")
         XCTAssertTrue(L10n.tr("prefs.showMenuBarItemHelp").contains("应用程序"))
+        XCTAssertTrue(L10n.tr("prefs.showMenuBarItemHelp").contains("仍会运行"))
+        XCTAssertTrue(L10n.tr("prefs.showMenuBarItemHelp").contains("休息覆盖层仍会出现"))
         XCTAssertTrue(L10n.tr("prefs.showMenuBarItemHelp").contains("再次打开 ShouldRest"))
         XCTAssertTrue(L10n.tr("prefs.showMenuBarItemRecovery").contains("应用程序"))
+        XCTAssertTrue(L10n.tr("prefs.showMenuBarItemRecovery").contains("仍会运行"))
+        XCTAssertTrue(L10n.tr("prefs.showMenuBarItemRecovery").contains("休息覆盖层仍会出现"))
         XCTAssertTrue(L10n.tr("prefs.showMenuBarItemRecovery").contains("再次打开 ShouldRest"))
         XCTAssertEqual(L10n.tr("prefs.pauseUntilMorningMode"), "早晨恢复")
         XCTAssertEqual(L10n.tr("prefs.pauseUntilMorningHour"), "恢复时间")
@@ -904,7 +934,12 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("debug.copied"), "已复制到剪贴板")
         XCTAssertEqual(L10n.tr("debug.updated"), "报告已刷新")
         XCTAssertEqual(L10n.tr("debug.summaryPausedBody"), "需要重新开始安排休息时，可从状态菜单恢复。")
+        XCTAssertEqual(
+            L10n.tr("debug.summaryPausedBodyMenuHidden"),
+            "休息已暂停，且菜单栏图标已隐藏。可从“应用程序”打开 ShouldRest，或使用 shouldrest resume、shouldrest://resume 恢复调度。"
+        )
         XCTAssertFalse(L10n.tr("debug.summaryPausedBody").contains("自动化"))
+        XCTAssertFalse(L10n.tr("debug.summaryPausedBodyMenuHidden").contains("状态菜单"))
         XCTAssertEqual(L10n.tr("debug.openLog"), "在 Finder 中显示日志位置")
         XCTAssertEqual(L10n.tr("debug.openSettings"), "在 Finder 中显示设置位置")
         XCTAssertNotEqual(L10n.tr("debug.openLog"), "在 Finder 中显示日志")
@@ -916,6 +951,11 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(L10n.tr("debug.openLogHiddenHelp").contains("日志文件位置"))
         XCTAssertFalse(L10n.tr("debug.openSettingsHiddenHelp").contains("设置文件位置"))
         XCTAssertFalse(L10n.tr("debug.pathHidden").contains("访问"))
+        XCTAssertEqual(
+            L10n.tr("debug.summaryReadyBodyMenuHidden"),
+            "菜单栏图标已隐藏。ShouldRest 仍在运行；可从“应用程序”打开 ShouldRest，或使用 shouldrest preferences、shouldrest://preferences 重新打开偏好设置。"
+        )
+        XCTAssertFalse(L10n.tr("debug.summaryReadyBodyMenuHidden").contains("菜单操作"))
         XCTAssertTrue(L10n.tr("debug.summaryEyeActiveBody").contains("紧急退出两次"))
         XCTAssertTrue(L10n.tr("debug.summaryEyeActiveBody").contains("两次 Esc"))
         XCTAssertFalse(L10n.tr("debug.summaryEyeActiveBody").contains("按一次 Esc"))
@@ -923,11 +963,23 @@ final class LocalizationQualityTests: XCTestCase {
             L10n.tr("debug.summaryBodyActiveBody"),
             "请根据当前活动休息设置，使用状态菜单或覆盖层里的可用按钮推迟、跳过或完成。"
         )
+        XCTAssertEqual(
+            L10n.tr("debug.summaryBodyActiveBodyMenuHidden"),
+            "请使用覆盖层里的可用按钮推迟、跳过或完成。菜单栏图标已隐藏，但 ShouldRest 仍在运行。"
+        )
         XCTAssertEqual(L10n.tr("debug.summaryBodyReadyTitle"), "活动休息可以完成了")
         XCTAssertEqual(L10n.tr("debug.summaryBodyReadyBody"), "准备好返回时，可从状态菜单或覆盖层完成。")
+        XCTAssertEqual(
+            L10n.tr("debug.summaryBodyReadyBodyMenuHidden"),
+            "准备好返回时，请从覆盖层完成。菜单栏图标已隐藏，但 ShouldRest 仍在运行。"
+        )
         XCTAssertFalse(L10n.tr("debug.summaryBodyActiveBody").contains("覆盖层内的推迟、跳过或完成按钮"))
+        XCTAssertFalse(L10n.tr("debug.summaryBodyActiveBodyMenuHidden").contains("状态菜单"))
         XCTAssertFalse(L10n.tr("debug.summaryBodyReadyBody").contains("推迟"))
         XCTAssertFalse(L10n.tr("debug.summaryBodyReadyBody").contains("跳过"))
+        XCTAssertFalse(L10n.tr("debug.summaryBodyReadyBodyMenuHidden").contains("状态菜单"))
+        XCTAssertFalse(L10n.tr("debug.summaryBodyReadyBodyMenuHidden").contains("推迟"))
+        XCTAssertFalse(L10n.tr("debug.summaryBodyReadyBodyMenuHidden").contains("跳过"))
         XCTAssertEqual(L10n.tr("about.debug"), "支持报告")
         XCTAssertEqual(
             L10n.tr("about.body"),
