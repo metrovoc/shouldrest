@@ -236,6 +236,7 @@ private enum PreferencesSaveStatus {
     case restored
     case appRulesRestored
     case ideasRestored
+    case updateSourceRestored
     case shortcutCleared
     case shortcutRestored
     case bodyImageSelected
@@ -3502,7 +3503,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         updateFeedURL.stringValue = Self.defaultUpdateFeedURL
         updateUpdateSourceRestoreButtonState()
-        scheduleAutosave()
+        scheduleAutosave(completionStatus: .updateSourceRestored)
     }
 
     private func confirmRestoreDefaults() -> Bool {
@@ -4196,6 +4197,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             symbolName = "arrow.counterclockwise.circle.fill"
             color = .systemBlue
             title = L10n.tr("prefs.autosaveIdeasRestored")
+        case .updateSourceRestored:
+            symbolName = "arrow.counterclockwise.circle.fill"
+            color = .systemBlue
+            title = L10n.tr("prefs.autosaveUpdateSourceRestored")
         case .shortcutCleared:
             symbolName = "xmark.circle.fill"
             color = .systemBlue

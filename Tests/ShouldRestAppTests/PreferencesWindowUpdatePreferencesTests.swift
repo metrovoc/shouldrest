@@ -338,6 +338,8 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
 
         let field = try XCTUnwrap(view(withIdentifier: "prefs.updateFeedURLField", in: contentView) as? NSTextField)
         let button = try XCTUnwrap(view(withIdentifier: "prefs.restoreUpdateSourceButton", in: contentView) as? NSButton)
+        let statusIcon = try XCTUnwrap(view(withIdentifier: "autosaveStatusIcon", in: contentView) as? NSImageView)
+        let statusLabel = try XCTUnwrap(view(withIdentifier: "autosaveStatusLabel", in: contentView) as? NSTextField)
 
         XCTAssertEqual(field.stringValue, "")
         XCTAssertTrue(button.isEnabled)
@@ -349,6 +351,11 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         XCTAssertEqual(field.stringValue, RestSettings.defaults.operations.updateFeedURL)
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(savedSettings.value?.operations.updateFeedURL, RestSettings.defaults.operations.updateFeedURL)
+        XCTAssertEqual(statusLabel.stringValue, L10n.tr("prefs.autosaveUpdateSourceRestored"))
+        XCTAssertEqual(statusLabel.toolTip, L10n.tr("prefs.autosaveUpdateSourceRestored"))
+        XCTAssertEqual(statusLabel.accessibilityHelp(), L10n.tr("prefs.autosaveUpdateSourceRestored"))
+        XCTAssertEqual(statusIcon.image?.accessibilityDescription, L10n.tr("prefs.autosaveUpdateSourceRestored"))
+        XCTAssertEqual(statusIcon.accessibilityHelp(), L10n.tr("prefs.autosaveUpdateSourceRestored"))
         XCTAssertFalse(button.isEnabled)
         XCTAssertEqual(button.toolTip, L10n.tr("prefs.restoreUpdateSourceDisabledDefaultHelp"))
     }

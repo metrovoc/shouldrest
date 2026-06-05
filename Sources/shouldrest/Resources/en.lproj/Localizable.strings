@@ -538,6 +538,7 @@
 "prefs.autosaveRestored" = "Defaults restored";
 "prefs.autosaveAppRulesRestored" = "Saved app rules restored";
 "prefs.autosaveIdeasRestored" = "Saved ideas restored";
+"prefs.autosaveUpdateSourceRestored" = "Default update source restored";
 "prefs.autosaveShortcutCleared" = "Shortcut cleared";
 "prefs.autosaveShortcutRestored" = "Default shortcut restored";
 "prefs.autosaveBodyImageSelected" = "Body Break image selected";
