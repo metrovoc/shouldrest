@@ -149,6 +149,8 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(L10n.tr("shortcut.recordHelp").contains("Command, Control, or Option"))
         XCTAssertEqual(L10n.tr("shortcut.recordingInvalid"), "Use ⌘, ⌃, or ⌥")
         XCTAssertNotEqual(L10n.tr("shortcut.recordHelp"), "Click, then press a shortcut.")
+        XCTAssertTrue(L10n.tr("shortcut.requiredHelp").localizedCaseInsensitiveContains("restore button"))
+        XCTAssertFalse(L10n.tr("shortcut.requiredHelp").localizedCaseInsensitiveContains("reset button"))
 
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(
@@ -158,6 +160,8 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(L10n.tr("shortcut.recordHelp").contains("Command、Control 或 Option"))
         XCTAssertEqual(L10n.tr("shortcut.recordingInvalid"), "使用 ⌘、⌃ 或 ⌥")
         XCTAssertNotEqual(L10n.tr("shortcut.recordHelp"), "点击后按快捷键。")
+        XCTAssertTrue(L10n.tr("shortcut.requiredHelp").contains("恢复按钮"))
+        XCTAssertFalse(L10n.tr("shortcut.requiredHelp").contains("重置按钮"))
     }
 
     func testVisiblePreferenceCopyAvoidsImplementationTerms() throws {
