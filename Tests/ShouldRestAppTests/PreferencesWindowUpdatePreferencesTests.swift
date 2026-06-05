@@ -387,10 +387,15 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
 
+        let container = try XCTUnwrap(view(withIdentifier: "prefs.adminMessageContainer", in: contentView) as? NSStackView)
         let bannerRow = try XCTUnwrap(view(withIdentifier: "prefs.adminMessageBanner", in: contentView) as? NSStackView)
         let icon = try XCTUnwrap(view(withIdentifier: "prefs.adminMessageIcon", in: contentView) as? NSImageView)
         let banner = try XCTUnwrap(view(withIdentifier: "prefs.adminMessageLabel", in: contentView) as? NSTextField)
 
+        XCTAssertFalse(container.isHidden)
+        XCTAssertEqual(container.edgeInsets.left, 24)
+        XCTAssertEqual(container.edgeInsets.right, 24)
+        XCTAssertFalse(isEffectivelyHidden(container))
         XCTAssertFalse(bannerRow.isHidden)
         XCTAssertTrue(bannerRow.wantsLayer)
         XCTAssertEqual(bannerRow.edgeInsets.top, 8)
@@ -399,7 +404,12 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         XCTAssertEqual(bannerRow.layer?.borderWidth, 1)
         XCTAssertNotNil(bannerRow.layer?.backgroundColor)
         XCTAssertNotNil(bannerRow.layer?.borderColor)
-        XCTAssertGreaterThanOrEqual(bannerRow.constraints.first { $0.firstAttribute == .width }?.constant ?? 0, 650)
+        XCTAssertFalse(bannerRow.constraints.contains { constraint in
+            constraint.firstAttribute == .width &&
+                constraint.relation == .equal &&
+                constraint.secondItem == nil &&
+                constraint.constant >= 650
+        })
         XCTAssertEqual(bannerRow.toolTip, message)
         XCTAssertEqual(bannerRow.accessibilityLabel(), L10n.tr("prefs.preferencesMessage"))
         XCTAssertEqual(bannerRow.accessibilityHelp(), message)
@@ -416,16 +426,40 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         XCTAssertEqual(banner.accessibilityHelp(), message)
     }
 
+    func testAdminPreferencesMessageBannerStaysVisibleAcrossTabs() throws {
+        let message = "Use the shared team rhythm."
+        var settings = RestSettings.defaults
+        settings.admin.customPreferencesMessage = message
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let tabView = try XCTUnwrap(firstTabView(in: contentView))
+        let container = try XCTUnwrap(view(withIdentifier: "prefs.adminMessageContainer", in: contentView) as? NSStackView)
+        let banner = try XCTUnwrap(view(withIdentifier: "prefs.adminMessageBanner", in: contentView) as? NSStackView)
+
+        XCTAssertFalse(isDescendantOrEqual(container, of: tabView))
+        XCTAssertFalse(isEffectivelyHidden(container))
+        XCTAssertFalse(isEffectivelyHidden(banner))
+        XCTAssertTrue(visibleTexts(in: contentView).contains(message))
+
+        try selectAdvancedTab(in: contentView)
+
+        XCTAssertFalse(isEffectivelyHidden(container))
+        XCTAssertFalse(isEffectivelyHidden(banner))
+        XCTAssertTrue(visibleTexts(in: contentView).contains(message))
+    }
+
     func testBlankAdminPreferencesMessageDoesNotExposeEmptyBanner() throws {
         var settings = RestSettings.defaults
         settings.admin.customPreferencesMessage = "   \n  "
         let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
 
+        let container = try XCTUnwrap(view(withIdentifier: "prefs.adminMessageContainer", in: contentView) as? NSStackView)
         let bannerRow = try XCTUnwrap(view(withIdentifier: "prefs.adminMessageBanner", in: contentView) as? NSStackView)
         let icon = try XCTUnwrap(view(withIdentifier: "prefs.adminMessageIcon", in: contentView) as? NSImageView)
         let banner = try XCTUnwrap(view(withIdentifier: "prefs.adminMessageLabel", in: contentView) as? NSTextField)
 
+        XCTAssertTrue(container.isHidden)
         XCTAssertTrue(bannerRow.isHidden)
         XCTAssertNil(bannerRow.toolTip)
         XCTAssertNil(bannerRow.accessibilityHelp())
@@ -544,6 +578,28 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
             }
         }
         return nil
+    }
+
+    private func isEffectivelyHidden(_ view: NSView) -> Bool {
+        var current: NSView? = view
+        while let candidate = current {
+            if candidate.isHidden {
+                return true
+            }
+            current = candidate.superview
+        }
+        return false
+    }
+
+    private func isDescendantOrEqual(_ view: NSView, of ancestor: NSView) -> Bool {
+        var current: NSView? = view
+        while let candidate = current {
+            if candidate === ancestor {
+                return true
+            }
+            current = candidate.superview
+        }
+        return false
     }
 
     private func sendAction(from control: NSControl) -> Bool {

@@ -442,6 +442,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private var settings: RestSettings
     private let onSave: (RestSettings) -> Void
+    private let adminMessageContainer = NSStackView()
     private let adminMessageBanner = NSStackView()
     private let adminMessageIcon = NSImageView()
     private let adminMessageLabel = NSTextField(labelWithString: "")
@@ -764,6 +765,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         let header = preferencesHeaderBar()
         root.addArrangedSubview(header)
+        let adminMessageContainer = adminMessageBannerContainerView()
+        root.addArrangedSubview(adminMessageContainer)
 
         let tabView = NSTabView()
         tabView.identifier = NSUserInterfaceItemIdentifier("prefs.tabView")
@@ -774,7 +777,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         root.addArrangedSubview(tabView)
 
         let scheduleStack = contentStack()
-        scheduleStack.addArrangedSubview(adminMessageBannerView())
         scheduleStack.addArrangedSubview(section(
             L10n.tr("prefs.sectionEyeGate"),
             icon: .restGate,
@@ -1388,6 +1390,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             root.topAnchor.constraint(equalTo: contentView.topAnchor),
             root.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
             header.widthAnchor.constraint(equalTo: root.widthAnchor),
+            adminMessageContainer.widthAnchor.constraint(equalTo: root.widthAnchor),
             tabView.widthAnchor.constraint(equalTo: root.widthAnchor),
             footer.widthAnchor.constraint(equalTo: root.widthAnchor)
         ])
@@ -1550,6 +1553,22 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         return stack
     }
 
+    private func adminMessageBannerContainerView() -> NSStackView {
+        adminMessageContainer.identifier = NSUserInterfaceItemIdentifier("prefs.adminMessageContainer")
+        adminMessageContainer.orientation = .vertical
+        adminMessageContainer.alignment = .leading
+        adminMessageContainer.spacing = 0
+        adminMessageContainer.edgeInsets = NSEdgeInsets(top: 12, left: 24, bottom: 0, right: 24)
+        adminMessageContainer.addArrangedSubview(adminMessageBannerView())
+        adminMessageContainer.isHidden = true
+
+        adminMessageBanner.widthAnchor.constraint(
+            lessThanOrEqualTo: adminMessageContainer.widthAnchor,
+            constant: -48
+        ).isActive = true
+        return adminMessageContainer
+    }
+
     private func adminMessageBannerView() -> NSStackView {
         adminMessageIcon.identifier = NSUserInterfaceItemIdentifier("prefs.adminMessageIcon")
         adminMessageIcon.image = NSImage(
@@ -1566,7 +1585,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         adminMessageLabel.textColor = .labelColor
         adminMessageLabel.lineBreakMode = .byWordWrapping
         adminMessageLabel.maximumNumberOfLines = 3
-        adminMessageLabel.widthAnchor.constraint(equalToConstant: 594).isActive = true
+        adminMessageLabel.widthAnchor.constraint(lessThanOrEqualToConstant: 594).isActive = true
 
         adminMessageBanner.identifier = NSUserInterfaceItemIdentifier("prefs.adminMessageBanner")
         adminMessageBanner.orientation = .horizontal
@@ -1578,7 +1597,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         adminMessageBanner.layer?.borderWidth = 1
         adminMessageBanner.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.08).cgColor
         adminMessageBanner.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.55).cgColor
-        adminMessageBanner.widthAnchor.constraint(equalToConstant: 650).isActive = true
         adminMessageBanner.addArrangedSubview(adminMessageIcon)
         adminMessageBanner.addArrangedSubview(adminMessageLabel)
         adminMessageBanner.setAccessibilityLabel(L10n.tr("prefs.preferencesMessage"))
@@ -2817,6 +2835,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private func updateAdminMessageLabel(_ message: String) {
         let isVisible = !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let visibleMessage = isVisible ? message : ""
+        adminMessageContainer.isHidden = !isVisible
         adminMessageBanner.isHidden = !isVisible
         adminMessageIcon.isHidden = !isVisible
         adminMessageIcon.setAccessibilityHelp(isVisible ? visibleMessage : nil)
