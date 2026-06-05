@@ -389,7 +389,7 @@
 "prefs.theme.light" = "Light";
 "prefs.theme.dark" = "Dark";
 "prefs.language" = "Interface language";
-"prefs.languageHelp" = "Menus, overlays, and newly opened windows use this language after autosave. Reopen Preferences to refresh this window.";
+"prefs.languageHelp" = "Autosave applies this language to menus, overlays, and Preferences immediately.";
 "prefs.language.system" = "System language";
 "prefs.language.english" = "English";
 "prefs.language.simplifiedChinese" = "Simplified Chinese";
@@ -563,7 +563,7 @@
 "prefs.autosaveShortcutRestored" = "Default shortcut restored";
 "prefs.autosaveBodyImageSelected" = "Body Break image selected";
 "prefs.autosaveBodyImageCleared" = "Body Break image cleared";
-"prefs.autosaveLanguageChanged" = "Language saved; reopen Preferences to refresh this window";
+"prefs.autosaveLanguageChanged" = "Language saved; Preferences refreshed";
 "prefs.autosaveInvalid" = "Fix import text to save";
 "prefs.autosaveInvalidField" = "Fix %@ to save";
 "prefs.searchPlaceholder" = "Find a setting";

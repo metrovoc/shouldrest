@@ -24,7 +24,7 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
         XCTAssertFalse(buttonTitles(in: contentView).contains("Save"))
     }
 
-    func testLanguageChangeAutosaveExplainsCurrentWindowRefresh() throws {
+    func testLanguageChangeAutosaveUsesRefreshStatusCopy() throws {
         L10n.languageOverride = "en"
         defer { L10n.languageOverride = nil }
 
@@ -51,6 +51,30 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
         XCTAssertEqual(icon.accessibilityLabel(), L10n.tr("prefs.autosaveLanguageChanged"))
         XCTAssertEqual(icon.accessibilityHelp(), L10n.tr("prefs.autosaveLanguageChanged"))
         XCTAssertEqual(icon.image?.accessibilityDescription, L10n.tr("prefs.autosaveLanguageChanged"))
+        XCTAssertFalse(label.stringValue.localizedCaseInsensitiveContains("reopen"))
+    }
+
+    func testRebuiltPreferencesCanShowLanguageRefreshStatusInNewLanguage() throws {
+        L10n.languageOverride = "zh-Hans"
+        defer { L10n.languageOverride = nil }
+
+        var settings = RestSettings.defaults
+        settings.presentation.languageIdentifier = "zh-Hans"
+        let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let tabView = try XCTUnwrap(firstTabView(in: contentView))
+        let label = try XCTUnwrap(view(withIdentifier: "autosaveStatusLabel", in: contentView) as? NSTextField)
+        let icon = try XCTUnwrap(view(withIdentifier: "autosaveStatusIcon", in: contentView) as? NSImageView)
+
+        controller.selectTab(.appearance)
+        controller.showLanguageRefreshedStatus()
+
+        XCTAssertEqual(tabView.selectedTabViewItem?.identifier as? String, L10n.tr("prefs.tabAppearance"))
+        XCTAssertEqual(label.stringValue, "语言已保存；偏好设置已刷新")
+        XCTAssertEqual(label.toolTip, L10n.tr("prefs.autosaveLanguageChanged"))
+        XCTAssertEqual(label.accessibilityHelp(), L10n.tr("prefs.autosaveLanguageChanged"))
+        XCTAssertEqual(icon.image?.accessibilityDescription, L10n.tr("prefs.autosaveLanguageChanged"))
+        XCTAssertFalse(label.stringValue.contains("重新打开"))
     }
 
     func testPreferencesStartWithBrandedHeaderAndAutosaveStatus() throws {
@@ -160,7 +184,7 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.autosaveBodyImageCleared"), "Body Break image cleared")
         XCTAssertEqual(
             L10n.tr("prefs.autosaveLanguageChanged"),
-            "Language saved; reopen Preferences to refresh this window"
+            "Language saved; Preferences refreshed"
         )
         XCTAssertEqual(L10n.tr("prefs.restoreDefaultsDisabledDefaultHelp"), "Current preferences already match the app defaults.")
 
@@ -182,7 +206,7 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.autosaveShortcutRestored"), "默认快捷键已恢复")
         XCTAssertEqual(L10n.tr("prefs.autosaveBodyImageSelected"), "活动休息图片已选择")
         XCTAssertEqual(L10n.tr("prefs.autosaveBodyImageCleared"), "活动休息图片已清空")
-        XCTAssertEqual(L10n.tr("prefs.autosaveLanguageChanged"), "语言已保存；重新打开偏好设置可刷新当前窗口")
+        XCTAssertEqual(L10n.tr("prefs.autosaveLanguageChanged"), "语言已保存；偏好设置已刷新")
         XCTAssertEqual(L10n.tr("prefs.restoreDefaultsDisabledDefaultHelp"), "当前偏好设置已是应用默认值。")
     }
 

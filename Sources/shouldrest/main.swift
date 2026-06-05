@@ -1642,6 +1642,14 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func openPreferences() {
+        presentPreferences(selecting: nil, restoringFrame: nil, showsLanguageRefreshStatus: false)
+    }
+
+    private func presentPreferences(
+        selecting tab: PreferencesTabTarget?,
+        restoringFrame frame: NSRect?,
+        showsLanguageRefreshStatus: Bool
+    ) {
         if preferencesWindowController == nil {
             preferencesWindowController = PreferencesWindowController(settings: settings) { [weak self] nextSettings in
                 Task { @MainActor in
@@ -1650,6 +1658,15 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         preferencesWindowController?.update(settings: settings)
+        if let frame {
+            preferencesWindowController?.window?.setFrame(frame, display: false)
+        }
+        if let tab {
+            preferencesWindowController?.selectTab(tab)
+        }
+        if showsLanguageRefreshStatus {
+            preferencesWindowController?.showLanguageRefreshedStatus()
+        }
         preferencesWindowController?.showWindow(nil)
         preferencesWindowController?.window?.makeKeyAndOrderFront(nil)
         preferencesWindowController?.window?.orderFrontRegardless()
@@ -1767,6 +1784,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func applySettings(_ nextSettings: RestSettings) {
+        let shouldRefreshVisiblePreferences = PreferencesLanguageRefreshPolicy.shouldRefreshPreferences(
+            previousSettings: settings,
+            nextSettings: nextSettings,
+            isPreferencesWindowVisible: preferencesWindowController?.window?.isVisible == true
+        )
+        let preferencesFrame = shouldRefreshVisiblePreferences ? preferencesWindowController?.window?.frame : nil
         settings = nextSettings
         engine.updateSettings(nextSettings)
         applyLanguageSetting()
@@ -1784,6 +1807,19 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             logger.log("Preferences save failed: \(error.localizedDescription)")
         }
         rebuildMenu()
+        if shouldRefreshVisiblePreferences {
+            refreshPreferencesWindowAfterLanguageChange(restoringFrame: preferencesFrame)
+        }
+    }
+
+    private func refreshPreferencesWindowAfterLanguageChange(restoringFrame frame: NSRect?) {
+        preferencesWindowController?.window?.orderOut(nil)
+        preferencesWindowController = nil
+        presentPreferences(
+            selecting: .appearance,
+            restoringFrame: frame,
+            showsLanguageRefreshStatus: true
+        )
     }
 
     @objc private func handleAutomation(_ notification: Notification) {

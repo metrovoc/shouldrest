@@ -799,6 +799,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         loadSettings()
     }
 
+    func selectTab(_ tab: PreferencesTabTarget) {
+        preferencesTabView?.selectTabViewItem(withIdentifier: tab.localizedIdentifier)
+    }
+
+    func showLanguageRefreshedStatus() {
+        setSaveStatus(.languageChanged)
+    }
+
     private func buildContent() {
         guard let contentView = window?.contentView else { return }
 
