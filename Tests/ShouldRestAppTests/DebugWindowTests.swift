@@ -96,7 +96,7 @@ final class DebugWindowTests: XCTestCase {
         NSPasteboard.general.clearContents()
         buttons.copy.sendAction(buttons.copy.action, to: buttons.copy.target)
         XCTAssertEqual(NSPasteboard.general.string(forType: .string), "state=initial")
-        XCTAssertEqual(status.stringValue, "Copied to Clipboard")
+        XCTAssertEqual(status.stringValue, "Copied to clipboard")
         XCTAssertEqual(status.stringValue, L10n.tr("debug.copied"))
         XCTAssertEqual(status.toolTip, L10n.tr("debug.copied"))
         XCTAssertEqual(status.accessibilityHelp(), L10n.tr("debug.copied"))

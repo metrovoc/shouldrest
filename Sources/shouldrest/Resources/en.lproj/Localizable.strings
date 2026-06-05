@@ -46,9 +46,9 @@
 "menu.preferences" = "Preferences…";
 "menu.preferencesHelp" = "Open ShouldRest preferences.";
 "menu.support" = "Help & Support";
-"menu.supportHelp" = "Open support reports, update, and project actions.";
+"menu.supportHelp" = "Open support reports, update checks, and project links.";
 "menu.checkUpdates" = "Check for Updates";
-"menu.checkUpdatesHelp" = "Check GitHub for a newer ShouldRest release.";
+"menu.checkUpdatesHelp" = "Check for a newer ShouldRest release.";
 "menu.downloadLatest" = "Download Latest Version";
 "menu.downloadLatestHelp" = "Open the latest ShouldRest release download page.";
 "menu.copyDebug" = "Copy Support Report";
@@ -159,7 +159,7 @@
 "debug.pathHidden" = "Location access is hidden in Preferences.";
 "debug.statusLabel" = "Support report status";
 "debug.ready" = "Report ready";
-"debug.copied" = "Copied to Clipboard";
+"debug.copied" = "Copied to clipboard";
 "debug.updated" = "Report refreshed";
 "debug.summaryReadyTitle" = "ShouldRest is ready";
 "debug.summaryReadyBody" = "Menu actions and Preferences are available.";

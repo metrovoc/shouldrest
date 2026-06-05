@@ -46,9 +46,9 @@
 "menu.preferences" = "偏好设置…";
 "menu.preferencesHelp" = "打开 ShouldRest 偏好设置。";
 "menu.support" = "帮助与支持";
-"menu.supportHelp" = "打开支持报告、更新和项目相关操作。";
+"menu.supportHelp" = "打开支持报告、更新检查和项目链接。";
 "menu.checkUpdates" = "检查更新";
-"menu.checkUpdatesHelp" = "在 GitHub 上检查是否有新的 ShouldRest 版本。";
+"menu.checkUpdatesHelp" = "检查是否有新的 ShouldRest 版本。";
 "menu.downloadLatest" = "下载最新版本";
 "menu.downloadLatestHelp" = "打开最新 ShouldRest 版本下载页面。";
 "menu.copyDebug" = "复制支持报告";
