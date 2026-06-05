@@ -2960,6 +2960,14 @@ final class RestOverlayView: NSView {
     }
 
     func performEmergencyOverrideKeyCommand(event: NSEvent? = nil) {
+        if let event {
+            switch emergencyOverrideKeyHandling(for: event) {
+            case .trigger:
+                break
+            case .consumeRepeat, .passThrough:
+                return
+            }
+        }
         requestEmergencyOverride()
     }
 

@@ -556,6 +556,31 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(requestCount, 2)
     }
 
+    func testDirectEscapeRepeatCommandDoesNotConfirmEmergency() throws {
+        let view = configuredEyeGateOverlay()
+        var requestCount = 0
+        view.onEmergencyOverrideRequested = {
+            requestCount += 1
+            return requestCount == 1 ? .armed : .complete
+        }
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+
+        view.performEmergencyOverrideKeyCommand(event: try escapeKeyEvent(timestamp: 1))
+
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+
+        view.performEmergencyOverrideKeyCommand(event: try escapeKeyEvent(isRepeat: true, timestamp: 1.01))
+        drainMainQueue()
+
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+
+        view.performEmergencyOverrideKeyCommand(event: try escapeKeyEvent(timestamp: 2))
+
+        XCTAssertEqual(requestCount, 2)
+    }
+
     func testAvailableEmergencyAllowsFirstConfirmationClick() {
         let view = configuredEyeGateOverlay()
 
