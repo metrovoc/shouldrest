@@ -75,6 +75,23 @@ final class PreferencesWindowSoundPreviewTests: XCTestCase {
         XCTAssertEqual(status.accessibilityHelp(), expectedStatus)
     }
 
+    func testSoundPreviewStatusStartsHiddenWithoutReadableResidualState() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectAppearanceTab(in: contentView)
+
+        let statusRow = try XCTUnwrap(view(withIdentifier: "soundPreviewStatusRow", in: contentView) as? NSStackView)
+        let statusIcon = try XCTUnwrap(view(withIdentifier: "soundPreviewStatusIcon", in: contentView) as? NSImageView)
+        let status = try XCTUnwrap(view(withIdentifier: "soundPreviewStatus", in: contentView) as? NSTextField)
+
+        assertHiddenSoundPreviewStatusIsCleared(
+            row: statusRow,
+            icon: statusIcon,
+            label: status
+        )
+    }
+
     func testPreviewingSelectedSoundShowsRowAndSoundName() throws {
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
@@ -151,15 +168,41 @@ final class PreferencesWindowSoundPreviewTests: XCTestCase {
 
         XCTAssertTrue(statusRow.isHidden)
         XCTAssertNil(statusRow.toolTip)
+        XCTAssertNil(statusRow.accessibilityLabel())
         XCTAssertNil(statusRow.accessibilityHelp())
         XCTAssertTrue(statusIcon.isHidden)
+        XCTAssertNil(statusIcon.image)
         XCTAssertNil(statusIcon.toolTip)
+        XCTAssertNil(statusIcon.accessibilityLabel())
         XCTAssertNil(statusIcon.accessibilityHelp())
         XCTAssertTrue(status.isHidden)
         XCTAssertEqual(status.stringValue, "")
         XCTAssertNil(status.toolTip)
         XCTAssertNil(status.accessibilityLabel())
         XCTAssertNil(status.accessibilityHelp())
+    }
+
+    private func assertHiddenSoundPreviewStatusIsCleared(
+        row: NSStackView,
+        icon: NSImageView,
+        label: NSTextField,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        XCTAssertTrue(row.isHidden, file: file, line: line)
+        XCTAssertNil(row.toolTip, file: file, line: line)
+        XCTAssertNil(row.accessibilityLabel(), file: file, line: line)
+        XCTAssertNil(row.accessibilityHelp(), file: file, line: line)
+        XCTAssertTrue(icon.isHidden, file: file, line: line)
+        XCTAssertNil(icon.image, file: file, line: line)
+        XCTAssertNil(icon.toolTip, file: file, line: line)
+        XCTAssertNil(icon.accessibilityLabel(), file: file, line: line)
+        XCTAssertNil(icon.accessibilityHelp(), file: file, line: line)
+        XCTAssertTrue(label.isHidden, file: file, line: line)
+        XCTAssertEqual(label.stringValue, "", file: file, line: line)
+        XCTAssertNil(label.toolTip, file: file, line: line)
+        XCTAssertNil(label.accessibilityLabel(), file: file, line: line)
+        XCTAssertNil(label.accessibilityHelp(), file: file, line: line)
     }
 
     private func soundPopup(containingButton button: NSButton, in view: NSView) -> NSPopUpButton? {

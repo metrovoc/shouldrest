@@ -1643,13 +1643,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         soundVolumeValueLabel.widthAnchor.constraint(equalToConstant: 54).isActive = true
 
         soundPreviewStatusIcon.identifier = NSUserInterfaceItemIdentifier("soundPreviewStatusIcon")
-        soundPreviewStatusIcon.image = NSImage(
-            systemSymbolName: "speaker.wave.2.circle.fill",
-            accessibilityDescription: L10n.tr("prefs.previewSound")
-        )
         soundPreviewStatusIcon.symbolConfiguration = .init(pointSize: 15, weight: .semibold)
         soundPreviewStatusIcon.contentTintColor = .controlAccentColor
-        soundPreviewStatusIcon.setAccessibilityLabel(L10n.tr("prefs.previewSound"))
         soundPreviewStatusIcon.widthAnchor.constraint(equalToConstant: 20).isActive = true
 
         soundPreviewStatusLabel.identifier = NSUserInterfaceItemIdentifier("soundPreviewStatus")
@@ -1673,9 +1668,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         soundPreviewStatusRow.widthAnchor.constraint(equalToConstant: 650).isActive = true
         soundPreviewStatusRow.addArrangedSubview(soundPreviewStatusIcon)
         soundPreviewStatusRow.addArrangedSubview(soundPreviewStatusLabel)
-        soundPreviewStatusRow.setAccessibilityLabel(L10n.tr("prefs.previewSound"))
-        soundPreviewStatusRow.isHidden = true
-        soundPreviewStatusIcon.isHidden = true
+        clearSoundPreviewStatus()
     }
 
     private func configureRhythmPresetButtons() {
@@ -4059,12 +4052,17 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func showSoundPreviewStatus(_ status: String) {
         soundPreviewStatusRow.isHidden = false
+        soundPreviewStatusRow.setAccessibilityLabel(L10n.tr("prefs.previewSound"))
         soundPreviewStatusRow.toolTip = status
         soundPreviewStatusRow.setAccessibilityHelp(status)
         soundPreviewStatusIcon.isHidden = false
+        soundPreviewStatusIcon.image = NSImage(
+            systemSymbolName: "speaker.wave.2.circle.fill",
+            accessibilityDescription: L10n.tr("prefs.previewSound")
+        )
+        soundPreviewStatusIcon.setAccessibilityLabel(L10n.tr("prefs.previewSound"))
         soundPreviewStatusIcon.toolTip = status
         soundPreviewStatusIcon.setAccessibilityHelp(status)
-        soundPreviewStatusIcon.image?.accessibilityDescription = L10n.tr("prefs.previewSound")
         soundPreviewStatusLabel.stringValue = status
         soundPreviewStatusLabel.toolTip = status
         soundPreviewStatusLabel.setAccessibilityLabel(status)
@@ -4075,9 +4073,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private func clearSoundPreviewStatus() {
         soundPreviewStatusRow.isHidden = true
         soundPreviewStatusRow.toolTip = nil
+        soundPreviewStatusRow.setAccessibilityLabel(nil)
         soundPreviewStatusRow.setAccessibilityHelp(nil)
         soundPreviewStatusIcon.isHidden = true
+        soundPreviewStatusIcon.image = nil
         soundPreviewStatusIcon.toolTip = nil
+        soundPreviewStatusIcon.setAccessibilityLabel(nil)
         soundPreviewStatusIcon.setAccessibilityHelp(nil)
         soundPreviewStatusLabel.isHidden = true
         soundPreviewStatusLabel.stringValue = ""
