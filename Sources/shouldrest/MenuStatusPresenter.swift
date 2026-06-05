@@ -202,6 +202,9 @@ enum MenuStatusPresenter {
             }
             return L10n.tr("status.eyeGateActiveGuidance")
         case .bodyBreak:
+            if isManualFinishReady(session, now: now) {
+                return L10n.tr("status.bodyBreakReadyGuidance")
+            }
             return L10n.tr("status.bodyBreakActiveGuidance")
         }
     }

@@ -105,7 +105,8 @@
 "status.eyeGateActiveGuidance" = "Click Emergency Exit twice in the overlay, or press Esc twice.";
 "status.eyeGateActiveNoEmergencyGuidance" = "Keep looking away until the timer ends.";
 "status.eyeGateReadyGuidance" = "Finish from the overlay when ready.";
-"status.bodyBreakActiveGuidance" = "Use overlay controls to postpone, skip, or finish.";
+"status.bodyBreakActiveGuidance" = "Use available menu or overlay controls to postpone, skip, or finish.";
+"status.bodyBreakReadyGuidance" = "Finish from this menu or the overlay when ready.";
 "status.readyCompact" = "done";
 "status.deferredShort" = "Delayed";
 "status.deferred" = "%@ delayed: %@";

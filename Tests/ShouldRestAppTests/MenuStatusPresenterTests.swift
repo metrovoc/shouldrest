@@ -423,7 +423,27 @@ final class MenuStatusPresenterTests: XCTestCase {
         XCTAssertTrue(lines[0].contains("5m remaining"))
         XCTAssertFalse(lines[0].contains("295s"))
         XCTAssertFalse(lines[0].contains("bodyBreak"))
-        XCTAssertEqual(lines[1], "Use overlay controls to postpone, skip, or finish.")
+        XCTAssertEqual(lines[1], "Use available menu or overlay controls to postpone, skip, or finish.")
+    }
+
+    func testManualFinishBodyBreakStatusUsesFinishOnlyGuidance() {
+        let state = RestEngineState(activeSession: RestSession(
+            kind: .bodyBreak,
+            startedAt: start,
+            scheduledAt: start,
+            duration: 60,
+            manualFinishEnabled: true
+        ))
+
+        let lines = MenuStatusPresenter.lines(state: state, settings: .defaults, now: start.addingTimeInterval(61))
+        let content = MenuStatusPresenter.headerContent(state: state, settings: .defaults, now: start.addingTimeInterval(61))
+
+        XCTAssertEqual(lines.first, "Body Break ready to finish")
+        XCTAssertEqual(lines[1], "Finish from this menu or the overlay when ready.")
+        XCTAssertEqual(content.primary, "Body Break ready to finish")
+        XCTAssertEqual(content.secondary, "Finish from this menu or the overlay when ready.")
+        XCTAssertFalse(lines[1].localizedCaseInsensitiveContains("postpone"))
+        XCTAssertFalse(lines[1].localizedCaseInsensitiveContains("skip"))
     }
 
     func testActiveEyeGateStatusKeepsExactShortSeconds() {

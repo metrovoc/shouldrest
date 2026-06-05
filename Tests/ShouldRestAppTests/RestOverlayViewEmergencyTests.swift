@@ -1243,6 +1243,36 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(requestCount, 2)
     }
 
+    func testEmergencyMouseHoldDoesNotConfirmUntilSecondDistinctClick() throws {
+        let view = configuredEyeGateOverlay()
+        view.layoutSubtreeIfNeeded()
+        var requestCount = 0
+        view.onEmergencyOverrideRequested = {
+            requestCount += 1
+            return requestCount == 1 ? .armed : .complete
+        }
+        let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
+        let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.panel"))
+        let panelOnlyPoint = NSPoint(x: panel.frame.minX + 4, y: panel.frame.midY)
+        let target = try XCTUnwrap(view.hitTest(panelOnlyPoint))
+
+        target.mouseDown(with: try mouseEvent(at: panelOnlyPoint, clickCount: 1))
+        drainMainQueue()
+
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+
+        target.mouseUp(with: try mouseUpEvent(at: panelOnlyPoint, clickCount: 1))
+        drainMainQueue()
+
+        XCTAssertEqual(requestCount, 1)
+        XCTAssertEqual(button.attributedTitle.string, L10n.tr("overlay.emergencyOverrideConfirm"))
+
+        try performRoutedMouseClick(on: view, at: panelOnlyPoint)
+
+        XCTAssertEqual(requestCount, 2)
+    }
+
     func testSingleEmergencyClickWithLegacyHoldOnlyArmsAndNeverCompletes() throws {
         let start = Date(timeIntervalSinceReferenceDate: 7_000)
         var settings = RestSettings.defaults
