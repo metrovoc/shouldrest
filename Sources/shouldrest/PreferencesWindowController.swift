@@ -614,6 +614,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private var shortcutBodyNowRow: NSView?
     private var shortcutEndBodyRow: NSView?
     private weak var shortcutEndBodyLabel: NSTextField?
+    private weak var shortcutEndBodyHelpLabel: NSTextField?
     private var shortcutEmergencyEyeRow: NSView?
     private var shortcutDuringRestGroupHeader: NSView?
     private let shortcutReset = ShortcutRecorderButton()
@@ -1186,9 +1187,15 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             )
         )
         shortcutEndBodyRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutEndBodyRow")
-        if let label = shortcutEndBodyRow.arrangedSubviews.first as? NSTextField {
+        if let labelStack = shortcutEndBodyRow.arrangedSubviews.first as? NSStackView,
+           let label = labelStack.arrangedSubviews.first as? NSTextField {
             label.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutEndBodyLabel")
             shortcutEndBodyLabel = label
+            if labelStack.arrangedSubviews.count > 1,
+               let helpLabel = labelStack.arrangedSubviews[1] as? NSTextField {
+                helpLabel.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutEndBodyHelp")
+                shortcutEndBodyHelpLabel = helpLabel
+            }
         }
         self.shortcutEndBodyRow = shortcutEndBodyRow
         shortcutsStack.addArrangedSubview(shortcutEndBodyRow)
@@ -3318,6 +3325,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         shortcutEndBodyLabel?.toolTip = help
         shortcutEndBodyLabel?.setAccessibilityLabel(title)
         shortcutEndBodyLabel?.setAccessibilityHelp(help)
+        shortcutEndBodyHelpLabel?.stringValue = help
+        shortcutEndBodyHelpLabel?.toolTip = help
+        shortcutEndBodyHelpLabel?.setAccessibilityLabel(help)
+        shortcutEndBodyHelpLabel?.setAccessibilityHelp(help)
         shortcutEndBody.actionHelp = help
         shortcutEndBodyRow?.toolTip = help
         shortcutEndBodyRow?.setAccessibilityHelp(help)
@@ -5249,10 +5260,39 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         controls.spacing = 6
         controls.alignment = .centerY
         let label = NSTextField(labelWithString: title)
-        label.widthAnchor.constraint(equalToConstant: 220).isActive = true
         label.toolTip = help
+        label.lineBreakMode = .byTruncatingTail
+        label.setAccessibilityLabel(title)
         label.setAccessibilityHelp(help)
-        let stack = NSStackView(views: [label, controls])
+
+        var labelViews: [NSView] = [label]
+        if let help,
+           !help.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let detailLabel = NSTextField(labelWithString: help)
+            detailLabel.font = .systemFont(ofSize: 11)
+            detailLabel.textColor = .secondaryLabelColor
+            detailLabel.lineBreakMode = .byWordWrapping
+            detailLabel.maximumNumberOfLines = 2
+            detailLabel.toolTip = help
+            detailLabel.setAccessibilityLabel(help)
+            detailLabel.setAccessibilityHelp(help)
+            if let identifier = recorder.identifier?.rawValue {
+                detailLabel.identifier = NSUserInterfaceItemIdentifier("\(identifier).help")
+            }
+            labelViews.append(detailLabel)
+        }
+
+        let labelStack = NSStackView(views: labelViews)
+        labelStack.orientation = .vertical
+        labelStack.spacing = 2
+        labelStack.alignment = .leading
+        labelStack.widthAnchor.constraint(equalToConstant: 220).isActive = true
+        if let identifier = recorder.identifier?.rawValue {
+            label.identifier = NSUserInterfaceItemIdentifier("\(identifier).label")
+            labelStack.identifier = NSUserInterfaceItemIdentifier("\(identifier).labelStack")
+        }
+
+        let stack = NSStackView(views: [labelStack, controls])
         stack.orientation = .horizontal
         stack.spacing = 12
         stack.alignment = .centerY

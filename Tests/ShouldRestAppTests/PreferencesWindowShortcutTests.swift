@@ -213,7 +213,7 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(recorder.toolTip, shortcutHelp("prefs.nextScheduledRestHelp", "shortcut.recordHelp"))
     }
 
-    func testShortcutControlsExposeActionHelpAlongsideRecorderInstructions() throws {
+    func testShortcutRowsExposeVisibleActionContextAlongsideRecorderInstructions() throws {
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
 
@@ -231,8 +231,20 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertFalse((emergency.toolTip ?? "").localizedCaseInsensitiveContains("shortcut again"))
 
         let visibleTexts = visibleTexts(in: contentView)
-        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.pause30ShortcutHelp")))
-        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.emergencyEyeGateShortcutHelp")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.pause30ShortcutHelp")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.emergencyEyeGateShortcutHelp")))
+
+        let pauseHelp = try XCTUnwrap(view(withIdentifier: "shortcut.pause30.help", in: contentView) as? NSTextField)
+        XCTAssertEqual(pauseHelp.stringValue, L10n.tr("prefs.pause30ShortcutHelp"))
+        XCTAssertEqual(pauseHelp.toolTip, L10n.tr("prefs.pause30ShortcutHelp"))
+        XCTAssertEqual(pauseHelp.accessibilityLabel(), L10n.tr("prefs.pause30ShortcutHelp"))
+        XCTAssertEqual(pauseHelp.accessibilityHelp(), L10n.tr("prefs.pause30ShortcutHelp"))
+        XCTAssertEqual(pauseHelp.maximumNumberOfLines, 2)
+        XCTAssertEqual(pauseHelp.lineBreakMode, .byWordWrapping)
+
+        let emergencyHelp = try XCTUnwrap(view(withIdentifier: "shortcut.emergencyEye.help", in: contentView) as? NSTextField)
+        XCTAssertEqual(emergencyHelp.stringValue, L10n.tr("prefs.emergencyEyeGateShortcutHelp"))
+        XCTAssertEqual(emergencyHelp.maximumNumberOfLines, 2)
     }
 
     func testActiveRestShortcutUsesBodyBreakActionCopyByDefault() throws {
@@ -246,6 +258,11 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(label.toolTip, L10n.tr("prefs.activeRestShortcut.bodyHelp"))
         XCTAssertEqual(label.accessibilityLabel(), L10n.tr("prefs.activeRestShortcut.body"))
         XCTAssertEqual(label.accessibilityHelp(), L10n.tr("prefs.activeRestShortcut.bodyHelp"))
+        let helpLabel = try XCTUnwrap(view(withIdentifier: "prefs.shortcutEndBodyHelp", in: contentView) as? NSTextField)
+        XCTAssertEqual(helpLabel.stringValue, L10n.tr("prefs.activeRestShortcut.bodyHelp"))
+        XCTAssertEqual(helpLabel.toolTip, L10n.tr("prefs.activeRestShortcut.bodyHelp"))
+        XCTAssertEqual(helpLabel.accessibilityLabel(), L10n.tr("prefs.activeRestShortcut.bodyHelp"))
+        XCTAssertEqual(helpLabel.accessibilityHelp(), L10n.tr("prefs.activeRestShortcut.bodyHelp"))
         XCTAssertFalse(visibleTexts(in: contentView).contains("End active rest"))
     }
 
@@ -262,6 +279,8 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(label.toolTip, L10n.tr("prefs.activeRestShortcut.eyeAndBodyHelp"))
         XCTAssertEqual(label.accessibilityLabel(), L10n.tr("prefs.activeRestShortcut.eyeAndBody"))
         XCTAssertEqual(label.accessibilityHelp(), L10n.tr("prefs.activeRestShortcut.eyeAndBodyHelp"))
+        let helpLabel = try XCTUnwrap(view(withIdentifier: "prefs.shortcutEndBodyHelp", in: contentView) as? NSTextField)
+        XCTAssertEqual(helpLabel.stringValue, L10n.tr("prefs.activeRestShortcut.eyeAndBodyHelp"))
         XCTAssertTrue(visibleTexts(in: contentView).contains(L10n.tr("prefs.activeRestShortcut.eyeAndBody")))
     }
 
@@ -591,6 +610,11 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(label.toolTip, L10n.tr("prefs.activeRestShortcut.eyeHelp"))
         XCTAssertEqual(label.accessibilityLabel(), L10n.tr("prefs.activeRestShortcut.eye"))
         XCTAssertEqual(label.accessibilityHelp(), L10n.tr("prefs.activeRestShortcut.eyeHelp"))
+        let helpLabel = try XCTUnwrap(view(withIdentifier: "prefs.shortcutEndBodyHelp", in: contentView) as? NSTextField)
+        XCTAssertEqual(helpLabel.stringValue, L10n.tr("prefs.activeRestShortcut.eyeHelp"))
+        XCTAssertEqual(helpLabel.toolTip, L10n.tr("prefs.activeRestShortcut.eyeHelp"))
+        XCTAssertEqual(helpLabel.accessibilityLabel(), L10n.tr("prefs.activeRestShortcut.eyeHelp"))
+        XCTAssertEqual(helpLabel.accessibilityHelp(), L10n.tr("prefs.activeRestShortcut.eyeHelp"))
         XCTAssertTrue(visibleTexts(in: contentView).contains(L10n.tr("prefs.activeRestShortcut.eye")))
         XCTAssertFalse(visibleTexts(in: contentView).contains(L10n.tr("prefs.activeRestShortcut.body")))
     }
