@@ -248,6 +248,7 @@ private enum PreferencesSaveStatus {
     case shortcutRestored
     case bodyImageSelected
     case bodyImageCleared
+    case languageChanged
     case invalid
 }
 
@@ -3745,7 +3746,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             updateAppExclusionAddRuleButtonState()
             return
         }
-        scheduleAutosave()
+        let completionStatus: PreferencesSaveStatus? = (sender as? NSControl) === languageIdentifier ? .languageChanged : nil
+        scheduleAutosave(completionStatus: completionStatus)
     }
 
     @objc private func rhythmPresetPressed(_ sender: NSButton) {
@@ -4408,6 +4410,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             symbolName = "photo.badge.minus"
             color = .systemBlue
             title = L10n.tr("prefs.autosaveBodyImageCleared")
+        case .languageChanged:
+            symbolName = "textformat"
+            color = .systemBlue
+            title = L10n.tr("prefs.autosaveLanguageChanged")
         case .invalid:
             symbolName = "exclamationmark.triangle.fill"
             color = .systemOrange

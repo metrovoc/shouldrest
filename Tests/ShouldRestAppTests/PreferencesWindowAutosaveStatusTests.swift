@@ -24,6 +24,35 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
         XCTAssertFalse(buttonTitles(in: contentView).contains("Save"))
     }
 
+    func testLanguageChangeAutosaveExplainsCurrentWindowRefresh() throws {
+        L10n.languageOverride = "en"
+        defer { L10n.languageOverride = nil }
+
+        var savedSettings: RestSettings?
+        let controller = PreferencesWindowController(settings: .defaults) { settings in
+            savedSettings = settings
+        }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        try selectAppearanceTab(in: contentView)
+        let language = try XCTUnwrap(view(withIdentifier: "prefs.language", in: contentView) as? NSPopUpButton)
+        let icon = try XCTUnwrap(view(withIdentifier: "autosaveStatusIcon", in: contentView) as? NSImageView)
+        let label = try XCTUnwrap(view(withIdentifier: "autosaveStatusLabel", in: contentView) as? NSTextField)
+
+        try selectPopup(language, representedObject: "zh-Hans")
+        XCTAssertTrue(sendAction(from: language))
+        XCTAssertTrue(controller.flushPendingAutosave(showAlerts: false))
+
+        XCTAssertEqual(savedSettings?.presentation.languageIdentifier, "zh-Hans")
+        XCTAssertEqual(label.stringValue, L10n.tr("prefs.autosaveLanguageChanged"))
+        XCTAssertEqual(label.toolTip, L10n.tr("prefs.autosaveLanguageChanged"))
+        XCTAssertEqual(label.accessibilityLabel(), L10n.tr("prefs.autosaveLanguageChanged"))
+        XCTAssertEqual(label.accessibilityHelp(), L10n.tr("prefs.autosaveLanguageChanged"))
+        XCTAssertEqual(icon.toolTip, L10n.tr("prefs.autosaveLanguageChanged"))
+        XCTAssertEqual(icon.accessibilityLabel(), L10n.tr("prefs.autosaveLanguageChanged"))
+        XCTAssertEqual(icon.accessibilityHelp(), L10n.tr("prefs.autosaveLanguageChanged"))
+        XCTAssertEqual(icon.image?.accessibilityDescription, L10n.tr("prefs.autosaveLanguageChanged"))
+    }
+
     func testPreferencesStartWithBrandedHeaderAndAutosaveStatus() throws {
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
@@ -129,6 +158,10 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.autosaveShortcutRestored"), "Default shortcut restored")
         XCTAssertEqual(L10n.tr("prefs.autosaveBodyImageSelected"), "Body Break image selected")
         XCTAssertEqual(L10n.tr("prefs.autosaveBodyImageCleared"), "Body Break image cleared")
+        XCTAssertEqual(
+            L10n.tr("prefs.autosaveLanguageChanged"),
+            "Language saved; reopen Preferences to refresh this window"
+        )
         XCTAssertEqual(L10n.tr("prefs.restoreDefaultsDisabledDefaultHelp"), "Current preferences already match the app defaults.")
 
         L10n.languageOverride = "zh-Hans"
@@ -149,6 +182,7 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.autosaveShortcutRestored"), "默认快捷键已恢复")
         XCTAssertEqual(L10n.tr("prefs.autosaveBodyImageSelected"), "活动休息图片已选择")
         XCTAssertEqual(L10n.tr("prefs.autosaveBodyImageCleared"), "活动休息图片已清空")
+        XCTAssertEqual(L10n.tr("prefs.autosaveLanguageChanged"), "语言已保存；重新打开偏好设置可刷新当前窗口")
         XCTAssertEqual(L10n.tr("prefs.restoreDefaultsDisabledDefaultHelp"), "当前偏好设置已是应用默认值。")
     }
 
@@ -173,6 +207,35 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
             titles.append(contentsOf: buttonTitles(in: subview))
         }
         return titles
+    }
+
+    private func selectPopup(_ popup: NSPopUpButton, representedObject: String) throws {
+        let item = try XCTUnwrap(
+            popup.itemArray.first { ($0.representedObject as? String) == representedObject }
+        )
+        popup.select(item)
+    }
+
+    private func selectAppearanceTab(in view: NSView) throws {
+        let tabView = try XCTUnwrap(firstTabView(in: view))
+        tabView.selectTabViewItem(withIdentifier: L10n.tr("prefs.tabAppearance"))
+    }
+
+    private func firstTabView(in view: NSView) -> NSTabView? {
+        if let tabView = view as? NSTabView {
+            return tabView
+        }
+        for subview in view.subviews {
+            if let found = firstTabView(in: subview) {
+                return found
+            }
+        }
+        return nil
+    }
+
+    private func sendAction(from control: NSControl) -> Bool {
+        guard let action = control.action else { return false }
+        return NSApplication.shared.sendAction(action, to: control.target, from: control)
     }
 
     private func contains(_ child: NSView, in ancestor: NSView) -> Bool {

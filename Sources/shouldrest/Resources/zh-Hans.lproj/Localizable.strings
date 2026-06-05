@@ -563,6 +563,7 @@
 "prefs.autosaveShortcutRestored" = "默认快捷键已恢复";
 "prefs.autosaveBodyImageSelected" = "活动休息图片已选择";
 "prefs.autosaveBodyImageCleared" = "活动休息图片已清空";
+"prefs.autosaveLanguageChanged" = "语言已保存；重新打开偏好设置可刷新当前窗口";
 "prefs.autosaveInvalid" = "修复导入文本后保存";
 "prefs.autosaveInvalidField" = "修复%@后保存";
 "prefs.searchPlaceholder" = "查找设置";

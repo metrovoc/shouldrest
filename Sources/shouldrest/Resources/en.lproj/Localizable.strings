@@ -563,6 +563,7 @@
 "prefs.autosaveShortcutRestored" = "Default shortcut restored";
 "prefs.autosaveBodyImageSelected" = "Body Break image selected";
 "prefs.autosaveBodyImageCleared" = "Body Break image cleared";
+"prefs.autosaveLanguageChanged" = "Language saved; reopen Preferences to refresh this window";
 "prefs.autosaveInvalid" = "Fix import text to save";
 "prefs.autosaveInvalidField" = "Fix %@ to save";
 "prefs.searchPlaceholder" = "Find a setting";
