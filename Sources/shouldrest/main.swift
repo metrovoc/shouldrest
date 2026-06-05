@@ -3099,9 +3099,20 @@ final class RestOverlayView: NSView {
         bodyActionRequestPending = true
         pendingBodyAction = kind
         updateBodyActionButtons()
-        DispatchQueue.main.async {
+        DispatchQueue.main.async { [weak self] in
             action()
+            self?.clearCompletedBodyActionRequest(kind)
         }
+    }
+
+    private func clearCompletedBodyActionRequest(_ kind: BodyOverlayActionKind) {
+        guard bodyActionRequestPending,
+              pendingBodyAction == kind else {
+            return
+        }
+        bodyActionRequestPending = false
+        pendingBodyAction = nil
+        updateBodyActionButtons()
     }
 
     func performEmergencyOverrideKeyCommand(event: NSEvent? = nil) {

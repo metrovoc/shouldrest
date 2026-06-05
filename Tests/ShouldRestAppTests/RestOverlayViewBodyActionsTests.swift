@@ -52,6 +52,40 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
         XCTAssertEqual(invokedActions, ["postpone"])
     }
 
+    func testBodyOverlayActionRestoresButtonsWhenHandlerLeavesOverlayVisible() throws {
+        var invokedActions: [String] = []
+        let view = configuredBodyOverlay(
+            actions: BodyOverlayActions(
+                canPostpone: true,
+                canFinish: false,
+                canSkip: true,
+                postpone: { invokedActions.append("postpone") },
+                finish: nil,
+                skip: { invokedActions.append("skip") }
+            )
+        )
+        let postponeButton = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodyPostpone.button") as? NSButton)
+        let skipButton = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodySkip.button") as? NSButton)
+
+        view.performBodyPostponeAction()
+
+        XCTAssertFalse(postponeButton.isEnabled)
+        XCTAssertFalse(skipButton.isEnabled)
+        drainMainQueue()
+
+        XCTAssertEqual(invokedActions, ["postpone"])
+        XCTAssertTrue(postponeButton.isEnabled)
+        XCTAssertTrue(skipButton.isEnabled)
+        XCTAssertEqual(postponeButton.attributedTitle.string, L10n.tr("overlay.bodyPostpone"))
+        XCTAssertEqual(postponeButton.toolTip, L10n.tr("overlay.bodyPostponeHelp"))
+        XCTAssertEqual(skipButton.toolTip, L10n.tr("overlay.bodySkipHelp"))
+
+        view.performBodySkipAction()
+        drainMainQueue()
+
+        XCTAssertEqual(invokedActions, ["postpone", "skip"])
+    }
+
     func testEachPendingBodyOverlayActionShowsSpecificProgressFeedback() throws {
         try assertPendingBodyActionFeedback(
             action: .postpone,
