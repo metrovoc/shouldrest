@@ -142,7 +142,13 @@ struct ParsedShortcut: Equatable {
 
 enum ShortcutDisplay {
     static func string(_ shortcut: String) -> String {
-        shortcut
+        let trimmedShortcut = shortcut.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedShortcut.isEmpty else { return "" }
+        guard ParsedShortcut(trimmedShortcut) != nil else {
+            return trimmedShortcut
+        }
+
+        return trimmedShortcut
             .split(separator: "+")
             .map { part in
                 switch part.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {

@@ -401,11 +401,13 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         let contentView = try XCTUnwrap(window.contentView)
 
         try selectShortcutsTab(in: contentView)
-        let warning = try XCTUnwrap(visibleTexts(in: contentView).first { $0.contains(L10n.tr("prefs.eyeGateNow")) && $0.contains("METAX") })
+        let warning = try XCTUnwrap(visibleTexts(in: contentView).first { $0.contains(L10n.tr("prefs.eyeGateNow")) && $0.contains("Meta+X") })
         let eyeNow = try XCTUnwrap(control(withIdentifier: "shortcut.eyeNow", in: contentView) as? ShortcutRecorderButton)
         let bodyNow = try XCTUnwrap(control(withIdentifier: "shortcut.bodyNow", in: contentView) as? ShortcutRecorderButton)
 
         XCTAssertEqual(eyeNow.validationWarning, warning)
+        XCTAssertEqual(eyeNow.title, "Meta+X")
+        XCTAssertFalse(warning.contains("METAX"))
         XCTAssertNil(bodyNow.validationWarning)
         XCTAssertEqual(eyeNow.toolTip, warning)
         let reviewButton = try XCTUnwrap(control(withIdentifier: "prefs.shortcutConflictReviewButton", in: contentView) as? NSButton)
