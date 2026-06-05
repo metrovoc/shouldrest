@@ -14,6 +14,8 @@ final class OnboardingWindowController: NSWindowController {
     private let rhythmPresetControl = NSSegmentedControl()
     private let rhythmPresetIcon = NSImageView()
     private let rhythmPresetDescription = NSTextField(labelWithString: "")
+    private let rhythmPresetRationale = NSTextField(labelWithString: "")
+    private let rhythmPresetRationaleIcon = NSImageView()
     private let rhythmMetricEyeInterval = NSTextField(labelWithString: "")
     private let rhythmMetricEyeDuration = NSTextField(labelWithString: "")
     private let rhythmMetricBodyAfter = NSTextField(labelWithString: "")
@@ -31,7 +33,7 @@ final class OnboardingWindowController: NSWindowController {
         self.onLearnMore = onLearnMore
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 680, height: 560),
+            contentRect: NSRect(x: 0, y: 0, width: 680, height: 590),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -255,6 +257,7 @@ final class OnboardingWindowController: NSWindowController {
         stack.addArrangedSubview(titleRow)
         stack.addArrangedSubview(rhythmPresetControl)
         stack.addArrangedSubview(rhythmPresetDescription)
+        stack.addArrangedSubview(rhythmPresetRationaleRow())
         stack.addArrangedSubview(rhythmMetricsView())
 
         NSLayoutConstraint.activate([
@@ -384,6 +387,34 @@ final class OnboardingWindowController: NSWindowController {
         updateRhythmPresetSelectionUI()
     }
 
+    private func rhythmPresetRationaleRow() -> NSView {
+        let row = NSStackView()
+        row.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmPresetRationaleRow")
+        row.orientation = .horizontal
+        row.alignment = .top
+        row.spacing = 6
+
+        rhythmPresetRationaleIcon.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmPresetRationaleIcon")
+        rhythmPresetRationaleIcon.symbolConfiguration = .init(pointSize: 12, weight: .semibold)
+        rhythmPresetRationaleIcon.contentTintColor = .controlAccentColor
+        rhythmPresetRationaleIcon.widthAnchor.constraint(equalToConstant: 16).isActive = true
+        rhythmPresetRationaleIcon.heightAnchor.constraint(equalToConstant: 16).isActive = true
+
+        rhythmPresetRationale.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmPresetRationale")
+        rhythmPresetRationale.font = .systemFont(ofSize: 11.5, weight: .medium)
+        rhythmPresetRationale.textColor = .labelColor
+        rhythmPresetRationale.lineBreakMode = .byWordWrapping
+        rhythmPresetRationale.maximumNumberOfLines = 2
+        rhythmPresetRationale.widthAnchor.constraint(lessThanOrEqualToConstant: 540).isActive = true
+        rhythmPresetRationale.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        rhythmPresetRationale.setContentCompressionResistancePriority(.required, for: .vertical)
+
+        row.addArrangedSubview(rhythmPresetRationaleIcon)
+        row.addArrangedSubview(rhythmPresetRationale)
+        updateRhythmPresetSelectionUI()
+        return row
+    }
+
     private func buttonRow() -> NSView {
         let row = NSStackView()
         row.orientation = .horizontal
@@ -472,6 +503,17 @@ final class OnboardingWindowController: NSWindowController {
         rhythmPresetControl.setAccessibilityHelp(selectedRhythmPreset.help)
         rhythmPresetIcon.image = rhythmPresetHeaderImage(for: selectedRhythmPreset)
         rhythmPresetIcon.setAccessibilityHelp(selectedRhythmPreset.help)
+        let rationale = selectedRhythmPreset.onboardingRationale
+        rhythmPresetRationale.stringValue = rationale
+        rhythmPresetRationale.toolTip = rationale
+        rhythmPresetRationale.setAccessibilityLabel(rationale)
+        rhythmPresetRationale.setAccessibilityHelp(rationale)
+        rhythmPresetRationaleIcon.image = symbolImage(
+            selectedRhythmPreset == .firstRunDefault ? "checkmark.seal" : selectedRhythmPreset.symbolName,
+            accessibilityDescription: rationale
+        )
+        rhythmPresetRationaleIcon.setAccessibilityLabel(rationale)
+        rhythmPresetRationaleIcon.setAccessibilityHelp(rationale)
         rhythmMetricEyeInterval.stringValue = L10n.format(
             "onboarding.metric.eyeIntervalValue",
             selectedRhythmPreset.eyeIntervalMinutes

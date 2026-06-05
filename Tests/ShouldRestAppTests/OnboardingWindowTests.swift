@@ -29,6 +29,9 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetPanel"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetControl"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetDescription"))
+        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetRationaleRow"))
+        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetRationaleIcon"))
+        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetRationale"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmMetricRow"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.metric.eyeInterval"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.metric.eyeDuration"))
@@ -53,6 +56,7 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.bodyFeatureTitle")))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.rhythmTitle")))
         XCTAssertTrue(texts.contains(RestRhythmPreset.firstRunDefault.help))
+        XCTAssertTrue(texts.contains(RestRhythmPreset.firstRunDefault.onboardingRationale))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.metric.eyeInterval")))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.metric.eyeDuration")))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.metric.bodyAfter")))
@@ -108,6 +112,12 @@ final class OnboardingWindowTests: XCTestCase {
         let icon = try XCTUnwrap(
             contentView.descendant(withIdentifier: "onboarding.rhythmPresetIcon") as? NSImageView
         )
+        let rationaleIcon = try XCTUnwrap(
+            contentView.descendant(withIdentifier: "onboarding.rhythmPresetRationaleIcon") as? NSImageView
+        )
+        let rationale = try XCTUnwrap(
+            contentView.descendant(withIdentifier: "onboarding.rhythmPresetRationale") as? NSTextField
+        )
         let eyeInterval = try XCTUnwrap(
             contentView.descendant(withIdentifier: "onboarding.metric.eyeInterval.value") as? NSTextField
         )
@@ -142,6 +152,12 @@ final class OnboardingWindowTests: XCTestCase {
             "\(L10n.tr("onboarding.rhythmTitle")): \(RestRhythmPreset.firstRunDefault.title)"
         )
         XCTAssertEqual(icon.accessibilityHelp(), RestRhythmPreset.firstRunDefault.help)
+        XCTAssertEqual(rationale.stringValue, RestRhythmPreset.firstRunDefault.onboardingRationale)
+        XCTAssertEqual(rationale.toolTip, RestRhythmPreset.firstRunDefault.onboardingRationale)
+        XCTAssertEqual(rationale.accessibilityLabel(), RestRhythmPreset.firstRunDefault.onboardingRationale)
+        XCTAssertEqual(rationale.accessibilityHelp(), RestRhythmPreset.firstRunDefault.onboardingRationale)
+        XCTAssertEqual(rationaleIcon.image?.accessibilityDescription, RestRhythmPreset.firstRunDefault.onboardingRationale)
+        XCTAssertEqual(rationaleIcon.accessibilityLabel(), RestRhythmPreset.firstRunDefault.onboardingRationale)
         XCTAssertEqual(eyeInterval.stringValue, L10n.format("onboarding.metric.eyeIntervalValue", 10))
         XCTAssertEqual(eyeDuration.stringValue, L10n.format("onboarding.metric.eyeDurationValue", 20))
         XCTAssertEqual(bodyAfter.stringValue, L10n.format("onboarding.metric.bodyAfterValue", 4))
@@ -168,6 +184,12 @@ final class OnboardingWindowTests: XCTestCase {
             "\(L10n.tr("onboarding.rhythmTitle")): \(RestRhythmPreset.movement.title)"
         )
         XCTAssertEqual(icon.accessibilityHelp(), RestRhythmPreset.movement.help)
+        XCTAssertEqual(rationale.stringValue, RestRhythmPreset.movement.onboardingRationale)
+        XCTAssertEqual(rationale.toolTip, RestRhythmPreset.movement.onboardingRationale)
+        XCTAssertEqual(rationale.accessibilityLabel(), RestRhythmPreset.movement.onboardingRationale)
+        XCTAssertEqual(rationale.accessibilityHelp(), RestRhythmPreset.movement.onboardingRationale)
+        XCTAssertEqual(rationaleIcon.image?.accessibilityDescription, RestRhythmPreset.movement.onboardingRationale)
+        XCTAssertEqual(rationaleIcon.accessibilityHelp(), RestRhythmPreset.movement.onboardingRationale)
         XCTAssertEqual(eyeInterval.stringValue, L10n.format("onboarding.metric.eyeIntervalValue", 20))
         XCTAssertEqual(eyeDuration.stringValue, L10n.format("onboarding.metric.eyeDurationValue", 20))
         XCTAssertEqual(bodyAfter.stringValue, L10n.format("onboarding.metric.bodyAfterValue", 2))

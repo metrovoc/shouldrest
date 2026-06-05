@@ -650,6 +650,9 @@
 "onboarding.bodyFeatureTitle" = "Configurable Body Breaks";
 "onboarding.bodyFeatureBody" = "Longer movement breaks can use postpones, images, display rules, and wait for you to finish.";
 "onboarding.rhythmTitle" = "Choose your starting rhythm";
+"onboarding.rhythmPreset.recommendedRationale" = "Lighter rhythm: Eye Gates stay strict, but arrive less often.";
+"onboarding.rhythmPreset.frequentEyeRationale" = "Recommended first: frequent 20-second Eye Gates protect the habit better than fewer large breaks.";
+"onboarding.rhythmPreset.movementRationale" = "Movement-focused: keep strict Eye Gates while giving posture more time.";
 "onboarding.metric.eyeInterval" = "Eye interval";
 "onboarding.metric.eyeIntervalValue" = "Every %d min";
 "onboarding.metric.eyeDuration" = "Eye duration";

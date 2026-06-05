@@ -35,6 +35,14 @@ enum RestRhythmPreset: Int, CaseIterable, Equatable {
         L10n.tr(helpKey)
     }
 
+    var onboardingRationaleKey: String {
+        "onboarding.rhythmPreset.\(identifier)Rationale"
+    }
+
+    var onboardingRationale: String {
+        L10n.tr(onboardingRationaleKey)
+    }
+
     var symbolName: String {
         switch self {
         case .recommended:

@@ -1066,6 +1066,10 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(L10n.tr("onboarding.preferencesHelp").contains("Apply the selected rhythm"))
         XCTAssertTrue(L10n.tr("onboarding.preferencesHelp").contains("adjust the details"))
         XCTAssertNotEqual(L10n.tr("onboarding.preferences"), "Open Preferences")
+        XCTAssertTrue(L10n.tr("onboarding.rhythmPreset.frequentEyeRationale").contains("Recommended first"))
+        XCTAssertTrue(L10n.tr("onboarding.rhythmPreset.frequentEyeRationale").contains("frequent 20-second Eye Gates"))
+        XCTAssertTrue(L10n.tr("onboarding.rhythmPreset.recommendedRationale").contains("less often"))
+        XCTAssertTrue(L10n.tr("onboarding.rhythmPreset.movementRationale").contains("posture"))
         XCTAssertEqual(
             L10n.format("onboarding.useSelectedWithPreset", "More Eye Rests"),
             "Start With More Eye Rests"
@@ -1076,6 +1080,10 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(L10n.tr("onboarding.preferencesHelp").contains("先应用当前选择的节奏"))
         XCTAssertTrue(L10n.tr("onboarding.preferencesHelp").contains("调整细节"))
         XCTAssertNotEqual(L10n.tr("onboarding.preferences"), "打开偏好设置")
+        XCTAssertTrue(L10n.tr("onboarding.rhythmPreset.frequentEyeRationale").contains("首次推荐"))
+        XCTAssertTrue(L10n.tr("onboarding.rhythmPreset.frequentEyeRationale").contains("频繁的 20 秒护眼休息"))
+        XCTAssertTrue(L10n.tr("onboarding.rhythmPreset.recommendedRationale").contains("出现频率更低"))
+        XCTAssertTrue(L10n.tr("onboarding.rhythmPreset.movementRationale").contains("姿势"))
         XCTAssertEqual(
             L10n.format("onboarding.useSelectedWithPreset", "更多护眼休息"),
             "使用更多护眼休息开始"
