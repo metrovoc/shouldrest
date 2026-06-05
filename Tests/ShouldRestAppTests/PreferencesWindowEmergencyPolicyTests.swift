@@ -11,23 +11,30 @@ final class PreferencesWindowEmergencyPolicyTests: XCTestCase {
         let visibleTexts = visibleTexts(in: contentView)
 
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.eyeEmergencyOverride")))
-        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.eyeEmergencyOverrideHelp")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.eyeEmergencyOverrideHelp")))
         XCTAssertFalse(visibleTexts.contains("Emergency Exit hold time"))
         XCTAssertFalse(visibleTexts.contains("紧急退出等待时长"))
-        XCTAssertFalse(visibleTexts.contains { $0.localizedCaseInsensitiveContains("confirmation") })
+        XCTAssertFalse(visibleTexts.contains { $0.localizedCaseInsensitiveContains("confirmation steps") })
         XCTAssertFalse(visibleTexts.contains { $0.localizedCaseInsensitiveContains("available after") })
         XCTAssertFalse(visibleTexts.contains { $0.contains("确认次数") })
         XCTAssertFalse(visibleTexts.contains { $0.contains("可用等待") })
     }
 
-    func testEmergencyPolicyControlExplainsTwoClickOverlayConfirmationAsHelpOnly() throws {
+    func testEmergencyPolicyControlExplainsTwoClickOverlayConfirmationInline() throws {
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
 
         let button = try XCTUnwrap(view(withIdentifier: "prefs.eyeEmergencyOverride", in: contentView) as? NSButton)
+        let helpLabel = try XCTUnwrap(view(withIdentifier: "prefs.eyeEmergencyOverrideHelp", in: contentView) as? NSTextField)
 
         XCTAssertEqual(button.toolTip, L10n.tr("prefs.eyeEmergencyOverrideHelp"))
         XCTAssertEqual(button.accessibilityHelp(), L10n.tr("prefs.eyeEmergencyOverrideHelp"))
+        XCTAssertEqual(helpLabel.stringValue, L10n.tr("prefs.eyeEmergencyOverrideHelp"))
+        XCTAssertEqual(helpLabel.toolTip, L10n.tr("prefs.eyeEmergencyOverrideHelp"))
+        XCTAssertEqual(helpLabel.accessibilityLabel(), L10n.tr("prefs.eyeEmergencyOverrideHelp"))
+        XCTAssertEqual(helpLabel.accessibilityHelp(), L10n.tr("prefs.eyeEmergencyOverrideHelp"))
+        XCTAssertEqual(helpLabel.maximumNumberOfLines, 2)
+        XCTAssertEqual(helpLabel.lineBreakMode, .byWordWrapping)
         XCTAssertTrue(button.toolTip?.contains("inside the overlay") ?? false)
         XCTAssertTrue(button.toolTip?.localizedCaseInsensitiveContains("second click") ?? false)
         XCTAssertTrue(button.toolTip?.localizedCaseInsensitiveContains("Esc") ?? false)
@@ -43,9 +50,11 @@ final class PreferencesWindowEmergencyPolicyTests: XCTestCase {
         let visibleTexts = visibleTexts(in: contentView)
 
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.eyeEmergencyOverride")))
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.eyeEmergencyOverrideHelp")))
+        XCTAssertTrue(view(withIdentifier: "prefs.eyeEmergencyOverrideHelpRow", in: contentView)?.isHidden ?? false)
         XCTAssertFalse(visibleTexts.contains("Emergency Exit hold time"))
         XCTAssertFalse(visibleTexts.contains("紧急退出等待时长"))
-        XCTAssertFalse(visibleTexts.contains { $0.localizedCaseInsensitiveContains("confirmation") })
+        XCTAssertFalse(visibleTexts.contains { $0.localizedCaseInsensitiveContains("confirmation steps") })
         XCTAssertFalse(visibleTexts.contains { $0.contains("确认次数") })
     }
 

@@ -149,8 +149,20 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
             XCTAssertEqual(control.toolTip, L10n.tr(expectation.helpKey), expectation.identifier)
             XCTAssertEqual(control.accessibilityHelp(), L10n.tr(expectation.helpKey), expectation.identifier)
         }
-        XCTAssertFalse(visibleTexts(in: contentView).contains(L10n.tr("prefs.eyeIntervalHelp")))
-        XCTAssertFalse(visibleTexts(in: contentView).contains(L10n.tr("prefs.bodyPostponeLimitHelp")))
+        let visibleTexts = visibleTexts(in: contentView)
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.enableEyeGateHelp")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.eyeManualFinishHelp")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.eyeEmergencyOverrideHelp")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.enableBodyBreakHelp")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.bodyAllowSkipHelp")))
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.eyeIntervalHelp")))
+        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.bodyPostponeLimitHelp")))
+
+        try assertInlineHelp("prefs.eyeEnabledHelp", text: L10n.tr("prefs.enableEyeGateHelp"), in: contentView)
+        try assertInlineHelp("prefs.eyeManualFinishHelp", text: L10n.tr("prefs.eyeManualFinishHelp"), in: contentView)
+        try assertInlineHelp("prefs.eyeEmergencyOverrideHelp", text: L10n.tr("prefs.eyeEmergencyOverrideHelp"), in: contentView)
+        try assertInlineHelp("prefs.bodyEnabledHelp", text: L10n.tr("prefs.enableBodyBreakHelp"), in: contentView)
+        try assertInlineHelp("prefs.bodyAllowSkipHelp", text: L10n.tr("prefs.bodyAllowSkipHelp"), in: contentView)
     }
 
     func testScheduleSummaryUpdatesWhenCoreSliderChangesAndAutosaves() throws {
@@ -272,6 +284,9 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertTrue(bodyEnabled.isEnabled)
         XCTAssertEqual(eyeEnabled.toolTip, L10n.tr("prefs.cannotDisableEyeGateLastRest"))
         XCTAssertEqual(eyeEnabled.accessibilityHelp(), L10n.tr("prefs.cannotDisableEyeGateLastRest"))
+        let eyeEnabledHelp = try XCTUnwrap(view(withIdentifier: "prefs.eyeEnabledHelp", in: contentView) as? NSTextField)
+        XCTAssertEqual(eyeEnabledHelp.stringValue, L10n.tr("prefs.cannotDisableEyeGateLastRest"))
+        XCTAssertEqual(eyeEnabledHelp.toolTip, L10n.tr("prefs.cannotDisableEyeGateLastRest"))
 
         bodyEnabled.state = .on
         XCTAssertTrue(sendAction(from: bodyEnabled))
@@ -284,6 +299,10 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertEqual(eyeEnabled.accessibilityHelp(), L10n.tr("prefs.enableEyeGateHelp"))
         XCTAssertEqual(bodyEnabled.toolTip, L10n.tr("prefs.cannotDisableBodyBreakLastRest"))
         XCTAssertEqual(bodyEnabled.accessibilityHelp(), L10n.tr("prefs.cannotDisableBodyBreakLastRest"))
+        XCTAssertEqual(eyeEnabledHelp.stringValue, L10n.tr("prefs.enableEyeGateHelp"))
+        let bodyEnabledHelp = try XCTUnwrap(view(withIdentifier: "prefs.bodyEnabledHelp", in: contentView) as? NSTextField)
+        XCTAssertEqual(bodyEnabledHelp.stringValue, L10n.tr("prefs.cannotDisableBodyBreakLastRest"))
+        XCTAssertEqual(bodyEnabledHelp.toolTip, L10n.tr("prefs.cannotDisableBodyBreakLastRest"))
     }
 
     func testCannotDisableBothRestsAlertExplainsRecoveryAction() {
@@ -312,7 +331,9 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertTrue(try view(withIdentifier: "prefs.eyeNotify", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.eyeLeadRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.eyeManualFinish", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.eyeManualFinishHelpRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.eyeEmergencyOverride", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.eyeEmergencyOverrideHelpRow", in: contentView).isHidden)
         XCTAssertNil(findView(withIdentifier: "prefs.eyeEmergencyHoldRow", in: contentView))
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyAfterEyeGatesRow", in: contentView).isHidden)
 
@@ -385,6 +406,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyPostponeLimitRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyPostponeWindowPercentRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyAllowSkip", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.bodyAllowSkipHelpRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyManualFinish", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyCoversAllDisplays", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyCoveredDisplayRow", in: contentView).isHidden)
@@ -470,6 +492,21 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
 
     private func view(withIdentifier identifier: String, in rootView: NSView) throws -> NSView {
         try XCTUnwrap(findView(withIdentifier: identifier, in: rootView))
+    }
+
+    private func assertInlineHelp(_ identifier: String, text: String, in rootView: NSView) throws {
+        let label = try XCTUnwrap(view(withIdentifier: identifier, in: rootView) as? NSTextField)
+        XCTAssertEqual(label.stringValue, text)
+        XCTAssertEqual(label.toolTip, text)
+        XCTAssertEqual(label.accessibilityLabel(), text)
+        XCTAssertEqual(label.accessibilityHelp(), text)
+        XCTAssertEqual(label.maximumNumberOfLines, 2)
+        XCTAssertEqual(label.lineBreakMode, .byWordWrapping)
+        XCTAssertFalse(label.isHidden)
+        let row = try view(withIdentifier: "\(identifier)Row", in: rootView)
+        XCTAssertFalse(row.isHidden)
+        XCTAssertEqual(row.toolTip, text)
+        XCTAssertEqual(row.accessibilityHelp(), text)
     }
 
     private func findView(withIdentifier identifier: String, in view: NSView) -> NSView? {

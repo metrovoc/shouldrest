@@ -469,6 +469,9 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let eyeLead = NSTextField()
     private let eyeManualFinish = NSButton(checkboxWithTitle: L10n.tr("prefs.eyeManualFinish"), target: nil, action: nil)
     private let eyeEmergencyOverride = NSButton(checkboxWithTitle: L10n.tr("prefs.eyeEmergencyOverride"), target: nil, action: nil)
+    private weak var eyeEnabledHelpLabel: NSTextField?
+    private var eyeManualFinishHelpRow: NSView?
+    private var eyeEmergencyOverrideHelpRow: NSView?
     private var eyeIntervalRow: NSView?
     private var eyeDurationRow: NSView?
     private var eyeColorRow: NSView?
@@ -486,6 +489,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let bodyPostponeWindowPercent = NSTextField()
     private let bodyAllowSkip = NSButton(checkboxWithTitle: L10n.tr("prefs.bodyAllowSkip"), target: nil, action: nil)
     private let bodyManualFinish = NSButton(checkboxWithTitle: L10n.tr("prefs.manualFinish"), target: nil, action: nil)
+    private weak var bodyEnabledHelpLabel: NSTextField?
+    private var bodyAllowSkipHelpRow: NSView?
     private let bodyCoversAllDisplays = NSButton(checkboxWithTitle: L10n.tr("prefs.bodyAllDisplays"), target: nil, action: nil)
     private let bodyCoveredDisplay = NSPopUpButton()
     private var bodyIntervalRow: NSView?
@@ -761,6 +766,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         scheduleStack.addArrangedSubview(row(L10n.tr("prefs.rhythmPresets"), rhythmPresetRow()))
         eyeEnabled.identifier = NSUserInterfaceItemIdentifier("prefs.eyeEnabled")
         scheduleStack.addArrangedSubview(eyeEnabled)
+        let eyeEnabledHelp = inlineControlHelpRow(
+            L10n.tr("prefs.enableEyeGateHelp"),
+            identifier: "prefs.eyeEnabledHelp"
+        )
+        eyeEnabledHelpLabel = eyeEnabledHelp.label
+        scheduleStack.addArrangedSubview(eyeEnabledHelp.row)
         let eyeIntervalRow = numberRow(
             L10n.tr("prefs.everyMinutes"),
             eyeInterval,
@@ -807,8 +818,20 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         scheduleStack.addArrangedSubview(eyeLeadRow)
         eyeManualFinish.identifier = NSUserInterfaceItemIdentifier("prefs.eyeManualFinish")
         scheduleStack.addArrangedSubview(eyeManualFinish)
+        let eyeManualFinishHelp = inlineControlHelpRow(
+            L10n.tr("prefs.eyeManualFinishHelp"),
+            identifier: "prefs.eyeManualFinishHelp"
+        )
+        eyeManualFinishHelpRow = eyeManualFinishHelp.row
+        scheduleStack.addArrangedSubview(eyeManualFinishHelp.row)
         eyeEmergencyOverride.identifier = NSUserInterfaceItemIdentifier("prefs.eyeEmergencyOverride")
         scheduleStack.addArrangedSubview(eyeEmergencyOverride)
+        let eyeEmergencyOverrideHelp = inlineControlHelpRow(
+            L10n.tr("prefs.eyeEmergencyOverrideHelp"),
+            identifier: "prefs.eyeEmergencyOverrideHelp"
+        )
+        eyeEmergencyOverrideHelpRow = eyeEmergencyOverrideHelp.row
+        scheduleStack.addArrangedSubview(eyeEmergencyOverrideHelp.row)
         scheduleStack.addArrangedSubview(separator())
         scheduleStack.addArrangedSubview(section(
             L10n.tr("prefs.sectionBodyBreak"),
@@ -817,6 +840,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         ))
         bodyEnabled.identifier = NSUserInterfaceItemIdentifier("prefs.bodyEnabled")
         scheduleStack.addArrangedSubview(bodyEnabled)
+        let bodyEnabledHelp = inlineControlHelpRow(
+            L10n.tr("prefs.enableBodyBreakHelp"),
+            identifier: "prefs.bodyEnabledHelp"
+        )
+        bodyEnabledHelpLabel = bodyEnabledHelp.label
+        scheduleStack.addArrangedSubview(bodyEnabledHelp.row)
         let bodyIntervalRow = numberRow(
             L10n.tr("prefs.bodyIntervalMinutes"),
             bodyInterval,
@@ -912,6 +941,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         scheduleStack.addArrangedSubview(bodyPostponeWindowPercentRow)
         bodyAllowSkip.identifier = NSUserInterfaceItemIdentifier("prefs.bodyAllowSkip")
         scheduleStack.addArrangedSubview(bodyAllowSkip)
+        let bodyAllowSkipHelp = inlineControlHelpRow(
+            L10n.tr("prefs.bodyAllowSkipHelp"),
+            identifier: "prefs.bodyAllowSkipHelp"
+        )
+        bodyAllowSkipHelpRow = bodyAllowSkipHelp.row
+        scheduleStack.addArrangedSubview(bodyAllowSkipHelp.row)
         bodyManualFinish.identifier = NSUserInterfaceItemIdentifier("prefs.bodyManualFinish")
         scheduleStack.addArrangedSubview(bodyManualFinish)
         bodyCoversAllDisplays.identifier = NSUserInterfaceItemIdentifier("prefs.bodyCoversAllDisplays")
@@ -3001,6 +3036,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         updateRestEnablementGuards(eyeGateEnabled: eyeGateEnabled)
         [eyeIntervalRow, eyeDurationRow, eyeColorRow].forEach { $0?.isHidden = !eyeGateEnabled }
         [eyeNotify, eyeManualFinish].forEach { $0.isHidden = !eyeGateEnabled }
+        eyeManualFinishHelpRow?.isHidden = !eyeGateEnabled
         setNumberInputEnabled(eyeInterval, eyeGateEnabled)
         setNumberInputEnabled(eyeDuration, eyeGateEnabled)
         eyeColor.isEnabled = eyeGateEnabled
@@ -3010,6 +3046,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         setNumberInputEnabled(eyeLead, eyeNotificationEnabled)
         eyeManualFinish.isEnabled = eyeGateEnabled
         eyeEmergencyOverride.isHidden = strictPreferencesHidden || !eyeGateEnabled
+        eyeEmergencyOverrideHelpRow?.isHidden = strictPreferencesHidden || !eyeGateEnabled
         eyeEmergencyOverride.isEnabled = eyeGateEnabled
 
         let bodyBreakEnabled = isOn(bodyEnabled)
@@ -3026,6 +3063,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             bodyCoversAllDisplays
         ].forEach { $0.isHidden = !bodyBreakEnabled }
         bodyAllowSkip.isHidden = strictPreferencesHidden || !bodyBreakEnabled
+        bodyAllowSkipHelpRow?.isHidden = strictPreferencesHidden || !bodyBreakEnabled
         [
             bodyColor, bodyNotify, bodyAllowSkip, bodyManualFinish, bodyCoversAllDisplays,
             bodyCoveredDisplay, bodyContentDisplay, bodyBlankSecondaryDisplays
@@ -3188,6 +3226,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         bodyEnabled.isEnabled = canToggleBodyBreak
         setOptionalHelp(canToggleEyeGate ? L10n.tr("prefs.enableEyeGateHelp") : eyeGateLastRestHelp, on: eyeEnabled)
         setOptionalHelp(canToggleBodyBreak ? L10n.tr("prefs.enableBodyBreakHelp") : bodyBreakLastRestHelp, on: bodyEnabled)
+        setInlineControlHelp(canToggleEyeGate ? L10n.tr("prefs.enableEyeGateHelp") : eyeGateLastRestHelp, on: eyeEnabledHelpLabel)
+        setInlineControlHelp(canToggleBodyBreak ? L10n.tr("prefs.enableBodyBreakHelp") : bodyBreakLastRestHelp, on: bodyEnabledHelpLabel)
     }
 
     private func setDynamicSummary(_ summary: String, on label: NSTextField) {
@@ -3195,6 +3235,15 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         label.toolTip = summary
         label.setAccessibilityLabel(summary)
         label.setAccessibilityHelp(summary)
+    }
+
+    private func setInlineControlHelp(_ help: String, on label: NSTextField?) {
+        label?.stringValue = help
+        label?.toolTip = help
+        label?.setAccessibilityLabel(help)
+        label?.setAccessibilityHelp(help)
+        label?.superview?.toolTip = help
+        label?.superview?.setAccessibilityHelp(help)
     }
 
     private func clearDynamicSummary(on label: NSTextField) {
@@ -5228,6 +5277,32 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         stack.spacing = 12
         stack.alignment = .centerY
         return stack
+    }
+
+    private func inlineControlHelpRow(_ text: String, identifier: String) -> (row: NSStackView, label: NSTextField) {
+        let spacer = NSView()
+        spacer.widthAnchor.constraint(equalToConstant: 22).isActive = true
+
+        let label = NSTextField(labelWithString: text)
+        label.identifier = NSUserInterfaceItemIdentifier(identifier)
+        label.font = .systemFont(ofSize: 11)
+        label.textColor = .secondaryLabelColor
+        label.lineBreakMode = .byWordWrapping
+        label.maximumNumberOfLines = 2
+        label.widthAnchor.constraint(lessThanOrEqualToConstant: 640).isActive = true
+        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        label.setContentCompressionResistancePriority(.required, for: .vertical)
+        setInlineControlHelp(text, on: label)
+
+        let row = NSStackView(views: [spacer, label])
+        row.identifier = NSUserInterfaceItemIdentifier("\(identifier)Row")
+        row.orientation = .horizontal
+        row.spacing = 4
+        row.alignment = .top
+        row.edgeInsets = NSEdgeInsets(top: -4, left: 0, bottom: 4, right: 0)
+        row.toolTip = text
+        row.setAccessibilityHelp(text)
+        return (row, label)
     }
 
     private func appExclusionTermsPickerRow() -> NSStackView {
