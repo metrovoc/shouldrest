@@ -151,7 +151,7 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
     func testManualAwaitingEyeGateOverlaySuppressesEmergencyAffordance() throws {
         let view = configuredEyeGateOverlay(
             manualAwaiting: true,
-            emergencyOverrideRemainingSeconds: 0,
+            isEmergencyOverrideAvailable: true,
             actions: BodyOverlayActions(
                 canPostpone: false,
                 canFinish: true,
@@ -257,7 +257,7 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
             settings: .defaults,
             showsContent: showsContent,
             manualAwaiting: manualAwaiting,
-            emergencyOverrideRemainingSeconds: nil,
+            isEmergencyOverrideAvailable: false,
             bodyActions: actions
         )
         return view
@@ -265,7 +265,7 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
 
     private func configuredEyeGateOverlay(
         manualAwaiting: Bool,
-        emergencyOverrideRemainingSeconds: Int? = nil,
+        isEmergencyOverrideAvailable: Bool = false,
         actions: BodyOverlayActions?
     ) -> RestOverlayView {
         let start = Date()
@@ -283,7 +283,7 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
             settings: .defaults,
             showsContent: true,
             manualAwaiting: manualAwaiting,
-            emergencyOverrideRemainingSeconds: emergencyOverrideRemainingSeconds,
+            isEmergencyOverrideAvailable: isEmergencyOverrideAvailable,
             bodyActions: actions
         )
         return view

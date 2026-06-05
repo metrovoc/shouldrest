@@ -125,7 +125,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             settings: settings,
             showsContent: true,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: 0,
+            isEmergencyOverrideAvailable: true,
             emergencyOverrideArmed: false
         )
         view.onEmergencyOverrideRequested = {
@@ -179,7 +179,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             settings: settings,
             showsContent: true,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: 0,
+            isEmergencyOverrideAvailable: true,
             emergencyOverrideArmed: false
         )
         view.onEmergencyOverrideRequested = {
@@ -196,7 +196,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
                     settings: settings,
                     showsContent: true,
                     manualAwaiting: false,
-                    emergencyOverrideRemainingSeconds: 0,
+                    isEmergencyOverrideAvailable: true,
                     emergencyOverrideArmed: coordinator.isArmed(for: session, now: requestTime)
                 )
             case .complete:
@@ -311,7 +311,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             settings: .defaults,
             showsContent: true,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: 0
+            isEmergencyOverrideAvailable: true
         )
 
         let event = try XCTUnwrap(NSEvent.keyEvent(
@@ -348,7 +348,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             settings: .defaults,
             showsContent: true,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: 0
+            isEmergencyOverrideAvailable: true
         )
         let button = try XCTUnwrap(window.overlayView.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
 
@@ -384,7 +384,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
     func testEmergencyTriggerArmsInsideOverlayInsteadOfExternalConfirmation() throws {
         let view = configuredEyeGateOverlay(
-            remainingSeconds: 0,
             isArmed: false
         )
         var requestCount = 0
@@ -404,7 +403,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             settings: .defaults,
             showsContent: true,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: 0,
+            isEmergencyOverrideAvailable: true,
             emergencyOverrideArmed: true
         )
 
@@ -471,20 +470,14 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(requestCount, 2)
     }
 
-    func testLegacyPositiveEmergencyRemainingStillAllowsFirstConfirmationClick() {
-        let view = configuredEyeGateOverlay(
-            remainingSeconds: 2,
-            isArmed: false
-        )
+    func testAvailableEmergencyAllowsFirstConfirmationClick() {
+        let view = configuredEyeGateOverlay()
 
         XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .activated)
     }
 
-    func testLegacyPositiveEmergencyRemainingStillLooksActionable() throws {
-        let view = configuredEyeGateOverlay(
-            remainingSeconds: 2,
-            isArmed: false
-        )
+    func testAvailableEmergencyLooksActionable() throws {
+        let view = configuredEyeGateOverlay()
 
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
 
@@ -492,7 +485,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
     }
 
     func testEmergencyAffordanceUsesDimRedGhostStyle() throws {
-        let view = configuredEyeGateOverlay(remainingSeconds: 2)
+        let view = configuredEyeGateOverlay()
 
         let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.panel"))
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
@@ -516,7 +509,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
     }
 
     func testEmergencyAffordanceRemainsDimWhenReady() throws {
-        let view = configuredEyeGateOverlay(remainingSeconds: 0)
+        let view = configuredEyeGateOverlay()
 
         let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.panel"))
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
@@ -531,7 +524,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
     }
 
     func testEmergencyAffordanceAccessibilityTracksConfirmationState() throws {
-        let view = configuredEyeGateOverlay(remainingSeconds: 0)
+        let view = configuredEyeGateOverlay()
         view.onEmergencyOverrideRequested = { .armed }
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
 
@@ -548,7 +541,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
     }
 
     func testEmergencyClickWithoutHandlerDoesNotEnterFalseConfirmationState() throws {
-        let view = configuredEyeGateOverlay(remainingSeconds: 0)
+        let view = configuredEyeGateOverlay()
         let button = try XCTUnwrap(view.descendant(withIdentifier: "overlay.emergency.button") as? NSButton)
 
         button.performClick(nil)
@@ -560,7 +553,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
     func testArmedEmergencyReturningArmedKeepsSecondClickConfirmationAvailable() throws {
         let view = configuredEyeGateOverlay(
-            remainingSeconds: 0,
             isArmed: true
         )
         var requestCount = 0
@@ -579,7 +571,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
     }
 
     func testUnavailableEmergencyRequestClearsLocalConfirmationState() throws {
-        let view = configuredEyeGateOverlay(remainingSeconds: 0)
+        let view = configuredEyeGateOverlay()
         var requestCount = 0
         view.onEmergencyOverrideRequested = {
             requestCount += 1
@@ -597,7 +589,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
     func testArmedEmergencyShowsInternalSecondClickConfirmation() throws {
         let view = configuredEyeGateOverlay(
-            remainingSeconds: 0,
             isArmed: true
         )
 
@@ -612,7 +603,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
     func testArmedEmergencyButtonClickRequestsExitImmediately() throws {
         let view = configuredEyeGateOverlay(
-            remainingSeconds: 0,
             isArmed: true
         )
         var requestCount = 0
@@ -629,7 +619,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
     func testArmedEmergencyIgnoresReentrantConfirmationWhileRequestIsInFlight() throws {
         let view = configuredEyeGateOverlay(
-            remainingSeconds: 0,
             isArmed: true
         )
         var requestCount = 0
@@ -655,7 +644,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             settings: .defaults,
             showsContent: true,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: 0,
+            isEmergencyOverrideAvailable: true,
             emergencyOverrideArmed: false
         )
         var requestCount = 0
@@ -677,7 +666,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             settings: .defaults,
             showsContent: true,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: 0,
+            isEmergencyOverrideAvailable: true,
             emergencyOverrideArmed: false
         )
 
@@ -695,7 +684,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             settings: .defaults,
             showsContent: true,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: 0,
+            isEmergencyOverrideAvailable: true,
             emergencyOverrideArmed: true
         )
 
@@ -708,7 +697,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             settings: .defaults,
             showsContent: true,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: 0,
+            isEmergencyOverrideAvailable: true,
             emergencyOverrideArmed: false
         )
 
@@ -716,9 +705,8 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(button.accessibilityLabel(), L10n.tr("overlay.emergencyOverride"))
     }
 
-    func testArmedEmergencyButtonClickIgnoresLegacyHoldRemaining() throws {
+    func testArmedEmergencyButtonClickRequestsCurrentConfirmationOnly() throws {
         let view = configuredEyeGateOverlay(
-            remainingSeconds: 5,
             isArmed: true
         )
         var requestCount = 0
@@ -835,7 +823,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             settings: .defaults,
             showsContent: true,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: 0,
+            isEmergencyOverrideAvailable: true,
             emergencyOverrideArmed: false
         )
         view.layoutSubtreeIfNeeded()
@@ -888,7 +876,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             settings: .defaults,
             showsContent: true,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: 0,
+            isEmergencyOverrideAvailable: true,
             emergencyOverrideArmed: false
         )
         var requestCount = 0
@@ -910,7 +898,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             settings: .defaults,
             showsContent: true,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: 0,
+            isEmergencyOverrideAvailable: true,
             emergencyOverrideArmed: true
         )
 
@@ -923,7 +911,6 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
 
     func testArmedEmergencyMouseClickRequestsConfirmationOnMouseUp() throws {
         let view = configuredEyeGateOverlay(
-            remainingSeconds: 0,
             isArmed: true
         )
         view.layoutSubtreeIfNeeded()
@@ -1038,7 +1025,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             settings: settings,
             showsContent: true,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: 0,
+            isEmergencyOverrideAvailable: true,
             emergencyOverrideArmed: false
         )
         view.layoutSubtreeIfNeeded()
@@ -1093,7 +1080,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             settings: settings,
             showsContent: true,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: 0,
+            isEmergencyOverrideAvailable: true,
             emergencyOverrideArmed: false
         )
         view.layoutSubtreeIfNeeded()
@@ -1124,7 +1111,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             settings: settings,
             showsContent: true,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: 0,
+            isEmergencyOverrideAvailable: true,
             emergencyOverrideArmed: coordinator.isArmed(for: session, now: requestTime)
         )
         drainMainQueue()
@@ -1244,14 +1231,14 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             settings: .defaults,
             showsContent: true,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: nil
+            isEmergencyOverrideAvailable: false
         )
 
         XCTAssertEqual(view.activateEmergencyOverrideIfAvailable(), .unavailable)
     }
 
     private func configuredEyeGateOverlay(
-        remainingSeconds: Int = 0,
+        isEmergencyOverrideAvailable: Bool = true,
         isArmed: Bool = false
     ) -> RestOverlayView {
         let session = eyeGateSession()
@@ -1262,7 +1249,7 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
             settings: .defaults,
             showsContent: true,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: remainingSeconds,
+            isEmergencyOverrideAvailable: isEmergencyOverrideAvailable,
             emergencyOverrideArmed: isArmed
         )
         return view

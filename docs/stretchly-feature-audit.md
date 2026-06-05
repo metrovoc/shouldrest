@@ -327,7 +327,7 @@ Implemented now:
 - Paused menu status includes recovery context: timed pauses show the remaining time until automatic resume, while indefinite pauses tell users to resume from the menu when ready.
 - Manual indefinite pause asks for default-cancel confirmation when no rest overlay is active, reducing accidental long-term disablement while avoiding system-modal confirmations behind active overlays.
 - Disabling break-health mode resets accumulated danger, matching Stretchly's runtime setting behavior.
-- Eye Gate emergency override is frictional without becoming unreachable: the first overlay/local-shortcut trigger arms the override, the second click or Esc confirms from inside the overlay, and completion is counted as a missed Eye Gate. Legacy hold durations are normalized to zero, legacy confirmation steps are capped to one internal overlay confirmation, and CLI/automation emergency remains a direct last-resort escape hatch.
+- Eye Gate emergency override is frictional without becoming unreachable: the first in-overlay click or Esc arms the override, the second click or Esc confirms from inside the overlay, and completion is counted as a missed Eye Gate. Legacy hold durations are ignored, legacy confirmation steps are capped to one internal overlay confirmation, and CLI/automation/menu/shortcut emergency requests only bring the overlay forward instead of confirming from outside it.
 - Admin strict-preference hiding now removes both the Body Break ordinary-skip control and the Eye Gate emergency-override shortcut row from Preferences while preserving their stored values.
 
 Still to perform for public release:

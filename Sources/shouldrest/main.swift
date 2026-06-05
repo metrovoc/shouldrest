@@ -2307,11 +2307,11 @@ final class OverlayController {
         let remaining = max(0, Int(session.duration - now.timeIntervalSince(session.startedAt)))
         let contentScreen = selectedContentScreen(for: session, settings: settings)
         let screens = coveredScreens(for: session, settings: settings, contentScreen: contentScreen)
-        let emergencyRemaining: Int?
+        let canUseEmergencyOverride: Bool
         if emergencyOverrideAction == nil {
-            emergencyRemaining = nil
+            canUseEmergencyOverride = false
         } else {
-            emergencyRemaining = emergencyOverrideRemainingSeconds(for: session, settings: settings, now: now)
+            canUseEmergencyOverride = emergencyOverrideIsAvailable(for: session, settings: settings, now: now)
         }
 
         for screen in screens {
@@ -2326,7 +2326,7 @@ final class OverlayController {
                 settings: settings,
                 showsContent: isContentScreen,
                 manualAwaiting: manualAwaiting,
-                emergencyOverrideRemainingSeconds: emergencyRemaining,
+                isEmergencyOverrideAvailable: canUseEmergencyOverride,
                 emergencyOverrideArmed: emergencyOverrideArmed,
                 bodyActions: bodyActions
             )
@@ -2397,15 +2397,12 @@ final class OverlayController {
         bodyActions = nil
     }
 
-    private func emergencyOverrideRemainingSeconds(for session: RestSession, settings: RestSettings, now: Date) -> Int? {
-        guard EmergencyOverrideCoordinator.isAvailable(
+    private func emergencyOverrideIsAvailable(for session: RestSession, settings: RestSettings, now: Date) -> Bool {
+        EmergencyOverrideCoordinator.isAvailable(
             session: session,
             policy: settings.eyeGate.emergencyOverride,
             now: now
-        ) else {
-            return nil
-        }
-        return 0
+        )
     }
 
     private func selectedContentScreen(for session: RestSession, settings: RestSettings) -> NSScreen? {
@@ -2542,24 +2539,14 @@ private struct EmergencyOverlayVisualStyle {
     var panelBackgroundAlpha: CGFloat
     var panelBorderAlpha: CGFloat
 
-    static func style(remainingSeconds: Int, isArmed: Bool) -> EmergencyOverlayVisualStyle {
-        if remainingSeconds == 0 {
+    static func style(isArmed: Bool) -> EmergencyOverlayVisualStyle {
+        if isArmed {
             return EmergencyOverlayVisualStyle(
                 buttonAlpha: 0.48,
                 tintAlpha: 0.64,
                 titleAlpha: 0.64,
                 panelBackgroundAlpha: 0.022,
                 panelBorderAlpha: 0.082
-            )
-        }
-
-        if isArmed {
-            return EmergencyOverlayVisualStyle(
-                buttonAlpha: 0.44,
-                tintAlpha: 0.58,
-                titleAlpha: 0.58,
-                panelBackgroundAlpha: 0.018,
-                panelBorderAlpha: 0.070
             )
         }
 
@@ -2641,7 +2628,7 @@ final class RestOverlayView: NSView {
     private let bodySkipButton = OverlayActionButton()
     private let bodyFinishButton = OverlayActionButton()
     private var detailCacheKey: String?
-    private var emergencyRemainingSeconds: Int?
+    private var isEmergencyOverrideAvailable = false
     private var emergencyOverrideArmed = false
     private var emergencyOverrideRequestInFlight = false
     private var emergencyOverrideSyntheticCycleLocked = false
@@ -2879,22 +2866,17 @@ final class RestOverlayView: NSView {
         settings: RestSettings,
         showsContent: Bool,
         manualAwaiting: Bool,
-        emergencyOverrideRemainingSeconds: Int?,
+        isEmergencyOverrideAvailable: Bool,
         emergencyOverrideArmed: Bool = false,
         bodyActions: BodyOverlayActions? = nil
     ) {
         let rule = settings.rule(for: session.kind)
         layer?.backgroundColor = NSColor(hex: rule.colorHex).withAlphaComponent(rule.enforcement.opacity).cgColor
         self.bodyActions = bodyActions
-        let visibleEmergencyRemaining: Int?
-        if manualAwaiting && session.kind == .eyeGate {
-            visibleEmergencyRemaining = nil
-        } else {
-            visibleEmergencyRemaining = emergencyOverrideRemainingSeconds
-        }
+        let canUseEmergencyOverride = isEmergencyOverrideAvailable && !(manualAwaiting && session.kind == .eyeGate)
         configureEmergencyButton(
             sessionID: session.id,
-            remainingSeconds: visibleEmergencyRemaining,
+            isAvailable: canUseEmergencyOverride,
             isArmed: emergencyOverrideArmed
         )
 
@@ -3053,7 +3035,7 @@ final class RestOverlayView: NSView {
 
     func activateEmergencyOverrideIfAvailable() -> EmergencyOverlayActivationResult {
         guard !emergencyButton.isHidden,
-              emergencyRemainingSeconds != nil else {
+              isEmergencyOverrideAvailable else {
             return .unavailable
         }
 
@@ -3061,16 +3043,15 @@ final class RestOverlayView: NSView {
     }
 
     private func armEmergencyOverrideLocallyIfNeeded() {
-        guard emergencyRemainingSeconds != nil else {
+        guard isEmergencyOverrideAvailable else {
             return
         }
-        emergencyRemainingSeconds = 0
         emergencyOverrideArmed = true
         updateEmergencyAffordanceUI()
     }
 
     private func clearEmergencyOverrideLocally() {
-        emergencyRemainingSeconds = nil
+        isEmergencyOverrideAvailable = false
         emergencyOverrideArmed = false
         emergencyOverrideRequestInFlight = false
         emergencyOverrideSyntheticCycleLocked = false
@@ -3081,7 +3062,7 @@ final class RestOverlayView: NSView {
 
     private func configureEmergencyButton(
         sessionID: UUID,
-        remainingSeconds: Int?,
+        isAvailable: Bool,
         isArmed: Bool
     ) {
         let isSameEmergencySession = emergencySessionID == sessionID
@@ -3094,8 +3075,8 @@ final class RestOverlayView: NSView {
             emergencyMouseDownStartedInActivationFrame = false
         }
 
-        guard remainingSeconds != nil else {
-            emergencyRemainingSeconds = nil
+        guard isAvailable else {
+            isEmergencyOverrideAvailable = false
             emergencyOverrideArmed = false
             emergencyOverrideRequestInFlight = false
             emergencyOverrideSyntheticCycleLocked = false
@@ -3106,7 +3087,7 @@ final class RestOverlayView: NSView {
             return
         }
 
-        emergencyRemainingSeconds = remainingSeconds
+        isEmergencyOverrideAvailable = true
         emergencyOverrideArmed = isArmed
 
         emergencyButton.isHidden = false
@@ -3116,15 +3097,12 @@ final class RestOverlayView: NSView {
     }
 
     private func updateEmergencyAffordanceUI() {
-        guard let remainingSeconds = emergencyRemainingSeconds else { return }
+        guard isEmergencyOverrideAvailable else { return }
 
         emergencyPanel.isHidden = false
         emergencyPanelWidthConstraint?.constant = 188
         emergencyPanelHeightConstraint?.constant = 44
-        let style = EmergencyOverlayVisualStyle.style(
-            remainingSeconds: emergencyOverrideArmed ? 0 : remainingSeconds,
-            isArmed: emergencyOverrideArmed
-        )
+        let style = EmergencyOverlayVisualStyle.style(isArmed: emergencyOverrideArmed)
         emergencyPanel.layer?.backgroundColor = NSColor.systemRed
             .withAlphaComponent(style.panelBackgroundAlpha)
             .cgColor

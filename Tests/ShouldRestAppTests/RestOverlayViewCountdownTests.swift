@@ -50,7 +50,7 @@ final class RestOverlayViewCountdownTests: XCTestCase {
             settings: .defaults,
             showsContent: true,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: 0
+            isEmergencyOverrideAvailable: true
         )
 
         let countdown = try XCTUnwrap(view.descendant(withIdentifier: "overlay.countdown.label") as? NSTextField)
@@ -181,7 +181,7 @@ final class RestOverlayViewCountdownTests: XCTestCase {
             settings: .defaults,
             showsContent: false,
             manualAwaiting: false,
-            emergencyOverrideRemainingSeconds: 0
+            isEmergencyOverrideAvailable: true
         )
 
         XCTAssertTrue(title.isHidden)
@@ -249,7 +249,7 @@ final class RestOverlayViewCountdownTests: XCTestCase {
             settings: settings,
             showsContent: true,
             manualAwaiting: manualAwaiting,
-            emergencyOverrideRemainingSeconds: nil
+            isEmergencyOverrideAvailable: false
         )
         return view
     }
@@ -275,7 +275,7 @@ final class RestOverlayViewCountdownTests: XCTestCase {
             settings: settings,
             showsContent: true,
             manualAwaiting: manualAwaiting,
-            emergencyOverrideRemainingSeconds: 0
+            isEmergencyOverrideAvailable: true
         )
         return view
     }
