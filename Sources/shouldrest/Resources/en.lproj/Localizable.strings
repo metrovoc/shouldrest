@@ -530,6 +530,7 @@
 "prefs.restoreUpdateSourceHelp" = "Restore the default GitHub release source.";
 "prefs.restoreUpdateSourceDisabledDefaultHelp" = "The default update source is already selected.";
 "prefs.restoreUpdateSourceDisabledUpdatesOffHelp" = "Turn on Check for updates before restoring the default source.";
+"prefs.invalidUpdateFeedURL" = "Use a complete http:// or https:// update source, or leave it blank.";
 "prefs.preferencesMessage" = "Preferences banner";
 "prefs.preferencesMessageHelp" = "Optional note shown at the top of Preferences for team, device, or environment-specific guidance.";
 "prefs.showAdminControls" = "Show advanced support controls";

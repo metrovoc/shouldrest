@@ -547,6 +547,58 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         XCTAssertEqual(savedSettings.value?.operations.updateFeedURL, "https://example.com/shouldrest.json")
     }
 
+    func testInvalidUpdateSourceBlocksSaveAndRevealsField() throws {
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
+
+        try selectAdvancedTab(in: contentView)
+        let field = try XCTUnwrap(view(withIdentifier: "prefs.updateFeedURLField", in: contentView) as? NSTextField)
+        let row = try view(withIdentifier: "prefs.updateFeedURLRow", in: contentView)
+        let statusIcon = try XCTUnwrap(view(withIdentifier: "autosaveStatusIcon", in: contentView) as? NSImageView)
+        let statusLabel = try XCTUnwrap(view(withIdentifier: "autosaveStatusLabel", in: contentView) as? NSTextField)
+
+        XCTAssertTrue(row.isHidden)
+
+        field.stringValue = "github releases latest"
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: field))
+
+        XCTAssertFalse(controller.windowShouldClose(window))
+        XCTAssertNil(savedSettings.value)
+        XCTAssertFalse(row.isHidden)
+
+        let expectedTitle = L10n.format("prefs.autosaveInvalidField", L10n.tr("prefs.updateFeedURL"))
+        XCTAssertEqual(statusLabel.stringValue, expectedTitle)
+        XCTAssertEqual(statusLabel.toolTip, L10n.tr("prefs.invalidUpdateFeedURL"))
+        XCTAssertEqual(statusLabel.accessibilityHelp(), L10n.tr("prefs.invalidUpdateFeedURL"))
+        XCTAssertEqual(statusIcon.image?.accessibilityDescription, expectedTitle)
+        XCTAssertEqual(statusIcon.accessibilityLabel(), expectedTitle)
+        XCTAssertEqual(statusIcon.accessibilityHelp(), L10n.tr("prefs.invalidUpdateFeedURL"))
+        XCTAssertTrue(isFirstResponder(field, in: window))
+    }
+
+    func testCorrectingInvalidUpdateSourceAutosaves() throws {
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
+
+        try selectAdvancedTab(in: contentView)
+        let field = try XCTUnwrap(view(withIdentifier: "prefs.updateFeedURLField", in: contentView) as? NSTextField)
+
+        field.stringValue = "github releases latest"
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: field))
+        XCTAssertFalse(controller.windowShouldClose(window))
+        XCTAssertNil(savedSettings.value)
+
+        field.stringValue = "https://example.com/shouldrest.json"
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: field))
+
+        XCTAssertTrue(controller.windowShouldClose(window))
+        XCTAssertEqual(savedSettings.value?.operations.updateFeedURL, "https://example.com/shouldrest.json")
+    }
+
     private func selectAdvancedTab(in view: NSView) throws {
         let tabView = try XCTUnwrap(firstTabView(in: view))
         tabView.selectTabViewItem(withIdentifier: L10n.tr("prefs.tabAdvanced"))
@@ -605,6 +657,10 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
     private func sendAction(from control: NSControl) -> Bool {
         guard let action = control.action else { return false }
         return NSApplication.shared.sendAction(action, to: control.target, from: control)
+    }
+
+    private func isFirstResponder(_ control: NSControl, in window: NSWindow) -> Bool {
+        window.firstResponder === control || control.currentEditor() === window.firstResponder
     }
 
     private func waitUntilSavedSettingsArrive(_ settings: SavedSettingsBox) {

@@ -2704,6 +2704,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             setInvalidSaveStatus(error)
             return false
         }
+        let validatedUpdateFeedURL: String
+        do {
+            validatedUpdateFeedURL = try normalizedUpdateFeedURLForSaving()
+        } catch {
+            setInvalidSaveStatus(error)
+            return false
+        }
 
         var next = settings
         next.eyeGate.isEnabled = isOn(eyeEnabled)
@@ -2806,7 +2813,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             next.operations.pauseUntilMorningLongitude = normalizedLongitude(doubleValue(pauseUntilMorningLongitude, fallback: 0))
         }
         next.operations.pauseForSuspendOrLock = isOn(pauseForSuspendOrLock)
-        next.operations.updateFeedURL = updateFeedURL.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        next.operations.updateFeedURL = validatedUpdateFeedURL
         next.admin.disableAppUpdateFeatures = isOn(disableUpdateFeatures)
         next.admin.hideSettingsFileLocation = isOn(hideSettingsPath)
         next.admin.hideStrictPreferences = isOn(hideStrictPreferences)
@@ -4305,6 +4312,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             saveStatusInvalidFieldName = invalid.fieldName
             saveStatusInvalidDetail = invalid.errorDescription
             revealInvalidAdvancedEditor(invalid.editor)
+        } else if let invalid = error as? InvalidUpdateFeedURL {
+            saveStatusInvalidFieldName = invalid.fieldName
+            saveStatusInvalidDetail = invalid.errorDescription
+            revealInvalidUpdateFeedURL()
         } else {
             saveStatusInvalidFieldName = nil
             saveStatusInvalidDetail = error.localizedDescription
@@ -4327,6 +4338,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         textView.scrollToVisible(textView.bounds)
         window?.makeFirstResponder(textView)
+    }
+
+    private func revealInvalidUpdateFeedURL() {
+        preferencesTabView?.selectTabViewItem(withIdentifier: L10n.tr("prefs.tabAdvanced"))
+        setAdvancedDisclosure(row: updateFeedURLRow, button: updateSourceAdvancedButton, expanded: true)
+        updateFeedURL.scrollToVisible(updateFeedURL.bounds)
+        window?.makeFirstResponder(updateFeedURL)
     }
 
     @objc private func previewSound(_ sender: NSButton) {
@@ -4882,12 +4900,35 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
     }
 
+    private struct InvalidUpdateFeedURL: LocalizedError {
+        var fieldName: String {
+            L10n.tr("prefs.updateFeedURL")
+        }
+
+        var errorDescription: String? {
+            L10n.tr("prefs.invalidUpdateFeedURL")
+        }
+    }
+
     private func showInvalidJSONAlert(_ error: Error) {
         let alert = NSAlert()
         alert.messageText = L10n.tr("prefs.invalidJSONTitle")
         alert.informativeText = error.localizedDescription
         alert.alertStyle = .warning
         alert.runModal()
+    }
+
+    private func normalizedUpdateFeedURLForSaving() throws -> String {
+        let value = updateFeedURL.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !value.isEmpty else { return "" }
+        guard let components = URLComponents(string: value),
+              let scheme = components.scheme?.lowercased(),
+              scheme == "http" || scheme == "https",
+              let host = components.host?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !host.isEmpty else {
+            throw InvalidUpdateFeedURL()
+        }
+        return value
     }
 
     private func decodedAdvancedAppExclusions() throws -> [AppExclusionRule]? {
