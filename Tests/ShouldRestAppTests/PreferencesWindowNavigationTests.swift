@@ -81,6 +81,7 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         XCTAssertTrue(searchStatus.stringValue.contains(L10n.tr("prefs.tabShortcuts")))
         XCTAssertTrue(searchStatus.stringValue.contains(L10n.tr("prefs.pause5hShortcut")))
         XCTAssertEqual(searchStatus.toolTip, searchStatus.stringValue)
+        XCTAssertEqual(searchStatus.accessibilityLabel(), searchStatus.stringValue)
         XCTAssertEqual(searchStatus.accessibilityHelp(), searchStatus.stringValue)
 
         let pause5h = try XCTUnwrap(view(withIdentifier: "shortcut.pause5h", in: contentView))
@@ -206,6 +207,7 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         XCTAssertTrue(sendAction(from: searchField))
         XCTAssertEqual(searchStatus.stringValue, L10n.format("prefs.searchNoResults", "json"))
         XCTAssertEqual(searchStatus.toolTip, searchStatus.stringValue)
+        XCTAssertEqual(searchStatus.accessibilityLabel(), searchStatus.stringValue)
         XCTAssertEqual(searchStatus.accessibilityHelp(), searchStatus.stringValue)
         XCTAssertNil(savedSettings.value)
     }
@@ -347,6 +349,7 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         )
         XCTAssertEqual(searchStatus.textColor, .systemOrange)
         XCTAssertEqual(searchStatus.toolTip, searchStatus.stringValue)
+        XCTAssertEqual(searchStatus.accessibilityLabel(), searchStatus.stringValue)
         XCTAssertEqual(searchStatus.accessibilityHelp(), searchStatus.stringValue)
     }
 
@@ -377,6 +380,7 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         )
         XCTAssertEqual(searchStatus.textColor, .systemOrange)
         XCTAssertEqual(searchStatus.toolTip, searchStatus.stringValue)
+        XCTAssertEqual(searchStatus.accessibilityLabel(), searchStatus.stringValue)
         XCTAssertEqual(searchStatus.accessibilityHelp(), searchStatus.stringValue)
         XCTAssertNil(savedSettings.value)
     }
@@ -413,6 +417,7 @@ final class PreferencesWindowNavigationTests: XCTestCase {
 
         XCTAssertEqual(searchField.stringValue, "")
         XCTAssertTrue(searchStatus.isHidden)
+        XCTAssertNil(searchStatus.accessibilityLabel())
 
         searchField.stringValue = L10n.tr("prefs.pause5hShortcut")
         XCTAssertTrue(sendAction(from: searchField))

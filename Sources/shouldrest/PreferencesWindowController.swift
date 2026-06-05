@@ -2650,6 +2650,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         adminMessageLabel.stringValue = visibleMessage
         adminMessageLabel.isHidden = !isVisible
         adminMessageLabel.toolTip = isVisible ? visibleMessage : nil
+        adminMessageLabel.setAccessibilityLabel(isVisible ? visibleMessage : nil)
         adminMessageLabel.setAccessibilityHelp(isVisible ? visibleMessage : nil)
         adminMessageBanner.toolTip = isVisible ? visibleMessage : nil
         adminMessageBanner.setAccessibilityHelp(isVisible ? visibleMessage : nil)
@@ -2704,6 +2705,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             shortcutConflictRecorders = []
             shortcutConflictLabel.stringValue = ""
             shortcutConflictLabel.toolTip = nil
+            shortcutConflictLabel.setAccessibilityLabel(nil)
             shortcutConflictLabel.setAccessibilityHelp(nil)
             shortcutConflictIcon.image?.accessibilityDescription = L10n.tr("prefs.shortcutConflictTitle")
             shortcutConflictIcon.setAccessibilityHelp(nil)
@@ -2717,6 +2719,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         shortcutConflictRecorders = warning.recorders
         shortcutConflictLabel.stringValue = warning.message
         shortcutConflictLabel.toolTip = warning.message
+        shortcutConflictLabel.setAccessibilityLabel(warning.message)
         shortcutConflictLabel.setAccessibilityHelp(warning.message)
         shortcutConflictIcon.image?.accessibilityDescription = warning.message
         shortcutConflictIcon.setAccessibilityHelp(warning.message)
@@ -3192,6 +3195,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         )
         shortcutEndBodyLabel?.stringValue = title
         shortcutEndBodyLabel?.toolTip = help
+        shortcutEndBodyLabel?.setAccessibilityLabel(title)
         shortcutEndBodyLabel?.setAccessibilityHelp(help)
         shortcutEndBody.actionHelp = help
         shortcutEndBodyRow?.toolTip = help
@@ -5479,6 +5483,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         searchStatusLabel.isHidden = hidden
         let help = hidden || text.isEmpty ? nil : text
         searchStatusLabel.toolTip = help
+        searchStatusLabel.setAccessibilityLabel(help)
         searchStatusLabel.setAccessibilityHelp(help)
     }
 

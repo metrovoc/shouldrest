@@ -218,6 +218,8 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         let label = try XCTUnwrap(view(withIdentifier: "prefs.shortcutEndBodyLabel", in: contentView) as? NSTextField)
         XCTAssertEqual(label.stringValue, L10n.tr("prefs.activeRestShortcut.body"))
         XCTAssertEqual(label.toolTip, L10n.tr("prefs.activeRestShortcut.bodyHelp"))
+        XCTAssertEqual(label.accessibilityLabel(), L10n.tr("prefs.activeRestShortcut.body"))
+        XCTAssertEqual(label.accessibilityHelp(), L10n.tr("prefs.activeRestShortcut.bodyHelp"))
         XCTAssertFalse(visibleTexts(in: contentView).contains("End active rest"))
     }
 
@@ -232,6 +234,8 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         let label = try XCTUnwrap(view(withIdentifier: "prefs.shortcutEndBodyLabel", in: contentView) as? NSTextField)
         XCTAssertEqual(label.stringValue, L10n.tr("prefs.activeRestShortcut.eyeAndBody"))
         XCTAssertEqual(label.toolTip, L10n.tr("prefs.activeRestShortcut.eyeAndBodyHelp"))
+        XCTAssertEqual(label.accessibilityLabel(), L10n.tr("prefs.activeRestShortcut.eyeAndBody"))
+        XCTAssertEqual(label.accessibilityHelp(), L10n.tr("prefs.activeRestShortcut.eyeAndBodyHelp"))
         XCTAssertTrue(visibleTexts(in: contentView).contains(L10n.tr("prefs.activeRestShortcut.eyeAndBody")))
     }
 
@@ -294,6 +298,7 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         let warningLabel = try XCTUnwrap(view(withIdentifier: "prefs.shortcutConflictLabel", in: contentView) as? NSTextField)
         XCTAssertEqual(warningLabel.stringValue, warning)
         XCTAssertEqual(warningLabel.toolTip, warning)
+        XCTAssertEqual(warningLabel.accessibilityLabel(), warning)
         XCTAssertEqual(warningLabel.accessibilityHelp(), warning)
         XCTAssertGreaterThanOrEqual(warningLabel.maximumNumberOfLines, 3)
         XCTAssertEqual(warningIcon.image?.accessibilityDescription, warning)
@@ -351,6 +356,10 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertTrue(warningRow.isHidden)
         XCTAssertNil(warningRow.toolTip)
         XCTAssertNil(warningRow.accessibilityHelp())
+        let warningLabel = try XCTUnwrap(view(withIdentifier: "prefs.shortcutConflictLabel", in: contentView) as? NSTextField)
+        XCTAssertEqual(warningLabel.stringValue, "")
+        XCTAssertNil(warningLabel.accessibilityLabel())
+        XCTAssertNil(warningLabel.accessibilityHelp())
         let reviewButton = try XCTUnwrap(control(withIdentifier: "prefs.shortcutConflictReviewButton", in: contentView) as? NSButton)
         XCTAssertFalse(reviewButton.isEnabled)
     }
@@ -490,6 +499,8 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         let label = try XCTUnwrap(view(withIdentifier: "prefs.shortcutEndBodyLabel", in: contentView) as? NSTextField)
         XCTAssertEqual(label.stringValue, L10n.tr("prefs.activeRestShortcut.eye"))
         XCTAssertEqual(label.toolTip, L10n.tr("prefs.activeRestShortcut.eyeHelp"))
+        XCTAssertEqual(label.accessibilityLabel(), L10n.tr("prefs.activeRestShortcut.eye"))
+        XCTAssertEqual(label.accessibilityHelp(), L10n.tr("prefs.activeRestShortcut.eyeHelp"))
         XCTAssertTrue(visibleTexts(in: contentView).contains(L10n.tr("prefs.activeRestShortcut.eye")))
         XCTAssertFalse(visibleTexts(in: contentView).contains(L10n.tr("prefs.activeRestShortcut.body")))
     }

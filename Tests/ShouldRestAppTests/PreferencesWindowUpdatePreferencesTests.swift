@@ -284,6 +284,7 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         XCTAssertEqual(banner.stringValue, message)
         XCTAssertGreaterThanOrEqual(banner.maximumNumberOfLines, 3)
         XCTAssertEqual(banner.toolTip, message)
+        XCTAssertEqual(banner.accessibilityLabel(), message)
         XCTAssertEqual(banner.accessibilityHelp(), message)
     }
 
@@ -305,6 +306,7 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         XCTAssertTrue(banner.isHidden)
         XCTAssertEqual(banner.stringValue, "")
         XCTAssertNil(banner.toolTip)
+        XCTAssertNil(banner.accessibilityLabel())
         XCTAssertNil(banner.accessibilityHelp())
     }
 
@@ -327,6 +329,7 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         XCTAssertEqual(bannerRow.accessibilityHelp(), "Use the shared team rhythm.")
         XCTAssertEqual(banner.stringValue, "Use the shared team rhythm.")
         XCTAssertEqual(banner.toolTip, "Use the shared team rhythm.")
+        XCTAssertEqual(banner.accessibilityLabel(), "Use the shared team rhythm.")
         XCTAssertEqual(banner.accessibilityHelp(), "Use the shared team rhythm.")
     }
 
