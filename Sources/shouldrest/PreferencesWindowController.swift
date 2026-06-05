@@ -381,6 +381,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private var settings: RestSettings
     private let onSave: (RestSettings) -> Void
+    private let adminMessageBanner = NSStackView()
+    private let adminMessageIcon = NSImageView()
     private let adminMessageLabel = NSTextField(labelWithString: "")
     private let searchField = NSSearchField()
     private let searchStatusLabel = NSTextField(labelWithString: "")
@@ -694,10 +696,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         root.addArrangedSubview(tabView)
 
         let scheduleStack = contentStack()
-        adminMessageLabel.identifier = NSUserInterfaceItemIdentifier("prefs.adminMessageLabel")
-        adminMessageLabel.lineBreakMode = .byWordWrapping
-        adminMessageLabel.widthAnchor.constraint(equalToConstant: 620).isActive = true
-        scheduleStack.addArrangedSubview(adminMessageLabel)
+        scheduleStack.addArrangedSubview(adminMessageBannerView())
         scheduleStack.addArrangedSubview(section(
             L10n.tr("prefs.sectionEyeGate"),
             icon: .restGate,
@@ -1359,6 +1358,42 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         stack.layer?.borderWidth = 1
         stack.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.55).cgColor
         return stack
+    }
+
+    private func adminMessageBannerView() -> NSStackView {
+        adminMessageIcon.identifier = NSUserInterfaceItemIdentifier("prefs.adminMessageIcon")
+        adminMessageIcon.image = NSImage(
+            systemSymbolName: "info.circle.fill",
+            accessibilityDescription: L10n.tr("prefs.preferencesMessage")
+        )
+        adminMessageIcon.symbolConfiguration = .init(pointSize: 15, weight: .semibold)
+        adminMessageIcon.contentTintColor = .controlAccentColor
+        adminMessageIcon.setAccessibilityLabel(L10n.tr("prefs.preferencesMessage"))
+        adminMessageIcon.widthAnchor.constraint(equalToConstant: 20).isActive = true
+
+        adminMessageLabel.identifier = NSUserInterfaceItemIdentifier("prefs.adminMessageLabel")
+        adminMessageLabel.font = .systemFont(ofSize: 12)
+        adminMessageLabel.textColor = .labelColor
+        adminMessageLabel.lineBreakMode = .byWordWrapping
+        adminMessageLabel.maximumNumberOfLines = 3
+        adminMessageLabel.widthAnchor.constraint(equalToConstant: 594).isActive = true
+
+        adminMessageBanner.identifier = NSUserInterfaceItemIdentifier("prefs.adminMessageBanner")
+        adminMessageBanner.orientation = .horizontal
+        adminMessageBanner.spacing = 8
+        adminMessageBanner.alignment = .top
+        adminMessageBanner.edgeInsets = NSEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
+        adminMessageBanner.wantsLayer = true
+        adminMessageBanner.layer?.cornerRadius = 7
+        adminMessageBanner.layer?.borderWidth = 1
+        adminMessageBanner.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.08).cgColor
+        adminMessageBanner.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.55).cgColor
+        adminMessageBanner.widthAnchor.constraint(equalToConstant: 650).isActive = true
+        adminMessageBanner.addArrangedSubview(adminMessageIcon)
+        adminMessageBanner.addArrangedSubview(adminMessageLabel)
+        adminMessageBanner.setAccessibilityLabel(L10n.tr("prefs.preferencesMessage"))
+        adminMessageBanner.isHidden = true
+        return adminMessageBanner
     }
 
     private func rhythmPresetRow() -> NSStackView {
@@ -2510,10 +2545,18 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private func updateAdminMessageLabel(_ message: String) {
         let isVisible = !message.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let visibleMessage = isVisible ? message : ""
+        adminMessageBanner.isHidden = !isVisible
+        adminMessageIcon.isHidden = !isVisible
+        adminMessageIcon.setAccessibilityHelp(isVisible ? visibleMessage : nil)
+        adminMessageIcon.image?.accessibilityDescription = isVisible
+            ? L10n.tr("prefs.preferencesMessage")
+            : nil
         adminMessageLabel.stringValue = visibleMessage
         adminMessageLabel.isHidden = !isVisible
         adminMessageLabel.toolTip = isVisible ? visibleMessage : nil
         adminMessageLabel.setAccessibilityHelp(isVisible ? visibleMessage : nil)
+        adminMessageBanner.toolTip = isVisible ? visibleMessage : nil
+        adminMessageBanner.setAccessibilityHelp(isVisible ? visibleMessage : nil)
     }
 
     private func updateUpdatePreferencesVisibility() {

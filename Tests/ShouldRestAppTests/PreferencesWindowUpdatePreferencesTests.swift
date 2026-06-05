@@ -205,10 +205,30 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
 
+        let bannerRow = try XCTUnwrap(view(withIdentifier: "prefs.adminMessageBanner", in: contentView) as? NSStackView)
+        let icon = try XCTUnwrap(view(withIdentifier: "prefs.adminMessageIcon", in: contentView) as? NSImageView)
         let banner = try XCTUnwrap(view(withIdentifier: "prefs.adminMessageLabel", in: contentView) as? NSTextField)
 
+        XCTAssertFalse(bannerRow.isHidden)
+        XCTAssertTrue(bannerRow.wantsLayer)
+        XCTAssertEqual(bannerRow.edgeInsets.top, 8)
+        XCTAssertEqual(bannerRow.edgeInsets.left, 12)
+        XCTAssertLessThanOrEqual(bannerRow.layer?.cornerRadius ?? 99, 8)
+        XCTAssertEqual(bannerRow.layer?.borderWidth, 1)
+        XCTAssertNotNil(bannerRow.layer?.backgroundColor)
+        XCTAssertNotNil(bannerRow.layer?.borderColor)
+        XCTAssertGreaterThanOrEqual(bannerRow.constraints.first { $0.firstAttribute == .width }?.constant ?? 0, 650)
+        XCTAssertEqual(bannerRow.toolTip, message)
+        XCTAssertEqual(bannerRow.accessibilityLabel(), L10n.tr("prefs.preferencesMessage"))
+        XCTAssertEqual(bannerRow.accessibilityHelp(), message)
+        XCTAssertFalse(icon.isHidden)
+        XCTAssertNotNil(icon.image)
+        XCTAssertEqual(icon.image?.accessibilityDescription, L10n.tr("prefs.preferencesMessage"))
+        XCTAssertEqual(icon.accessibilityLabel(), L10n.tr("prefs.preferencesMessage"))
+        XCTAssertEqual(icon.accessibilityHelp(), message)
         XCTAssertFalse(banner.isHidden)
         XCTAssertEqual(banner.stringValue, message)
+        XCTAssertGreaterThanOrEqual(banner.maximumNumberOfLines, 3)
         XCTAssertEqual(banner.toolTip, message)
         XCTAssertEqual(banner.accessibilityHelp(), message)
     }
@@ -219,8 +239,15 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
 
+        let bannerRow = try XCTUnwrap(view(withIdentifier: "prefs.adminMessageBanner", in: contentView) as? NSStackView)
+        let icon = try XCTUnwrap(view(withIdentifier: "prefs.adminMessageIcon", in: contentView) as? NSImageView)
         let banner = try XCTUnwrap(view(withIdentifier: "prefs.adminMessageLabel", in: contentView) as? NSTextField)
 
+        XCTAssertTrue(bannerRow.isHidden)
+        XCTAssertNil(bannerRow.toolTip)
+        XCTAssertNil(bannerRow.accessibilityHelp())
+        XCTAssertTrue(icon.isHidden)
+        XCTAssertNil(icon.accessibilityHelp())
         XCTAssertTrue(banner.isHidden)
         XCTAssertEqual(banner.stringValue, "")
         XCTAssertNil(banner.toolTip)
@@ -232,6 +259,7 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
         settings.admin.customPreferencesMessage = "Managed by your team"
         let controller = PreferencesWindowController(settings: settings, onSave: { _ in })
         let contentView = try XCTUnwrap(controller.window?.contentView)
+        let bannerRow = try XCTUnwrap(view(withIdentifier: "prefs.adminMessageBanner", in: contentView) as? NSStackView)
         let banner = try XCTUnwrap(view(withIdentifier: "prefs.adminMessageLabel", in: contentView) as? NSTextField)
 
         try selectAdvancedTab(in: contentView)
@@ -240,6 +268,9 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
 
         controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: messageField))
 
+        XCTAssertFalse(bannerRow.isHidden)
+        XCTAssertEqual(bannerRow.toolTip, "Use the shared team rhythm.")
+        XCTAssertEqual(bannerRow.accessibilityHelp(), "Use the shared team rhythm.")
         XCTAssertEqual(banner.stringValue, "Use the shared team rhythm.")
         XCTAssertEqual(banner.toolTip, "Use the shared team rhythm.")
         XCTAssertEqual(banner.accessibilityHelp(), "Use the shared team rhythm.")
