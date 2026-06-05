@@ -305,6 +305,11 @@ private struct PreferencesHighlightSnapshot {
 struct AppExclusionApplicationCandidate: Equatable {
     var name: String
     var bundleIdentifier: String?
+    var icon: NSImage?
+
+    static func == (lhs: AppExclusionApplicationCandidate, rhs: AppExclusionApplicationCandidate) -> Bool {
+        lhs.name == rhs.name && lhs.bundleIdentifier == rhs.bundleIdentifier
+    }
 
     var terms: [String] {
         Self.uniqueNonemptyTerms([name, bundleIdentifier])
@@ -328,7 +333,11 @@ struct AppExclusionApplicationCandidate: Equatable {
                 if let bundleIdentifier, bundleIdentifier == ownBundleIdentifier {
                     return nil
                 }
-                return AppExclusionApplicationCandidate(name: name, bundleIdentifier: bundleIdentifier)
+                return AppExclusionApplicationCandidate(
+                    name: name,
+                    bundleIdentifier: bundleIdentifier,
+                    icon: app.icon
+                )
             }
             .filter { candidate in
                 let key = "\(candidate.name.lowercased())|\((candidate.bundleIdentifier ?? "").lowercased())"
@@ -339,6 +348,13 @@ struct AppExclusionApplicationCandidate: Equatable {
             .sorted { lhs, rhs in
                 lhs.menuTitle.localizedCaseInsensitiveCompare(rhs.menuTitle) == .orderedAscending
             }
+    }
+
+    func menuIcon(size: CGFloat = 16) -> NSImage? {
+        guard let icon = icon?.copy() as? NSImage else { return nil }
+        icon.size = NSSize(width: size, height: size)
+        icon.isTemplate = false
+        return icon
     }
 
     static func uniqueNonemptyTerms(_ values: [String?]) -> [String] {
@@ -377,11 +393,14 @@ enum AppExclusionRunningAppMenuItemFactory {
         let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
         item.target = target
         item.representedObject = AppExclusionApplicationCandidateBox(candidate)
-        item.image = imageProvider("app")
+        let candidateIcon = candidate.menuIcon()
+        let usesFallbackIcon = candidateIcon == nil
+        item.image = candidateIcon ?? imageProvider("app")
         applyPresentation(
             title: title,
             help: L10n.format("prefs.addRunningAppMenuItemHelp", title),
-            to: item
+            to: item,
+            imageIsTemplate: usesFallbackIcon
         )
         return item
     }
@@ -395,15 +414,20 @@ enum AppExclusionRunningAppMenuItemFactory {
         let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
         item.isEnabled = false
         item.image = imageProvider("info.circle")
-        applyPresentation(title: title, help: L10n.tr("prefs.noRunningAppsHelp"), to: item)
+        applyPresentation(
+            title: title,
+            help: L10n.tr("prefs.noRunningAppsHelp"),
+            to: item,
+            imageIsTemplate: true
+        )
         return item
     }
 
-    private static func applyPresentation(title: String, help: String, to item: NSMenuItem) {
+    private static func applyPresentation(title: String, help: String, to item: NSMenuItem, imageIsTemplate: Bool) {
         item.toolTip = help
         item.setAccessibilityLabel(title)
         item.setAccessibilityHelp(help)
-        item.image?.isTemplate = true
+        item.image?.isTemplate = imageIsTemplate
         item.image?.accessibilityDescription = title
     }
 }

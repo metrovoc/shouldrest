@@ -590,6 +590,40 @@ final class PreferencesWindowContextVisibilityTests: XCTestCase {
         XCTAssertFalse(item.accessibilityHelp()?.contains("us.zoom.xos") ?? true)
     }
 
+    func testRunningAppPickerCandidateMenuItemsPreferActualAppIcon() throws {
+        defer { L10n.languageOverride = nil }
+        L10n.languageOverride = "en"
+        let target = AppExclusionRunningAppMenuItemTarget()
+        let appIcon = NSImage(size: NSSize(width: 48, height: 48))
+        appIcon.isTemplate = false
+        appIcon.accessibilityDescription = "Original app icon"
+        var didRequestFallbackIcon = false
+        let candidate = AppExclusionApplicationCandidate(
+            name: "Keynote",
+            bundleIdentifier: "com.apple.iWork.Keynote",
+            icon: appIcon
+        )
+
+        let item = AppExclusionRunningAppMenuItemFactory.makeCandidateItem(
+            candidate: candidate,
+            target: target,
+            action: #selector(AppExclusionRunningAppMenuItemTarget.pick(_:)),
+            imageProvider: { symbolName in
+                didRequestFallbackIcon = true
+                return NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)
+            }
+        )
+
+        XCTAssertFalse(didRequestFallbackIcon)
+        XCTAssertFalse(item.image?.isTemplate ?? true)
+        XCTAssertEqual(item.image?.size.width, 16)
+        XCTAssertEqual(item.image?.size.height, 16)
+        XCTAssertEqual(item.image?.accessibilityDescription, "Keynote")
+        XCTAssertEqual(item.toolTip, "Add Keynote as an app rule.")
+        XCTAssertEqual(item.accessibilityHelp(), "Add Keynote as an app rule.")
+        XCTAssertNotNil(item.representedObject)
+    }
+
     func testRunningAppPickerEmptyMenuItemHasDisabledStatusCopy() {
         defer { L10n.languageOverride = nil }
         L10n.languageOverride = "en"
