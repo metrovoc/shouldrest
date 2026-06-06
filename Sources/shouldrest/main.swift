@@ -544,6 +544,52 @@ enum StatusMenuSettingsLocationMenuItemFactory {
 }
 
 @MainActor
+struct BodyBreakIdeaAssignments: Equatable {
+    private(set) var pending: RestIdea?
+    private(set) var active: [UUID: RestIdea] = [:]
+
+    mutating func storePending(_ idea: RestIdea?) {
+        pending = idea
+    }
+
+    func ideaForStartAttempt(explicit idea: RestIdea?) -> RestIdea? {
+        idea ?? pending
+    }
+
+    mutating func bindStartedIdea(_ idea: RestIdea?, to session: RestSession) {
+        guard session.kind == .bodyBreak else { return }
+        if let idea {
+            active[session.id] = idea
+        }
+        pending = nil
+    }
+
+    mutating func bindPending(to session: RestSession) {
+        guard session.kind == .bodyBreak, let pending else { return }
+        active[session.id] = pending
+        self.pending = nil
+    }
+
+    mutating func deferActiveIdeaToPending(for session: RestSession) {
+        guard session.kind == .bodyBreak, let idea = active.removeValue(forKey: session.id) else { return }
+        pending = idea
+    }
+
+    func activeIdea(for session: RestSession) -> RestIdea? {
+        active[session.id]
+    }
+
+    mutating func clearActive(for session: RestSession) {
+        active.removeValue(forKey: session.id)
+    }
+
+    mutating func clearAll() {
+        pending = nil
+        active.removeAll()
+    }
+}
+
+@MainActor
 final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private let settingsStore: SettingsStore
     private let logger = AppLogger()
@@ -569,8 +615,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private var pausedForSuspendOrLock = false
     private var manualAwaitingSessionID: UUID?
     private var latestReleaseURL: URL?
-    private var pendingBodyBreakIdea: RestIdea?
-    private var activeBodyBreakIdeas: [UUID: RestIdea] = [:]
+    private var bodyBreakIdeas = BodyBreakIdeaAssignments()
     private var activeBreakShortcutSessionID: UUID?
     private var activeBreakShortcutValue: String?
     private var activeBreakShortcutRegistered = false
@@ -750,10 +795,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             overlayController.dismiss()
             emergencyOverrideCoordinator.clear(sessionID: active.id)
             manualAwaitingSessionID = nil
-            if active.kind == .bodyBreak, let idea = activeBodyBreakIdeas[active.id] {
-                pendingBodyBreakIdea = idea
-            }
-            clearActiveBodyBreakIdea(for: active)
+            bodyBreakIdeas.deferActiveIdeaToPending(for: active)
             logger.log("Active \(kind.rawValue) deferred: \(MenuStatusPresenter.deferralReasonText(reason))")
             rebuildMenu()
             return
@@ -1216,12 +1258,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func startBodyBreakNow(idea: RestIdea?) {
-        let effectiveIdea = idea ?? pendingBodyBreakIdea
-        pendingBodyBreakIdea = nil
+        let effectiveIdea = bodyBreakIdeas.ideaForStartAttempt(explicit: idea)
         if case .started(let session) = engine.takeNow(.bodyBreak) {
-            if let idea = effectiveIdea {
-                activeBodyBreakIdeas[session.id] = idea
-            }
+            bodyBreakIdeas.bindStartedIdea(effectiveIdea, to: session)
             playRestSound(settings.rule(for: session.kind).startSound)
             let now = Date()
             overlayController.present(
@@ -1722,8 +1761,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         unregisterEmergencyEscapeShortcut()
         overlayController.dismiss()
         manualAwaitingSessionID = nil
-        pendingBodyBreakIdea = nil
-        activeBodyBreakIdeas.removeAll()
+        bodyBreakIdeas.clearAll()
         cancelAutomationTasks()
         logger.log("Schedule reset")
         rebuildMenu()
@@ -2019,7 +2057,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         if let wait, wait > 0 {
             scheduleBodyBreakAutomation(after: wait, idea: idea)
         } else if noSkip {
-            pendingBodyBreakIdea = idea
+            bodyBreakIdeas.storePending(idea)
             logger.log("Stored one-shot Body Break content")
         } else {
             startBodyBreakNow(idea: idea)
@@ -2110,18 +2148,16 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func bindPendingBodyBreakIdea(to session: RestSession) {
-        guard session.kind == .bodyBreak, let idea = pendingBodyBreakIdea else { return }
-        activeBodyBreakIdeas[session.id] = idea
-        pendingBodyBreakIdea = nil
+        bodyBreakIdeas.bindPending(to: session)
     }
 
     private func clearActiveBodyBreakIdea(for session: RestSession) {
-        activeBodyBreakIdeas.removeValue(forKey: session.id)
+        bodyBreakIdeas.clearActive(for: session)
     }
 
     private func overlaySettings(for session: RestSession) -> RestSettings {
         guard session.kind == .bodyBreak,
-              let idea = activeBodyBreakIdeas[session.id] else {
+              let idea = bodyBreakIdeas.activeIdea(for: session) else {
             return settings
         }
         var copy = settings
