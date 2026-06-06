@@ -132,6 +132,23 @@ final class CommandLineAutomationTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: marker.path))
     }
 
+    func testEmergencyAutomationQueuePersistsRequestsUntilEyeGateIsActive() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let marker = directory.appendingPathComponent("emergency-request")
+
+        XCTAssertTrue(EmergencyAutomationQueue.persistUntilActiveEyeGate(activeRestKind: nil, fileURL: marker))
+        XCTAssertTrue(EmergencyAutomationSignal.isPending(fileURL: marker))
+        XCTAssertTrue(EmergencyAutomationSignal.consume(fileURL: marker))
+
+        XCTAssertTrue(EmergencyAutomationQueue.persistUntilActiveEyeGate(activeRestKind: .bodyBreak, fileURL: marker))
+        XCTAssertTrue(EmergencyAutomationSignal.isPending(fileURL: marker))
+        XCTAssertTrue(EmergencyAutomationSignal.consume(fileURL: marker))
+
+        XCTAssertFalse(EmergencyAutomationQueue.persistUntilActiveEyeGate(activeRestKind: .eyeGate, fileURL: marker))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: marker.path))
+    }
+
     func testParsesStretchlyStyleDurations() throws {
         XCTAssertEqual(CommandLineAutomation.parseDuration("60"), 60 * 60)
         XCTAssertEqual(CommandLineAutomation.parseDuration("1h"), 60 * 60)

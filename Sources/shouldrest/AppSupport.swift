@@ -105,6 +105,20 @@ enum EmergencyAutomationSignal {
     }
 }
 
+enum EmergencyAutomationQueue {
+    @discardableResult
+    static func persistUntilActiveEyeGate(
+        activeRestKind: RestKind?,
+        fileURL: URL = AppPaths.emergencyRequestURL
+    ) -> Bool {
+        guard activeRestKind != .eyeGate else {
+            return false
+        }
+        try? EmergencyAutomationSignal.write(fileURL: fileURL)
+        return true
+    }
+}
+
 enum AppVersion {
     private static let fallback = "0.1.133"
 

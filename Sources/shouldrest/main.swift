@@ -1408,7 +1408,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func handleEmergencyAutomation() {
-        guard engine.state.activeSession?.kind == .eyeGate else {
+        guard !EmergencyAutomationQueue.persistUntilActiveEyeGate(
+            activeRestKind: engine.state.activeSession?.kind
+        ) else {
             logger.log("Emergency automation queued until active Eye Gate")
             return
         }
