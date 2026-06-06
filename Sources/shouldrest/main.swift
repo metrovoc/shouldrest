@@ -625,6 +625,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private var lastGlobalShortcutFailureKey: String?
     private var lastActiveBreakShortcutFailureKey: String?
     private var automationTasks: [UUID: Task<Void, Never>] = [:]
+    private var pendingAutomationStarts = PendingAutomationStartRequests()
 
     override init() {
         let store = SettingsStore(fileURL: AppPaths.settingsURL)
@@ -769,6 +770,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         if let expiredPause, engine.state.pause == nil {
             notifyAutomaticResume(from: expiredPause)
         }
+        retryPendingAutomationStarts()
         rebuildMenu()
     }
 
@@ -813,6 +815,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             if case .completed(let session, let reason) = result {
                 releaseActiveRestSurface(for: session)
                 logger.log("Completed \(session.kind.rawValue) during resume reason=\(reason)")
+                retryPendingAutomationStarts()
                 rebuildMenu()
                 return
             }
@@ -826,6 +829,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 releaseActiveRestSurface(for: active)
                 logger.log("Completed \(active.kind.rawValue)")
                 playRestSound(settings.rule(for: active.kind).finishSound)
+                retryPendingAutomationStarts()
             }
             rebuildMenu()
         case .present(let manualAwaiting):
@@ -1235,7 +1239,13 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func takeEyeGateNow() {
-        if case .started(let session) = engine.takeNow(.eyeGate) {
+        _ = startEyeGateNow(source: "Manual")
+    }
+
+    @discardableResult
+    private func startEyeGateNow(source: String) -> RestEngineResult {
+        let result = engine.takeNow(.eyeGate)
+        if case .started(let session) = result {
             playRestSound(settings.rule(for: session.kind).startSound)
             let now = Date()
             overlayController.present(
@@ -1248,18 +1258,23 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             )
             refreshActiveBreakShortcut()
             refreshEmergencyEscapeShortcut()
-            logger.log("Manual Eye Gate started")
+            logger.log("\(source) Eye Gate started")
+        } else if case .denied(let denial) = result {
+            logger.log("\(source) Eye Gate start denied: \(denial)")
         }
         rebuildMenu()
+        return result
     }
 
     @objc private func takeBodyBreakNow() {
         startBodyBreakNow(idea: nil)
     }
 
-    private func startBodyBreakNow(idea: RestIdea?) {
+    @discardableResult
+    private func startBodyBreakNow(idea: RestIdea?, source: String = "Manual") -> RestEngineResult {
         let effectiveIdea = bodyBreakIdeas.ideaForStartAttempt(explicit: idea)
-        if case .started(let session) = engine.takeNow(.bodyBreak) {
+        let result = engine.takeNow(.bodyBreak)
+        if case .started(let session) = result {
             bodyBreakIdeas.bindStartedIdea(effectiveIdea, to: session)
             playRestSound(settings.rule(for: session.kind).startSound)
             let now = Date()
@@ -1273,9 +1288,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             )
             refreshActiveBreakShortcut()
             refreshEmergencyEscapeShortcut()
-            logger.log("Manual Body Break started")
+            logger.log("\(source) Body Break started")
+        } else if case .denied(let denial) = result {
+            logger.log("\(source) Body Break start denied: \(denial)")
         }
         rebuildMenu()
+        return result
     }
 
     @objc private func takeNextScheduledRestNow() {
@@ -1303,6 +1321,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             emergencyOverrideCoordinator.clear(sessionID: active.id)
             clearActiveBodyBreakIdea(for: active)
             logger.log("Body Break postponed")
+            retryPendingAutomationStarts()
         }
         rebuildMenu()
     }
@@ -1321,6 +1340,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             releaseActiveRestSurface(for: active)
             logger.log("Manually finished \(active.kind.rawValue)")
             playRestSound(settings.rule(for: active.kind).finishSound)
+            retryPendingAutomationStarts()
         }
         rebuildMenu()
     }
@@ -1341,6 +1361,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             emergencyOverrideCoordinator.clear(sessionID: active.id)
             manualAwaitingSessionID = nil
             logger.log("Body Break skipped")
+            retryPendingAutomationStarts()
         } else {
             logger.log("Body Break skip denied")
         }
@@ -1366,6 +1387,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             emergencyOverrideCoordinator.clear(sessionID: active.id)
             clearActiveBodyBreakIdea(for: active)
             logger.log("Body Break postponed by end shortcut")
+            retryPendingAutomationStarts()
         } else if availability.canSkip, case .completed = engine.skipActive(now: now) {
             unregisterActiveBreakShortcut()
             unregisterEmergencyEscapeShortcut()
@@ -1374,6 +1396,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             manualAwaitingSessionID = nil
             clearActiveBodyBreakIdea(for: active)
             logger.log("Body Break skipped by end shortcut")
+            retryPendingAutomationStarts()
         } else {
             logger.log("Active rest end shortcut ignored because no action is available")
         }
@@ -1520,6 +1543,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             if shouldPlaySound {
                 playRestSound(settings.rule(for: completedSession.kind).finishSound)
             }
+            retryPendingAutomationStarts()
         } else {
             logger.log("Emergency override denied result=\(result)")
         }
@@ -1656,6 +1680,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     @objc private func resumeBreaks() {
         _ = engine.resume()
         logger.log("Breaks resumed")
+        retryPendingAutomationStarts()
         rebuildMenu()
     }
 
@@ -1762,6 +1787,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         overlayController.dismiss()
         manualAwaitingSessionID = nil
         bodyBreakIdeas.clearAll()
+        pendingAutomationStarts.clearAll()
         cancelAutomationTasks()
         logger.log("Schedule reset")
         rebuildMenu()
@@ -2118,7 +2144,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     private func runScheduledEyeGateAutomation(id: UUID) {
         automationTasks.removeValue(forKey: id)
-        takeEyeGateNow()
+        enqueuePendingAutomationStart(AutomationStartRequest(kind: .eyeGate))
     }
 
     private func scheduleBodyBreakAutomation(after delay: TimeInterval, idea: RestIdea?) {
@@ -2141,7 +2167,39 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     private func runScheduledBodyBreakAutomation(id: UUID, idea: RestIdea?) {
         automationTasks.removeValue(forKey: id)
-        startBodyBreakNow(idea: idea)
+        enqueuePendingAutomationStart(AutomationStartRequest(kind: .bodyBreak, bodyBreakIdea: idea))
+    }
+
+    private func enqueuePendingAutomationStart(_ request: AutomationStartRequest) {
+        pendingAutomationStarts.enqueue(request)
+        logger.log("Queued delayed \(request.kind.rawValue) automation start")
+        retryPendingAutomationStarts()
+    }
+
+    private func retryPendingAutomationStarts() {
+        while engine.state.activeSession == nil,
+              engine.state.pause == nil,
+              let request = pendingAutomationStarts.next {
+            let result: RestEngineResult
+            switch request.kind {
+            case .eyeGate:
+                result = startEyeGateNow(source: "Delayed automation")
+            case .bodyBreak:
+                result = startBodyBreakNow(idea: request.bodyBreakIdea, source: "Delayed automation")
+            }
+
+            switch AutomationStartRetryPolicy.decision(for: result) {
+            case .satisfied:
+                pendingAutomationStarts.remove(request)
+                return
+            case .keepPending:
+                logger.log("Delayed \(request.kind.rawValue) automation remains pending: \(result)")
+                return
+            case .discard:
+                pendingAutomationStarts.remove(request)
+                logger.log("Discarded delayed \(request.kind.rawValue) automation: \(result)")
+            }
+        }
     }
 
     private func cancelAutomationTasks() {
@@ -2216,6 +2274,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
         let result = engine.evaluate(now: now, context: context)
         handleEngineResult(result, now: now)
+        retryPendingAutomationStarts()
         refreshActiveBreakShortcut()
         refreshEmergencyEscapeShortcut()
         logger.log("System resume detected idleDuration=\(idleDuration) restIdleDuration=\(restIdleDuration)")
