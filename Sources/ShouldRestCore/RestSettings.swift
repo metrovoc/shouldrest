@@ -1,5 +1,22 @@
 import Foundation
 
+private enum SettingsNormalization {
+    static func atLeast(_ lowerBound: TimeInterval, _ value: TimeInterval) -> TimeInterval {
+        guard value.isFinite else { return lowerBound }
+        return max(lowerBound, value)
+    }
+
+    static func nonNegative(_ value: TimeInterval) -> TimeInterval {
+        guard value.isFinite else { return 0 }
+        return max(0, value)
+    }
+
+    static func clamped(_ value: Double, min lowerBound: Double, max upperBound: Double, fallback: Double) -> Double {
+        guard value.isFinite else { return fallback }
+        return min(upperBound, max(lowerBound, value))
+    }
+}
+
 public struct RestSettings: Codable, Equatable, Sendable {
     public var eyeGate: RestRule
     public var bodyBreak: RestRule
@@ -78,10 +95,28 @@ public struct RestSettings: Codable, Equatable, Sendable {
     }
 
     public func enforcingAtLeastOneEnabledRest() -> RestSettings {
-        guard !eyeGate.isEnabled, !bodyBreak.isEnabled else { return self }
-        var copy = self
+        var copy = normalized()
+        guard !copy.eyeGate.isEnabled, !copy.bodyBreak.isEnabled else { return copy }
         copy.eyeGate.isEnabled = true
         return copy
+    }
+
+    public func normalized() -> RestSettings {
+        RestSettings(
+            eyeGate: eyeGate.normalized(fallback: .eyeGateDefault),
+            bodyBreak: bodyBreak.normalized(fallback: .bodyBreakDefault),
+            bodyBreakAfterEyeGates: bodyBreakAfterEyeGates,
+            notifications: notifications.normalized(),
+            naturalBreaks: naturalBreaks.normalized(),
+            focusMode: focusMode,
+            workingHours: workingHours.normalized(),
+            appExclusions: appExclusions,
+            contentLibrary: contentLibrary,
+            presentation: presentation,
+            shortcuts: shortcuts,
+            operations: operations.normalized(),
+            admin: admin
+        )
     }
 
     public func normalizedForCurrentDesign() -> RestSettings {
@@ -127,8 +162,8 @@ public struct RestRule: Codable, Equatable, Sendable {
         finishSound: SoundPolicy
     ) {
         self.isEnabled = isEnabled
-        self.interval = max(1, interval)
-        self.duration = max(1, duration)
+        self.interval = SettingsNormalization.atLeast(1, interval)
+        self.duration = SettingsNormalization.atLeast(1, duration)
         self.ordinarySkipEnabled = ordinarySkipEnabled
         self.postpone = postpone
         self.manualFinishEnabled = manualFinishEnabled
@@ -169,6 +204,33 @@ public struct RestRule: Codable, Equatable, Sendable {
         startSound: .silent,
         finishSound: .named("crystal-glass", volume: 1)
     )
+
+    public func normalized(fallback: RestRule) -> RestRule {
+        RestRule(
+            isEnabled: isEnabled,
+            interval: interval,
+            duration: duration,
+            ordinarySkipEnabled: ordinarySkipEnabled,
+            postpone: postpone.normalized(),
+            manualFinishEnabled: manualFinishEnabled,
+            emergencyOverride: emergencyOverride.normalized(),
+            enforcement: enforcement.normalized(),
+            content: content,
+            colorHex: Self.normalizedColorHex(colorHex, fallback: fallback.colorHex),
+            startSound: startSound.normalized(),
+            finishSound: finishSound.normalized()
+        )
+    }
+
+    public static func normalizedColorHex(_ rawValue: String, fallback: String) -> String {
+        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        let body = trimmed.hasPrefix("#") ? String(trimmed.dropFirst()) : trimmed
+        guard body.count == 6,
+              body.allSatisfy(\.isHexDigit) else {
+            return fallback
+        }
+        return "#\(body.uppercased())"
+    }
 }
 
 public struct PostponePolicy: Codable, Equatable, Sendable {
@@ -184,9 +246,14 @@ public struct PostponePolicy: Codable, Equatable, Sendable {
         allowedDuringFirstPercent: Double
     ) {
         self.isEnabled = isEnabled
-        self.duration = max(1, duration)
+        self.duration = SettingsNormalization.atLeast(1, duration)
         self.maxCount = max(0, maxCount)
-        self.allowedDuringFirstPercent = min(100, max(0, allowedDuringFirstPercent))
+        self.allowedDuringFirstPercent = SettingsNormalization.clamped(
+            allowedDuringFirstPercent,
+            min: 0,
+            max: 100,
+            fallback: 0
+        )
     }
 
     public static let disabled = PostponePolicy(
@@ -195,6 +262,15 @@ public struct PostponePolicy: Codable, Equatable, Sendable {
         maxCount: 0,
         allowedDuringFirstPercent: 0
     )
+
+    public func normalized() -> PostponePolicy {
+        PostponePolicy(
+            isEnabled: isEnabled,
+            duration: duration,
+            maxCount: maxCount,
+            allowedDuringFirstPercent: allowedDuringFirstPercent
+        )
+    }
 }
 
 public struct EmergencyOverridePolicy: Codable, Equatable, Sendable {
@@ -225,6 +301,10 @@ public struct EmergencyOverridePolicy: Codable, Equatable, Sendable {
         isEnabled: false,
         confirmationSteps: 0
     )
+
+    public func normalized() -> EmergencyOverridePolicy {
+        EmergencyOverridePolicy(isEnabled: isEnabled, confirmationSteps: confirmationSteps)
+    }
 }
 
 public struct EnforcementProfile: Codable, Equatable, Sendable {
@@ -252,7 +332,7 @@ public struct EnforcementProfile: Codable, Equatable, Sendable {
         self.coversAllDisplays = coversAllDisplays
         self.usesScreenSaverLevel = usesScreenSaverLevel
         self.isOpaque = isOpaque
-        self.opacity = min(1, max(0, opacity))
+        self.opacity = SettingsNormalization.clamped(opacity, min: 0, max: 1, fallback: 1)
         self.allowRegularWindowMode = allowRegularWindowMode
         self.coveredDisplay = coveredDisplay
         self.contentDisplay = contentDisplay
@@ -279,6 +359,20 @@ public struct EnforcementProfile: Codable, Equatable, Sendable {
         contentDisplay: .all,
         blankSecondaryDisplays: false
     )
+
+    public func normalized() -> EnforcementProfile {
+        EnforcementProfile(
+            coversAllDisplays: coversAllDisplays,
+            usesScreenSaverLevel: usesScreenSaverLevel,
+            isOpaque: isOpaque,
+            opacity: opacity,
+            allowRegularWindowMode: allowRegularWindowMode,
+            coveredDisplay: coveredDisplay,
+            contentDisplay: contentDisplay,
+            blankSecondaryDisplays: blankSecondaryDisplays,
+            configuredDisplayIndex: configuredDisplayIndex
+        )
+    }
 }
 
 public enum DisplaySelection: String, Codable, Equatable, Sendable {
@@ -300,6 +394,15 @@ public enum RestContentPolicy: String, Codable, Equatable, Sendable {
 public enum SoundPolicy: Codable, Equatable, Sendable {
     case silent
     case named(String, volume: Double)
+
+    public func normalized() -> SoundPolicy {
+        switch self {
+        case .silent:
+            return .silent
+        case .named(let name, let volume):
+            return .named(name, volume: SettingsNormalization.clamped(volume, min: 0, max: 1, fallback: 1))
+        }
+    }
 }
 
 public struct NotificationSettings: Codable, Equatable, Sendable {
@@ -318,8 +421,8 @@ public struct NotificationSettings: Codable, Equatable, Sendable {
     ) {
         self.eyeGateEnabled = eyeGateEnabled
         self.bodyBreakEnabled = bodyBreakEnabled
-        self.eyeGateLeadTime = max(0, eyeGateLeadTime)
-        self.bodyBreakLeadTime = max(0, bodyBreakLeadTime)
+        self.eyeGateLeadTime = SettingsNormalization.nonNegative(eyeGateLeadTime)
+        self.bodyBreakLeadTime = SettingsNormalization.nonNegative(bodyBreakLeadTime)
         self.silentNotifications = silentNotifications
     }
 
@@ -348,6 +451,16 @@ public struct NotificationSettings: Codable, Equatable, Sendable {
             bodyBreakLeadTime
         }
     }
+
+    public func normalized() -> NotificationSettings {
+        NotificationSettings(
+            eyeGateEnabled: eyeGateEnabled,
+            bodyBreakEnabled: bodyBreakEnabled,
+            eyeGateLeadTime: eyeGateLeadTime,
+            bodyBreakLeadTime: bodyBreakLeadTime,
+            silentNotifications: silentNotifications
+        )
+    }
 }
 
 public struct NaturalBreakSettings: Codable, Equatable, Sendable {
@@ -356,13 +469,17 @@ public struct NaturalBreakSettings: Codable, Equatable, Sendable {
 
     public init(isEnabled: Bool, inactivityResetTime: TimeInterval) {
         self.isEnabled = isEnabled
-        self.inactivityResetTime = max(1, inactivityResetTime)
+        self.inactivityResetTime = SettingsNormalization.atLeast(1, inactivityResetTime)
     }
 
     public static let defaults = NaturalBreakSettings(
         isEnabled: true,
         inactivityResetTime: 5 * 60
     )
+
+    public func normalized() -> NaturalBreakSettings {
+        NaturalBreakSettings(isEnabled: isEnabled, inactivityResetTime: inactivityResetTime)
+    }
 }
 
 public struct FocusModeSettings: Codable, Equatable, Sendable {
@@ -417,6 +534,14 @@ public struct WorkingHoursSettings: Codable, Equatable, Sendable {
             return minute >= startMinuteOfDay && minute < endMinuteOfDay
         }
         return minute >= startMinuteOfDay || minute < endMinuteOfDay
+    }
+
+    public func normalized() -> WorkingHoursSettings {
+        WorkingHoursSettings(
+            isEnabled: isEnabled,
+            startMinuteOfDay: startMinuteOfDay,
+            endMinuteOfDay: endMinuteOfDay
+        )
     }
 }
 
@@ -628,7 +753,9 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
         self.showOnboardingOnNextLaunch = showOnboardingOnNextLaunch
         self.pauseUntilMorningHour = pauseUntilMorningHour.map(Self.normalizedMorningHour)
         self.pauseUntilMorningMode = pauseUntilMorningMode
-        self.pauseUntilMorningLatitude = pauseUntilMorningLatitude.map { min(89.8, max(-89.8, $0)) }
+        self.pauseUntilMorningLatitude = pauseUntilMorningLatitude.map {
+            SettingsNormalization.clamped($0, min: -89.8, max: 89.8, fallback: 0)
+        }
         self.pauseUntilMorningLongitude = pauseUntilMorningLongitude.map(Self.normalizedLongitude)
         self.pauseForSuspendOrLock = pauseForSuspendOrLock
     }
@@ -661,6 +788,22 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
 
     public var resolvedShowOnboardingOnNextLaunch: Bool {
         showOnboardingOnNextLaunch ?? false
+    }
+
+    public func normalized() -> OperationsSettings {
+        OperationsSettings(
+            openAtLogin: openAtLogin,
+            checkForUpdates: checkForUpdates,
+            notifyNewVersion: notifyNewVersion,
+            updateFeedURL: updateFeedURL,
+            hasCompletedOnboarding: hasCompletedOnboarding,
+            showOnboardingOnNextLaunch: showOnboardingOnNextLaunch,
+            pauseUntilMorningHour: pauseUntilMorningHour,
+            pauseUntilMorningMode: pauseUntilMorningMode,
+            pauseUntilMorningLatitude: pauseUntilMorningLatitude,
+            pauseUntilMorningLongitude: pauseUntilMorningLongitude,
+            pauseForSuspendOrLock: pauseForSuspendOrLock
+        )
     }
 
     public func secondsUntilMorning(from now: Date = Date(), calendar: Calendar = .current) -> TimeInterval {

@@ -177,14 +177,14 @@ public struct RestEngine: Equatable, Sendable {
     private var hasCreditedNaturalRestInCurrentIdleEpisode: Bool
 
     public init(settings: RestSettings = .defaults, now: Date = Date()) {
-        self.settings = settings.enforcingAtLeastOneEnabledRest()
+        self.settings = settings.normalizedForCurrentDesign()
         self.state = RestEngineState()
         self.hasCreditedNaturalRestInCurrentIdleEpisode = false
         scheduleNextRest(from: now)
     }
 
     public mutating func updateSettings(_ settings: RestSettings, now: Date = Date()) {
-        let enforcedSettings = settings.enforcingAtLeastOneEnabledRest()
+        let enforcedSettings = settings.normalizedForCurrentDesign()
         self.settings = enforcedSettings
         if !enforcedSettings.naturalBreaks.isEnabled {
             hasCreditedNaturalRestInCurrentIdleEpisode = false

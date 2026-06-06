@@ -578,6 +578,59 @@ final class RestEngineTests: XCTestCase {
         XCTAssertFalse(loaded.bodyBreak.isEnabled)
     }
 
+    func testSettingsStoreNormalizesUnsafeDecodedSettingsAndPersistsMigration() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let url = directory.appendingPathComponent("settings.json")
+        let store = SettingsStore(fileURL: url)
+
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try unsafeSettingsData().write(to: url, options: [.atomic])
+
+        let loaded = try store.load()
+
+        XCTAssertEqual(loaded.bodyBreakAfterEyeGates, 1)
+        XCTAssertEqual(loaded.eyeGate.interval, 1)
+        XCTAssertEqual(loaded.eyeGate.duration, 1)
+        XCTAssertEqual(loaded.notifications.eyeGateLeadTime, 0)
+        XCTAssertEqual(loaded.notifications.bodyBreakLeadTime, 0)
+        XCTAssertEqual(loaded.naturalBreaks.inactivityResetTime, 1)
+        XCTAssertEqual(loaded.workingHours.startMinuteOfDay, 0)
+        XCTAssertEqual(loaded.workingHours.endMinuteOfDay, 1_439)
+        XCTAssertEqual(loaded.bodyBreak.colorHex, RestRule.bodyBreakDefault.colorHex)
+        XCTAssertEqual(loaded.bodyBreak.postpone.duration, 1)
+        XCTAssertEqual(loaded.bodyBreak.postpone.maxCount, 0)
+        XCTAssertEqual(loaded.bodyBreak.postpone.allowedDuringFirstPercent, 100)
+        XCTAssertEqual(loaded.bodyBreak.enforcement.opacity, 1)
+        XCTAssertEqual(loaded.bodyBreak.enforcement.configuredDisplayIndex, 0)
+        XCTAssertEqual(loaded.bodyBreak.startSound, .named("crystal-glass", volume: 1))
+        XCTAssertEqual(loaded.bodyBreak.finishSound, .named("crystal-glass", volume: 0))
+        XCTAssertEqual(loaded.operations.resolvedPauseUntilMorningHour, 23)
+        XCTAssertEqual(loaded.operations.pauseUntilMorningLatitude, 89.8)
+        XCTAssertEqual(loaded.operations.pauseUntilMorningLongitude, -80)
+
+        let migrated = try JSONDecoder().decode(RestSettings.self, from: Data(contentsOf: url))
+        XCTAssertEqual(migrated, loaded)
+    }
+
+    func testRestEngineNormalizesUnsafeSettingsBeforeScheduling() {
+        var settings = RestSettings.defaults
+        settings.eyeGate.interval = 0
+        settings.eyeGate.duration = -20
+        settings.bodyBreakAfterEyeGates = 0
+        settings.bodyBreak.enforcement.opacity = 2
+        settings.notifications.eyeGateLeadTime = -10
+
+        let engine = RestEngine(settings: settings, now: start)
+
+        XCTAssertEqual(engine.settings.eyeGate.interval, 1)
+        XCTAssertEqual(engine.settings.eyeGate.duration, 1)
+        XCTAssertEqual(engine.settings.bodyBreakAfterEyeGates, 1)
+        XCTAssertEqual(engine.settings.bodyBreak.enforcement.opacity, 1)
+        XCTAssertEqual(engine.settings.notifications.eyeGateLeadTime, 0)
+        XCTAssertEqual(engine.state.scheduled?.dueAt, start.addingTimeInterval(1))
+    }
+
     func testSettingsStoreMigratesLegacyEmergencyConfirmationSteps() throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -864,5 +917,54 @@ final class RestEngineTests: XCTestCase {
         emergencyOverride["minimumHoldDuration"] = hold
         rule["emergencyOverride"] = emergencyOverride
         object[ruleKey] = rule
+    }
+
+    private func unsafeSettingsData() throws -> Data {
+        let data = try JSONEncoder().encode(RestSettings.defaults)
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+        object["bodyBreakAfterEyeGates"] = 0
+
+        var eyeGate = try XCTUnwrap(object["eyeGate"] as? [String: Any])
+        eyeGate["interval"] = 0
+        eyeGate["duration"] = -20
+        object["eyeGate"] = eyeGate
+
+        var bodyBreak = try XCTUnwrap(object["bodyBreak"] as? [String: Any])
+        bodyBreak["colorHex"] = "not-a-color"
+        var bodyPostpone = try XCTUnwrap(bodyBreak["postpone"] as? [String: Any])
+        bodyPostpone["duration"] = 0
+        bodyPostpone["maxCount"] = -4
+        bodyPostpone["allowedDuringFirstPercent"] = 250
+        bodyBreak["postpone"] = bodyPostpone
+        var bodyEnforcement = try XCTUnwrap(bodyBreak["enforcement"] as? [String: Any])
+        bodyEnforcement["opacity"] = 2
+        bodyEnforcement["configuredDisplayIndex"] = -8
+        bodyBreak["enforcement"] = bodyEnforcement
+        bodyBreak["startSound"] = ["named": ["_0": "crystal-glass", "volume": 5]]
+        bodyBreak["finishSound"] = ["named": ["_0": "crystal-glass", "volume": -2]]
+        object["bodyBreak"] = bodyBreak
+
+        var notifications = try XCTUnwrap(object["notifications"] as? [String: Any])
+        notifications["eyeGateLeadTime"] = -10
+        notifications["bodyBreakLeadTime"] = -30
+        object["notifications"] = notifications
+
+        var naturalBreaks = try XCTUnwrap(object["naturalBreaks"] as? [String: Any])
+        naturalBreaks["inactivityResetTime"] = 0
+        object["naturalBreaks"] = naturalBreaks
+
+        var workingHours = try XCTUnwrap(object["workingHours"] as? [String: Any])
+        workingHours["startMinuteOfDay"] = -1
+        workingHours["endMinuteOfDay"] = 2_000
+        object["workingHours"] = workingHours
+
+        var operations = try XCTUnwrap(object["operations"] as? [String: Any])
+        operations["pauseUntilMorningHour"] = 99
+        operations["pauseUntilMorningLatitude"] = 120
+        operations["pauseUntilMorningLongitude"] = 1_000
+        object["operations"] = operations
+
+        return try JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys])
     }
 }
