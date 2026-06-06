@@ -307,6 +307,41 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertEqual(ideasCopy.accessibilityHelp(), L10n.tr("prefs.copyIdeasBulkEditorDisabledBodyOffHelp"))
     }
 
+    func testAdvancedAppRulesSaveNormalizedMatchTerms() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "alpha",
+                name: "Alpha",
+                matchTerms: ["alpha.app"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let editor = try XCTUnwrap(view(withIdentifier: "appExclusionsJSONEditor", in: contentView) as? NSTextView)
+
+        editor.string = """
+        [
+          {
+            "id": "dirty",
+            "name": "Dirty",
+            "matchTerms": ["", "  ", " Zoom "],
+            "mode": "pauseWhenMatched",
+            "appliesTo": ["bodyBreak"],
+            "isEnabled": true
+          }
+        ]
+        """
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: editor))
+
+        XCTAssertTrue(controller.flushPendingAutosave(showAlerts: false))
+        XCTAssertEqual(savedSettings.value?.appExclusions.first?.matchTerms, ["Zoom"])
+    }
+
     func testAdvancedJSONLoadsPrettyPrintedMultilineContent() throws {
         var settings = RestSettings.defaults
         settings.appExclusions = [

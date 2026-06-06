@@ -839,16 +839,17 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
         if let active = engine.state.activeSession, active.kind == .bodyBreak {
             let now = Date()
+            let availability = activeRestActionAvailability(for: active, now: now)
             var addedBodyAction = false
-            if canPostponeBodyBreak(active, now: now) {
+            if availability.canPostpone {
                 menu.addItem(actionItem(L10n.tr("menu.postponeBodyBreak"), #selector(postponeBodyBreak)))
                 addedBodyAction = true
             }
-            if now.timeIntervalSince(active.startedAt) >= active.duration {
+            if availability.canFinish {
                 menu.addItem(actionItem(L10n.tr("menu.finishBodyBreak"), #selector(finishActiveBreak)))
                 addedBodyAction = true
             }
-            if canSkipBodyBreak(active, now: now) {
+            if availability.canSkip {
                 menu.addItem(actionItem(L10n.tr("menu.skipBodyBreak"), #selector(skipBodyBreak)))
                 addedBodyAction = true
             }
@@ -1068,6 +1069,15 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         return !canPostponeBodyBreak(session, now: now)
     }
 
+    private func activeRestActionAvailability(for session: RestSession, now: Date) -> OverlayActionAvailability {
+        ActiveRestActionPolicy.availability(
+            for: session,
+            now: now,
+            canPostponeBodyBreak: canPostponeBodyBreak(session, now: now),
+            canSkipBodyBreak: canSkipBodyBreak(session, now: now)
+        )
+    }
+
     private func canEmergencyOverrideEyeGate(_ session: RestSession, now: Date) -> Bool {
         EmergencyOverrideCoordinator.isAvailable(
             session: session,
@@ -1084,12 +1094,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func overlayBodyActions(for session: RestSession, now: Date) -> BodyOverlayActions? {
-        let availability = OverlayActionPolicy.availability(
-            for: session,
-            now: now,
-            canPostponeBodyBreak: canPostponeBodyBreak(session, now: now),
-            canSkipBodyBreak: canSkipBodyBreak(session, now: now)
-        )
+        let availability = activeRestActionAvailability(for: session, now: now)
 
         switch session.kind {
         case .eyeGate:
@@ -1172,27 +1177,35 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func postponeBodyBreak() {
-        let active = engine.state.activeSession
-        if case .postponed = engine.postponeActive() {
+        guard let active = engine.state.activeSession else { return }
+        let now = Date()
+        guard activeRestActionAvailability(for: active, now: now).canPostpone else {
+            logger.log("Body Break postpone denied by policy")
+            rebuildMenu()
+            return
+        }
+        if case .postponed = engine.postponeActive(now: now) {
             unregisterActiveBreakShortcut()
             unregisterEmergencyEscapeShortcut()
             overlayController.dismiss()
-            if let active {
-                emergencyOverrideCoordinator.clear(sessionID: active.id)
-                clearActiveBodyBreakIdea(for: active)
-            }
+            emergencyOverrideCoordinator.clear(sessionID: active.id)
+            clearActiveBodyBreakIdea(for: active)
             logger.log("Body Break postponed")
         }
         rebuildMenu()
     }
 
     @objc private func finishActiveBreak() {
+        finishActiveBreakIfAvailable(now: Date())
+    }
+
+    private func finishActiveBreakIfAvailable(now: Date) {
         guard let active = engine.state.activeSession else { return }
-        if Date().timeIntervalSince(active.startedAt) < active.duration {
-            logger.log("Ignored early finish for \(active.kind.rawValue)")
+        guard activeRestActionAvailability(for: active, now: now).canFinish else {
+            logger.log("Ignored unavailable finish for \(active.kind.rawValue)")
             return
         }
-        if case .completed = engine.completeActive(reason: .manual) {
+        if case .completed = engine.completeActive(now: now, reason: .manual) {
             releaseActiveRestSurface(for: active)
             logger.log("Manually finished \(active.kind.rawValue)")
             playRestSound(settings.rule(for: active.kind).finishSound)
@@ -1202,12 +1215,13 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func skipBodyBreak() {
         guard let active = engine.state.activeSession else { return }
-        guard canSkipBodyBreak(active, now: Date()) else {
+        let now = Date()
+        guard activeRestActionAvailability(for: active, now: now).canSkip else {
             logger.log("Body Break skip denied by policy")
             rebuildMenu()
             return
         }
-        if case .completed = engine.skipActive() {
+        if case .completed = engine.skipActive(now: now) {
             unregisterActiveBreakShortcut()
             unregisterEmergencyEscapeShortcut()
             clearActiveBodyBreakIdea(for: active)
@@ -1224,24 +1238,23 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     @objc private func endActiveBreakFromShortcut() {
         let now = Date()
         guard let active = engine.state.activeSession else { return }
+        let availability = activeRestActionAvailability(for: active, now: now)
 
-        if now.timeIntervalSince(active.startedAt) >= active.duration {
-            if active.kind == .bodyBreak || active.manualFinishEnabled {
-                finishActiveBreak()
-            }
+        if availability.canFinish {
+            finishActiveBreakIfAvailable(now: now)
             return
         }
 
         guard active.kind == .bodyBreak else { return }
 
-        if case .postponed = engine.postponeActive(now: now) {
+        if availability.canPostpone, case .postponed = engine.postponeActive(now: now) {
             unregisterActiveBreakShortcut()
             unregisterEmergencyEscapeShortcut()
             overlayController.dismiss()
             emergencyOverrideCoordinator.clear(sessionID: active.id)
             clearActiveBodyBreakIdea(for: active)
             logger.log("Body Break postponed by end shortcut")
-        } else if case .completed = engine.skipActive(now: now) {
+        } else if availability.canSkip, case .completed = engine.skipActive(now: now) {
             unregisterActiveBreakShortcut()
             unregisterEmergencyEscapeShortcut()
             overlayController.dismiss()
@@ -1249,6 +1262,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             manualAwaitingSessionID = nil
             clearActiveBodyBreakIdea(for: active)
             logger.log("Body Break skipped by end shortcut")
+        } else {
+            logger.log("Active rest end shortcut ignored because no action is available")
         }
         rebuildMenu()
     }
@@ -1452,7 +1467,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     private func refreshActiveBreakShortcut() {
         guard let active = engine.state.activeSession,
-              active.kind == .bodyBreak || active.manualFinishEnabled else {
+              activeRestActionAvailability(for: active, now: Date()).hasAvailableAction else {
             unregisterActiveBreakShortcut()
             return
         }
@@ -1784,14 +1799,15 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func applySettings(_ nextSettings: RestSettings) {
+        let normalizedSettings = nextSettings.normalizedForCurrentDesign()
         let shouldRefreshVisiblePreferences = PreferencesLanguageRefreshPolicy.shouldRefreshPreferences(
             previousSettings: settings,
-            nextSettings: nextSettings,
+            nextSettings: normalizedSettings,
             isPreferencesWindowVisible: preferencesWindowController?.window?.isVisible == true
         )
         let preferencesFrame = shouldRefreshVisiblePreferences ? preferencesWindowController?.window?.frame : nil
-        settings = nextSettings
-        engine.updateSettings(nextSettings)
+        settings = normalizedSettings
+        engine.updateSettings(normalizedSettings)
         applyLanguageSetting()
         applyAppearanceSetting()
         applyOpenAtLoginSetting()
@@ -1801,7 +1817,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         refreshEmergencyEscapeShortcut()
         scheduleAutomaticUpdateCheck()
         do {
-            try settingsStore.save(nextSettings)
+            try settingsStore.save(normalizedSettings)
             logger.log("Preferences saved")
         } catch {
             logger.log("Preferences save failed: \(error.localizedDescription)")
@@ -2315,9 +2331,13 @@ struct OverlayActionAvailability: Equatable {
     var canPostpone: Bool
     var canFinish: Bool
     var canSkip: Bool
+
+    var hasAvailableAction: Bool {
+        canPostpone || canFinish || canSkip
+    }
 }
 
-enum OverlayActionPolicy {
+enum ActiveRestActionPolicy {
     static func availability(
         for session: RestSession,
         now: Date,
@@ -2629,7 +2649,9 @@ final class OverlayWindow: NSWindow {
 
     func configureBackdrop(session: RestSession, settings: RestSettings) {
         let rule = settings.rule(for: session.kind)
-        let color = NSColor(hex: rule.colorHex).withAlphaComponent(rule.enforcement.opacity)
+        let fallbackColor = RestSettings.defaults.rule(for: session.kind).colorHex
+        let color = NSColor(hex: rule.colorHex, fallback: fallbackColor)
+            .withAlphaComponent(rule.enforcement.opacity)
         backgroundColor = color
         isOpaque = rule.enforcement.isOpaque && rule.enforcement.opacity >= 1
     }
@@ -3004,7 +3026,10 @@ final class RestOverlayView: NSView {
         bodyActions: BodyOverlayActions? = nil
     ) {
         let rule = settings.rule(for: session.kind)
-        layer?.backgroundColor = NSColor(hex: rule.colorHex).withAlphaComponent(rule.enforcement.opacity).cgColor
+        let fallbackColor = RestSettings.defaults.rule(for: session.kind).colorHex
+        layer?.backgroundColor = NSColor(hex: rule.colorHex, fallback: fallbackColor)
+            .withAlphaComponent(rule.enforcement.opacity)
+            .cgColor
         self.bodyActions = bodyActions
         let canUseEmergencyOverride = isEmergencyOverrideAvailable && !(manualAwaiting && session.kind == .eyeGate)
         configureEmergencyButton(
@@ -3544,17 +3569,28 @@ enum RunningApplications {
         guard rule.isEnabled else { return false }
         let running = NSWorkspace.shared.runningApplications
         return running.contains { app in
-            let candidates = [
-                app.localizedName,
-                app.bundleIdentifier,
-                app.executableURL?.lastPathComponent,
-                app.executableURL?.path
-            ].compactMap { $0?.lowercased() }
+            matches(
+                rule: rule,
+                candidates: [
+                    app.localizedName,
+                    app.bundleIdentifier,
+                    app.executableURL?.lastPathComponent,
+                    app.executableURL?.path
+                ].compactMap { $0 }
+            )
+        }
+    }
 
-            return rule.matchTerms.contains { term in
-                let needle = term.lowercased()
-                return candidates.contains { $0.contains(needle) }
-            }
+    static func matches(rule: AppExclusionRule, candidates: [String]) -> Bool {
+        guard rule.isEnabled else { return false }
+        let normalizedTerms = rule.matchTerms
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+            .filter { !$0.isEmpty }
+        guard !normalizedTerms.isEmpty else { return false }
+
+        let normalizedCandidates = candidates.map { $0.lowercased() }
+        return normalizedTerms.contains { term in
+            normalizedCandidates.contains { $0.contains(term) }
         }
     }
 }
@@ -3620,11 +3656,13 @@ extension ShouldRestAppDelegate: UNUserNotificationCenterDelegate {
 }
 
 extension NSColor {
-    convenience init(hex: String) {
-        let trimmed = hex.trimmingCharacters(in: CharacterSet(charactersIn: "#"))
-        let scanner = Scanner(string: trimmed)
-        var value: UInt64 = 0
-        scanner.scanHexInt64(&value)
+    convenience init(hex: String, fallback: String = "#000000") {
+        let normalized = RestRule.normalizedColorHex(
+            hex,
+            fallback: RestRule.normalizedColorHex(fallback, fallback: "#000000")
+        )
+        let body = String(normalized.dropFirst())
+        let value = UInt64(body, radix: 16) ?? 0
 
         let red = CGFloat((value & 0xFF0000) >> 16) / 255
         let green = CGFloat((value & 0x00FF00) >> 8) / 255

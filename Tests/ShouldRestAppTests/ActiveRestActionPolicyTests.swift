@@ -3,7 +3,7 @@ import ShouldRestCore
 import XCTest
 @testable import shouldrest
 
-final class OverlayActionPolicyTests: XCTestCase {
+final class ActiveRestActionPolicyTests: XCTestCase {
     func testEyeGateManualFinishShowsOnlyFinishAfterDuration() {
         let start = Date()
         let session = RestSession(
@@ -15,7 +15,7 @@ final class OverlayActionPolicyTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            OverlayActionPolicy.availability(
+            ActiveRestActionPolicy.availability(
                 for: session,
                 now: start.addingTimeInterval(19),
                 canPostponeBodyBreak: true,
@@ -24,7 +24,7 @@ final class OverlayActionPolicyTests: XCTestCase {
             OverlayActionAvailability(canPostpone: false, canFinish: false, canSkip: false)
         )
         XCTAssertEqual(
-            OverlayActionPolicy.availability(
+            ActiveRestActionPolicy.availability(
                 for: session,
                 now: start.addingTimeInterval(20),
                 canPostponeBodyBreak: true,
@@ -45,7 +45,7 @@ final class OverlayActionPolicyTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            OverlayActionPolicy.availability(
+            ActiveRestActionPolicy.availability(
                 for: session,
                 now: start.addingTimeInterval(60),
                 canPostponeBodyBreak: true,
@@ -66,7 +66,7 @@ final class OverlayActionPolicyTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            OverlayActionPolicy.availability(
+            ActiveRestActionPolicy.availability(
                 for: session,
                 now: start.addingTimeInterval(10),
                 canPostponeBodyBreak: true,
@@ -75,7 +75,7 @@ final class OverlayActionPolicyTests: XCTestCase {
             OverlayActionAvailability(canPostpone: true, canFinish: false, canSkip: false)
         )
         XCTAssertEqual(
-            OverlayActionPolicy.availability(
+            ActiveRestActionPolicy.availability(
                 for: session,
                 now: start.addingTimeInterval(10),
                 canPostponeBodyBreak: false,
@@ -84,7 +84,7 @@ final class OverlayActionPolicyTests: XCTestCase {
             OverlayActionAvailability(canPostpone: false, canFinish: false, canSkip: true)
         )
         XCTAssertEqual(
-            OverlayActionPolicy.availability(
+            ActiveRestActionPolicy.availability(
                 for: session,
                 now: start.addingTimeInterval(60),
                 canPostponeBodyBreak: true,
@@ -105,7 +105,7 @@ final class OverlayActionPolicyTests: XCTestCase {
         )
 
         XCTAssertEqual(
-            OverlayActionPolicy.availability(
+            ActiveRestActionPolicy.availability(
                 for: session,
                 now: start.addingTimeInterval(60),
                 canPostponeBodyBreak: true,
@@ -113,5 +113,36 @@ final class OverlayActionPolicyTests: XCTestCase {
             ),
             OverlayActionAvailability(canPostpone: false, canFinish: false, canSkip: false)
         )
+        XCTAssertFalse(
+            ActiveRestActionPolicy.availability(
+                for: session,
+                now: start.addingTimeInterval(60),
+                canPostponeBodyBreak: true,
+                canSkipBodyBreak: true
+            ).hasAvailableAction
+        )
+    }
+
+    func testAvailabilityReportsWhetherAnyActionCanRun() {
+        XCTAssertFalse(OverlayActionAvailability(
+            canPostpone: false,
+            canFinish: false,
+            canSkip: false
+        ).hasAvailableAction)
+        XCTAssertTrue(OverlayActionAvailability(
+            canPostpone: true,
+            canFinish: false,
+            canSkip: false
+        ).hasAvailableAction)
+        XCTAssertTrue(OverlayActionAvailability(
+            canPostpone: false,
+            canFinish: true,
+            canSkip: false
+        ).hasAvailableAction)
+        XCTAssertTrue(OverlayActionAvailability(
+            canPostpone: false,
+            canFinish: false,
+            canSkip: true
+        ).hasAvailableAction)
     }
 }

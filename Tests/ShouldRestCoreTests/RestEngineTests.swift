@@ -608,6 +608,7 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(loaded.operations.resolvedPauseUntilMorningHour, 23)
         XCTAssertEqual(loaded.operations.pauseUntilMorningLatitude, 89.8)
         XCTAssertEqual(loaded.operations.pauseUntilMorningLongitude, -80)
+        XCTAssertEqual(loaded.appExclusions.first?.matchTerms, ["Zoom"])
 
         let migrated = try JSONDecoder().decode(RestSettings.self, from: Data(contentsOf: url))
         XCTAssertEqual(migrated, loaded)
@@ -958,6 +959,15 @@ final class RestEngineTests: XCTestCase {
         workingHours["startMinuteOfDay"] = -1
         workingHours["endMinuteOfDay"] = 2_000
         object["workingHours"] = workingHours
+
+        object["appExclusions"] = [[
+            "id": "empty-term-rule",
+            "name": "Empty term rule",
+            "matchTerms": ["", "  ", " Zoom "],
+            "mode": "pauseWhenMatched",
+            "appliesTo": ["bodyBreak"],
+            "isEnabled": true
+        ]]
 
         var operations = try XCTUnwrap(object["operations"] as? [String: Any])
         operations["pauseUntilMorningHour"] = 99

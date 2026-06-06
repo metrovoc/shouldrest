@@ -771,7 +771,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let nowProvider: () -> Date
 
     init(settings: RestSettings, nowProvider: @escaping () -> Date = Date.init, onSave: @escaping (RestSettings) -> Void) {
-        self.settings = settings
+        self.settings = settings.normalizedForCurrentDesign()
         self.onSave = onSave
         self.nowProvider = nowProvider
 
@@ -800,7 +800,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     func update(settings: RestSettings) {
-        self.settings = settings
+        self.settings = settings.normalizedForCurrentDesign()
         loadSettings()
     }
 
@@ -2671,7 +2671,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         eyeEnabled.state = state(settings.eyeGate.isEnabled)
         eyeInterval.stringValue = String(Int(settings.eyeGate.interval / 60))
         eyeDuration.stringValue = String(Int(settings.eyeGate.duration))
-        eyeColor.color = NSColor(hex: settings.eyeGate.colorHex)
+        eyeColor.color = NSColor(hex: settings.eyeGate.colorHex, fallback: RestSettings.defaults.eyeGate.colorHex)
         eyeNotify.state = state(settings.notifications.eyeGateEnabled)
         eyeLead.stringValue = String(Int(settings.notifications.eyeGateLeadTime))
         eyeManualFinish.state = state(settings.eyeGate.manualFinishEnabled)
@@ -2681,7 +2681,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         bodyInterval.stringValue = String(Int(settings.bodyBreak.interval / 60))
         bodyDuration.stringValue = String(Int(settings.bodyBreak.duration / 60))
         bodyAfterEyeGates.stringValue = String(settings.bodyBreakAfterEyeGates)
-        bodyColor.color = NSColor(hex: settings.bodyBreak.colorHex)
+        bodyColor.color = NSColor(hex: settings.bodyBreak.colorHex, fallback: RestSettings.defaults.bodyBreak.colorHex)
         bodyNotify.state = state(settings.notifications.bodyBreakEnabled)
         bodyLead.stringValue = String(Int(settings.notifications.bodyBreakLeadTime))
         bodyPostponeMinutes.stringValue = String(Int(settings.bodyBreak.postpone.duration / 60))
@@ -2928,9 +2928,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         next.admin.hideStrictPreferences = isOn(hideStrictPreferences)
         next.admin.customPreferencesMessage = customPreferencesMessage.stringValue
 
-        settings = next
+        let normalized = next.normalizedForCurrentDesign()
+        settings = normalized
         applyAdminVisibility()
-        onSave(next)
+        onSave(normalized)
         let successfulSaveStatus = pendingSuccessfulSaveStatus ?? .saved
         pendingSuccessfulSaveStatus = nil
         setSaveStatus(successfulSaveStatus)

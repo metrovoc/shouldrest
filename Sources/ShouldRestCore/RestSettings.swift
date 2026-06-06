@@ -110,7 +110,7 @@ public struct RestSettings: Codable, Equatable, Sendable {
             naturalBreaks: naturalBreaks.normalized(),
             focusMode: focusMode,
             workingHours: workingHours.normalized(),
-            appExclusions: appExclusions,
+            appExclusions: appExclusions.map { $0.normalized() },
             contentLibrary: contentLibrary,
             presentation: presentation,
             shortcuts: shortcuts,
@@ -572,6 +572,19 @@ public struct AppExclusionRule: Codable, Equatable, Identifiable, Sendable {
         self.mode = mode
         self.appliesTo = appliesTo
         self.isEnabled = isEnabled
+    }
+
+    public func normalized() -> AppExclusionRule {
+        AppExclusionRule(
+            id: id,
+            name: name,
+            matchTerms: matchTerms
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty },
+            mode: mode,
+            appliesTo: appliesTo,
+            isEnabled: isEnabled
+        )
     }
 }
 
