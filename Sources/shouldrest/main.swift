@@ -1740,9 +1740,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     ) {
         if preferencesWindowController == nil {
             preferencesWindowController = PreferencesWindowController(settings: settings) { [weak self] nextSettings in
-                Task { @MainActor in
-                    self?.applySettings(nextSettings)
-                }
+                try self?.applySettings(nextSettings)
             }
         }
         preferencesWindowController?.update(settings: settings)
@@ -1783,10 +1781,16 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func completeOnboarding(rhythmPreset: RestRhythmPreset, openPreferences shouldOpenPreferences: Bool) {
-        rhythmPreset.apply(to: &settings)
-        settings.operations.hasCompletedOnboarding = true
-        settings.operations.showOnboardingOnNextLaunch = false
-        applySettings(settings)
+        var nextSettings = settings
+        rhythmPreset.apply(to: &nextSettings)
+        nextSettings.operations.hasCompletedOnboarding = true
+        nextSettings.operations.showOnboardingOnNextLaunch = false
+        do {
+            try applySettings(nextSettings)
+        } catch {
+            logger.log("Onboarding preferences save failed: \(error.localizedDescription)")
+            return
+        }
         logger.log("Onboarding completed")
         if shouldOpenPreferences {
             openPreferences()
@@ -1871,7 +1875,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func applySettings(_ nextSettings: RestSettings) {
+    private func applySettings(_ nextSettings: RestSettings) throws {
         let normalizedSettings = nextSettings.normalizedForCurrentDesign()
         let shouldRefreshVisiblePreferences = PreferencesLanguageRefreshPolicy.shouldRefreshPreferences(
             previousSettings: settings,
@@ -1879,6 +1883,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             isPreferencesWindowVisible: preferencesWindowController?.window?.isVisible == true
         )
         let preferencesFrame = shouldRefreshVisiblePreferences ? preferencesWindowController?.window?.frame : nil
+        try settingsStore.save(normalizedSettings)
         settings = normalizedSettings
         engine.updateSettings(normalizedSettings)
         applyLanguageSetting()
@@ -1889,12 +1894,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         refreshActiveBreakShortcut()
         refreshEmergencyEscapeShortcut()
         scheduleAutomaticUpdateCheck()
-        do {
-            try settingsStore.save(normalizedSettings)
-            logger.log("Preferences saved")
-        } catch {
-            logger.log("Preferences save failed: \(error.localizedDescription)")
-        }
+        logger.log("Preferences saved")
         rebuildMenu()
         if shouldRefreshVisiblePreferences {
             refreshPreferencesWindowAfterLanguageChange(restoringFrame: preferencesFrame)

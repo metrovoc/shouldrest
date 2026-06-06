@@ -569,6 +569,8 @@
 "prefs.autosaveMenuBarShown" = "Menu bar icon restored";
 "prefs.autosaveEmergencyExitEnabled" = "Emergency Exit enabled";
 "prefs.autosaveEmergencyExitDisabled" = "Emergency Exit disabled during Eye Gate";
+"prefs.autosaveSaveFailed" = "Could not save settings";
+"prefs.autosaveSaveFailedHelp" = "Settings are still pending. Details: %@";
 "prefs.autosaveInvalid" = "Fix import text to save";
 "prefs.autosaveInvalidField" = "Fix %@ to save";
 "prefs.searchPlaceholder" = "Find a setting";

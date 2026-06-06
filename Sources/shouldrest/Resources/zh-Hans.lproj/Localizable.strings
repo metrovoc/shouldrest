@@ -569,6 +569,8 @@
 "prefs.autosaveMenuBarShown" = "菜单栏图标已恢复";
 "prefs.autosaveEmergencyExitEnabled" = "紧急退出已启用";
 "prefs.autosaveEmergencyExitDisabled" = "护眼休息期间紧急退出已关闭";
+"prefs.autosaveSaveFailed" = "设置未能保存";
+"prefs.autosaveSaveFailedHelp" = "设置仍在等待保存。详情：%@";
 "prefs.autosaveInvalid" = "修复导入文本后保存";
 "prefs.autosaveInvalidField" = "修复%@后保存";
 "prefs.searchPlaceholder" = "查找设置";

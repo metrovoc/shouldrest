@@ -253,6 +253,7 @@ private enum PreferencesSaveStatus {
     case menuBarShown
     case emergencyExitEnabled
     case emergencyExitDisabled
+    case saveFailed
     case invalid
 }
 
@@ -521,7 +522,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private static let defaultUpdateFeedURL = RestSettings.defaults.operations.updateFeedURL
 
     private var settings: RestSettings
-    private let onSave: (RestSettings) -> Void
+    private let onSave: (RestSettings) throws -> Void
     private let adminMessageContainer = NSStackView()
     private let adminMessageBanner = NSStackView()
     private let adminMessageIcon = NSImageView()
@@ -770,7 +771,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let adminControlsStack = NSStackView()
     private let nowProvider: () -> Date
 
-    init(settings: RestSettings, nowProvider: @escaping () -> Date = Date.init, onSave: @escaping (RestSettings) -> Void) {
+    init(settings: RestSettings, nowProvider: @escaping () -> Date = Date.init, onSave: @escaping (RestSettings) throws -> Void) {
         self.settings = settings.normalizedForCurrentDesign()
         self.onSave = onSave
         self.nowProvider = nowProvider
@@ -2929,9 +2930,15 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         next.admin.customPreferencesMessage = customPreferencesMessage.stringValue
 
         let normalized = next.normalizedForCurrentDesign()
+        do {
+            try onSave(normalized)
+        } catch {
+            setSaveFailureStatus(error)
+            return false
+        }
+
         settings = normalized
         applyAdminVisibility()
-        onSave(normalized)
         let successfulSaveStatus = pendingSuccessfulSaveStatus ?? .saved
         pendingSuccessfulSaveStatus = nil
         setSaveStatus(successfulSaveStatus)
@@ -3678,10 +3685,27 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             return
         }
         guard confirmRestoreDefaults() else { return }
-        settings = .restoredDefaults
+
+        autosaveGeneration += 1
+        autosaveTask?.cancel()
+        autosaveTask = nil
+        hasPendingTextEditing = false
+        let previousSettings = settings
+        let restoredSettings = RestSettings.restoredDefaults.normalizedForCurrentDesign()
+        settings = restoredSettings
         loadSettings()
-        onSave(settings)
-        setSaveStatus(.restored)
+        do {
+            try onSave(restoredSettings)
+            hasPendingAutosave = false
+            pendingSuccessfulSaveStatus = nil
+            setSaveStatus(.restored)
+        } catch {
+            settings = previousSettings
+            hasPendingAutosave = true
+            pendingSuccessfulSaveStatus = .restored
+            setSaveFailureStatus(error)
+            updateRestoreDefaultsButtonState()
+        }
     }
 
     @objc private func restoreUpdateSourcePressed(_ sender: NSButton) {
@@ -4361,7 +4385,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func setSaveStatus(_ status: PreferencesSaveStatus, objectName: String? = nil) {
         switch status {
-        case .invalid:
+        case .invalid, .saveFailed:
             break
         default:
             saveStatusInvalidFieldName = nil
@@ -4474,6 +4498,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             symbolName = "exclamationmark.triangle.fill"
             color = .systemOrange
             title = L10n.tr("prefs.autosaveEmergencyExitDisabled")
+        case .saveFailed:
+            symbolName = "exclamationmark.triangle.fill"
+            color = .systemRed
+            title = L10n.tr("prefs.autosaveSaveFailed")
         case .invalid:
             symbolName = "exclamationmark.triangle.fill"
             color = .systemOrange
@@ -4495,6 +4523,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         saveStatusIcon.setAccessibilityHelp(help)
         saveStatusLabel.setAccessibilityLabel(title)
         saveStatusLabel.setAccessibilityHelp(help)
+    }
+
+    private func setSaveFailureStatus(_ error: Error) {
+        saveStatusInvalidFieldName = nil
+        saveStatusInvalidDetail = L10n.format("prefs.autosaveSaveFailedHelp", error.localizedDescription)
+        setSaveStatus(.saveFailed)
     }
 
     private func setInvalidSaveStatus(_ error: Error) {

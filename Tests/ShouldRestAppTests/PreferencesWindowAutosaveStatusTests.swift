@@ -54,6 +54,49 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
         XCTAssertFalse(label.stringValue.localizedCaseInsensitiveContains("reopen"))
     }
 
+    func testAutosaveSaveFailureKeepsPendingChangeForRetry() throws {
+        L10n.languageOverride = "en"
+        defer { L10n.languageOverride = nil }
+
+        var attempts = 0
+        var shouldFail = true
+        var savedSettings: RestSettings?
+        let controller = PreferencesWindowController(settings: .defaults) { settings in
+            attempts += 1
+            if shouldFail {
+                throw NSError(
+                    domain: "ShouldRestTests.PreferencesSave",
+                    code: 1,
+                    userInfo: [NSLocalizedDescriptionKey: "Disk is full"]
+                )
+            }
+            savedSettings = settings
+        }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        try selectAppearanceTab(in: contentView)
+        let language = try XCTUnwrap(view(withIdentifier: "prefs.language", in: contentView) as? NSPopUpButton)
+        let label = try XCTUnwrap(view(withIdentifier: "autosaveStatusLabel", in: contentView) as? NSTextField)
+        let icon = try XCTUnwrap(view(withIdentifier: "autosaveStatusIcon", in: contentView) as? NSImageView)
+
+        try selectPopup(language, representedObject: "zh-Hans")
+        XCTAssertTrue(sendAction(from: language))
+
+        XCTAssertFalse(controller.flushPendingAutosave(showAlerts: false))
+        XCTAssertEqual(attempts, 1)
+        XCTAssertNil(savedSettings)
+        XCTAssertEqual(label.stringValue, L10n.tr("prefs.autosaveSaveFailed"))
+        XCTAssertTrue(label.toolTip?.contains("Settings are still pending") ?? false)
+        XCTAssertTrue(label.toolTip?.contains("Disk is full") ?? false)
+        XCTAssertEqual(label.accessibilityHelp(), label.toolTip)
+        XCTAssertEqual(icon.image?.accessibilityDescription, L10n.tr("prefs.autosaveSaveFailed"))
+
+        shouldFail = false
+        XCTAssertTrue(controller.flushPendingAutosave(showAlerts: false))
+        XCTAssertEqual(attempts, 2)
+        XCTAssertEqual(savedSettings?.presentation.languageIdentifier, "zh-Hans")
+        XCTAssertEqual(label.stringValue, L10n.tr("prefs.autosaveLanguageChanged"))
+    }
+
     func testRebuiltPreferencesCanShowLanguageRefreshStatusInNewLanguage() throws {
         L10n.languageOverride = "zh-Hans"
         defer { L10n.languageOverride = nil }
@@ -196,6 +239,11 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
             L10n.tr("prefs.autosaveEmergencyExitDisabled"),
             "Emergency Exit disabled during Eye Gate"
         )
+        XCTAssertEqual(L10n.tr("prefs.autosaveSaveFailed"), "Could not save settings")
+        XCTAssertEqual(
+            L10n.format("prefs.autosaveSaveFailedHelp", "Disk is full"),
+            "Settings are still pending. Details: Disk is full"
+        )
         XCTAssertEqual(L10n.tr("prefs.restoreDefaultsDisabledDefaultHelp"), "Current preferences already match the app defaults.")
 
         L10n.languageOverride = "zh-Hans"
@@ -221,6 +269,11 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.autosaveMenuBarShown"), "菜单栏图标已恢复")
         XCTAssertEqual(L10n.tr("prefs.autosaveEmergencyExitEnabled"), "紧急退出已启用")
         XCTAssertEqual(L10n.tr("prefs.autosaveEmergencyExitDisabled"), "护眼休息期间紧急退出已关闭")
+        XCTAssertEqual(L10n.tr("prefs.autosaveSaveFailed"), "设置未能保存")
+        XCTAssertEqual(
+            L10n.format("prefs.autosaveSaveFailedHelp", "磁盘已满"),
+            "设置仍在等待保存。详情：磁盘已满"
+        )
         XCTAssertEqual(L10n.tr("prefs.restoreDefaultsDisabledDefaultHelp"), "当前偏好设置已是应用默认值。")
     }
 
