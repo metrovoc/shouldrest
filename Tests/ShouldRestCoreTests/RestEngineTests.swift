@@ -427,6 +427,58 @@ final class RestEngineTests: XCTestCase {
         XCTAssertNil(engine.state.activeDeferral)
     }
 
+    func testSettingsUpdatePreservesDeferredRestUntilContextClears() {
+        var engine = RestEngine(settings: .defaults, now: start)
+        completeEyeGatesUntilBodyBreakDue(&engine, now: start)
+
+        let bodyDue = engine.state.scheduled!.dueAt
+        _ = engine.evaluate(
+            now: bodyDue,
+            context: RestContext(focusModeActive: true)
+        )
+
+        var updated = RestSettings.defaults
+        updated.presentation.showCurrentTimeDuringBodyBreak = true
+        let savedAt = bodyDue.addingTimeInterval(5)
+        engine.updateSettings(updated, now: savedAt)
+
+        XCTAssertEqual(engine.state.scheduled?.kind, .bodyBreak)
+        XCTAssertEqual(engine.state.scheduled?.dueAt, bodyDue)
+        XCTAssertEqual(engine.state.activeDeferral?.reason, .focusMode)
+
+        let resumed = engine.evaluate(
+            now: savedAt.addingTimeInterval(1),
+            context: RestContext(focusModeActive: false)
+        )
+
+        guard case .started(let session) = resumed else {
+            return XCTFail("Expected settings save during deferral to keep the rest due")
+        }
+        XCTAssertEqual(session.kind, .bodyBreak)
+        XCTAssertEqual(session.scheduledAt, bodyDue)
+        XCTAssertNil(engine.state.activeDeferral)
+    }
+
+    func testSettingsUpdateDropsDeferredRestWhenThatRestIsDisabled() {
+        var engine = RestEngine(settings: .defaults, now: start)
+        completeEyeGatesUntilBodyBreakDue(&engine, now: start)
+
+        let bodyDue = engine.state.scheduled!.dueAt
+        _ = engine.evaluate(
+            now: bodyDue,
+            context: RestContext(focusModeActive: true)
+        )
+
+        var updated = RestSettings.defaults
+        updated.bodyBreak.isEnabled = false
+        let savedAt = bodyDue.addingTimeInterval(5)
+        engine.updateSettings(updated, now: savedAt)
+
+        XCTAssertEqual(engine.state.scheduled?.kind, .eyeGate)
+        XCTAssertEqual(engine.state.scheduled?.dueAt, savedAt.addingTimeInterval(updated.eyeGate.interval))
+        XCTAssertNil(engine.state.activeDeferral)
+    }
+
     func testDisablingBreakHealthModeResetsDangerScore() {
         var engine = RestEngine(settings: .defaults, now: start)
         completeEyeGatesUntilBodyBreakDue(&engine, now: start)

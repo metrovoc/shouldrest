@@ -193,7 +193,7 @@ public struct RestEngine: Equatable, Sendable {
             state.dangerScore = 0
         }
         if state.activeSession == nil && state.pause == nil {
-            scheduleNextRest(from: now)
+            refreshScheduleAfterSettingsUpdate(from: now)
         }
     }
 
@@ -409,6 +409,16 @@ public struct RestEngine: Equatable, Sendable {
         let dueAt = now.addingTimeInterval(intervalForNextRest(kind))
         state.scheduled = scheduledRest(kind: kind, dueAt: dueAt)
         state.activeDeferral = nil
+    }
+
+    private mutating func refreshScheduleAfterSettingsUpdate(from now: Date) {
+        guard let activeDeferral = state.activeDeferral,
+              let scheduled = state.scheduled,
+              activeDeferral.kind == scheduled.kind,
+              settings.rule(for: scheduled.kind).isEnabled else {
+            scheduleNextRest(from: now)
+            return
+        }
     }
 
     private func scheduledRest(kind: RestKind, dueAt: Date) -> ScheduledRest {
