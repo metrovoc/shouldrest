@@ -2004,10 +2004,14 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func handleURLEvent(_ event: NSAppleEventDescriptor, withReplyEvent replyEvent: NSAppleEventDescriptor) {
         guard let urlString = event.paramDescriptor(forKeyword: keyDirectObject)?.stringValue,
-              CommandLineAutomation.post(urlString: urlString) else {
+              let request = CommandLineAutomation.request(fromURLString: urlString) else {
             logger.log("Ignored invalid automation URL event")
             return
         }
+        if request.command == .emergency {
+            try? EmergencyAutomationSignal.write()
+        }
+        performAutomation(request.command, userInfo: request.userInfo)
         logger.log("Handled automation URL \(urlString)")
     }
 

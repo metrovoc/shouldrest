@@ -282,6 +282,22 @@ final class CommandLineAutomationTests: XCTestCase {
         XCTAssertFalse(request.noSkip)
     }
 
+    func testParsesURLStringForInAppAutomationDispatch() throws {
+        let request = try XCTUnwrap(CommandLineAutomation.request(
+            fromURLString: "shouldrest://body?wait=2m&title=Move&text=Stretch&noSkip=1"
+        ))
+
+        XCTAssertEqual(request.command, .body)
+        XCTAssertEqual(request.duration, 2 * 60)
+        XCTAssertEqual(request.title, "Move")
+        XCTAssertEqual(request.text, "Stretch")
+        XCTAssertTrue(request.noSkip)
+        XCTAssertEqual(request.userInfo["duration"] as? TimeInterval, 2 * 60)
+        XCTAssertEqual(request.userInfo["title"] as? String, "Move")
+        XCTAssertEqual(request.userInfo["text"] as? String, "Stretch")
+        XCTAssertEqual(request.userInfo["noSkip"] as? Bool, true)
+    }
+
     func testPlansImmediateMiniAliasAsEyeGateRequest() throws {
         let plan = CommandLineAutomation.eyeGateCommandPlan(["mini"])
 

@@ -487,7 +487,7 @@ enum CommandLineAutomation {
         return true
     }
 
-    private static func request(fromURLString urlString: String) -> AutomationRequest? {
+    static func request(fromURLString urlString: String) -> AutomationRequest? {
         guard let url = URL(string: urlString), url.scheme == "shouldrest" else {
             return nil
         }
