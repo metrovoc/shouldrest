@@ -380,6 +380,42 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertTrue(ideasEditor.string.contains("Stretch"))
     }
 
+    func testAdvancedAppRulesStayEnabledWhenFirstStoredRuleIsDisabled() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "disabled",
+                name: "Disabled",
+                matchTerms: ["disabled.app"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: false
+            ),
+            AppExclusionRule(
+                id: "enabled",
+                name: "Enabled",
+                matchTerms: ["enabled.app"],
+                mode: .resumeOnlyWhenMatched,
+                appliesTo: [.eyeGate],
+                isEnabled: true
+            )
+        ]
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let checkbox = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionEnabled", in: contentView) as? NSButton)
+        let editor = try XCTUnwrap(view(withIdentifier: "appExclusionsJSONEditor", in: contentView) as? NSTextView)
+
+        XCTAssertEqual(checkbox.state, .on)
+        XCTAssertTrue(editor.string.contains("Enabled"))
+        XCTAssertFalse(editor.string.contains("Disabled"))
+
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: editor))
+
+        XCTAssertTrue(controller.flushPendingAutosave(showAlerts: false))
+        XCTAssertEqual(savedSettings.value?.appExclusions.map(\.id), ["enabled"])
+    }
+
     func testTurningOffAppExclusionsIgnoresHiddenAdvancedRulesAndAutosaves() throws {
         var settings = RestSettings.defaults
         settings.appExclusions = [

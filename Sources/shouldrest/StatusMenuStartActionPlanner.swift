@@ -20,7 +20,7 @@ enum StatusMenuStartAction: Equatable {
 
 enum StatusMenuStartActionPlanner {
     static func actions(state: RestEngineState, settings: RestSettings) -> [StatusMenuStartAction] {
-        guard state.activeSession == nil else { return [] }
+        guard state.activeSession == nil, state.pause == nil else { return [] }
 
         let scheduledKind = state.scheduled?.kind
         var actions: [StatusMenuStartAction] = []

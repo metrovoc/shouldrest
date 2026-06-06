@@ -2705,7 +2705,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         workingStartPicker.dateValue = Self.dateForTimePicker(minutes: settings.workingHours.startMinuteOfDay)
         workingEndPicker.dateValue = Self.dateForTimePicker(minutes: settings.workingHours.endMinuteOfDay)
 
-        let appExclusionsEnabled = settings.appExclusions.first?.isEnabled ?? false
+        let appExclusionsEnabled = settings.appExclusions.contains { $0.isEnabled }
         appExclusionEnabled.state = state(appExclusionsEnabled)
         clearAppExclusionRuleEditState()
         appExclusionName.stringValue = ""

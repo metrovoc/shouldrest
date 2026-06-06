@@ -277,6 +277,9 @@ public struct RestEngine: Equatable, Sendable {
         guard state.activeSession == nil else {
             return .denied(.alreadyActive)
         }
+        guard state.pause == nil else {
+            return .denied(.alreadyPaused)
+        }
         guard settings.rule(for: kind).isEnabled else {
             return .denied(.actionDisabled)
         }

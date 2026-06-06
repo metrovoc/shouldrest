@@ -39,6 +39,7 @@ public enum ContextDeferralReason: Codable, Equatable, Sendable {
 
 public enum ActionDenial: Equatable, Sendable {
     case alreadyActive
+    case alreadyPaused
     case noActiveSession
     case actionDisabled
     case eyeGateCannotBeSkipped

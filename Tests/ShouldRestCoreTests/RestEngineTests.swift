@@ -213,6 +213,20 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.statistics.skippedBodyBreaks, 0)
     }
 
+    func testTakeNowCannotCreateActiveRestWhilePaused() {
+        var engine = RestEngine(settings: .defaults, now: start)
+        let pauseResult = engine.pause(for: 60 * 60, now: start, reason: .user)
+        guard case .paused(let pause) = pauseResult else {
+            return XCTFail("Expected initial pause")
+        }
+
+        let result = engine.takeNow(.eyeGate, now: start.addingTimeInterval(1))
+
+        XCTAssertEqual(result, .denied(.alreadyPaused))
+        XCTAssertNil(engine.state.activeSession)
+        XCTAssertEqual(engine.state.pause, pause)
+    }
+
     func testNaturalIdleCreditsScheduledEyeGate() {
         var engine = RestEngine(settings: .defaults, now: start)
         let result = engine.evaluate(

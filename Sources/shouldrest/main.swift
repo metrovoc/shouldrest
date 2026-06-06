@@ -281,6 +281,29 @@ enum MenuBarVisibilityPolicy {
     }
 }
 
+enum RestContextPolicy {
+    static func make(
+        settings: RestSettings,
+        now: Date,
+        idleDuration: TimeInterval,
+        focusModeActive: Bool,
+        appExclusions: [AppExclusionEvaluation]
+    ) -> RestContext {
+        RestContext(
+            idleDuration: idleDuration,
+            focusModeActive: focusModeActive,
+            inWorkingHours: settings.workingHours.contains(now),
+            appExclusions: appExclusions
+        )
+    }
+}
+
+enum SystemSuspendPausePolicy {
+    static func shouldPauseScheduler(state: RestEngineState) -> Bool {
+        state.activeSession == nil && state.pause == nil
+    }
+}
+
 enum StatusMenuActionIcon {
     static func symbolName(forActionName actionName: String) -> String? {
         switch actionName.replacingOccurrences(of: ":", with: "") {
@@ -666,10 +689,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func tick() {
         let now = Date()
 
-        if now.timeIntervalSince(lastFocusCheck) > 5 {
-            focusModeActive = focusDetector.isFocusModeActive()
-            lastFocusCheck = now
-        }
+        refreshFocusMode(now: now)
 
         if consumeEmergencyAutomationSignalIfNeeded() {
             return
@@ -679,7 +699,10 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             if emergencyOverrideCoordinator.armedSessionID != active.id {
                 emergencyOverrideCoordinator.clear()
             }
-            if case .deferred(let kind, let reason) = engine.deferActiveForAppExclusion(now: now, context: currentContext()) {
+            if case .deferred(let kind, let reason) = engine.deferActiveForAppExclusion(
+                now: now,
+                context: currentContext(now: now)
+            ) {
                 unregisterActiveBreakShortcut()
                 unregisterEmergencyEscapeShortcut()
                 overlayController.dismiss()
@@ -733,7 +756,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         let expiredPause = engine.state.pause.flatMap { pause in
             pause.isActive(at: now) ? nil : pause
         }
-        let result = engine.evaluate(now: now, context: currentContext())
+        let result = engine.evaluate(now: now, context: currentContext(now: now))
         handleEngineResult(result, now: now)
         if let expiredPause, engine.state.pause == nil {
             notifyAutomaticResume(from: expiredPause)
@@ -765,14 +788,21 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func currentContext() -> RestContext {
+    private func refreshFocusMode(now: Date, force: Bool = false) {
+        guard force || now.timeIntervalSince(lastFocusCheck) > 5 else { return }
+        focusModeActive = focusDetector.isFocusModeActive()
+        lastFocusCheck = now
+    }
+
+    private func currentContext(now: Date, idleDuration: TimeInterval? = nil) -> RestContext {
         let appExclusions = settings.appExclusions.map { rule in
             AppExclusionEvaluation(rule: rule, isMatched: RunningApplications.matches(rule: rule))
         }
-        return RestContext(
-            idleDuration: SystemIdleTime.seconds(),
+        return RestContextPolicy.make(
+            settings: settings,
+            now: now,
+            idleDuration: idleDuration ?? SystemIdleTime.seconds(),
             focusModeActive: focusModeActive,
-            inWorkingHours: settings.workingHours.contains(Date()),
             appExclusions: appExclusions
         )
     }
@@ -2038,7 +2068,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         suspendedAt = Date()
         pausedForSuspendOrLock = false
         if settings.operations.resolvedPauseForSuspendOrLock {
-            if engine.state.activeSession == nil,
+            if SystemSuspendPausePolicy.shouldPauseScheduler(state: engine.state),
                case .paused = engine.pause(for: nil, reason: .suspendOrLock) {
                 pausedForSuspendOrLock = true
             }
@@ -2056,11 +2086,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         let now = Date()
         let idleDuration = suspendedAt.map { now.timeIntervalSince($0) } ?? 0
         suspendedAt = nil
+        refreshFocusMode(now: now, force: true)
         if pausedForSuspendOrLock {
             _ = engine.resume(now: now)
             pausedForSuspendOrLock = false
         }
-        let result = engine.evaluate(now: now, context: RestContext(idleDuration: idleDuration))
+        let result = engine.evaluate(now: now, context: currentContext(now: now, idleDuration: idleDuration))
         handleEngineResult(result, now: now)
         refreshActiveBreakShortcut()
         refreshEmergencyEscapeShortcut()

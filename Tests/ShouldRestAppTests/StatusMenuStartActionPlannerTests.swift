@@ -63,6 +63,18 @@ final class StatusMenuStartActionPlannerTests: XCTestCase {
         )
     }
 
+    func testPausedScheduleSuppressesStartActions() {
+        let state = RestEngineState(
+            scheduled: ScheduledRest(kind: .eyeGate, dueAt: start.addingTimeInterval(600), notificationAt: nil),
+            pause: PauseState(reason: .user, startedAt: start, until: start.addingTimeInterval(60 * 60))
+        )
+
+        XCTAssertEqual(
+            StatusMenuStartActionPlanner.actions(state: state, settings: .defaults),
+            []
+        )
+    }
+
     func testStartActionTitlesStayUserFacingAndConcrete() {
         defer { L10n.languageOverride = nil }
         L10n.languageOverride = "en"
