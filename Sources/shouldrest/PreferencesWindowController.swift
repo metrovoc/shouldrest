@@ -4940,12 +4940,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let raw = appExclusionsJSONEditor.string.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !raw.isEmpty,
               let data = raw.data(using: .utf8),
-              let decoded = try? JSONDecoder().decode([AppExclusionRule].self, from: data) else {
+              let decoded = try? importedAppExclusionRules(from: data) else {
             return []
         }
-        return decoded.map { rule in
-            normalizedAppExclusionRuleForPreferences(rule)
-        }.filter { $0.isEnabled && !$0.matchTerms.isEmpty }
+        return decoded.filter { $0.isEnabled && !$0.matchTerms.isEmpty }
     }
 
     private func appExclusionRuleListItem(rule: AppExclusionRule, index: Int) -> NSView {
@@ -5090,6 +5088,54 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
     }
 
+    private struct ImportedAppExclusionRule: Decodable {
+        var rule: AppExclusionRule
+
+        private enum CodingKeys: String, CodingKey {
+            case id
+            case name
+            case matchTerms
+            case mode
+            case appliesTo
+            case isEnabled
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            rule = AppExclusionRule(
+                id: try container.decodeIfPresent(String.self, forKey: .id) ?? UUID().uuidString,
+                name: try container.decodeIfPresent(String.self, forKey: .name) ?? "",
+                matchTerms: try container.decodeIfPresent([String].self, forKey: .matchTerms) ?? [],
+                mode: try container.decodeIfPresent(AppExclusionRule.Mode.self, forKey: .mode) ?? .pauseWhenMatched,
+                appliesTo: try container.decodeIfPresent(Set<RestKind>.self, forKey: .appliesTo) ?? [.bodyBreak],
+                isEnabled: try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? true
+            )
+        }
+    }
+
+    private struct ImportedRestIdea: Decodable {
+        var idea: RestIdea
+
+        private enum CodingKeys: String, CodingKey {
+            case id
+            case kind
+            case title
+            case body
+            case isEnabled
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            idea = RestIdea(
+                id: try container.decodeIfPresent(String.self, forKey: .id) ?? UUID().uuidString,
+                kind: try container.decodeIfPresent(RestKind.self, forKey: .kind) ?? .bodyBreak,
+                title: try container.decodeIfPresent(String.self, forKey: .title) ?? "",
+                body: try container.decodeIfPresent(String.self, forKey: .body) ?? "",
+                isEnabled: try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? true
+            )
+        }
+    }
+
     private struct InvalidUpdateFeedURL: LocalizedError {
         var fieldName: String {
             L10n.tr("prefs.updateFeedURL")
@@ -5125,12 +5171,17 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let raw = appExclusionsJSONEditor.string.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !raw.isEmpty, let data = raw.data(using: .utf8) else { return nil }
         do {
-            return try JSONDecoder()
-                .decode([AppExclusionRule].self, from: data)
-                .map(normalizedAppExclusionRuleForPreferences)
+            return try importedAppExclusionRules(from: data)
         } catch {
             throw InvalidAdvancedJSON(editor: .appRules, underlying: error)
         }
+    }
+
+    private func importedAppExclusionRules(from data: Data) throws -> [AppExclusionRule] {
+        try JSONDecoder()
+            .decode([ImportedAppExclusionRule].self, from: data)
+            .map(\.rule)
+            .map(normalizedAppExclusionRuleForPreferences)
     }
 
     private func encodedAppExclusionsForEditor(_ rules: [AppExclusionRule]) -> String {
@@ -5314,20 +5365,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let raw = customBodyIdeasJSONEditor.string.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !raw.isEmpty,
               let data = raw.data(using: .utf8),
-              let decoded = try? JSONDecoder().decode([RestIdea].self, from: data) else {
+              let decoded = try? importedCustomBodyIdeas(from: data) else {
             return []
         }
         return decoded
-            .filter { $0.kind == .bodyBreak }
-            .map {
-                RestIdea(
-                    id: $0.id.isEmpty ? UUID().uuidString : $0.id,
-                    kind: .bodyBreak,
-                    title: $0.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? defaultCustomBodyIdeaTitle() : $0.title,
-                    body: ContentSanitizer.sanitizeRichText($0.body),
-                    isEnabled: $0.isEnabled
-                )
-            }
     }
 
     private func customBodyIdeaListItem(idea: RestIdea, index: Int) -> NSView {
@@ -5522,21 +5563,26 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let raw = customBodyIdeasJSONEditor.string.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !raw.isEmpty, let data = raw.data(using: .utf8) else { return nil }
         do {
-            let decoded = try JSONDecoder().decode([RestIdea].self, from: data)
-            return decoded
-                .filter { $0.kind == .bodyBreak }
-                .map {
-                    RestIdea(
-                        id: $0.id.isEmpty ? UUID().uuidString : $0.id,
-                        kind: .bodyBreak,
-                        title: $0.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? defaultCustomBodyIdeaTitle() : $0.title,
-                        body: ContentSanitizer.sanitizeRichText($0.body),
-                        isEnabled: $0.isEnabled
-                    )
-                }
+            return try importedCustomBodyIdeas(from: data)
         } catch {
             throw InvalidAdvancedJSON(editor: .customIdeas, underlying: error)
         }
+    }
+
+    private func importedCustomBodyIdeas(from data: Data) throws -> [RestIdea] {
+        try JSONDecoder()
+            .decode([ImportedRestIdea].self, from: data)
+            .map(\.idea)
+            .filter { $0.kind == .bodyBreak }
+            .map {
+                RestIdea(
+                    id: $0.id.isEmpty ? UUID().uuidString : $0.id,
+                    kind: .bodyBreak,
+                    title: $0.title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? defaultCustomBodyIdeaTitle() : $0.title,
+                    body: ContentSanitizer.sanitizeRichText($0.body),
+                    isEnabled: $0.isEnabled
+                )
+            }
     }
 
     private func encodedCustomIdeasForEditor(_ ideas: [RestIdea]) -> String {

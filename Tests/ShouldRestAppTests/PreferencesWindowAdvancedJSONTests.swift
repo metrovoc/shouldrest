@@ -517,6 +517,55 @@ final class PreferencesWindowAdvancedJSONTests: XCTestCase {
         XCTAssertEqual(statusLabel.accessibilityHelp(), statusLabel.toolTip)
     }
 
+    func testStructurallyInvalidAppRulesBulkJSONIsRejected() throws {
+        var settings = RestSettings.defaults
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "alpha",
+                name: "Alpha",
+                matchTerms: ["alpha.app"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let editor = try XCTUnwrap(view(withIdentifier: "appExclusionsJSONEditor", in: contentView) as? NSTextView)
+        let listRow = try XCTUnwrap(view(withIdentifier: "prefs.appExclusionRulesListRow", in: contentView))
+        let statusLabel = try XCTUnwrap(view(withIdentifier: "autosaveStatusLabel", in: contentView) as? NSTextField)
+
+        editor.string = "[1]"
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: editor))
+
+        XCTAssertTrue(listRow.isHidden)
+        XCTAssertFalse(controller.flushPendingAutosave(showAlerts: false))
+        XCTAssertNil(savedSettings.value)
+        XCTAssertEqual(statusLabel.stringValue, L10n.format("prefs.autosaveInvalidField", L10n.tr("prefs.advancedRulesJSON")))
+    }
+
+    func testStructurallyInvalidIdeasBulkJSONIsRejectedWithoutPreviewPlaceholder() throws {
+        var settings = RestSettings.defaults
+        settings.contentLibrary.customBodyBreakIdeas = [
+            RestIdea(id: "stretch", kind: .bodyBreak, title: "Stretch", body: "Open shoulders")
+        ]
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: settings) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let editor = try XCTUnwrap(view(withIdentifier: "customBodyIdeasJSONEditor", in: contentView) as? NSTextView)
+        let listRow = try XCTUnwrap(view(withIdentifier: "prefs.customBodyIdeasListRow", in: contentView))
+        let statusLabel = try XCTUnwrap(view(withIdentifier: "autosaveStatusLabel", in: contentView) as? NSTextField)
+
+        editor.string = "[1]"
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: editor))
+
+        XCTAssertTrue(listRow.isHidden)
+        XCTAssertFalse(controller.flushPendingAutosave(showAlerts: false))
+        XCTAssertNil(savedSettings.value)
+        XCTAssertEqual(statusLabel.stringValue, L10n.format("prefs.autosaveInvalidField", L10n.tr("prefs.advancedIdeasJSON")))
+    }
+
     func testInvalidAppRulesBulkEditorIsRevealedWhenAutosaveFails() throws {
         var settings = RestSettings.defaults
         settings.appExclusions = [
