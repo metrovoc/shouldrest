@@ -220,6 +220,34 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
         XCTAssertTrue(didFinish)
     }
 
+    func testManualAwaitingBodyFinishButtonExposesFullTileHitArea() throws {
+        let view = configuredBodyOverlay(
+            manualAwaiting: true,
+            actions: BodyOverlayActions(
+                canPostpone: false,
+                canFinish: true,
+                canSkip: false,
+                postpone: nil,
+                finish: {},
+                skip: nil
+            )
+        )
+        view.layoutSubtreeIfNeeded()
+
+        let finishButton = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodyFinish.button") as? NSButton)
+        XCTAssertGreaterThan(finishButton.layer?.backgroundColor?.alpha ?? 0, 0)
+        XCTAssertGreaterThan(finishButton.layer?.borderColor?.alpha ?? 0, 0)
+
+        let hitPoints = [
+            NSPoint(x: finishButton.bounds.minX + 3, y: finishButton.bounds.midY),
+            NSPoint(x: finishButton.bounds.midX, y: finishButton.bounds.midY),
+            NSPoint(x: finishButton.bounds.maxX - 3, y: finishButton.bounds.midY)
+        ].map { finishButton.convert($0, to: view) }
+        for point in hitPoints {
+            XCTAssertTrue(view.hitTest(point) === finishButton)
+        }
+    }
+
     func testManualAwaitingEyeGateOverlayCanFinishInsideOverlay() throws {
         var didFinish = false
         let view = configuredEyeGateOverlay(
@@ -455,6 +483,9 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
         XCTAssertEqual(button.toolTip, toolTip, file: file, line: line)
         XCTAssertEqual(button.accessibilityLabel(), title, file: file, line: line)
         XCTAssertEqual(button.accessibilityHelp(), toolTip, file: file, line: line)
+        XCTAssertTrue(button.wantsLayer, file: file, line: line)
+        XCTAssertGreaterThan(button.layer?.backgroundColor?.alpha ?? 0, 0, file: file, line: line)
+        XCTAssertGreaterThan(button.layer?.borderColor?.alpha ?? 0, 0, file: file, line: line)
         XCTAssertTrue(
             button.hasConstraint(attribute: .width, relation: .greaterThanOrEqual, constant: 112),
             file: file,
@@ -480,6 +511,8 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
         XCTAssertNil(button.toolTip, file: file, line: line)
         XCTAssertNil(button.accessibilityLabel(), file: file, line: line)
         XCTAssertNil(button.accessibilityHelp(), file: file, line: line)
+        XCTAssertEqual(button.layer?.backgroundColor?.alpha ?? 0, 0, file: file, line: line)
+        XCTAssertEqual(button.layer?.borderColor?.alpha ?? 0, 0, file: file, line: line)
     }
 
     private func drainMainQueue(

@@ -536,7 +536,8 @@ public struct RestEngine: Equatable, Sendable {
             guard deferralReason(for: scheduled.kind, context: context) == nil else {
                 return nil
             }
-            guard context.idleDuration >= rule.duration else {
+            let requiredIdleDuration = max(rule.duration, settings.naturalBreaks.inactivityResetTime)
+            guard context.idleDuration >= requiredIdleDuration else {
                 return nil
             }
             hasCreditedNaturalRestInCurrentIdleEpisode = true

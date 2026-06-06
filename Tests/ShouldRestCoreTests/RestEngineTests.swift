@@ -227,11 +227,23 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.pause, pause)
     }
 
-    func testNaturalIdleCreditsScheduledEyeGate() {
+    func testNaturalIdleUsesAwayThresholdBeforeCreditingScheduledEyeGate() {
         var engine = RestEngine(settings: .defaults, now: start)
-        let result = engine.evaluate(
+        let earlyIdleResult = engine.evaluate(
             now: start.addingTimeInterval(60),
             context: RestContext(idleDuration: 20)
+        )
+
+        XCTAssertEqual(earlyIdleResult, .noChange)
+        XCTAssertEqual(engine.state.statistics.completedEyeGates, 0)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 0)
+        XCTAssertEqual(engine.state.eyeGatesSinceBodyBreak, 0)
+        XCTAssertEqual(engine.state.scheduled?.kind, .eyeGate)
+
+        let awayThreshold = engine.settings.naturalBreaks.inactivityResetTime
+        let result = engine.evaluate(
+            now: start.addingTimeInterval(awayThreshold),
+            context: RestContext(idleDuration: awayThreshold)
         )
 
         XCTAssertEqual(result, .naturalRestCredited(.eyeGate))
@@ -240,19 +252,19 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.eyeGatesSinceBodyBreak, 1)
 
         let repeatedIdleResult = engine.evaluate(
-            now: start.addingTimeInterval(61),
-            context: RestContext(idleDuration: 21)
+            now: start.addingTimeInterval(awayThreshold + 1),
+            context: RestContext(idleDuration: awayThreshold + 1)
         )
         XCTAssertEqual(repeatedIdleResult, .noChange)
         XCTAssertEqual(engine.state.statistics.naturalEyeGates, 1)
 
         _ = engine.evaluate(
-            now: start.addingTimeInterval(62),
+            now: start.addingTimeInterval(awayThreshold + 2),
             context: RestContext(idleDuration: 0)
         )
         let nextIdleResult = engine.evaluate(
-            now: start.addingTimeInterval(83),
-            context: RestContext(idleDuration: 20)
+            now: start.addingTimeInterval(awayThreshold * 2 + 2),
+            context: RestContext(idleDuration: awayThreshold)
         )
         XCTAssertEqual(nextIdleResult, .naturalRestCredited(.eyeGate))
         XCTAssertEqual(engine.state.statistics.naturalEyeGates, 2)

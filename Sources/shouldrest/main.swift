@@ -2875,6 +2875,35 @@ final class OverlayActionButton: NSButton {
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
         true
     }
+
+    func applyBodyActionTileStyle(isPendingButton: Bool, isActionLocked: Bool) {
+        wantsLayer = true
+        layer?.cornerRadius = 7
+        layer?.borderWidth = 1
+        layer?.masksToBounds = true
+
+        let backgroundAlpha: CGFloat
+        let borderAlpha: CGFloat
+        if isPendingButton {
+            backgroundAlpha = 0.18
+            borderAlpha = 0.34
+        } else if isActionLocked {
+            backgroundAlpha = 0.08
+            borderAlpha = 0.16
+        } else {
+            backgroundAlpha = 0.14
+            borderAlpha = 0.28
+        }
+
+        layer?.backgroundColor = NSColor.white.withAlphaComponent(backgroundAlpha).cgColor
+        layer?.borderColor = NSColor.white.withAlphaComponent(borderAlpha).cgColor
+    }
+
+    func clearBodyActionTileStyle() {
+        layer?.backgroundColor = NSColor.clear.cgColor
+        layer?.borderColor = NSColor.clear.cgColor
+        layer?.borderWidth = 0
+    }
 }
 
 final class OverlayClickPanel: NSView {
@@ -3547,6 +3576,10 @@ final class RestOverlayView: NSView {
                 clearBodyActionButtonPresentation(button)
             } else {
                 updateBodyActionButtonPresentation(button, kind: kind)
+                button.applyBodyActionTileStyle(
+                    isPendingButton: bodyActionRequestPending && pendingBodyAction == kind,
+                    isActionLocked: bodyActionRequestPending && pendingBodyAction != kind
+                )
             }
         }
         bodyActionStack.isHidden = bodyPostponeButton.isHidden && bodySkipButton.isHidden && bodyFinishButton.isHidden
@@ -3560,6 +3593,7 @@ final class RestOverlayView: NSView {
         button.setAccessibilityHelp(nil)
         button.title = ""
         button.attributedTitle = NSAttributedString(string: "")
+        button.clearBodyActionTileStyle()
     }
 
     private func updateBodyActionButtonPresentation(_ button: OverlayActionButton, kind: BodyOverlayActionKind) {
