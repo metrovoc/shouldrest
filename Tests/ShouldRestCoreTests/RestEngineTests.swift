@@ -258,6 +258,74 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.statistics.naturalEyeGates, 2)
     }
 
+    func testNaturalIdleDoesNotBypassOutsideWorkingHoursDeferral() {
+        var settings = RestSettings.defaults
+        settings.workingHours = WorkingHoursSettings(
+            isEnabled: true,
+            startMinuteOfDay: 9 * 60,
+            endMinuteOfDay: 17 * 60
+        )
+        var engine = RestEngine(settings: settings, now: start)
+        let dueAt = engine.state.scheduled!.dueAt
+
+        let result = engine.evaluate(
+            now: dueAt,
+            context: RestContext(idleDuration: settings.eyeGate.duration, inWorkingHours: false)
+        )
+
+        XCTAssertEqual(result, .deferred(.eyeGate, .outsideWorkingHours))
+        XCTAssertEqual(engine.state.statistics.completedEyeGates, 0)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 0)
+        XCTAssertEqual(engine.state.activeDeferral?.reason, .outsideWorkingHours)
+    }
+
+    func testNaturalIdleDoesNotBypassFocusModeDeferral() {
+        var engine = RestEngine(settings: .defaults, now: start)
+        completeEyeGatesUntilBodyBreakDue(&engine, now: start)
+        let bodyDue = engine.state.scheduled!.dueAt
+
+        let result = engine.evaluate(
+            now: bodyDue,
+            context: RestContext(
+                idleDuration: engine.settings.bodyBreak.duration,
+                focusModeActive: true
+            )
+        )
+
+        XCTAssertEqual(result, .deferred(.bodyBreak, .focusMode))
+        XCTAssertEqual(engine.state.statistics.completedBodyBreaks, 0)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 0)
+        XCTAssertEqual(engine.state.activeDeferral?.reason, .focusMode)
+    }
+
+    func testNaturalIdleDoesNotBypassAppExclusionDeferral() {
+        let rule = AppExclusionRule(
+            id: "presentation",
+            name: "Presentation",
+            matchTerms: ["Keynote"],
+            mode: .pauseWhenMatched,
+            appliesTo: [.bodyBreak],
+            isEnabled: true
+        )
+        var settings = RestSettings.defaults
+        settings.appExclusions = [rule]
+        var engine = RestEngine(settings: settings, now: start)
+        completeEyeGatesUntilBodyBreakDue(&engine, now: start)
+
+        let result = engine.evaluate(
+            now: engine.state.scheduled!.dueAt,
+            context: RestContext(
+                idleDuration: engine.settings.bodyBreak.duration,
+                appExclusions: [AppExclusionEvaluation(rule: rule, isMatched: true)]
+            )
+        )
+
+        XCTAssertEqual(result, .deferred(.bodyBreak, .appExclusion("Presentation")))
+        XCTAssertEqual(engine.state.statistics.completedBodyBreaks, 0)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 0)
+        XCTAssertEqual(engine.state.activeDeferral?.reason, .appExclusion("Presentation"))
+    }
+
     func testFocusModeDefersBodyBreakButNotEyeGateByDefault() {
         var engine = RestEngine(settings: .defaults, now: start)
         completeEyeGatesUntilBodyBreakDue(&engine, now: start)

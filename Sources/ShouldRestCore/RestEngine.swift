@@ -533,6 +533,9 @@ public struct RestEngine: Equatable, Sendable {
 
         if let scheduled = state.scheduled {
             let rule = settings.rule(for: scheduled.kind)
+            guard deferralReason(for: scheduled.kind, context: context) == nil else {
+                return nil
+            }
             guard context.idleDuration >= rule.duration else {
                 return nil
             }
