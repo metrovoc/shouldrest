@@ -248,6 +248,62 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
         }
     }
 
+    func testManualAwaitingBodyFinishPanelPaddingTriggersFinish() throws {
+        var didFinish = false
+        let view = configuredBodyOverlay(
+            manualAwaiting: true,
+            actions: BodyOverlayActions(
+                canPostpone: false,
+                canFinish: true,
+                canSkip: false,
+                postpone: nil,
+                finish: { didFinish = true },
+                skip: nil
+            )
+        )
+        view.layoutSubtreeIfNeeded()
+
+        let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodyActions.panel") as? OverlayClickPanel)
+        let finishButton = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodyFinish.button") as? NSButton)
+        let paddingPoint = NSPoint(x: panel.bounds.maxX - 3, y: panel.bounds.midY)
+        let pointInView = panel.convert(paddingPoint, to: view)
+
+        XCTAssertTrue(view.hitTest(pointInView) === panel)
+        XCTAssertFalse(finishButton.bounds.contains(panel.convert(paddingPoint, to: finishButton)))
+
+        panel.mouseDown(with: makeMouseDownEvent(at: paddingPoint, in: panel))
+
+        XCTAssertFalse(didFinish)
+        drainMainQueue()
+        XCTAssertTrue(didFinish)
+    }
+
+    func testBodyActionPanelPaddingDoesNotTriggerAmbiguousActions() throws {
+        var invokedActions: [String] = []
+        let view = configuredBodyOverlay(
+            actions: BodyOverlayActions(
+                canPostpone: true,
+                canFinish: false,
+                canSkip: true,
+                postpone: { invokedActions.append("postpone") },
+                finish: nil,
+                skip: { invokedActions.append("skip") }
+            )
+        )
+        view.layoutSubtreeIfNeeded()
+
+        let panel = try XCTUnwrap(view.descendant(withIdentifier: "overlay.bodyActions.panel") as? OverlayClickPanel)
+        let paddingPoint = NSPoint(x: panel.bounds.maxX - 3, y: panel.bounds.midY)
+        let pointInView = panel.convert(paddingPoint, to: view)
+
+        XCTAssertTrue(view.hitTest(pointInView) === panel)
+
+        panel.mouseDown(with: makeMouseDownEvent(at: paddingPoint, in: panel))
+        drainMainQueue()
+
+        XCTAssertTrue(invokedActions.isEmpty)
+    }
+
     func testManualAwaitingEyeGateOverlayCanFinishInsideOverlay() throws {
         var didFinish = false
         let view = configuredEyeGateOverlay(
@@ -525,6 +581,20 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
         }
         let result = XCTWaiter().wait(for: [expectation], timeout: 1)
         XCTAssertEqual(result, .completed, file: file, line: line)
+    }
+
+    private func makeMouseDownEvent(at point: NSPoint, in view: NSView) -> NSEvent {
+        NSEvent.mouseEvent(
+            with: .leftMouseDown,
+            location: view.convert(point, to: nil),
+            modifierFlags: [],
+            timestamp: 0,
+            windowNumber: view.window?.windowNumber ?? 0,
+            context: nil,
+            eventNumber: 0,
+            clickCount: 1,
+            pressure: 1
+        )!
     }
 }
 

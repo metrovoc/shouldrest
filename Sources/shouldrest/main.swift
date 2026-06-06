@@ -3115,7 +3115,7 @@ final class RestOverlayView: NSView {
     private let imageView = NSImageView()
     private let emergencyPanel = OverlayClickPanel()
     private let emergencyButton = OverlayActionButton()
-    private let bodyActionPanel = NSView()
+    private let bodyActionPanel = OverlayClickPanel()
     private let bodyActionStack = NSStackView()
     private let bodyPostponeButton = OverlayActionButton()
     private let bodySkipButton = OverlayActionButton()
@@ -3222,6 +3222,9 @@ final class RestOverlayView: NSView {
         bodyActionPanel.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.075).cgColor
         bodyActionPanel.layer?.borderColor = NSColor.white.withAlphaComponent(0.15).cgColor
         bodyActionPanel.isHidden = true
+        bodyActionPanel.onClick = { [weak self] in
+            self?.requestSingleVisibleBodyActionFromPanel()
+        }
         addSubview(bodyActionPanel)
 
         bodyActionStack.translatesAutoresizingMaskIntoConstraints = false
@@ -3425,6 +3428,21 @@ final class RestOverlayView: NSView {
         DispatchQueue.main.async { [weak self] in
             action()
             self?.clearCompletedBodyActionRequest(kind)
+        }
+    }
+
+    private func requestSingleVisibleBodyActionFromPanel() {
+        guard let action = singleVisibleBodyActionKind() else {
+            return
+        }
+
+        switch action {
+        case .postpone:
+            bodyPostponePressed()
+        case .skip:
+            bodySkipPressed()
+        case .finish:
+            bodyFinishPressed()
         }
     }
 
@@ -3653,6 +3671,33 @@ final class RestOverlayView: NSView {
         }
         bodyActionStack.isHidden = bodyPostponeButton.isHidden && bodySkipButton.isHidden && bodyFinishButton.isHidden
         bodyActionPanel.isHidden = bodyActionStack.isHidden
+        updateBodyActionPanelAffordance()
+    }
+
+    private func updateBodyActionPanelAffordance() {
+        guard !bodyActionPanel.isHidden,
+              let action = singleVisibleBodyActionKind() else {
+            bodyActionPanel.toolTip = nil
+            bodyActionPanel.setAccessibilityLabel(nil)
+            bodyActionPanel.setAccessibilityHelp(nil)
+            return
+        }
+
+        let isPendingAction = bodyActionRequestPending && pendingBodyAction == action
+        let title = isPendingAction ? action.pendingTitle : action.title
+        let help = isPendingAction ? action.pendingHelp : action.help
+        bodyActionPanel.toolTip = help
+        bodyActionPanel.setAccessibilityLabel(title)
+        bodyActionPanel.setAccessibilityHelp(help)
+    }
+
+    private func singleVisibleBodyActionKind() -> BodyOverlayActionKind? {
+        let visibleActions: [BodyOverlayActionKind] = [
+            bodyPostponeButton.isHidden ? nil : .postpone,
+            bodySkipButton.isHidden ? nil : .skip,
+            bodyFinishButton.isHidden ? nil : .finish
+        ].compactMap { $0 }
+        return visibleActions.count == 1 ? visibleActions[0] : nil
     }
 
     private func clearBodyActionButtonPresentation(_ button: OverlayActionButton) {
