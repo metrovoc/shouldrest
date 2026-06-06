@@ -228,10 +228,68 @@ struct EyeGateCommandPlan: Equatable {
     var ignoredReadableContent: Bool
 }
 
+enum AutomationDurationPolicy {
+    static let maximumDuration: TimeInterval = 366 * 24 * 60 * 60
+
+    enum UserInfoDuration: Equatable {
+        case missing
+        case valid(TimeInterval)
+        case invalid
+    }
+
+    static func duration(fromUserInfo userInfo: [AnyHashable: Any]?) -> UserInfoDuration {
+        guard let rawValue = userInfo?["duration"] else {
+            return .missing
+        }
+
+        let duration: TimeInterval
+        if let number = rawValue as? NSNumber {
+            guard CFGetTypeID(number) != CFBooleanGetTypeID() else {
+                return .invalid
+            }
+            duration = number.doubleValue
+        } else if let rawDuration = rawValue as? TimeInterval {
+            duration = rawDuration
+        } else {
+            return .invalid
+        }
+
+        guard let safeDuration = sanitizedDuration(duration) else {
+            return .invalid
+        }
+        return .valid(safeDuration)
+    }
+
+    static func secondsFromDurationComponents(
+        hours: TimeInterval = 0,
+        minutes: TimeInterval = 0
+    ) -> TimeInterval? {
+        guard hours.isFinite, minutes.isFinite, hours >= 0, minutes >= 0 else {
+            return nil
+        }
+        let seconds = (hours * 60 * 60) + (minutes * 60)
+        return sanitizedDuration(seconds)
+    }
+
+    static func sleepNanoseconds(for delay: TimeInterval) -> UInt64? {
+        guard let safeDelay = sanitizedDuration(delay) else {
+            return nil
+        }
+        return UInt64(ceil(safeDelay * 1_000_000_000))
+    }
+
+    private static func sanitizedDuration(_ duration: TimeInterval) -> TimeInterval? {
+        guard duration.isFinite,
+              duration > 0,
+              duration <= maximumDuration else {
+            return nil
+        }
+        return duration
+    }
+}
+
 @MainActor
 enum CommandLineAutomation {
-    private static let maximumAutomationDuration: TimeInterval = 366 * 24 * 60 * 60
-
     private enum DurationParseResult {
         case valid(TimeInterval?)
         case invalid
@@ -601,7 +659,7 @@ enum CommandLineAutomation {
         }
         if input.range(of: #"^\d+$"#, options: .regularExpression) != nil,
            let minutes = TimeInterval(input) {
-            return secondsFromDurationComponents(minutes: minutes)
+            return AutomationDurationPolicy.secondsFromDurationComponents(minutes: minutes)
         }
 
         let pattern = #"^(?:(\d+)h)?(?:(\d+)m)?$"#
@@ -621,23 +679,7 @@ enum CommandLineAutomation {
               let minutes = number(at: 2) else {
             return nil
         }
-        return secondsFromDurationComponents(hours: hours, minutes: minutes)
-    }
-
-    private static func secondsFromDurationComponents(
-        hours: TimeInterval = 0,
-        minutes: TimeInterval = 0
-    ) -> TimeInterval? {
-        guard hours.isFinite, minutes.isFinite, hours >= 0, minutes >= 0 else {
-            return nil
-        }
-        let seconds = (hours * 60 * 60) + (minutes * 60)
-        guard seconds.isFinite,
-              seconds > 0,
-              seconds <= maximumAutomationDuration else {
-            return nil
-        }
-        return seconds
+        return AutomationDurationPolicy.secondsFromDurationComponents(hours: hours, minutes: minutes)
     }
 
     private static func configuredOperations() -> OperationsSettings? {

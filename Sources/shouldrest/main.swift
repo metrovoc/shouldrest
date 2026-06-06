@@ -1895,7 +1895,14 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func performAutomation(_ command: AutomationCommand, userInfo: [AnyHashable: Any]?) {
         switch command {
         case .pause:
-            pause(for: automationDuration(from: userInfo), reason: .user)
+            switch automationDuration(from: userInfo) {
+            case .missing:
+                pause(for: nil, reason: .user)
+            case .valid(let duration):
+                pause(for: duration, reason: .user)
+            case .invalid:
+                logger.log("Ignored pause automation with invalid duration")
+            }
         case .resume:
             resumeBreaks()
         case .toggle:
@@ -1932,19 +1939,22 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         logger.log("Handled automation URL \(urlString)")
     }
 
-    private func automationDuration(from userInfo: [AnyHashable: Any]?) -> TimeInterval? {
-        if let duration = userInfo?["duration"] as? TimeInterval {
-            return duration
-        }
-        if let duration = userInfo?["duration"] as? NSNumber {
-            return duration.doubleValue
-        }
-        return nil
+    private func automationDuration(from userInfo: [AnyHashable: Any]?) -> AutomationDurationPolicy.UserInfoDuration {
+        AutomationDurationPolicy.duration(fromUserInfo: userInfo)
     }
 
     private func handleEyeGateAutomation(_ userInfo: [AnyHashable: Any]?) {
         let noSkip = automationNoSkip(from: userInfo)
-        let wait = automationDuration(from: userInfo)
+        let wait: TimeInterval?
+        switch automationDuration(from: userInfo) {
+        case .missing:
+            wait = nil
+        case .valid(let duration):
+            wait = duration
+        case .invalid:
+            logger.log("Ignored Eye Gate automation with invalid duration")
+            return
+        }
         if automationHasReadableContent(userInfo) {
             logger.log("Ignored Eye Gate readable content customization")
         }
@@ -1961,7 +1971,16 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func handleBodyBreakAutomation(_ userInfo: [AnyHashable: Any]?) {
         let idea = automationBodyBreakIdea(from: userInfo)
         let noSkip = automationNoSkip(from: userInfo)
-        let wait = automationDuration(from: userInfo)
+        let wait: TimeInterval?
+        switch automationDuration(from: userInfo) {
+        case .missing:
+            wait = nil
+        case .valid(let duration):
+            wait = duration
+        case .invalid:
+            logger.log("Ignored Body Break automation with invalid duration")
+            return
+        }
 
         if let wait, wait > 0 {
             scheduleBodyBreakAutomation(after: wait, idea: idea)
@@ -2004,8 +2023,11 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func scheduleEyeGateAutomation(after delay: TimeInterval) {
+        guard let nanoseconds = AutomationDurationPolicy.sleepNanoseconds(for: delay) else {
+            logger.log("Ignored Eye Gate automation with invalid delay \(delay)")
+            return
+        }
         let id = UUID()
-        let nanoseconds = UInt64(max(1, delay) * 1_000_000_000)
         let task = Task { [weak self] in
             try? await Task.sleep(nanoseconds: nanoseconds)
             guard !Task.isCancelled else { return }
@@ -2024,8 +2046,11 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func scheduleBodyBreakAutomation(after delay: TimeInterval, idea: RestIdea?) {
+        guard let nanoseconds = AutomationDurationPolicy.sleepNanoseconds(for: delay) else {
+            logger.log("Ignored Body Break automation with invalid delay \(delay)")
+            return
+        }
         let id = UUID()
-        let nanoseconds = UInt64(max(1, delay) * 1_000_000_000)
         let task = Task { [weak self, idea] in
             try? await Task.sleep(nanoseconds: nanoseconds)
             guard !Task.isCancelled else { return }

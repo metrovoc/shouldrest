@@ -153,6 +153,50 @@ final class CommandLineAutomationTests: XCTestCase {
         XCTAssertNil(CommandLineAutomation.parseDuration("999999999999999999999999h"))
     }
 
+    func testAutomationDurationPolicyAcceptsFiniteNotificationDurations() {
+        XCTAssertEqual(
+            AutomationDurationPolicy.duration(fromUserInfo: nil),
+            .missing
+        )
+        XCTAssertEqual(
+            AutomationDurationPolicy.duration(fromUserInfo: ["duration": 30.5]),
+            .valid(30.5)
+        )
+        XCTAssertEqual(
+            AutomationDurationPolicy.duration(fromUserInfo: ["duration": NSNumber(value: 45)]),
+            .valid(45)
+        )
+    }
+
+    func testAutomationDurationPolicyRejectsInvalidNotificationDurations() {
+        let invalidValues: [Any] = [
+            0,
+            -1,
+            Double.nan,
+            Double.infinity,
+            AutomationDurationPolicy.maximumDuration + 1,
+            true,
+            NSNumber(value: true),
+            "20"
+        ]
+
+        for value in invalidValues {
+            XCTAssertEqual(
+                AutomationDurationPolicy.duration(fromUserInfo: ["duration": value]),
+                .invalid,
+                "Expected invalid duration for \(value)"
+            )
+        }
+    }
+
+    func testAutomationDurationPolicyOnlyBuildsSafeSleepDelays() {
+        XCTAssertEqual(AutomationDurationPolicy.sleepNanoseconds(for: 1.25), 1_250_000_000)
+        XCTAssertNotNil(AutomationDurationPolicy.sleepNanoseconds(for: AutomationDurationPolicy.maximumDuration))
+        XCTAssertNil(AutomationDurationPolicy.sleepNanoseconds(for: 0))
+        XCTAssertNil(AutomationDurationPolicy.sleepNanoseconds(for: Double.infinity))
+        XCTAssertNil(AutomationDurationPolicy.sleepNanoseconds(for: AutomationDurationPolicy.maximumDuration + 1))
+    }
+
     func testParsesPauseURLAutomation() throws {
         let url = try XCTUnwrap(URL(string: "shouldrest://pause?duration=1h20m"))
         let request = try XCTUnwrap(CommandLineAutomation.request(from: url))
