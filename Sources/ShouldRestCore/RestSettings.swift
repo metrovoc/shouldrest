@@ -934,13 +934,29 @@ public struct AppExclusionRule: Codable, Equatable, Identifiable, Sendable {
         AppExclusionRule(
             id: id,
             name: name,
-            matchTerms: matchTerms
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                .filter { !$0.isEmpty },
+            matchTerms: normalizedMatchTerms,
             mode: mode,
             appliesTo: appliesTo,
             isEnabled: isEnabled
         )
+    }
+
+    public var normalizedMatchTerms: [String] {
+        matchTerms
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+    }
+
+    public var isActionable: Bool {
+        isEnabled && !normalizedMatchTerms.isEmpty && !appliesTo.isEmpty
+    }
+
+    public var displayName: String {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !trimmedName.isEmpty {
+            return trimmedName
+        }
+        return normalizedMatchTerms.first ?? id
     }
 }
 

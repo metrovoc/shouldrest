@@ -3910,7 +3910,7 @@ enum SystemIdleTime {
 
 enum RunningApplications {
     static func matches(rule: AppExclusionRule) -> Bool {
-        guard rule.isEnabled else { return false }
+        guard rule.isActionable else { return false }
         let running = NSWorkspace.shared.runningApplications
         return running.contains { app in
             matches(
@@ -3926,11 +3926,8 @@ enum RunningApplications {
     }
 
     static func matches(rule: AppExclusionRule, candidates: [String]) -> Bool {
-        guard rule.isEnabled else { return false }
-        let normalizedTerms = rule.matchTerms
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
-            .filter { !$0.isEmpty }
-        guard !normalizedTerms.isEmpty else { return false }
+        guard rule.isActionable else { return false }
+        let normalizedTerms = rule.normalizedMatchTerms.map { $0.lowercased() }
 
         let normalizedCandidates = candidates.map { $0.lowercased() }
         return normalizedTerms.contains { term in

@@ -496,12 +496,12 @@ public struct RestEngine: Equatable, Sendable {
             return .focusMode
         }
 
-        for evaluation in context.appExclusions where evaluation.rule.isEnabled && evaluation.rule.appliesTo.contains(kind) {
+        for evaluation in context.appExclusions where evaluation.rule.isActionable && evaluation.rule.appliesTo.contains(kind) {
             switch evaluation.rule.mode {
             case .pauseWhenMatched where evaluation.isMatched:
-                return .appExclusion(evaluation.rule.name)
+                return .appExclusion(evaluation.rule.displayName)
             case .resumeOnlyWhenMatched where !evaluation.isMatched:
-                return .appExclusion(evaluation.rule.name)
+                return .appExclusion(evaluation.rule.displayName)
             default:
                 continue
             }
@@ -516,9 +516,9 @@ public struct RestEngine: Equatable, Sendable {
     ) -> ContextDeferralReason? {
         guard kind != .eyeGate else { return nil }
 
-        for evaluation in context.appExclusions where evaluation.rule.isEnabled && evaluation.rule.appliesTo.contains(kind) {
+        for evaluation in context.appExclusions where evaluation.rule.isActionable && evaluation.rule.appliesTo.contains(kind) {
             if evaluation.rule.mode == .pauseWhenMatched, evaluation.isMatched {
-                return .appExclusion(evaluation.rule.name)
+                return .appExclusion(evaluation.rule.displayName)
             }
         }
 

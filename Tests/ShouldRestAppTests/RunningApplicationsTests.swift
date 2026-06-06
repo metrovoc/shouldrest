@@ -16,6 +16,19 @@ final class RunningApplicationsTests: XCTestCase {
         XCTAssertFalse(RunningApplications.matches(rule: rule, candidates: ["Finder", "com.apple.finder"]))
     }
 
+    func testTargetlessAppExclusionDoesNotMatchCandidates() {
+        let rule = AppExclusionRule(
+            id: "targetless",
+            name: "Targetless",
+            matchTerms: ["Finder"],
+            mode: .pauseWhenMatched,
+            appliesTo: [],
+            isEnabled: true
+        )
+
+        XCTAssertFalse(RunningApplications.matches(rule: rule, candidates: ["Finder", "com.apple.finder"]))
+    }
+
     func testAppExclusionTermsAreTrimmedBeforeMatching() {
         let rule = AppExclusionRule(
             id: "zoom",

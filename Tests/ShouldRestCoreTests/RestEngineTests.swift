@@ -589,6 +589,58 @@ final class RestEngineTests: XCTestCase {
         XCTAssertNil(engine.state.activeDeferral)
     }
 
+    func testEmptyResumeOnlyAppExclusionDoesNotDeferForever() {
+        let rule = AppExclusionRule(
+            id: "empty-rule",
+            name: "Empty rule",
+            matchTerms: ["", "  "],
+            mode: .resumeOnlyWhenMatched,
+            appliesTo: [.bodyBreak],
+            isEnabled: true
+        )
+        var settings = RestSettings.defaults
+        settings.appExclusions = [rule]
+
+        var engine = RestEngine(settings: settings, now: start)
+        completeEyeGatesUntilBodyBreakDue(&engine, now: start)
+
+        let bodyDue = engine.state.scheduled!.dueAt
+        let result = engine.evaluate(
+            now: bodyDue,
+            context: RestContext(appExclusions: [AppExclusionEvaluation(rule: rule, isMatched: false)])
+        )
+
+        guard case .started(let session) = result else {
+            return XCTFail("Expected empty resume-only app rule to be ignored instead of deferring forever")
+        }
+        XCTAssertEqual(session.kind, .bodyBreak)
+        XCTAssertNil(engine.state.activeDeferral)
+    }
+
+    func testBlankAppExclusionNameFallsBackToReadableTermInDeferralReason() {
+        let rule = AppExclusionRule(
+            id: "blank-name-rule",
+            name: "  ",
+            matchTerms: ["  Keynote  "],
+            mode: .pauseWhenMatched,
+            appliesTo: [.bodyBreak],
+            isEnabled: true
+        )
+        var settings = RestSettings.defaults
+        settings.appExclusions = [rule]
+
+        var engine = RestEngine(settings: settings, now: start)
+        completeEyeGatesUntilBodyBreakDue(&engine, now: start)
+
+        let result = engine.evaluate(
+            now: engine.state.scheduled!.dueAt,
+            context: RestContext(appExclusions: [AppExclusionEvaluation(rule: rule, isMatched: true)])
+        )
+
+        XCTAssertEqual(result, .deferred(.bodyBreak, .appExclusion("Keynote")))
+        XCTAssertEqual(engine.state.activeDeferral?.reason, .appExclusion("Keynote"))
+    }
+
     func testContentSanitizerRemovesScriptsAndDangerousAttributes() {
         let unsafe = #"""
         <p onclick="alert(1)">Stretch</p>
