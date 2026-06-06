@@ -3971,14 +3971,9 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             var ideas = try decodedAdvancedCustomIdeas() ?? []
             ideas.removeAll { $0.id == match.id }
             clearCustomBodyIdeaEditState()
-            if let first = ideas.first {
-                customBodyTitle.stringValue = first.title
-                customBodyTextEditor.string = first.body
-            } else {
-                customBodyTitle.stringValue = ""
-                customBodyTextEditor.string = ""
-            }
-            customBodyIdeasJSONEditor.string = ideas.count > 1 ? encodedCustomIdeasForEditor(ideas) : ""
+            customBodyTitle.stringValue = ""
+            customBodyTextEditor.string = ""
+            customBodyIdeasJSONEditor.string = encodedCustomIdeasForEditor(ideas)
             setAdvancedDisclosure(row: customBodyIdeasJSONRow, button: customBodyIdeasAdvancedButton, expanded: false)
             refreshCustomBodyIdeaList()
             updateCustomBodyAddIdeaButtonState()

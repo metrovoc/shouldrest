@@ -544,12 +544,32 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         let ideas = try XCTUnwrap(savedSettings.value?.contentLibrary.customBodyBreakIdeas)
         XCTAssertEqual(ideas.map(\.title), ["Stretch"])
         try assertAutosaveStatus("prefs.autosaveCustomIdeaRemoved", in: contentView)
-        XCTAssertTrue(listRow.isHidden)
+        XCTAssertFalse(listRow.isHidden)
         XCTAssertEqual(
-            (try view(withIdentifier: "prefs.customBodyTitleField", in: contentView) as? NSTextField)?.stringValue,
+            (try view(withIdentifier: "prefs.customBodyIdeaTitle.0", in: contentView) as? NSTextField)?.stringValue,
             "Stretch"
         )
+        XCTAssertEqual(
+            (try view(withIdentifier: "prefs.customBodyTitleField", in: contentView) as? NSTextField)?.stringValue,
+            ""
+        )
         XCTAssertTrue(jsonRow.isHidden)
+
+        savedSettings.value = nil
+        let title = try XCTUnwrap(view(withIdentifier: "prefs.customBodyTitleField", in: contentView) as? NSTextField)
+        let body = try XCTUnwrap(view(withIdentifier: "customBodyTextEditor", in: contentView) as? NSTextView)
+        let addButton = try XCTUnwrap(view(withIdentifier: "prefs.customBodyAddIdeaButton", in: contentView) as? NSButton)
+        title.stringValue = "Look outside"
+        controller.controlTextDidChange(Notification(name: NSControl.textDidChangeNotification, object: title))
+        body.string = "Focus on a far object."
+        controller.textDidChange(Notification(name: NSText.didChangeNotification, object: body))
+
+        XCTAssertTrue(sendAction(from: addButton))
+
+        waitUntilSavedSettingsArrive(savedSettings)
+        let updatedIdeas = try XCTUnwrap(savedSettings.value?.contentLibrary.customBodyBreakIdeas)
+        XCTAssertEqual(updatedIdeas.map(\.title), ["Stretch", "Look outside"])
+        XCTAssertEqual(updatedIdeas[1].body, "Focus on a far object.")
     }
 
     func testCustomBodyIdeaRotationListEditsExistingIdeaAndAutosavesOnUpdateOnly() throws {
