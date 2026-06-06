@@ -368,6 +368,9 @@ public struct RestEngine: Equatable, Sendable {
             if active.kind == .eyeGate {
                 return .denied(.eyeGateCannotBeSkipped)
             }
+            guard settings.rule(for: active.kind).ordinarySkipEnabled else {
+                return .denied(.actionDisabled)
+            }
             _ = completeActive(now: now, reason: .skipped)
         }
 

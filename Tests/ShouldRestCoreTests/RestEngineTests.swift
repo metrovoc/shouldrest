@@ -184,6 +184,35 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.activeSession?.kind, .bodyBreak)
     }
 
+    func testPauseDuringSkippableBodyBreakRecordsSkippedRestAndPauses() {
+        var engine = RestEngine(settings: .defaults, now: start)
+        _ = engine.takeNow(.bodyBreak, now: start)
+
+        let result = engine.pause(for: 30 * 60, now: start.addingTimeInterval(1), reason: .user)
+
+        guard case .paused(let pause) = result else {
+            return XCTFail("Expected pause to skip active Body Break and pause")
+        }
+        XCTAssertNil(engine.state.activeSession)
+        XCTAssertEqual(engine.state.pause, pause)
+        XCTAssertEqual(engine.state.statistics.skippedBodyBreaks, 1)
+        XCTAssertEqual(engine.state.dangerScore, RestKind.bodyBreak.defaultHealthWeight)
+    }
+
+    func testPauseCannotBypassStrictBodyBreakSkipPolicy() {
+        var settings = RestSettings.defaults
+        settings.bodyBreak.ordinarySkipEnabled = false
+        var engine = RestEngine(settings: settings, now: start)
+        _ = engine.takeNow(.bodyBreak, now: start)
+
+        let result = engine.pause(for: 30 * 60, now: start.addingTimeInterval(1), reason: .user)
+
+        XCTAssertEqual(result, .denied(.actionDisabled))
+        XCTAssertEqual(engine.state.activeSession?.kind, .bodyBreak)
+        XCTAssertNil(engine.state.pause)
+        XCTAssertEqual(engine.state.statistics.skippedBodyBreaks, 0)
+    }
+
     func testNaturalIdleCreditsScheduledEyeGate() {
         var engine = RestEngine(settings: .defaults, now: start)
         let result = engine.evaluate(
