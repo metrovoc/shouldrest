@@ -3961,10 +3961,63 @@ final class FocusModeDetector {
     }
 }
 
+enum DisplayIdentifier {
+    static let screenNumberKey = NSDeviceDescriptionKey("NSScreenNumber")
+
+    static func value(from deviceDescription: [NSDeviceDescriptionKey: Any], fallbackFrame: NSRect) -> CGDirectDisplayID {
+        directDisplayID(from: deviceDescription[screenNumberKey]) ?? syntheticDisplayID(for: fallbackFrame)
+    }
+
+    static func directDisplayID(from value: Any?) -> CGDirectDisplayID? {
+        if let number = value as? NSNumber {
+            guard CFGetTypeID(number) != CFBooleanGetTypeID(),
+                  number.int64Value > 0,
+                  number.uint64Value <= UInt64(CGDirectDisplayID.max) else {
+                return nil
+            }
+            return CGDirectDisplayID(number.uint64Value)
+        }
+
+        if let id = value as? CGDirectDisplayID, id > 0 {
+            return id
+        }
+
+        if let id = value as? Int,
+           id > 0,
+           id <= Int(CGDirectDisplayID.max) {
+            return CGDirectDisplayID(id)
+        }
+
+        return nil
+    }
+
+    static func syntheticDisplayID(for frame: NSRect) -> CGDirectDisplayID {
+        var hash: UInt64 = 0xcbf29ce484222325
+        for component in frame.syntheticDisplayIDComponents {
+            var value = UInt64(bitPattern: component)
+            for _ in 0..<8 {
+                hash ^= value & 0xff
+                hash &*= 0x100000001b3
+                value >>= 8
+            }
+        }
+
+        let raw = CGDirectDisplayID(truncatingIfNeeded: hash)
+        return (raw == 0 ? 1 : raw) | 0x8000_0000
+    }
+}
+
 extension NSScreen {
     var displayID: CGDirectDisplayID {
-        let key = NSDeviceDescriptionKey("NSScreenNumber")
-        return deviceDescription[key] as? CGDirectDisplayID ?? 0
+        DisplayIdentifier.value(from: deviceDescription, fallbackFrame: frame)
+    }
+}
+
+private extension NSRect {
+    var syntheticDisplayIDComponents: [Int64] {
+        [minX, minY, width, height].map { coordinate in
+            Int64((coordinate * 1_000).rounded())
+        }
     }
 }
 
