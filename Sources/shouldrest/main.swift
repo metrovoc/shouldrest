@@ -3299,11 +3299,6 @@ final class RestOverlayView: NSView {
         emergencyOverrideArmed: Bool = false,
         bodyActions: BodyOverlayActions? = nil
     ) {
-        let rule = settings.rule(for: session.kind)
-        let fallbackColor = RestSettings.defaults.rule(for: session.kind).colorHex
-        layer?.backgroundColor = NSColor(hex: rule.colorHex, fallback: fallbackColor)
-            .withAlphaComponent(rule.enforcement.opacity)
-            .cgColor
         self.bodyActions = bodyActions
         let canUseEmergencyOverride = isEmergencyOverrideAvailable && !(manualAwaiting && session.kind == .eyeGate)
         configureEmergencyButton(

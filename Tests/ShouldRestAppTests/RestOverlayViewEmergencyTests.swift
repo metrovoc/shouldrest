@@ -588,6 +588,30 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         assertColor(window.backgroundColor, matches: NSColor(hex: "#225588"))
     }
 
+    func testOverlayBackdropOpacityIsAppliedOnlyByWindowBackground() throws {
+        let screen = try XCTUnwrap(NSScreen.main)
+        let session = bodyBreakSession()
+        var settings = RestSettings.defaults
+        settings.bodyBreak.colorHex = "#884422"
+        settings.bodyBreak.enforcement.opacity = 0.4
+
+        let window = OverlayWindow(screen: screen, session: session, settings: settings)
+        defer { window.close() }
+
+        assertColor(window.backgroundColor, matches: NSColor(hex: "#884422").withAlphaComponent(0.4))
+
+        window.overlayView.configure(
+            session: session,
+            remainingSeconds: 300,
+            settings: settings,
+            showsContent: true,
+            manualAwaiting: false,
+            isEmergencyOverrideAvailable: false
+        )
+
+        XCTAssertNil(window.overlayView.layer?.backgroundColor)
+    }
+
     func testEmergencyTriggerArmsInsideOverlayInsteadOfExternalConfirmation() throws {
         let view = configuredEyeGateOverlay(
             isArmed: false
