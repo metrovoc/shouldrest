@@ -93,4 +93,25 @@ final class OverlayActionPolicyTests: XCTestCase {
             OverlayActionAvailability(canPostpone: false, canFinish: true, canSkip: false)
         )
     }
+
+    func testBodyBreakWithoutManualFinishDoesNotExposeDeadFinishActionAfterDuration() {
+        let start = Date()
+        let session = RestSession(
+            kind: .bodyBreak,
+            startedAt: start,
+            scheduledAt: start,
+            duration: 60,
+            manualFinishEnabled: false
+        )
+
+        XCTAssertEqual(
+            OverlayActionPolicy.availability(
+                for: session,
+                now: start.addingTimeInterval(60),
+                canPostponeBodyBreak: true,
+                canSkipBodyBreak: true
+            ),
+            OverlayActionAvailability(canPostpone: false, canFinish: false, canSkip: false)
+        )
+    }
 }

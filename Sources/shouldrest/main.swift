@@ -2335,10 +2335,20 @@ enum OverlayActionPolicy {
         case .bodyBreak:
             return OverlayActionAvailability(
                 canPostpone: !canFinish && canPostponeBodyBreak,
-                canFinish: canFinish,
+                canFinish: session.manualFinishEnabled && canFinish,
                 canSkip: !canFinish && canSkipBodyBreak
             )
         }
+    }
+}
+
+enum ActiveRestCountdown {
+    static func remainingSeconds(duration: TimeInterval, elapsed: TimeInterval) -> Int {
+        max(0, Int(ceil(duration - elapsed)))
+    }
+
+    static func remainingSeconds(for session: RestSession, now: Date) -> Int {
+        remainingSeconds(duration: session.duration, elapsed: now.timeIntervalSince(session.startedAt))
     }
 }
 
@@ -2369,6 +2379,8 @@ final class OverlayController {
     private var settings: RestSettings?
     private var emergencyOverrideAction: (() -> EmergencyOverrideDecision)?
     private var bodyActions: BodyOverlayActions?
+    private var manualAwaiting = false
+    private var emergencyOverrideArmed = false
 
     func present(
         session: RestSession,
@@ -2411,10 +2423,12 @@ final class OverlayController {
         self.settings = settings
         self.emergencyOverrideAction = emergencyOverrideAction
         self.bodyActions = bodyActions
+        self.manualAwaiting = manualAwaiting
+        self.emergencyOverrideArmed = emergencyOverrideArmed
         let contentScreen = selectedContentScreen(for: session, settings: settings)
         let screens = coveredScreens(for: session, settings: settings, contentScreen: contentScreen)
         reconcileWindows(for: screens, session: session, settings: settings)
-        let remaining = max(0, Int(session.duration - now.timeIntervalSince(session.startedAt)))
+        let remaining = ActiveRestCountdown.remainingSeconds(for: session, now: now)
         let canUseEmergencyOverride: Bool
         if emergencyOverrideAction == nil {
             canUseEmergencyOverride = false
@@ -2428,6 +2442,7 @@ final class OverlayController {
             windows[id]?.overlayView.onEmergencyOverrideRequested = emergencyOverrideAction
             windows[id]?.overlayView.bodyActions = bodyActions
             windows[id]?.setFrame(screen.frame, display: true)
+            windows[id]?.configureBackdrop(session: session, settings: settings)
             windows[id]?.overlayView.configure(
                 session: session,
                 remainingSeconds: remaining,
@@ -2469,9 +2484,15 @@ final class OverlayController {
     func reconcile() {
         guard let session, let settings else { return }
 
-        let contentScreen = selectedContentScreen(for: session, settings: settings)
-        let screens = coveredScreens(for: session, settings: settings, contentScreen: contentScreen)
-        reconcileWindows(for: screens, session: session, settings: settings)
+        update(
+            session: session,
+            settings: settings,
+            now: Date(),
+            manualAwaiting: manualAwaiting,
+            emergencyOverrideAction: emergencyOverrideAction,
+            emergencyOverrideArmed: emergencyOverrideArmed,
+            bodyActions: bodyActions
+        )
     }
 
     private func reconcileWindows(for screens: [NSScreen], session: RestSession, settings: RestSettings) {
@@ -2503,6 +2524,8 @@ final class OverlayController {
         settings = nil
         emergencyOverrideAction = nil
         bodyActions = nil
+        manualAwaiting = false
+        emergencyOverrideArmed = false
     }
 
     private func emergencyOverrideIsAvailable(for session: RestSession, settings: RestSettings, now: Date) -> Bool {
@@ -2596,13 +2619,19 @@ final class OverlayWindow: NSWindow {
         level = settings.rule(for: session.kind).enforcement.usesScreenSaverLevel ? .screenSaver : .modalPanel
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
         isReleasedWhenClosed = false
-        isOpaque = true
-        backgroundColor = .black
         hasShadow = false
         hidesOnDeactivate = false
         isMovable = false
         canHide = false
+        configureBackdrop(session: session, settings: settings)
         syncOverlayViewFrame(to: screen.frame.size)
+    }
+
+    func configureBackdrop(session: RestSession, settings: RestSettings) {
+        let rule = settings.rule(for: session.kind)
+        let color = NSColor(hex: rule.colorHex).withAlphaComponent(rule.enforcement.opacity)
+        backgroundColor = color
+        isOpaque = rule.enforcement.isOpaque && rule.enforcement.opacity >= 1
     }
 
     override var canBecomeKey: Bool {

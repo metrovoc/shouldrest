@@ -159,7 +159,7 @@ enum MenuStatusPresenter {
             if isManualFinishReady(active, now: now) {
                 return L10n.format("status.readyToFinish", restKindName(active.kind))
             }
-            let remaining = max(0, Int(active.duration - now.timeIntervalSince(active.startedAt)))
+            let remaining = ActiveRestCountdown.remainingSeconds(for: active, now: now)
             return L10n.format("status.active", restKindName(active.kind), activeRemainingText(seconds: remaining))
         }
         if let pause = state.pause {

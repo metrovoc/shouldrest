@@ -11,6 +11,12 @@ final class RestOverlayViewCountdownTests: XCTestCase {
         XCTAssertEqual(OverlayCountdownFormatter.remainingText(seconds: -4), "0s")
     }
 
+    func testActiveRestCountdownDoesNotShowZeroBeforeDurationEnds() {
+        XCTAssertEqual(ActiveRestCountdown.remainingSeconds(duration: 60, elapsed: 58.01), 2)
+        XCTAssertEqual(ActiveRestCountdown.remainingSeconds(duration: 60, elapsed: 59.01), 1)
+        XCTAssertEqual(ActiveRestCountdown.remainingSeconds(duration: 60, elapsed: 60), 0)
+    }
+
     func testOverlayCountdownFormatterUsesReadableMinuteClock() {
         XCTAssertEqual(OverlayCountdownFormatter.remainingText(seconds: 60), "1:00")
         XCTAssertEqual(OverlayCountdownFormatter.remainingText(seconds: 75), "1:15")

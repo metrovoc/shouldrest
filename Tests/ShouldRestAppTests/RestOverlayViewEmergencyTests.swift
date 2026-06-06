@@ -571,6 +571,23 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(window.overlayView.frame.height, 480)
     }
 
+    func testOverlayWindowBackdropUsesCurrentRestRuleColor() throws {
+        let screen = try XCTUnwrap(NSScreen.main)
+        let session = bodyBreakSession()
+        var settings = RestSettings.defaults
+        settings.bodyBreak.colorHex = "#884422"
+
+        let window = OverlayWindow(screen: screen, session: session, settings: settings)
+        defer { window.close() }
+
+        assertColor(window.backgroundColor, matches: NSColor(hex: "#884422"))
+
+        settings.bodyBreak.colorHex = "#225588"
+        window.configureBackdrop(session: session, settings: settings)
+
+        assertColor(window.backgroundColor, matches: NSColor(hex: "#225588"))
+    }
+
     func testEmergencyTriggerArmsInsideOverlayInsteadOfExternalConfirmation() throws {
         let view = configuredEyeGateOverlay(
             isArmed: false
@@ -1709,6 +1726,17 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         )
     }
 
+    private func bodyBreakSession() -> RestSession {
+        let start = Date()
+        return RestSession(
+            kind: .bodyBreak,
+            startedAt: start,
+            scheduledAt: start,
+            duration: 60,
+            manualFinishEnabled: true
+        )
+    }
+
     private func drainMainQueue(
         file: StaticString = #filePath,
         line: UInt = #line
@@ -1733,6 +1761,22 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertNil(button.toolTip, file: file, line: line)
         XCTAssertNil(button.accessibilityLabel(), file: file, line: line)
         XCTAssertNil(button.accessibilityHelp(), file: file, line: line)
+    }
+
+    private func assertColor(
+        _ actual: NSColor?,
+        matches expected: NSColor,
+        file: StaticString = #filePath,
+        line: UInt = #line
+    ) {
+        let actualRGB = actual?.usingColorSpace(.deviceRGB)
+        let expectedRGB = expected.usingColorSpace(.deviceRGB)
+        XCTAssertNotNil(actualRGB, file: file, line: line)
+        XCTAssertNotNil(expectedRGB, file: file, line: line)
+        XCTAssertEqual(actualRGB?.redComponent ?? -1, expectedRGB?.redComponent ?? -2, accuracy: 0.001, file: file, line: line)
+        XCTAssertEqual(actualRGB?.greenComponent ?? -1, expectedRGB?.greenComponent ?? -2, accuracy: 0.001, file: file, line: line)
+        XCTAssertEqual(actualRGB?.blueComponent ?? -1, expectedRGB?.blueComponent ?? -2, accuracy: 0.001, file: file, line: line)
+        XCTAssertEqual(actualRGB?.alphaComponent ?? -1, expectedRGB?.alphaComponent ?? -2, accuracy: 0.001, file: file, line: line)
     }
 
     private func performEmergencyClick(on view: RestOverlayView) throws {
