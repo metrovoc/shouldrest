@@ -99,6 +99,57 @@ final class RestContextPolicyTests: XCTestCase {
         XCTAssertFalse(SystemSuspendPausePolicy.shouldPauseScheduler(state: RestEngineState(activeSession: active)))
     }
 
+    func testSystemResumeIdlePolicyKeepsOrdinaryIdleButIgnoresAutoPausedSuspendIdle() {
+        XCTAssertEqual(
+            SystemResumeIdlePolicy.effectiveIdleDuration(
+                suspendedIdleDuration: 120,
+                didPauseScheduler: false
+            ),
+            120
+        )
+        XCTAssertEqual(
+            SystemResumeIdlePolicy.effectiveIdleDuration(
+                suspendedIdleDuration: 120,
+                didPauseScheduler: true
+            ),
+            0
+        )
+        XCTAssertEqual(
+            SystemResumeIdlePolicy.effectiveIdleDuration(
+                suspendedIdleDuration: -1,
+                didPauseScheduler: false
+            ),
+            0
+        )
+    }
+
+    func testSystemResumeAfterAutoPauseDoesNotCreditSuspendTimeAsNaturalRest() {
+        let sleepAt = Date(timeIntervalSinceReferenceDate: 3_000)
+        let wakeAt = sleepAt.addingTimeInterval(5 * 60)
+        let settings = RestSettings.defaults
+        var engine = RestEngine(settings: settings, now: sleepAt)
+
+        _ = engine.pause(for: nil, now: sleepAt, reason: .suspendOrLock)
+        XCTAssertEqual(engine.resume(now: wakeAt), .resumed)
+
+        let context = RestContextPolicy.make(
+            settings: settings,
+            now: wakeAt,
+            idleDuration: SystemResumeIdlePolicy.effectiveIdleDuration(
+                suspendedIdleDuration: wakeAt.timeIntervalSince(sleepAt),
+                didPauseScheduler: true
+            ),
+            focusModeActive: false,
+            appExclusions: []
+        )
+
+        XCTAssertEqual(engine.evaluate(now: wakeAt, context: context), .noChange)
+        XCTAssertEqual(engine.state.statistics.completedEyeGates, 0)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 0)
+        XCTAssertEqual(engine.state.scheduled?.kind, .eyeGate)
+        XCTAssertEqual(engine.state.scheduled?.dueAt, wakeAt.addingTimeInterval(settings.eyeGate.interval))
+    }
+
     private func localDate(hour: Int, minute: Int) throws -> Date {
         let calendar = Calendar.current
         let anchor = Date(timeIntervalSinceReferenceDate: 0)

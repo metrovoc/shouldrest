@@ -137,12 +137,20 @@ final class CommandLineAutomationTests: XCTestCase {
         XCTAssertEqual(CommandLineAutomation.parseDuration("1h"), 60 * 60)
         XCTAssertEqual(CommandLineAutomation.parseDuration("1h20m"), 80 * 60)
         XCTAssertEqual(CommandLineAutomation.parseDuration("20m"), 20 * 60)
+        XCTAssertEqual(CommandLineAutomation.parseDuration(" 20m "), 20 * 60)
         let untilMorning = try XCTUnwrap(CommandLineAutomation.parseDuration("until-morning", morningHour: 6))
         XCTAssertGreaterThan(untilMorning, 0)
         XCTAssertLessThanOrEqual(untilMorning, 24 * 60 * 60)
         XCTAssertNil(CommandLineAutomation.parseDuration("indefinitely"))
         XCTAssertNil(CommandLineAutomation.parseDuration("0"))
+        XCTAssertNil(CommandLineAutomation.parseDuration("1.5"))
         XCTAssertNil(CommandLineAutomation.parseDuration("abc"))
+    }
+
+    func testRejectsUnsafeOrUnreasonableAutomationDurations() {
+        XCTAssertNil(CommandLineAutomation.parseDuration(String(Int.max)))
+        XCTAssertNil(CommandLineAutomation.parseDuration("\(Int.max)h"))
+        XCTAssertNil(CommandLineAutomation.parseDuration("999999999999999999999999h"))
     }
 
     func testParsesPauseURLAutomation() throws {

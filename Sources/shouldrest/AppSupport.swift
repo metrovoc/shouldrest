@@ -230,6 +230,8 @@ struct EyeGateCommandPlan: Equatable {
 
 @MainActor
 enum CommandLineAutomation {
+    private static let maximumAutomationDuration: TimeInterval = 366 * 24 * 60 * 60
+
     private enum DurationParseResult {
         case valid(TimeInterval?)
         case invalid
@@ -587,6 +589,7 @@ enum CommandLineAutomation {
         operations: OperationsSettings? = nil,
         morningHour: Int? = nil
     ) -> TimeInterval? {
+        let input = input.trimmingCharacters(in: .whitespacesAndNewlines)
         if input == "indefinitely" {
             return nil
         }
@@ -596,8 +599,9 @@ enum CommandLineAutomation {
             }
             return OperationsSettings.secondsUntilMorning(morningHour: morningHour)
         }
-        if let minutes = Int(input), minutes > 0 {
-            return TimeInterval(minutes * 60)
+        if input.range(of: #"^\d+$"#, options: .regularExpression) != nil,
+           let minutes = TimeInterval(input) {
+            return secondsFromDurationComponents(minutes: minutes)
         }
 
         let pattern = #"^(?:(\d+)h)?(?:(\d+)m)?$"#
@@ -608,13 +612,32 @@ enum CommandLineAutomation {
             return nil
         }
 
-        func number(at index: Int) -> Int {
+        func number(at index: Int) -> TimeInterval? {
             guard let range = Range(match.range(at: index), in: input) else { return 0 }
-            return Int(input[range]) ?? 0
+            return TimeInterval(input[range])
         }
 
-        let seconds = (number(at: 1) * 60 * 60) + (number(at: 2) * 60)
-        return seconds > 0 ? TimeInterval(seconds) : nil
+        guard let hours = number(at: 1),
+              let minutes = number(at: 2) else {
+            return nil
+        }
+        return secondsFromDurationComponents(hours: hours, minutes: minutes)
+    }
+
+    private static func secondsFromDurationComponents(
+        hours: TimeInterval = 0,
+        minutes: TimeInterval = 0
+    ) -> TimeInterval? {
+        guard hours.isFinite, minutes.isFinite, hours >= 0, minutes >= 0 else {
+            return nil
+        }
+        let seconds = (hours * 60 * 60) + (minutes * 60)
+        guard seconds.isFinite,
+              seconds > 0,
+              seconds <= maximumAutomationDuration else {
+            return nil
+        }
+        return seconds
     }
 
     private static func configuredOperations() -> OperationsSettings? {

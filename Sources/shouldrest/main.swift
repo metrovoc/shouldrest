@@ -304,6 +304,15 @@ enum SystemSuspendPausePolicy {
     }
 }
 
+enum SystemResumeIdlePolicy {
+    static func effectiveIdleDuration(
+        suspendedIdleDuration: TimeInterval,
+        didPauseScheduler: Bool
+    ) -> TimeInterval {
+        didPauseScheduler ? 0 : max(0, suspendedIdleDuration)
+    }
+}
+
 enum StatusMenuActionIcon {
     static func symbolName(forActionName actionName: String) -> String? {
         switch actionName.replacingOccurrences(of: ":", with: "") {
@@ -2086,16 +2095,21 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         let now = Date()
         let idleDuration = suspendedAt.map { now.timeIntervalSince($0) } ?? 0
         suspendedAt = nil
+        let didPauseScheduler = pausedForSuspendOrLock
         refreshFocusMode(now: now, force: true)
-        if pausedForSuspendOrLock {
+        if didPauseScheduler {
             _ = engine.resume(now: now)
             pausedForSuspendOrLock = false
         }
-        let result = engine.evaluate(now: now, context: currentContext(now: now, idleDuration: idleDuration))
+        let restIdleDuration = SystemResumeIdlePolicy.effectiveIdleDuration(
+            suspendedIdleDuration: idleDuration,
+            didPauseScheduler: didPauseScheduler
+        )
+        let result = engine.evaluate(now: now, context: currentContext(now: now, idleDuration: restIdleDuration))
         handleEngineResult(result, now: now)
         refreshActiveBreakShortcut()
         refreshEmergencyEscapeShortcut()
-        logger.log("System resume detected idleDuration=\(idleDuration)")
+        logger.log("System resume detected idleDuration=\(idleDuration) restIdleDuration=\(restIdleDuration)")
         rebuildMenu()
     }
 
