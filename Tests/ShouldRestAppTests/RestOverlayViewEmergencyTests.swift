@@ -1228,6 +1228,41 @@ final class RestOverlayViewEmergencyTests: XCTestCase {
         XCTAssertEqual(requestCount, 0)
     }
 
+    func testOverlayControllerNormalizesUnsafeEyeGateEnforcementBeforeCreatingWindows() throws {
+        _ = try XCTUnwrap(NSScreen.main)
+        let session = eyeGateSession()
+        let controller = OverlayController()
+        defer { controller.dismiss() }
+        var settings = RestSettings.defaults
+        settings.eyeGate.colorHex = "#336699"
+        settings.eyeGate.enforcement = EnforcementProfile(
+            coversAllDisplays: false,
+            usesScreenSaverLevel: false,
+            isOpaque: false,
+            opacity: 0,
+            allowRegularWindowMode: true,
+            coveredDisplay: .configured,
+            contentDisplay: .none,
+            blankSecondaryDisplays: false,
+            configuredDisplayIndex: 9
+        )
+
+        controller.update(
+            session: session,
+            settings: settings,
+            now: session.startedAt.addingTimeInterval(1),
+            manualAwaiting: false
+        )
+
+        let windows = controller.windowsForTesting
+        XCTAssertEqual(windows.count, NSScreen.screens.count)
+        for window in windows {
+            XCTAssertEqual(window.level, .screenSaver)
+            XCTAssertTrue(window.isOpaque)
+            assertColor(window.backgroundColor, matches: NSColor(hex: "#336699"))
+        }
+    }
+
     func testRefreshKeepsEmergencyConfirmationWhenCoordinatorStillArmed() throws {
         let session = eyeGateSession()
         let view = RestOverlayView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))

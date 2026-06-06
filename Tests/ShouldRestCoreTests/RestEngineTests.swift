@@ -743,6 +743,7 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(loaded.bodyBreakAfterEyeGates, 1)
         XCTAssertEqual(loaded.eyeGate.interval, 1)
         XCTAssertEqual(loaded.eyeGate.duration, 1)
+        XCTAssertEqual(loaded.eyeGate.enforcement, .eyeGateDefault)
         XCTAssertEqual(loaded.notifications.eyeGateLeadTime, 0)
         XCTAssertEqual(loaded.notifications.bodyBreakLeadTime, 0)
         XCTAssertEqual(loaded.naturalBreaks.inactivityResetTime, 1)
@@ -831,6 +832,17 @@ final class RestEngineTests: XCTestCase {
         var settings = RestSettings.defaults
         settings.eyeGate.interval = 0
         settings.eyeGate.duration = -20
+        settings.eyeGate.enforcement = EnforcementProfile(
+            coversAllDisplays: false,
+            usesScreenSaverLevel: false,
+            isOpaque: false,
+            opacity: 0,
+            allowRegularWindowMode: true,
+            coveredDisplay: .configured,
+            contentDisplay: .none,
+            blankSecondaryDisplays: false,
+            configuredDisplayIndex: 9
+        )
         settings.bodyBreakAfterEyeGates = 0
         settings.bodyBreak.enforcement.opacity = 2
         settings.notifications.eyeGateLeadTime = -10
@@ -839,6 +851,7 @@ final class RestEngineTests: XCTestCase {
 
         XCTAssertEqual(engine.settings.eyeGate.interval, 1)
         XCTAssertEqual(engine.settings.eyeGate.duration, 1)
+        XCTAssertEqual(engine.settings.eyeGate.enforcement, .eyeGateDefault)
         XCTAssertEqual(engine.settings.bodyBreakAfterEyeGates, 1)
         XCTAssertEqual(engine.settings.bodyBreak.enforcement.opacity, 1)
         XCTAssertEqual(engine.settings.notifications.eyeGateLeadTime, 0)
@@ -1218,6 +1231,17 @@ final class RestEngineTests: XCTestCase {
         var eyeGate = try XCTUnwrap(object["eyeGate"] as? [String: Any])
         eyeGate["interval"] = 0
         eyeGate["duration"] = -20
+        var eyeEnforcement = try XCTUnwrap(eyeGate["enforcement"] as? [String: Any])
+        eyeEnforcement["coversAllDisplays"] = false
+        eyeEnforcement["usesScreenSaverLevel"] = false
+        eyeEnforcement["isOpaque"] = false
+        eyeEnforcement["opacity"] = 0
+        eyeEnforcement["allowRegularWindowMode"] = true
+        eyeEnforcement["coveredDisplay"] = "configured"
+        eyeEnforcement["contentDisplay"] = "none"
+        eyeEnforcement["blankSecondaryDisplays"] = false
+        eyeEnforcement["configuredDisplayIndex"] = 9
+        eyeGate["enforcement"] = eyeEnforcement
         object["eyeGate"] = eyeGate
 
         var bodyBreak = try XCTUnwrap(object["bodyBreak"] as? [String: Any])

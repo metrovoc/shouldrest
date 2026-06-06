@@ -2647,6 +2647,10 @@ final class OverlayController {
     private var manualAwaiting = false
     private var emergencyOverrideArmed = false
 
+    var windowsForTesting: [OverlayWindow] {
+        Array(windows.values)
+    }
+
     func present(
         session: RestSession,
         settings: RestSettings,
@@ -2655,14 +2659,15 @@ final class OverlayController {
         emergencyOverrideArmed: Bool = false,
         bodyActions: BodyOverlayActions? = nil
     ) {
+        let effectiveSettings = settings.normalizedForCurrentDesign()
         self.session = session
-        self.settings = settings
+        self.settings = effectiveSettings
         self.emergencyOverrideAction = emergencyOverrideAction
         self.bodyActions = bodyActions
         NSApp.activate(ignoringOtherApps: true)
         update(
             session: session,
-            settings: settings,
+            settings: effectiveSettings,
             now: now,
             manualAwaiting: false,
             emergencyOverrideAction: emergencyOverrideAction,
@@ -2684,34 +2689,40 @@ final class OverlayController {
         emergencyOverrideArmed: Bool = false,
         bodyActions: BodyOverlayActions? = nil
     ) {
+        let effectiveSettings = settings.normalizedForCurrentDesign()
         self.session = session
-        self.settings = settings
+        self.settings = effectiveSettings
         self.emergencyOverrideAction = emergencyOverrideAction
         self.bodyActions = bodyActions
         self.manualAwaiting = manualAwaiting
         self.emergencyOverrideArmed = emergencyOverrideArmed
-        let contentScreen = selectedContentScreen(for: session, settings: settings)
-        let screens = coveredScreens(for: session, settings: settings, contentScreen: contentScreen)
-        reconcileWindows(for: screens, session: session, settings: settings)
+        let contentScreen = selectedContentScreen(for: session, settings: effectiveSettings)
+        let screens = coveredScreens(for: session, settings: effectiveSettings, contentScreen: contentScreen)
+        reconcileWindows(for: screens, session: session, settings: effectiveSettings)
         let remaining = ActiveRestCountdown.remainingSeconds(for: session, now: now)
         let canUseEmergencyOverride: Bool
         if emergencyOverrideAction == nil {
             canUseEmergencyOverride = false
         } else {
-            canUseEmergencyOverride = emergencyOverrideIsAvailable(for: session, settings: settings, now: now)
+            canUseEmergencyOverride = emergencyOverrideIsAvailable(for: session, settings: effectiveSettings, now: now)
         }
 
         for screen in screens {
             let id = screen.displayID
-            let isContentScreen = shouldShowContent(on: screen, contentScreen: contentScreen, session: session, settings: settings)
+            let isContentScreen = shouldShowContent(
+                on: screen,
+                contentScreen: contentScreen,
+                session: session,
+                settings: effectiveSettings
+            )
             windows[id]?.overlayView.onEmergencyOverrideRequested = emergencyOverrideAction
             windows[id]?.overlayView.bodyActions = bodyActions
             windows[id]?.setFrame(screen.frame, display: true)
-            windows[id]?.configureBackdrop(session: session, settings: settings)
+            windows[id]?.configureBackdrop(session: session, settings: effectiveSettings)
             windows[id]?.overlayView.configure(
                 session: session,
                 remainingSeconds: remaining,
-                settings: settings,
+                settings: effectiveSettings,
                 showsContent: isContentScreen,
                 manualAwaiting: manualAwaiting,
                 isEmergencyOverrideAvailable: canUseEmergencyOverride,
@@ -2722,7 +2733,7 @@ final class OverlayController {
             if manualAwaiting && session.kind == .bodyBreak {
                 level = .modalPanel
             } else {
-                level = windowLevel(for: session, settings: settings)
+                level = windowLevel(for: session, settings: effectiveSettings)
             }
             windows[id]?.level = level
             windows[id]?.makeKeyAndOrderFront(nil)

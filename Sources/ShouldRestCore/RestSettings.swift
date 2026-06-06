@@ -181,6 +181,7 @@ public struct RestSettings: Codable, Equatable, Sendable {
         copy.eyeGate.emergencyOverride.confirmationSteps = EmergencyOverridePolicy.confirmationStepsForCurrentDesign(
             isEnabled: copy.eyeGate.emergencyOverride.isEnabled
         )
+        copy.eyeGate.enforcement = .eyeGateDefault
         copy.bodyBreak.emergencyOverride = .disabled
         if let emergencyShortcut = copy.shortcuts.emergencyEyeGateOverride,
            emergencyShortcut.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
