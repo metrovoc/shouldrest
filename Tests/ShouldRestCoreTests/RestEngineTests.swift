@@ -753,6 +753,68 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(migrated, loaded)
     }
 
+    func testSettingsStoreLoadsLegacyMissingFieldsAndPersistsMigration() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let url = directory.appendingPathComponent("settings.json")
+        let store = SettingsStore(fileURL: url)
+
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try legacySettingsDataWithMissingFields().write(to: url, options: [.atomic])
+
+        let loaded = try store.load()
+
+        XCTAssertFalse(loaded.eyeGate.isEnabled)
+        XCTAssertEqual(loaded.bodyBreak.colorHex, "#123456")
+        XCTAssertEqual(loaded.notifications.silentNotifications, NotificationSettings.defaults.silentNotifications)
+        XCTAssertEqual(loaded.shortcuts.reset, ShortcutSettings.defaults.reset)
+        XCTAssertNil(loaded.shortcuts.endBodyBreak)
+        XCTAssertNil(loaded.shortcuts.emergencyEyeGateOverride)
+        XCTAssertEqual(loaded.shortcuts.resolvedEndBodyBreakShortcut, ShortcutSettings.defaultEndBodyBreakShortcut)
+        XCTAssertEqual(loaded.contentLibrary.localImagePaths, [])
+        XCTAssertEqual(loaded.contentLibrary.customBodyBreakIdeas.first?.isEnabled, true)
+        XCTAssertEqual(loaded.appExclusions.first?.appliesTo, [.bodyBreak])
+        XCTAssertEqual(loaded.admin.customPreferencesMessage, AdminSettings.defaults.customPreferencesMessage)
+
+        let migratedData = try Data(contentsOf: url)
+        let migratedRaw = try XCTUnwrap(JSONSerialization.jsonObject(with: migratedData) as? [String: Any])
+        let migratedShortcuts = try XCTUnwrap(migratedRaw["shortcuts"] as? [String: Any])
+        let migratedContentLibrary = try XCTUnwrap(migratedRaw["contentLibrary"] as? [String: Any])
+        let migratedAdmin = try XCTUnwrap(migratedRaw["admin"] as? [String: Any])
+        XCTAssertNotNil(migratedShortcuts["reset"])
+        XCTAssertNotNil(migratedContentLibrary["localImagePaths"])
+        XCTAssertNotNil(migratedAdmin["customPreferencesMessage"])
+        XCTAssertEqual(try JSONDecoder().decode(RestSettings.self, from: migratedData), loaded)
+    }
+
+    func testSettingsStoreReturnsLoadedSettingsWhenMigrationCannotBePersisted() throws {
+        let fileManager = FileManager.default
+        let directory = fileManager.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let url = directory.appendingPathComponent("settings.json")
+        let store = SettingsStore(fileURL: url)
+
+        try fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+        try legacySettingsDataWithMissingFields().write(to: url, options: [.atomic])
+        try fileManager.setAttributes([.posixPermissions: NSNumber(value: 0o555)], ofItemAtPath: directory.path)
+        defer {
+            try? fileManager.setAttributes([.posixPermissions: NSNumber(value: 0o700)], ofItemAtPath: directory.path)
+            try? fileManager.removeItem(at: directory)
+        }
+        guard !fileManager.isWritableFile(atPath: directory.path) else {
+            throw XCTSkip("Temporary directory permissions still allow writes")
+        }
+
+        let loaded = try store.load()
+
+        XCTAssertFalse(loaded.eyeGate.isEnabled)
+        XCTAssertEqual(loaded.bodyBreak.colorHex, "#123456")
+        XCTAssertEqual(loaded.shortcuts.reset, ShortcutSettings.defaults.reset)
+        let raw = try XCTUnwrap(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+        let shortcuts = try XCTUnwrap(raw["shortcuts"] as? [String: Any])
+        XCTAssertNil(shortcuts["reset"])
+    }
+
     func testRestEngineNormalizesUnsafeSettingsBeforeScheduling() {
         var settings = RestSettings.defaults
         settings.eyeGate.interval = 0
@@ -935,6 +997,28 @@ final class RestEngineTests: XCTestCase {
         )
     }
 
+    func testShortcutSettingsDecodesLegacyMissingResetShortcut() throws {
+        let legacyJSON = #"""
+        {
+          "pauseToggle": "",
+          "pauseFor30Minutes": "",
+          "pauseFor1Hour": "",
+          "pauseFor2Hours": "",
+          "pauseFor5Hours": "",
+          "pauseUntilMorning": "",
+          "takeEyeGateNow": "",
+          "takeBodyBreakNow": "",
+          "skipToNextBodyBreak": ""
+        }
+        """#.data(using: .utf8)!
+
+        let shortcuts = try JSONDecoder().decode(ShortcutSettings.self, from: legacyJSON)
+
+        XCTAssertEqual(shortcuts.reset, "")
+        XCTAssertNil(shortcuts.emergencyEyeGateOverride)
+        XCTAssertEqual(shortcuts.resolvedEndBodyBreakShortcut, ShortcutSettings.defaultEndBodyBreakShortcut)
+    }
+
     func testOperationsSettingsCalculatesUntilMorningUsingConfiguredHour() throws {
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = TimeZone(secondsFromGMT: 0)!
@@ -1057,6 +1141,60 @@ final class RestEngineTests: XCTestCase {
         emergencyOverride["minimumHoldDuration"] = hold
         rule["emergencyOverride"] = emergencyOverride
         object[ruleKey] = rule
+    }
+
+    private func legacySettingsDataWithMissingFields() throws -> Data {
+        var settings = RestSettings.defaults
+        settings.eyeGate.isEnabled = false
+        settings.bodyBreak.colorHex = "#123456"
+        settings.contentLibrary = ContentLibrarySettings(
+            useBuiltInIdeas: false,
+            customBodyBreakIdeas: [
+                RestIdea(id: "legacy-custom", kind: .bodyBreak, title: "Legacy custom", body: "Move")
+            ],
+            localImagePaths: ["/tmp/body.png"]
+        )
+        settings.appExclusions = [
+            AppExclusionRule(
+                id: "legacy-rule",
+                name: "Legacy rule",
+                matchTerms: ["Zoom"],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: true
+            )
+        ]
+        settings.admin.customPreferencesMessage = "Keep strict"
+
+        let data = try JSONEncoder().encode(settings)
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+        var notifications = try XCTUnwrap(object["notifications"] as? [String: Any])
+        notifications.removeValue(forKey: "silentNotifications")
+        object["notifications"] = notifications
+
+        var shortcuts = try XCTUnwrap(object["shortcuts"] as? [String: Any])
+        shortcuts.removeValue(forKey: "reset")
+        shortcuts.removeValue(forKey: "endBodyBreak")
+        shortcuts.removeValue(forKey: "emergencyEyeGateOverride")
+        object["shortcuts"] = shortcuts
+
+        var contentLibrary = try XCTUnwrap(object["contentLibrary"] as? [String: Any])
+        contentLibrary.removeValue(forKey: "localImagePaths")
+        var ideas = try XCTUnwrap(contentLibrary["customBodyBreakIdeas"] as? [[String: Any]])
+        ideas[0].removeValue(forKey: "isEnabled")
+        contentLibrary["customBodyBreakIdeas"] = ideas
+        object["contentLibrary"] = contentLibrary
+
+        var appExclusions = try XCTUnwrap(object["appExclusions"] as? [[String: Any]])
+        appExclusions[0].removeValue(forKey: "appliesTo")
+        object["appExclusions"] = appExclusions
+
+        var admin = try XCTUnwrap(object["admin"] as? [String: Any])
+        admin.removeValue(forKey: "customPreferencesMessage")
+        object["admin"] = admin
+
+        return try JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys])
     }
 
     private func unsafeSettingsData() throws -> Data {

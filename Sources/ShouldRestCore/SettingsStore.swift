@@ -21,16 +21,23 @@ public struct SettingsStore: Sendable {
         let data = try Data(contentsOf: fileURL)
         let decoded = try decoder.decode(RestSettings.self, from: data)
         let normalized = decoded.normalizedForCurrentDesign()
-        if decoded != normalized || data.range(of: Self.legacyEmergencyTimingKey) != nil {
-            try save(normalized)
+        let normalizedData = try encoder.encode(normalized)
+        if decoded != normalized ||
+            data != normalizedData ||
+            data.range(of: Self.legacyEmergencyTimingKey) != nil {
+            try? write(normalizedData)
         }
         return normalized
     }
 
     public func save(_ settings: RestSettings) throws {
+        let data = try encoder.encode(settings.normalizedForCurrentDesign())
+        try write(data)
+    }
+
+    private func write(_ data: Data) throws {
         let directory = fileURL.deletingLastPathComponent()
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        let data = try encoder.encode(settings.normalizedForCurrentDesign())
         try data.write(to: fileURL, options: [.atomic])
     }
 }

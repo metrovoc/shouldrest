@@ -14,6 +14,28 @@ public struct RestIdea: Codable, Equatable, Identifiable, Sendable {
         self.body = body
         self.isEnabled = isEnabled
     }
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case kind
+        case title
+        case body
+        case isEnabled
+    }
+
+    public init(from decoder: Decoder) throws {
+        guard let container = try? decoder.container(keyedBy: CodingKeys.self) else {
+            self.init(id: UUID().uuidString, kind: .bodyBreak, title: "", body: "", isEnabled: false)
+            return
+        }
+        self.init(
+            id: container.decodeLossy(String.self, forKey: .id, default: UUID().uuidString),
+            kind: container.decodeLossy(RestKind.self, forKey: .kind, default: .bodyBreak),
+            title: container.decodeLossy(String.self, forKey: .title, default: ""),
+            body: container.decodeLossy(String.self, forKey: .body, default: ""),
+            isEnabled: container.decodeLossy(Bool.self, forKey: .isEnabled, default: true)
+        )
+    }
 }
 
 public enum BuiltInRestIdeas {
@@ -63,6 +85,29 @@ public struct ContentLibrarySettings: Codable, Equatable, Sendable {
         self.useBuiltInIdeas = useBuiltInIdeas
         self.customBodyBreakIdeas = customBodyBreakIdeas
         self.localImagePaths = localImagePaths
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case useBuiltInIdeas
+        case customBodyBreakIdeas
+        case localImagePaths
+    }
+
+    public init(from decoder: Decoder) throws {
+        let defaults = Self.defaults
+        guard let container = try? decoder.container(keyedBy: CodingKeys.self) else {
+            self = defaults
+            return
+        }
+        self.init(
+            useBuiltInIdeas: container.decodeLossy(Bool.self, forKey: .useBuiltInIdeas, default: defaults.useBuiltInIdeas),
+            customBodyBreakIdeas: container.decodeLossy(
+                [RestIdea].self,
+                forKey: .customBodyBreakIdeas,
+                default: defaults.customBodyBreakIdeas
+            ),
+            localImagePaths: container.decodeLossy([String].self, forKey: .localImagePaths, default: defaults.localImagePaths)
+        )
     }
 
     public static let defaults = ContentLibrarySettings(

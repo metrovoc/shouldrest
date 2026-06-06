@@ -17,6 +17,16 @@ private enum SettingsNormalization {
     }
 }
 
+extension KeyedDecodingContainer {
+    func decodeLossy<T: Decodable>(_ type: T.Type, forKey key: Key, default defaultValue: @autoclosure () -> T) -> T {
+        (try? decodeIfPresent(type, forKey: key)) ?? defaultValue()
+    }
+
+    func decodeLossyOptional<T: Decodable>(_ type: T.Type, forKey key: Key) -> T? {
+        try? decodeIfPresent(type, forKey: key)
+    }
+}
+
 public struct RestSettings: Codable, Equatable, Sendable {
     public var eyeGate: RestRule
     public var bodyBreak: RestRule
@@ -60,6 +70,53 @@ public struct RestSettings: Codable, Equatable, Sendable {
         self.shortcuts = shortcuts
         self.operations = operations
         self.admin = admin
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case eyeGate
+        case bodyBreak
+        case bodyBreakAfterEyeGates
+        case notifications
+        case naturalBreaks
+        case focusMode
+        case workingHours
+        case appExclusions
+        case contentLibrary
+        case presentation
+        case shortcuts
+        case operations
+        case admin
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let defaults = Self.defaults
+        self.init(
+            eyeGate: Self.decodeRule(.eyeGate, from: container, fallback: defaults.eyeGate),
+            bodyBreak: Self.decodeRule(.bodyBreak, from: container, fallback: defaults.bodyBreak),
+            bodyBreakAfterEyeGates: container.decodeLossy(
+                Int.self,
+                forKey: .bodyBreakAfterEyeGates,
+                default: defaults.bodyBreakAfterEyeGates
+            ),
+            notifications: container.decodeLossy(NotificationSettings.self, forKey: .notifications, default: defaults.notifications),
+            naturalBreaks: container.decodeLossy(NaturalBreakSettings.self, forKey: .naturalBreaks, default: defaults.naturalBreaks),
+            focusMode: container.decodeLossy(FocusModeSettings.self, forKey: .focusMode, default: defaults.focusMode),
+            workingHours: container.decodeLossy(WorkingHoursSettings.self, forKey: .workingHours, default: defaults.workingHours),
+            appExclusions: container.decodeLossy([AppExclusionRule].self, forKey: .appExclusions, default: defaults.appExclusions),
+            contentLibrary: container.decodeLossy(ContentLibrarySettings.self, forKey: .contentLibrary, default: defaults.contentLibrary),
+            presentation: container.decodeLossy(PresentationSettings.self, forKey: .presentation, default: defaults.presentation),
+            shortcuts: container.decodeLossy(ShortcutSettings.self, forKey: .shortcuts, default: defaults.shortcuts),
+            operations: container.decodeLossy(OperationsSettings.self, forKey: .operations, default: defaults.operations),
+            admin: container.decodeLossy(AdminSettings.self, forKey: .admin, default: defaults.admin)
+        )
+    }
+
+    private static func decodeRule(_ key: CodingKeys, from container: KeyedDecodingContainer<CodingKeys>, fallback: RestRule) -> RestRule {
+        guard let decoder = try? container.superDecoder(forKey: key) else {
+            return fallback
+        }
+        return RestRule(from: decoder, fallback: fallback)
     }
 
     public static let defaults = RestSettings(
@@ -175,6 +232,84 @@ public struct RestRule: Codable, Equatable, Sendable {
         self.finishSound = finishSound
     }
 
+    private enum CodingKeys: String, CodingKey {
+        case isEnabled
+        case interval
+        case duration
+        case ordinarySkipEnabled
+        case postpone
+        case manualFinishEnabled
+        case emergencyOverride
+        case enforcement
+        case content
+        case colorHex
+        case startSound
+        case finishSound
+    }
+
+    public init(from decoder: Decoder) throws {
+        self.init(from: decoder, fallback: .bodyBreakDefault)
+    }
+
+    init(from decoder: Decoder, fallback: RestRule) {
+        guard let container = try? decoder.container(keyedBy: CodingKeys.self) else {
+            self = fallback
+            return
+        }
+        self.init(
+            isEnabled: container.decodeLossy(Bool.self, forKey: .isEnabled, default: fallback.isEnabled),
+            interval: container.decodeLossy(TimeInterval.self, forKey: .interval, default: fallback.interval),
+            duration: container.decodeLossy(TimeInterval.self, forKey: .duration, default: fallback.duration),
+            ordinarySkipEnabled: container.decodeLossy(
+                Bool.self,
+                forKey: .ordinarySkipEnabled,
+                default: fallback.ordinarySkipEnabled
+            ),
+            postpone: Self.decodePostpone(from: container, fallback: fallback.postpone),
+            manualFinishEnabled: container.decodeLossy(
+                Bool.self,
+                forKey: .manualFinishEnabled,
+                default: fallback.manualFinishEnabled
+            ),
+            emergencyOverride: Self.decodeEmergencyOverride(from: container, fallback: fallback.emergencyOverride),
+            enforcement: Self.decodeEnforcement(from: container, fallback: fallback.enforcement),
+            content: container.decodeLossy(RestContentPolicy.self, forKey: .content, default: fallback.content),
+            colorHex: container.decodeLossy(String.self, forKey: .colorHex, default: fallback.colorHex),
+            startSound: container.decodeLossy(SoundPolicy.self, forKey: .startSound, default: fallback.startSound),
+            finishSound: container.decodeLossy(SoundPolicy.self, forKey: .finishSound, default: fallback.finishSound)
+        )
+    }
+
+    private static func decodePostpone(
+        from container: KeyedDecodingContainer<CodingKeys>,
+        fallback: PostponePolicy
+    ) -> PostponePolicy {
+        guard let decoder = try? container.superDecoder(forKey: .postpone) else {
+            return fallback
+        }
+        return PostponePolicy(from: decoder, fallback: fallback)
+    }
+
+    private static func decodeEmergencyOverride(
+        from container: KeyedDecodingContainer<CodingKeys>,
+        fallback: EmergencyOverridePolicy
+    ) -> EmergencyOverridePolicy {
+        guard let decoder = try? container.superDecoder(forKey: .emergencyOverride) else {
+            return fallback
+        }
+        return EmergencyOverridePolicy(from: decoder, fallback: fallback)
+    }
+
+    private static func decodeEnforcement(
+        from container: KeyedDecodingContainer<CodingKeys>,
+        fallback: EnforcementProfile
+    ) -> EnforcementProfile {
+        guard let decoder = try? container.superDecoder(forKey: .enforcement) else {
+            return fallback
+        }
+        return EnforcementProfile(from: decoder, fallback: fallback)
+    }
+
     public static let eyeGateDefault = RestRule(
         isEnabled: true,
         interval: 10 * 60,
@@ -256,6 +391,34 @@ public struct PostponePolicy: Codable, Equatable, Sendable {
         )
     }
 
+    private enum CodingKeys: String, CodingKey {
+        case isEnabled
+        case duration
+        case maxCount
+        case allowedDuringFirstPercent
+    }
+
+    public init(from decoder: Decoder) throws {
+        self.init(from: decoder, fallback: .disabled)
+    }
+
+    init(from decoder: Decoder, fallback: PostponePolicy) {
+        guard let container = try? decoder.container(keyedBy: CodingKeys.self) else {
+            self = fallback
+            return
+        }
+        self.init(
+            isEnabled: container.decodeLossy(Bool.self, forKey: .isEnabled, default: fallback.isEnabled),
+            duration: container.decodeLossy(TimeInterval.self, forKey: .duration, default: fallback.duration),
+            maxCount: container.decodeLossy(Int.self, forKey: .maxCount, default: fallback.maxCount),
+            allowedDuringFirstPercent: container.decodeLossy(
+                Double.self,
+                forKey: .allowedDuringFirstPercent,
+                default: fallback.allowedDuringFirstPercent
+            )
+        )
+    }
+
     public static let disabled = PostponePolicy(
         isEnabled: false,
         duration: 1,
@@ -286,6 +449,26 @@ public struct EmergencyOverridePolicy: Codable, Equatable, Sendable {
     public init(isEnabled: Bool, confirmationSteps: Int) {
         self.isEnabled = isEnabled
         self.confirmationSteps = max(0, confirmationSteps)
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case isEnabled
+        case confirmationSteps
+    }
+
+    public init(from decoder: Decoder) throws {
+        self.init(from: decoder, fallback: .disabled)
+    }
+
+    init(from decoder: Decoder, fallback: EmergencyOverridePolicy) {
+        guard let container = try? decoder.container(keyedBy: CodingKeys.self) else {
+            self = fallback
+            return
+        }
+        self.init(
+            isEnabled: container.decodeLossy(Bool.self, forKey: .isEnabled, default: fallback.isEnabled),
+            confirmationSteps: container.decodeLossy(Int.self, forKey: .confirmationSteps, default: fallback.confirmationSteps)
+        )
     }
 
     public static func confirmationStepsForCurrentDesign(isEnabled: Bool) -> Int {
@@ -338,6 +521,61 @@ public struct EnforcementProfile: Codable, Equatable, Sendable {
         self.contentDisplay = contentDisplay
         self.blankSecondaryDisplays = blankSecondaryDisplays
         self.configuredDisplayIndex = configuredDisplayIndex.map { max(0, $0) }
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case coversAllDisplays
+        case usesScreenSaverLevel
+        case isOpaque
+        case opacity
+        case allowRegularWindowMode
+        case coveredDisplay
+        case contentDisplay
+        case blankSecondaryDisplays
+        case configuredDisplayIndex
+    }
+
+    public init(from decoder: Decoder) throws {
+        self.init(from: decoder, fallback: .bodyBreakDefault)
+    }
+
+    init(from decoder: Decoder, fallback: EnforcementProfile) {
+        guard let container = try? decoder.container(keyedBy: CodingKeys.self) else {
+            self = fallback
+            return
+        }
+        self.init(
+            coversAllDisplays: container.decodeLossy(
+                Bool.self,
+                forKey: .coversAllDisplays,
+                default: fallback.coversAllDisplays
+            ),
+            usesScreenSaverLevel: container.decodeLossy(
+                Bool.self,
+                forKey: .usesScreenSaverLevel,
+                default: fallback.usesScreenSaverLevel
+            ),
+            isOpaque: container.decodeLossy(Bool.self, forKey: .isOpaque, default: fallback.isOpaque),
+            opacity: container.decodeLossy(Double.self, forKey: .opacity, default: fallback.opacity),
+            allowRegularWindowMode: container.decodeLossy(
+                Bool.self,
+                forKey: .allowRegularWindowMode,
+                default: fallback.allowRegularWindowMode
+            ),
+            coveredDisplay: container.decodeLossyOptional(DisplaySelection.self, forKey: .coveredDisplay) ?? fallback.coveredDisplay,
+            contentDisplay: container.decodeLossy(
+                DisplaySelection.self,
+                forKey: .contentDisplay,
+                default: fallback.contentDisplay
+            ),
+            blankSecondaryDisplays: container.decodeLossy(
+                Bool.self,
+                forKey: .blankSecondaryDisplays,
+                default: fallback.blankSecondaryDisplays
+            ),
+            configuredDisplayIndex: container.decodeLossyOptional(Int.self, forKey: .configuredDisplayIndex) ??
+                fallback.configuredDisplayIndex
+        )
     }
 
     public static let eyeGateDefault = EnforcementProfile(
@@ -426,6 +664,33 @@ public struct NotificationSettings: Codable, Equatable, Sendable {
         self.silentNotifications = silentNotifications
     }
 
+    private enum CodingKeys: String, CodingKey {
+        case eyeGateEnabled
+        case bodyBreakEnabled
+        case eyeGateLeadTime
+        case bodyBreakLeadTime
+        case silentNotifications
+    }
+
+    public init(from decoder: Decoder) throws {
+        let defaults = Self.defaults
+        guard let container = try? decoder.container(keyedBy: CodingKeys.self) else {
+            self = defaults
+            return
+        }
+        self.init(
+            eyeGateEnabled: container.decodeLossy(Bool.self, forKey: .eyeGateEnabled, default: defaults.eyeGateEnabled),
+            bodyBreakEnabled: container.decodeLossy(Bool.self, forKey: .bodyBreakEnabled, default: defaults.bodyBreakEnabled),
+            eyeGateLeadTime: container.decodeLossy(TimeInterval.self, forKey: .eyeGateLeadTime, default: defaults.eyeGateLeadTime),
+            bodyBreakLeadTime: container.decodeLossy(
+                TimeInterval.self,
+                forKey: .bodyBreakLeadTime,
+                default: defaults.bodyBreakLeadTime
+            ),
+            silentNotifications: container.decodeLossy(Bool.self, forKey: .silentNotifications, default: defaults.silentNotifications)
+        )
+    }
+
     public static let defaults = NotificationSettings(
         eyeGateEnabled: true,
         bodyBreakEnabled: true,
@@ -472,6 +737,27 @@ public struct NaturalBreakSettings: Codable, Equatable, Sendable {
         self.inactivityResetTime = SettingsNormalization.atLeast(1, inactivityResetTime)
     }
 
+    private enum CodingKeys: String, CodingKey {
+        case isEnabled
+        case inactivityResetTime
+    }
+
+    public init(from decoder: Decoder) throws {
+        let defaults = Self.defaults
+        guard let container = try? decoder.container(keyedBy: CodingKeys.self) else {
+            self = defaults
+            return
+        }
+        self.init(
+            isEnabled: container.decodeLossy(Bool.self, forKey: .isEnabled, default: defaults.isEnabled),
+            inactivityResetTime: container.decodeLossy(
+                TimeInterval.self,
+                forKey: .inactivityResetTime,
+                default: defaults.inactivityResetTime
+            )
+        )
+    }
+
     public static let defaults = NaturalBreakSettings(
         isEnabled: true,
         inactivityResetTime: 5 * 60
@@ -491,6 +777,25 @@ public struct FocusModeSettings: Codable, Equatable, Sendable {
         self.monitorFocusMode = monitorFocusMode
         self.deferEyeGate = deferEyeGate
         self.deferBodyBreak = deferBodyBreak
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case monitorFocusMode
+        case deferEyeGate
+        case deferBodyBreak
+    }
+
+    public init(from decoder: Decoder) throws {
+        let defaults = Self.defaults
+        guard let container = try? decoder.container(keyedBy: CodingKeys.self) else {
+            self = defaults
+            return
+        }
+        self.init(
+            monitorFocusMode: container.decodeLossy(Bool.self, forKey: .monitorFocusMode, default: defaults.monitorFocusMode),
+            deferEyeGate: container.decodeLossy(Bool.self, forKey: .deferEyeGate, default: defaults.deferEyeGate),
+            deferBodyBreak: container.decodeLossy(Bool.self, forKey: .deferBodyBreak, default: defaults.deferBodyBreak)
+        )
     }
 
     public static let defaults = FocusModeSettings(
@@ -518,6 +823,25 @@ public struct WorkingHoursSettings: Codable, Equatable, Sendable {
         self.isEnabled = isEnabled
         self.startMinuteOfDay = min(1_439, max(0, startMinuteOfDay))
         self.endMinuteOfDay = min(1_439, max(0, endMinuteOfDay))
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case isEnabled
+        case startMinuteOfDay
+        case endMinuteOfDay
+    }
+
+    public init(from decoder: Decoder) throws {
+        let defaults = Self.always
+        guard let container = try? decoder.container(keyedBy: CodingKeys.self) else {
+            self = defaults
+            return
+        }
+        self.init(
+            isEnabled: container.decodeLossy(Bool.self, forKey: .isEnabled, default: defaults.isEnabled),
+            startMinuteOfDay: container.decodeLossy(Int.self, forKey: .startMinuteOfDay, default: defaults.startMinuteOfDay),
+            endMinuteOfDay: container.decodeLossy(Int.self, forKey: .endMinuteOfDay, default: defaults.endMinuteOfDay)
+        )
     }
 
     public static let always = WorkingHoursSettings(
@@ -574,6 +898,37 @@ public struct AppExclusionRule: Codable, Equatable, Identifiable, Sendable {
         self.isEnabled = isEnabled
     }
 
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case name
+        case matchTerms
+        case mode
+        case appliesTo
+        case isEnabled
+    }
+
+    public init(from decoder: Decoder) throws {
+        guard let container = try? decoder.container(keyedBy: CodingKeys.self) else {
+            self.init(
+                id: UUID().uuidString,
+                name: "",
+                matchTerms: [],
+                mode: .pauseWhenMatched,
+                appliesTo: [.bodyBreak],
+                isEnabled: false
+            )
+            return
+        }
+        self.init(
+            id: container.decodeLossy(String.self, forKey: .id, default: UUID().uuidString),
+            name: container.decodeLossy(String.self, forKey: .name, default: ""),
+            matchTerms: container.decodeLossy([String].self, forKey: .matchTerms, default: []),
+            mode: container.decodeLossy(Mode.self, forKey: .mode, default: .pauseWhenMatched),
+            appliesTo: container.decodeLossy(Set<RestKind>.self, forKey: .appliesTo, default: [.bodyBreak]),
+            isEnabled: container.decodeLossy(Bool.self, forKey: .isEnabled, default: true)
+        )
+    }
+
     public func normalized() -> AppExclusionRule {
         AppExclusionRule(
             id: id,
@@ -620,6 +975,35 @@ public struct PresentationSettings: Codable, Equatable, Sendable {
         self.breakHealthMode = breakHealthMode
         self.showMenuBarItem = showMenuBarItem
         self.languageIdentifier = languageIdentifier
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case themeSource
+        case trayIconStyle
+        case showCurrentTimeDuringBodyBreak
+        case breakHealthMode
+        case showMenuBarItem
+        case languageIdentifier
+    }
+
+    public init(from decoder: Decoder) throws {
+        let defaults = Self.defaults
+        guard let container = try? decoder.container(keyedBy: CodingKeys.self) else {
+            self = defaults
+            return
+        }
+        self.init(
+            themeSource: container.decodeLossy(ThemeSource.self, forKey: .themeSource, default: defaults.themeSource),
+            trayIconStyle: container.decodeLossy(TrayIconStyle.self, forKey: .trayIconStyle, default: defaults.trayIconStyle),
+            showCurrentTimeDuringBodyBreak: container.decodeLossy(
+                Bool.self,
+                forKey: .showCurrentTimeDuringBodyBreak,
+                default: defaults.showCurrentTimeDuringBodyBreak
+            ),
+            breakHealthMode: container.decodeLossy(Bool.self, forKey: .breakHealthMode, default: defaults.breakHealthMode),
+            showMenuBarItem: container.decodeLossyOptional(Bool.self, forKey: .showMenuBarItem),
+            languageIdentifier: container.decodeLossyOptional(String.self, forKey: .languageIdentifier)
+        )
     }
 
     public static let defaults = PresentationSettings(
@@ -714,6 +1098,61 @@ public struct ShortcutSettings: Codable, Equatable, Sendable {
         self.reset = reset
     }
 
+    private enum CodingKeys: String, CodingKey {
+        case pauseToggle
+        case pauseFor30Minutes
+        case pauseFor1Hour
+        case pauseFor2Hours
+        case pauseFor5Hours
+        case pauseUntilMorning
+        case skipToNextScheduledRest
+        case takeEyeGateNow
+        case takeBodyBreakNow
+        case skipToNextBodyBreak
+        case endBodyBreak
+        case emergencyEyeGateOverride
+        case reset
+    }
+
+    public init(from decoder: Decoder) throws {
+        let defaults = Self.defaults
+        guard let container = try? decoder.container(keyedBy: CodingKeys.self) else {
+            self = defaults
+            return
+        }
+        self.init(
+            pauseToggle: container.decodeLossy(String.self, forKey: .pauseToggle, default: defaults.pauseToggle),
+            pauseFor30Minutes: container.decodeLossy(
+                String.self,
+                forKey: .pauseFor30Minutes,
+                default: defaults.pauseFor30Minutes
+            ),
+            pauseFor1Hour: container.decodeLossy(String.self, forKey: .pauseFor1Hour, default: defaults.pauseFor1Hour),
+            pauseFor2Hours: container.decodeLossy(String.self, forKey: .pauseFor2Hours, default: defaults.pauseFor2Hours),
+            pauseFor5Hours: container.decodeLossy(String.self, forKey: .pauseFor5Hours, default: defaults.pauseFor5Hours),
+            pauseUntilMorning: container.decodeLossy(
+                String.self,
+                forKey: .pauseUntilMorning,
+                default: defaults.pauseUntilMorning
+            ),
+            skipToNextScheduledRest: container.decodeLossyOptional(String.self, forKey: .skipToNextScheduledRest),
+            takeEyeGateNow: container.decodeLossy(String.self, forKey: .takeEyeGateNow, default: defaults.takeEyeGateNow),
+            takeBodyBreakNow: container.decodeLossy(
+                String.self,
+                forKey: .takeBodyBreakNow,
+                default: defaults.takeBodyBreakNow
+            ),
+            skipToNextBodyBreak: container.decodeLossy(
+                String.self,
+                forKey: .skipToNextBodyBreak,
+                default: defaults.skipToNextBodyBreak
+            ),
+            endBodyBreak: container.decodeLossyOptional(String.self, forKey: .endBodyBreak),
+            emergencyEyeGateOverride: container.decodeLossyOptional(String.self, forKey: .emergencyEyeGateOverride),
+            reset: container.decodeLossy(String.self, forKey: .reset, default: defaults.reset)
+        )
+    }
+
     public static let defaults = ShortcutSettings(
         pauseToggle: "",
         pauseFor30Minutes: "",
@@ -771,6 +1210,45 @@ public struct OperationsSettings: Codable, Equatable, Sendable {
         }
         self.pauseUntilMorningLongitude = pauseUntilMorningLongitude.map(Self.normalizedLongitude)
         self.pauseForSuspendOrLock = pauseForSuspendOrLock
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case openAtLogin
+        case checkForUpdates
+        case notifyNewVersion
+        case updateFeedURL
+        case hasCompletedOnboarding
+        case showOnboardingOnNextLaunch
+        case pauseUntilMorningHour
+        case pauseUntilMorningMode
+        case pauseUntilMorningLatitude
+        case pauseUntilMorningLongitude
+        case pauseForSuspendOrLock
+    }
+
+    public init(from decoder: Decoder) throws {
+        let defaults = Self.defaults
+        guard let container = try? decoder.container(keyedBy: CodingKeys.self) else {
+            self = defaults
+            return
+        }
+        self.init(
+            openAtLogin: container.decodeLossy(Bool.self, forKey: .openAtLogin, default: defaults.openAtLogin),
+            checkForUpdates: container.decodeLossy(Bool.self, forKey: .checkForUpdates, default: defaults.checkForUpdates),
+            notifyNewVersion: container.decodeLossy(Bool.self, forKey: .notifyNewVersion, default: defaults.notifyNewVersion),
+            updateFeedURL: container.decodeLossy(String.self, forKey: .updateFeedURL, default: defaults.updateFeedURL),
+            hasCompletedOnboarding: container.decodeLossy(
+                Bool.self,
+                forKey: .hasCompletedOnboarding,
+                default: defaults.hasCompletedOnboarding
+            ),
+            showOnboardingOnNextLaunch: container.decodeLossyOptional(Bool.self, forKey: .showOnboardingOnNextLaunch),
+            pauseUntilMorningHour: container.decodeLossyOptional(Int.self, forKey: .pauseUntilMorningHour),
+            pauseUntilMorningMode: container.decodeLossyOptional(MorningPauseMode.self, forKey: .pauseUntilMorningMode),
+            pauseUntilMorningLatitude: container.decodeLossyOptional(Double.self, forKey: .pauseUntilMorningLatitude),
+            pauseUntilMorningLongitude: container.decodeLossyOptional(Double.self, forKey: .pauseUntilMorningLongitude),
+            pauseForSuspendOrLock: container.decodeLossyOptional(Bool.self, forKey: .pauseForSuspendOrLock)
+        )
     }
 
     public static let defaults = OperationsSettings(
@@ -966,6 +1444,43 @@ public struct AdminSettings: Codable, Equatable, Sendable {
         self.hideSettingsFileLocation = hideSettingsFileLocation
         self.hideStrictPreferences = hideStrictPreferences
         self.customPreferencesMessage = customPreferencesMessage
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case disableAppUpdateFeatures
+        case hideSettingsFileLocation
+        case hideStrictPreferences
+        case customPreferencesMessage
+    }
+
+    public init(from decoder: Decoder) throws {
+        let defaults = Self.defaults
+        guard let container = try? decoder.container(keyedBy: CodingKeys.self) else {
+            self = defaults
+            return
+        }
+        self.init(
+            disableAppUpdateFeatures: container.decodeLossy(
+                Bool.self,
+                forKey: .disableAppUpdateFeatures,
+                default: defaults.disableAppUpdateFeatures
+            ),
+            hideSettingsFileLocation: container.decodeLossy(
+                Bool.self,
+                forKey: .hideSettingsFileLocation,
+                default: defaults.hideSettingsFileLocation
+            ),
+            hideStrictPreferences: container.decodeLossy(
+                Bool.self,
+                forKey: .hideStrictPreferences,
+                default: defaults.hideStrictPreferences
+            ),
+            customPreferencesMessage: container.decodeLossy(
+                String.self,
+                forKey: .customPreferencesMessage,
+                default: defaults.customPreferencesMessage
+            )
+        )
     }
 
     public static let defaults = AdminSettings(
