@@ -134,6 +134,49 @@ final class RestOverlayViewCountdownTests: XCTestCase {
         assertOverlayLabelHelp(detail)
     }
 
+    func testBodyBreakOverlayFallsBackWhenCustomIdeaFieldsAreBlank() throws {
+        L10n.languageOverride = "en"
+        defer { L10n.languageOverride = nil }
+
+        var settings = RestSettings.defaults
+        settings.contentLibrary.useBuiltInIdeas = false
+        settings.contentLibrary.customBodyBreakIdeas = [
+            RestIdea(id: "blank", kind: .bodyBreak, title: " \n\t ", body: " \n\t ")
+        ]
+        let view = configuredBodyOverlay(remainingSeconds: 300, settings: settings)
+
+        let title = try XCTUnwrap(view.descendant(withIdentifier: "overlay.title.label") as? NSTextField)
+        let detail = try XCTUnwrap(view.descendant(withIdentifier: "overlay.detail.label") as? NSTextField)
+        XCTAssertEqual(title.stringValue, "Body Break")
+        XCTAssertEqual(detail.stringValue, "Stand up, breathe, and move.")
+        assertOverlayLabelHelp(title)
+        assertOverlayLabelHelp(detail)
+    }
+
+    func testBodyBreakOverlayFallsBackWhenCustomBodySanitizesToEmpty() throws {
+        L10n.languageOverride = "en"
+        defer { L10n.languageOverride = nil }
+
+        var settings = RestSettings.defaults
+        settings.contentLibrary.useBuiltInIdeas = false
+        settings.contentLibrary.customBodyBreakIdeas = [
+            RestIdea(
+                id: "script-only",
+                kind: .bodyBreak,
+                title: "Safe title",
+                body: "<script>alert('x')</script>"
+            )
+        ]
+        let view = configuredBodyOverlay(remainingSeconds: 300, settings: settings)
+
+        let title = try XCTUnwrap(view.descendant(withIdentifier: "overlay.title.label") as? NSTextField)
+        let detail = try XCTUnwrap(view.descendant(withIdentifier: "overlay.detail.label") as? NSTextField)
+        XCTAssertEqual(title.stringValue, "Safe title")
+        XCTAssertEqual(detail.stringValue, "Stand up, breathe, and move.")
+        assertOverlayLabelHelp(title)
+        assertOverlayLabelHelp(detail)
+    }
+
     func testManualAwaitingBodyBreakOverlayUsesKindSpecificCompletionCopy() throws {
         L10n.languageOverride = "zh-Hans"
         defer { L10n.languageOverride = nil }

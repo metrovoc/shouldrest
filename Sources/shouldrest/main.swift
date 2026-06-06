@@ -3354,8 +3354,9 @@ final class RestOverlayView: NSView {
             let ideas = settings.contentLibrary.ideas(for: .bodyBreak)
             let index = Int(session.startedAt.timeIntervalSinceReferenceDate) % max(1, ideas.count)
             let idea = ideas[safe: index]
-            titleLabel.stringValue = idea?.title ?? L10n.tr("overlay.bodyTitle")
-            setDetailText(idea?.body ?? L10n.tr("overlay.bodyBody"), allowsRichText: true)
+            let copy = bodyBreakCopy(from: idea)
+            titleLabel.stringValue = copy.title
+            setDetailText(copy.body, allowsRichText: true)
             if let image = localBodyBreakImage(settings: settings) {
                 imageView.image = image
                 imageView.isHidden = false
@@ -3743,6 +3744,17 @@ final class RestOverlayView: NSView {
             return nil
         }
         return NSImage(contentsOfFile: path)
+    }
+
+    private func bodyBreakCopy(from idea: RestIdea?) -> (title: String, body: String) {
+        let fallbackTitle = L10n.tr("overlay.bodyTitle")
+        let fallbackBody = L10n.tr("overlay.bodyBody")
+        let title = idea?.title.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let body = idea.map { ContentSanitizer.sanitizeRichText($0.body) } ?? ""
+        return (
+            title: title.isEmpty ? fallbackTitle : title,
+            body: body.isEmpty ? fallbackBody : body
+        )
     }
 
     private func updateOverlayTextAccessibility() {
