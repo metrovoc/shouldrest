@@ -548,8 +548,15 @@ struct BodyBreakIdeaAssignments: Equatable {
     private(set) var pending: RestIdea?
     private(set) var active: [UUID: RestIdea] = [:]
 
-    mutating func storePending(_ idea: RestIdea?) {
+    mutating func storePending(_ idea: RestIdea) {
         pending = idea
+    }
+
+    @discardableResult
+    mutating func storePendingIfPresent(_ idea: RestIdea?) -> Bool {
+        guard let idea else { return false }
+        storePending(idea)
+        return true
     }
 
     func ideaForStartAttempt(explicit idea: RestIdea?) -> RestIdea? {
@@ -2089,8 +2096,11 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         if let wait, wait > 0 {
             scheduleBodyBreakAutomation(after: wait, idea: idea)
         } else if noSkip {
-            bodyBreakIdeas.storePending(idea)
-            logger.log("Stored one-shot Body Break content")
+            if bodyBreakIdeas.storePendingIfPresent(idea) {
+                logger.log("Stored one-shot Body Break content")
+            } else {
+                logger.log("Kept current Body Break schedule for noskip automation without content")
+            }
         } else {
             startBodyBreakNow(idea: idea)
         }

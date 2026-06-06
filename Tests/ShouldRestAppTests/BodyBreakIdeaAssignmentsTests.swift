@@ -48,6 +48,16 @@ final class BodyBreakIdeaAssignmentsTests: XCTestCase {
         XCTAssertEqual(assignments.activeIdea(for: bodySession), explicitIdea)
     }
 
+    func testMissingOneShotIdeaDoesNotClearExistingPendingIdea() {
+        let pendingIdea = idea(id: "pending", title: "Pending")
+        var assignments = BodyBreakIdeaAssignments()
+        assignments.storePending(pendingIdea)
+
+        XCTAssertFalse(assignments.storePendingIfPresent(nil))
+
+        XCTAssertEqual(assignments.pending, pendingIdea)
+    }
+
     func testDeferredActiveIdeaReturnsToPendingForNextBodyBreak() {
         let pendingIdea = idea(id: "pending", title: "Pending")
         let bodySession = session(kind: .bodyBreak)
