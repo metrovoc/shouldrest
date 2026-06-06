@@ -704,58 +704,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        if let active = engine.state.activeSession {
-            if emergencyOverrideCoordinator.armedSessionID != active.id {
-                emergencyOverrideCoordinator.clear()
-            }
-            if case .deferred(let kind, let reason) = engine.deferActiveForAppExclusion(
+        if engine.state.activeSession != nil {
+            handleActiveRestLifecycle(
                 now: now,
-                context: currentContext(now: now)
-            ) {
-                unregisterActiveBreakShortcut()
-                unregisterEmergencyEscapeShortcut()
-                overlayController.dismiss()
-                emergencyOverrideCoordinator.clear(sessionID: active.id)
-                manualAwaitingSessionID = nil
-                if active.kind == .bodyBreak, let idea = activeBodyBreakIdeas[active.id] {
-                    pendingBodyBreakIdea = idea
-                }
-                clearActiveBodyBreakIdea(for: active)
-                logger.log("Active \(kind.rawValue) deferred: \(MenuStatusPresenter.deferralReasonText(reason))")
-                rebuildMenu()
-                return
-            }
-            refreshActiveBreakShortcut()
-            refreshEmergencyEscapeShortcut()
-            let elapsed = now.timeIntervalSince(active.startedAt)
-            let shouldAwaitManualFinish = elapsed >= active.duration && active.manualFinishEnabled
-            overlayController.update(
-                session: active,
-                settings: overlaySettings(for: active),
-                now: now,
-                manualAwaiting: shouldAwaitManualFinish,
-                emergencyOverrideAction: overlayEmergencyOverrideAction(for: active, now: now),
-                emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: active, now: now),
-                bodyActions: overlayBodyActions(for: active, now: now)
+                context: currentContext(now: now),
+                allowsNaturalCompletion: false
             )
-            if shouldAwaitManualFinish {
-                if manualAwaitingSessionID != active.id {
-                    manualAwaitingSessionID = active.id
-                    playRestSound(settings.rule(for: active.kind).finishSound)
-                    logger.log("Entered manual finish phase for \(active.kind.rawValue)")
-                }
-                rebuildMenu()
-                return
-            }
-            if elapsed >= active.duration {
-                _ = engine.completeActive(now: now, reason: .completed)
-                releaseActiveRestSurface(for: active)
-                logger.log("Completed \(active.kind.rawValue)")
-                rebuildMenu()
-                playRestSound(settings.rule(for: active.kind).finishSound)
-                return
-            }
-            rebuildMenu()
             return
         }
 
@@ -771,6 +725,86 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             notifyAutomaticResume(from: expiredPause)
         }
         rebuildMenu()
+    }
+
+    private func handleActiveRestLifecycle(
+        now: Date,
+        context: RestContext,
+        allowsNaturalCompletion: Bool
+    ) {
+        guard let active = engine.state.activeSession else {
+            rebuildMenu()
+            return
+        }
+
+        if emergencyOverrideCoordinator.armedSessionID != active.id {
+            emergencyOverrideCoordinator.clear()
+        }
+
+        if case .deferred(let kind, let reason) = engine.deferActiveForAppExclusion(
+            now: now,
+            context: context
+        ) {
+            unregisterActiveBreakShortcut()
+            unregisterEmergencyEscapeShortcut()
+            overlayController.dismiss()
+            emergencyOverrideCoordinator.clear(sessionID: active.id)
+            manualAwaitingSessionID = nil
+            if active.kind == .bodyBreak, let idea = activeBodyBreakIdeas[active.id] {
+                pendingBodyBreakIdea = idea
+            }
+            clearActiveBodyBreakIdea(for: active)
+            logger.log("Active \(kind.rawValue) deferred: \(MenuStatusPresenter.deferralReasonText(reason))")
+            rebuildMenu()
+            return
+        }
+
+        switch ActiveRestLifecyclePolicy.decision(
+            for: active,
+            settings: settings,
+            now: now,
+            context: context,
+            allowsNaturalCompletion: allowsNaturalCompletion
+        ) {
+        case .naturalCompletion:
+            let result = engine.evaluate(now: now, context: context)
+            if case .completed(let session, let reason) = result {
+                releaseActiveRestSurface(for: session)
+                logger.log("Completed \(session.kind.rawValue) during resume reason=\(reason)")
+                rebuildMenu()
+                return
+            }
+            handleActiveRestLifecycle(
+                now: now,
+                context: context,
+                allowsNaturalCompletion: false
+            )
+        case .elapsedCompletion:
+            if case .completed = engine.completeActive(now: now, reason: .completed) {
+                releaseActiveRestSurface(for: active)
+                logger.log("Completed \(active.kind.rawValue)")
+                playRestSound(settings.rule(for: active.kind).finishSound)
+            }
+            rebuildMenu()
+        case .present(let manualAwaiting):
+            refreshActiveBreakShortcut()
+            refreshEmergencyEscapeShortcut()
+            overlayController.update(
+                session: active,
+                settings: overlaySettings(for: active),
+                now: now,
+                manualAwaiting: manualAwaiting,
+                emergencyOverrideAction: overlayEmergencyOverrideAction(for: active, now: now),
+                emergencyOverrideArmed: emergencyOverrideCoordinator.isArmed(for: active, now: now),
+                bodyActions: overlayBodyActions(for: active, now: now)
+            )
+            if manualAwaiting, manualAwaitingSessionID != active.id {
+                manualAwaitingSessionID = active.id
+                playRestSound(settings.rule(for: active.kind).finishSound)
+                logger.log("Entered manual finish phase for \(active.kind.rawValue)")
+            }
+            rebuildMenu()
+        }
     }
 
     private func handleEngineResult(_ result: RestEngineResult, now: Date) {
@@ -2130,7 +2164,17 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             suspendedIdleDuration: idleDuration,
             didPauseScheduler: didPauseScheduler
         )
-        let result = engine.evaluate(now: now, context: currentContext(now: now, idleDuration: restIdleDuration))
+        let context = currentContext(now: now, idleDuration: restIdleDuration)
+        if engine.state.activeSession != nil {
+            handleActiveRestLifecycle(
+                now: now,
+                context: context,
+                allowsNaturalCompletion: true
+            )
+            logger.log("System resume detected idleDuration=\(idleDuration) restIdleDuration=\(restIdleDuration)")
+            return
+        }
+        let result = engine.evaluate(now: now, context: context)
         handleEngineResult(result, now: now)
         refreshActiveBreakShortcut()
         refreshEmergencyEscapeShortcut()
@@ -2429,6 +2473,38 @@ enum ActiveRestActionPolicy {
                 canSkip: !canFinish && canSkipBodyBreak
             )
         }
+    }
+}
+
+enum ActiveRestLifecycleDecision: Equatable {
+    case naturalCompletion
+    case elapsedCompletion
+    case present(manualAwaiting: Bool)
+}
+
+enum ActiveRestLifecyclePolicy {
+    static func decision(
+        for session: RestSession,
+        settings: RestSettings,
+        now: Date,
+        context: RestContext,
+        allowsNaturalCompletion: Bool
+    ) -> ActiveRestLifecycleDecision {
+        if allowsNaturalCompletion,
+           settings.naturalBreaks.isEnabled,
+           context.idleDuration >= session.duration {
+            return .naturalCompletion
+        }
+
+        let elapsed = now.timeIntervalSince(session.startedAt)
+        guard elapsed >= session.duration else {
+            return .present(manualAwaiting: false)
+        }
+
+        if session.manualFinishEnabled {
+            return .present(manualAwaiting: true)
+        }
+        return .elapsedCompletion
     }
 }
 

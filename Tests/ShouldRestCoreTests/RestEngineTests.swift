@@ -258,6 +258,34 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.statistics.naturalEyeGates, 2)
     }
 
+    func testNaturalIdleCompletesActiveRestOnlyOncePerIdleEpisode() {
+        var engine = RestEngine(settings: .defaults, now: start)
+        _ = engine.takeNow(.eyeGate, now: start)
+
+        let result = engine.evaluate(
+            now: start.addingTimeInterval(30),
+            context: RestContext(idleDuration: engine.settings.eyeGate.duration)
+        )
+
+        guard case .completed(let session, let reason) = result else {
+            return XCTFail("Expected active rest to complete naturally")
+        }
+        XCTAssertEqual(session.kind, .eyeGate)
+        XCTAssertEqual(reason, .natural)
+        XCTAssertNil(engine.state.activeSession)
+        XCTAssertEqual(engine.state.statistics.completedEyeGates, 1)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 1)
+
+        let repeatedIdleResult = engine.evaluate(
+            now: start.addingTimeInterval(31),
+            context: RestContext(idleDuration: engine.settings.eyeGate.duration + 1)
+        )
+
+        XCTAssertEqual(repeatedIdleResult, .noChange)
+        XCTAssertEqual(engine.state.statistics.completedEyeGates, 1)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 1)
+    }
+
     func testNaturalIdleDoesNotBypassOutsideWorkingHoursDeferral() {
         var settings = RestSettings.defaults
         settings.workingHours = WorkingHoursSettings(

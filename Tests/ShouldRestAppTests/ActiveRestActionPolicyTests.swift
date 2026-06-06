@@ -145,4 +145,109 @@ final class ActiveRestActionPolicyTests: XCTestCase {
             canSkip: true
         ).hasAvailableAction)
     }
+
+    func testResumeIdleCanNaturallyCompleteActiveRestBeforeRenderingManualFinish() {
+        let start = Date()
+        let session = RestSession(
+            kind: .bodyBreak,
+            startedAt: start,
+            scheduledAt: start,
+            duration: 60,
+            manualFinishEnabled: true
+        )
+
+        XCTAssertEqual(
+            ActiveRestLifecyclePolicy.decision(
+                for: session,
+                settings: .defaults,
+                now: start.addingTimeInterval(120),
+                context: RestContext(idleDuration: 60),
+                allowsNaturalCompletion: true
+            ),
+            .naturalCompletion
+        )
+    }
+
+    func testRegularTickDoesNotNaturallyCompleteActiveRestFromIdleContext() {
+        let start = Date()
+        let session = RestSession(
+            kind: .bodyBreak,
+            startedAt: start,
+            scheduledAt: start,
+            duration: 60,
+            manualFinishEnabled: true
+        )
+
+        XCTAssertEqual(
+            ActiveRestLifecyclePolicy.decision(
+                for: session,
+                settings: .defaults,
+                now: start.addingTimeInterval(120),
+                context: RestContext(idleDuration: 60),
+                allowsNaturalCompletion: false
+            ),
+            .present(manualAwaiting: true)
+        )
+    }
+
+    func testElapsedActiveRestLifecycleSeparatesManualAndAutomaticCompletion() {
+        let start = Date()
+        let manualSession = RestSession(
+            kind: .bodyBreak,
+            startedAt: start,
+            scheduledAt: start,
+            duration: 60,
+            manualFinishEnabled: true
+        )
+        let automaticSession = RestSession(
+            kind: .eyeGate,
+            startedAt: start,
+            scheduledAt: start,
+            duration: 20,
+            manualFinishEnabled: false
+        )
+
+        XCTAssertEqual(
+            ActiveRestLifecyclePolicy.decision(
+                for: manualSession,
+                settings: .defaults,
+                now: start.addingTimeInterval(60),
+                context: RestContext(),
+                allowsNaturalCompletion: true
+            ),
+            .present(manualAwaiting: true)
+        )
+        XCTAssertEqual(
+            ActiveRestLifecyclePolicy.decision(
+                for: automaticSession,
+                settings: .defaults,
+                now: start.addingTimeInterval(20),
+                context: RestContext(),
+                allowsNaturalCompletion: true
+            ),
+            .elapsedCompletion
+        )
+    }
+
+    func testRunningActiveRestLifecycleKeepsOverlayInActivePhase() {
+        let start = Date()
+        let session = RestSession(
+            kind: .eyeGate,
+            startedAt: start,
+            scheduledAt: start,
+            duration: 20,
+            manualFinishEnabled: false
+        )
+
+        XCTAssertEqual(
+            ActiveRestLifecyclePolicy.decision(
+                for: session,
+                settings: .defaults,
+                now: start.addingTimeInterval(19),
+                context: RestContext(),
+                allowsNaturalCompletion: true
+            ),
+            .present(manualAwaiting: false)
+        )
+    }
 }
