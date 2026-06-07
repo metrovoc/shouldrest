@@ -2454,7 +2454,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             content.sound = .default
         }
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
-        UNUserNotificationCenter.current().add(request)
+        UNUserNotificationCenter.current().add(request) { [weak self] error in
+            guard let error else { return }
+            Task { @MainActor in
+                self?.logger.log("Notification delivery failed: \(error.localizedDescription)")
+            }
+        }
     }
 
     private func registerShortcut(_ shortcut: String, action: @MainActor @escaping () -> Void) -> Bool {
@@ -4043,6 +4048,14 @@ private extension NSRect {
 }
 
 extension ShouldRestAppDelegate: UNUserNotificationCenterDelegate {
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .list, .sound])
+    }
+
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
