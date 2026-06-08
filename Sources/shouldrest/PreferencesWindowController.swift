@@ -534,16 +534,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let restoreDefaultsButton = NSButton()
     private let scheduleSummaryIcon = NSImageView()
     private let scheduleSummaryLabel = NSTextField(labelWithString: "")
-    private let rhythmPresetRecommendedButton = NSButton()
-    private let rhythmPresetFrequentEyeButton = NSButton()
-    private let rhythmPresetMovementButton = NSButton()
-    private var rhythmPresetButtonEntries: [(button: NSButton, preset: RestRhythmPreset)] {
-        [
-            (rhythmPresetRecommendedButton, .recommended),
-            (rhythmPresetFrequentEyeButton, .frequentEye),
-            (rhythmPresetMovementButton, .movement)
-        ]
-    }
     private let soundPlayer = SoundPlayer()
     private var isLoadingSettings = false
     private var hasPendingTextEditing = false
@@ -831,7 +821,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         configureAppExclusionRunningAppButton()
         configureAppExclusionAddRuleButton()
         configureAppExclusionRulesList()
-        configureRhythmPresetButtons()
         configureCustomBodyAddIdeaButton()
         configureCustomBodyIdeasList()
         configureSoundPreviewButtons()
@@ -872,7 +861,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             identifier: "prefs.section.eyeGate"
         ))
         scheduleStack.addArrangedSubview(scheduleSummaryView())
-        scheduleStack.addArrangedSubview(row(L10n.tr("prefs.rhythmPresets"), rhythmPresetRow()))
         eyeEnabled.identifier = NSUserInterfaceItemIdentifier("prefs.eyeEnabled")
         scheduleStack.addArrangedSubview(eyeEnabled)
         let eyeEnabledHelp = inlineControlHelpRow(
@@ -1705,19 +1693,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         return stack
     }
 
-    private func rhythmPresetRow() -> NSStackView {
-        let stack = NSStackView(views: [
-            rhythmPresetRecommendedButton,
-            rhythmPresetFrequentEyeButton,
-            rhythmPresetMovementButton
-        ])
-        stack.identifier = NSUserInterfaceItemIdentifier("prefs.rhythmPresetRow")
-        stack.orientation = .horizontal
-        stack.spacing = 8
-        stack.alignment = .centerY
-        return stack
-    }
-
     private func addTab(to tabView: NSTabView, title: String, icon: PreferencesTabIcon, stack: NSStackView) {
         let item = NSTabViewItem(identifier: title)
         item.label = title
@@ -1923,42 +1898,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         soundPreviewStatusRow.addArrangedSubview(soundPreviewStatusIcon)
         soundPreviewStatusRow.addArrangedSubview(soundPreviewStatusLabel)
         clearSoundPreviewStatus()
-    }
-
-    private func configureRhythmPresetButtons() {
-        configureRhythmPresetButton(
-            rhythmPresetRecommendedButton,
-            preset: .recommended
-        )
-        configureRhythmPresetButton(
-            rhythmPresetFrequentEyeButton,
-            preset: .frequentEye
-        )
-        configureRhythmPresetButton(
-            rhythmPresetMovementButton,
-            preset: .movement
-        )
-    }
-
-    private func configureRhythmPresetButton(
-        _ button: NSButton,
-        preset: RestRhythmPreset
-    ) {
-        let title = rhythmPresetButtonTitle(for: preset)
-        button.identifier = NSUserInterfaceItemIdentifier("prefs.rhythmPreset.\(preset.identifier)")
-        button.title = title
-        button.image = NSImage(systemSymbolName: preset.symbolName, accessibilityDescription: title)
-        button.imagePosition = .imageLeading
-        button.imageHugsTitle = true
-        button.bezelStyle = .rounded
-        button.setButtonType(.toggle)
-        button.allowsMixedState = false
-        button.toolTip = rhythmPresetButtonHelp(for: preset, isSelected: false)
-        button.setAccessibilityLabel(title)
-        button.setAccessibilityHelp(button.toolTip)
-        button.tag = preset.rawValue
-        button.target = self
-        button.action = #selector(rhythmPresetPressed(_:))
     }
 
     private func configureSaveStatusControls() {
@@ -3481,47 +3420,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         setDynamicSummary(summary, on: scheduleSummaryLabel)
         scheduleSummaryIcon.image?.accessibilityDescription = summary
         scheduleSummaryIcon.setAccessibilityHelp(summary)
-        updateRhythmPresetButtonStates()
-    }
-
-    private func updateRhythmPresetButtonStates() {
-        let selectedPreset = currentMatchingRhythmPreset()
-        rhythmPresetButtonEntries.forEach { entry in
-            let isSelected = entry.preset == selectedPreset
-            entry.button.state = isSelected ? .on : .off
-            entry.button.contentTintColor = isSelected ? .controlAccentColor : nil
-            entry.button.toolTip = rhythmPresetButtonHelp(for: entry.preset, isSelected: isSelected)
-            entry.button.setAccessibilityHelp(entry.button.toolTip)
-        }
-    }
-
-    private func currentMatchingRhythmPreset() -> RestRhythmPreset? {
-        guard isOn(eyeEnabled),
-              isOn(bodyEnabled) else { return nil }
-
-        let eyeIntervalMinutes = max(1, intValue(eyeInterval))
-        let eyeDurationSeconds = max(1, intValue(eyeDuration))
-        let bodyIntervalMinutes = max(1, intValue(bodyInterval))
-        let bodyDurationMinutes = max(1, intValue(bodyDuration))
-
-        return RestRhythmPreset.allCases.first { preset in
-            preset.eyeIntervalMinutes == eyeIntervalMinutes &&
-                preset.eyeDurationSeconds == eyeDurationSeconds &&
-                preset.bodyIntervalMinutes == bodyIntervalMinutes &&
-                preset.bodyDurationMinutes == bodyDurationMinutes
-        }
-    }
-
-    private func rhythmPresetButtonHelp(for preset: RestRhythmPreset, isSelected: Bool) -> String {
-        let key = isSelected ? "prefs.rhythmPreset.selectedHelp" : "prefs.rhythmPreset.applyHelp"
-        return L10n.format(key, rhythmPresetButtonTitle(for: preset), preset.help)
-    }
-
-    private func rhythmPresetButtonTitle(for preset: RestRhythmPreset) -> String {
-        guard preset == RestRhythmPreset.firstRunDefault else {
-            return preset.title
-        }
-        return L10n.tr("prefs.rhythmPreset.frequentEyeRecommended")
     }
 
     private func updateShortcutPreferenceVisibility(
@@ -3792,23 +3690,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             return isOn(eyeEmergencyOverride) ? .emergencyExitEnabled : .emergencyExitDisabled
         }
         return nil
-    }
-
-    @objc private func rhythmPresetPressed(_ sender: NSButton) {
-        guard let preset = RestRhythmPreset(rawValue: sender.tag) else { return }
-        applyRhythmPreset(preset)
-    }
-
-    private func applyRhythmPreset(_ preset: RestRhythmPreset) {
-        eyeEnabled.state = .on
-        bodyEnabled.state = .on
-        eyeInterval.stringValue = String(preset.eyeIntervalMinutes)
-        eyeDuration.stringValue = String(preset.eyeDurationSeconds)
-        bodyInterval.stringValue = String(preset.bodyIntervalMinutes)
-        bodyDuration.stringValue = String(preset.bodyDurationMinutes)
-        syncNumberControlsFromFields()
-        updateDependentControlEnablement()
-        scheduleAutosave()
     }
 
     @objc private func addRunningAppExclusionPressed(_ sender: NSButton) {

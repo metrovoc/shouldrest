@@ -19,86 +19,13 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertNotNil(icon.image)
         XCTAssertEqual(
             label.stringValue,
-            L10n.format("prefs.scheduleSummary.eyeAndBody", 10, 20, 45, 5)
+            L10n.format("prefs.scheduleSummary.eyeAndBody", 20, 20, 60, 3)
         )
         XCTAssertEqual(label.toolTip, label.stringValue)
         XCTAssertEqual(label.accessibilityLabel(), label.stringValue)
         XCTAssertEqual(label.accessibilityHelp(), label.stringValue)
         XCTAssertEqual(icon.image?.accessibilityDescription, label.stringValue)
         XCTAssertEqual(icon.accessibilityHelp(), label.stringValue)
-    }
-
-    func testScheduleRhythmPresetsExposeIconButtonsWithHelp() throws {
-        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
-        let contentView = try XCTUnwrap(controller.window?.contentView)
-
-        try selectScheduleTab(in: contentView)
-
-        let row = try XCTUnwrap(view(withIdentifier: "prefs.rhythmPresetRow", in: contentView) as? NSStackView)
-        let recommended = try XCTUnwrap(view(withIdentifier: "prefs.rhythmPreset.recommended", in: contentView) as? NSButton)
-        let frequentEye = try XCTUnwrap(view(withIdentifier: "prefs.rhythmPreset.frequentEye", in: contentView) as? NSButton)
-        let movement = try XCTUnwrap(view(withIdentifier: "prefs.rhythmPreset.movement", in: contentView) as? NSButton)
-
-        XCTAssertFalse(row.isHidden)
-        XCTAssertEqual(recommended.title, L10n.tr("prefs.rhythmPreset.recommended"))
-        XCTAssertEqual(frequentEye.title, L10n.tr("prefs.rhythmPreset.frequentEyeRecommended"))
-        XCTAssertTrue(frequentEye.title.contains("Recommended"))
-        XCTAssertEqual(movement.title, L10n.tr("prefs.rhythmPreset.movement"))
-        [recommended, frequentEye, movement].forEach { button in
-            XCTAssertNotNil(button.image)
-            XCTAssertEqual(button.image?.accessibilityDescription, button.title)
-            XCTAssertEqual(button.imagePosition, .imageLeading)
-            XCTAssertFalse(button.toolTip?.isEmpty ?? true)
-            XCTAssertEqual(button.accessibilityLabel(), button.title)
-            XCTAssertEqual(button.accessibilityHelp(), button.toolTip)
-        }
-        XCTAssertEqual(recommended.state, .off)
-        XCTAssertEqual(frequentEye.state, .on)
-        XCTAssertEqual(movement.state, .off)
-        XCTAssertNil(recommended.contentTintColor)
-        XCTAssertNotNil(frequentEye.contentTintColor)
-        XCTAssertNil(movement.contentTintColor)
-        XCTAssertEqual(
-            frequentEye.toolTip,
-            L10n.format(
-                "prefs.rhythmPreset.selectedHelp",
-                L10n.tr("prefs.rhythmPreset.frequentEyeRecommended"),
-                RestRhythmPreset.frequentEye.help
-            )
-        )
-    }
-
-    func testFrequentEyeRhythmPresetUpdatesFieldsSlidersSummaryAndAutosaves() throws {
-        let savedSettings = SavedSettingsBox()
-        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
-        let contentView = try XCTUnwrap(controller.window?.contentView)
-
-        try selectScheduleTab(in: contentView)
-        let preset = try XCTUnwrap(view(withIdentifier: "prefs.rhythmPreset.frequentEye", in: contentView) as? NSButton)
-        let eyeInterval = try XCTUnwrap(view(withIdentifier: "eyeIntervalField", in: contentView) as? NSTextField)
-        let eyeIntervalSlider = try XCTUnwrap(view(withIdentifier: "eyeIntervalSlider", in: contentView) as? NSSlider)
-        let bodyInterval = try XCTUnwrap(view(withIdentifier: "bodyIntervalField", in: contentView) as? NSTextField)
-        let bodyIntervalSlider = try XCTUnwrap(view(withIdentifier: "bodyIntervalSlider", in: contentView) as? NSSlider)
-        let summary = try XCTUnwrap(view(withIdentifier: "prefs.scheduleSummaryLabel", in: contentView) as? NSTextField)
-
-        XCTAssertTrue(sendAction(from: preset))
-
-        XCTAssertEqual(eyeInterval.stringValue, "10")
-        XCTAssertEqual(eyeIntervalSlider.doubleValue, 10)
-        XCTAssertEqual(bodyInterval.stringValue, "45")
-        XCTAssertEqual(bodyIntervalSlider.doubleValue, 45)
-        XCTAssertEqual(
-            summary.stringValue,
-            L10n.format("prefs.scheduleSummary.eyeAndBody", 10, 20, 45, 5)
-        )
-        XCTAssertEqual(summary.accessibilityLabel(), summary.stringValue)
-        waitUntilSavedSettingsArrive(savedSettings)
-        XCTAssertEqual(savedSettings.value?.eyeGate.isEnabled, true)
-        XCTAssertEqual(savedSettings.value?.bodyBreak.isEnabled, true)
-        XCTAssertEqual(savedSettings.value?.eyeGate.interval, 10 * 60)
-        XCTAssertEqual(savedSettings.value?.eyeGate.duration, 20)
-        XCTAssertEqual(savedSettings.value?.bodyBreak.interval, 45 * 60)
-        XCTAssertEqual(savedSettings.value?.bodyBreak.duration, 5 * 60)
     }
 
     func testScheduleControlsExposeBehaviorHelp() throws {
@@ -179,53 +106,11 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
 
         XCTAssertEqual(
             label.stringValue,
-            L10n.format("prefs.scheduleSummary.eyeAndBody", 45, 20, 45, 5)
+            L10n.format("prefs.scheduleSummary.eyeAndBody", 45, 20, 60, 3)
         )
         XCTAssertEqual(label.accessibilityLabel(), label.stringValue)
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(savedSettings.value?.eyeGate.interval, 45 * 60)
-    }
-
-    func testRhythmPresetSelectionFollowsAppliedAndCustomScheduleValues() throws {
-        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
-        let contentView = try XCTUnwrap(controller.window?.contentView)
-
-        try selectScheduleTab(in: contentView)
-        let frequentEye = try XCTUnwrap(view(withIdentifier: "prefs.rhythmPreset.frequentEye", in: contentView) as? NSButton)
-        let movement = try XCTUnwrap(view(withIdentifier: "prefs.rhythmPreset.movement", in: contentView) as? NSButton)
-        let bodyDurationSlider = try XCTUnwrap(view(withIdentifier: "bodyDurationSlider", in: contentView) as? NSSlider)
-
-        XCTAssertEqual(frequentEye.state, .on)
-        XCTAssertEqual(movement.state, .off)
-
-        XCTAssertTrue(sendAction(from: movement))
-
-        XCTAssertEqual(frequentEye.state, .off)
-        XCTAssertEqual(movement.state, .on)
-        XCTAssertEqual(
-            movement.toolTip,
-            L10n.format(
-                "prefs.rhythmPreset.selectedHelp",
-                RestRhythmPreset.movement.title,
-                RestRhythmPreset.movement.help
-            )
-        )
-
-        bodyDurationSlider.doubleValue = 7
-        XCTAssertTrue(sendAction(from: bodyDurationSlider))
-
-        XCTAssertEqual(frequentEye.state, .off)
-        XCTAssertEqual(movement.state, .off)
-        XCTAssertNil(frequentEye.contentTintColor)
-        XCTAssertNil(movement.contentTintColor)
-        XCTAssertEqual(
-            movement.toolTip,
-            L10n.format(
-                "prefs.rhythmPreset.applyHelp",
-                RestRhythmPreset.movement.title,
-                RestRhythmPreset.movement.help
-            )
-        )
     }
 
     func testScheduleSummaryFollowsDisabledRestTypes() throws {
@@ -243,7 +128,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
 
         XCTAssertEqual(
             label.stringValue,
-            L10n.format("prefs.scheduleSummary.eyeOnly", 10, 20)
+            L10n.format("prefs.scheduleSummary.eyeOnly", 20, 20)
         )
         XCTAssertEqual(label.accessibilityLabel(), label.stringValue)
         waitUntilSavedSettingsArrive(savedSettings)
@@ -260,7 +145,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
 
         XCTAssertEqual(
             label.stringValue,
-            L10n.format("prefs.scheduleSummary.bodyOnly", 45, 5)
+            L10n.format("prefs.scheduleSummary.bodyOnly", 60, 3)
         )
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(savedSettings.value?.eyeGate.isEnabled, false)

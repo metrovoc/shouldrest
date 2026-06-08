@@ -5,10 +5,10 @@ import XCTest
 
 @MainActor
 final class OnboardingWindowTests: XCTestCase {
-    func testOnboardingWindowUsesPolishedFirstRunLayout() throws {
+    func testOnboardingWindowUsesPolishedFirstRunLayoutWithoutPresetSelection() throws {
         let controller = OnboardingWindowController(
-            onUsePreset: { _ in },
-            onOpenPreferences: { _ in },
+            onStart: {},
+            onOpenPreferences: {},
             onLearnMore: {}
         )
         let window = try XCTUnwrap(controller.window)
@@ -26,13 +26,11 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertTrue(eyeIcon.image?.isTemplate ?? false)
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.feature.emergency"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.feature.body"))
-        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetPanel"))
-        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetControl"))
-        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetRecommendation"))
-        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetDescription"))
-        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetRationaleRow"))
-        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetRationaleIcon"))
-        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPresetRationale"))
+        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPanel"))
+        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmDescription"))
+        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmRationaleRow"))
+        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmRationaleIcon"))
+        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmRationale"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmMetricRow"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.metric.eyeInterval"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.metric.eyeDuration"))
@@ -40,10 +38,10 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.metric.bodyDuration"))
     }
 
-    func testOnboardingCopyExplainsCoreProductChoices() throws {
+    func testOnboardingCopyExplainsSingleRecommendedRhythm() throws {
         let controller = OnboardingWindowController(
-            onUsePreset: { _ in },
-            onOpenPreferences: { _ in },
+            onStart: {},
+            onOpenPreferences: {},
             onLearnMore: {}
         )
         let contentView = try XCTUnwrap(controller.window?.contentView)
@@ -56,9 +54,8 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.emergencyFeatureTitle")))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.bodyFeatureTitle")))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.rhythmTitle")))
-        XCTAssertTrue(texts.contains(L10n.format("onboarding.recommendedPresetBadge", RestRhythmPreset.firstRunDefault.title)))
-        XCTAssertTrue(texts.contains(RestRhythmPreset.firstRunDefault.help))
-        XCTAssertTrue(texts.contains(RestRhythmPreset.firstRunDefault.onboardingRationale))
+        XCTAssertTrue(texts.contains(defaultRhythmDescription()))
+        XCTAssertTrue(texts.contains(L10n.tr("onboarding.rhythmRationale")))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.metric.eyeInterval")))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.metric.eyeDuration")))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.metric.bodyInterval")))
@@ -67,17 +64,17 @@ final class OnboardingWindowTests: XCTestCase {
 
     func testOnboardingButtonsUseIconsHelpAndDefaultAction() throws {
         let controller = OnboardingWindowController(
-            onUsePreset: { _ in },
-            onOpenPreferences: { _ in },
+            onStart: {},
+            onOpenPreferences: {},
             onLearnMore: {}
         )
         let contentView = try XCTUnwrap(controller.window?.contentView)
 
         let learnMore = try XCTUnwrap(button(withIdentifier: "onboarding.aboutButton", in: contentView))
         let preferences = try XCTUnwrap(button(withIdentifier: "onboarding.preferencesButton", in: contentView))
-        let useSelected = try XCTUnwrap(button(withIdentifier: "onboarding.useSelectedButton", in: contentView))
+        let start = try XCTUnwrap(button(withIdentifier: "onboarding.startButton", in: contentView))
 
-        for button in [learnMore, preferences, useSelected] {
+        for button in [learnMore, preferences, start] {
             XCTAssertNotNil(button.image)
             XCTAssertEqual(button.image?.accessibilityDescription, button.title)
             XCTAssertEqual(button.imagePosition, .imageLeading)
@@ -88,37 +85,30 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertEqual(learnMore.toolTip, L10n.tr("onboarding.learnMoreHelp"))
         XCTAssertEqual(preferences.title, L10n.tr("onboarding.preferences"))
         XCTAssertEqual(preferences.toolTip, L10n.tr("onboarding.preferencesHelp"))
-        XCTAssertEqual(useSelected.title, L10n.tr("onboarding.useRecommended"))
-        XCTAssertEqual(useSelected.toolTip, L10n.tr("onboarding.useSelectedHelp"))
-        XCTAssertEqual(useSelected.keyEquivalent, "\r")
-        XCTAssertEqual(useSelected.bezelStyle, .rounded)
+        XCTAssertEqual(start.title, L10n.tr("onboarding.useRecommended"))
+        XCTAssertEqual(start.toolTip, L10n.tr("onboarding.startHelp"))
+        XCTAssertEqual(start.keyEquivalent, "\r")
+        XCTAssertEqual(start.bezelStyle, .rounded)
     }
 
-    func testOnboardingRhythmPresetSelectionUpdatesDescriptionAndPrimaryAction() throws {
-        var selectedPreset: RestRhythmPreset?
+    func testOnboardingRecommendedRhythmDetailsReflectDefaultSettings() throws {
         let controller = OnboardingWindowController(
-            onUsePreset: { selectedPreset = $0 },
-            onOpenPreferences: { _ in },
+            onStart: {},
+            onOpenPreferences: {},
             onLearnMore: {}
         )
         let contentView = try XCTUnwrap(controller.window?.contentView)
-        let control = try XCTUnwrap(
-            contentView.descendant(withIdentifier: "onboarding.rhythmPresetControl") as? NSSegmentedControl
-        )
         let description = try XCTUnwrap(
-            contentView.descendant(withIdentifier: "onboarding.rhythmPresetDescription") as? NSTextField
+            contentView.descendant(withIdentifier: "onboarding.rhythmDescription") as? NSTextField
         )
         let icon = try XCTUnwrap(
-            contentView.descendant(withIdentifier: "onboarding.rhythmPresetIcon") as? NSImageView
+            contentView.descendant(withIdentifier: "onboarding.rhythmIcon") as? NSImageView
         )
         let rationaleIcon = try XCTUnwrap(
-            contentView.descendant(withIdentifier: "onboarding.rhythmPresetRationaleIcon") as? NSImageView
+            contentView.descendant(withIdentifier: "onboarding.rhythmRationaleIcon") as? NSImageView
         )
         let rationale = try XCTUnwrap(
-            contentView.descendant(withIdentifier: "onboarding.rhythmPresetRationale") as? NSTextField
-        )
-        let recommendation = try XCTUnwrap(
-            contentView.descendant(withIdentifier: "onboarding.rhythmPresetRecommendation") as? NSTextField
+            contentView.descendant(withIdentifier: "onboarding.rhythmRationale") as? NSTextField
         )
         let eyeInterval = try XCTUnwrap(
             contentView.descendant(withIdentifier: "onboarding.metric.eyeInterval.value") as? NSTextField
@@ -132,148 +122,78 @@ final class OnboardingWindowTests: XCTestCase {
         let bodyDuration = try XCTUnwrap(
             contentView.descendant(withIdentifier: "onboarding.metric.bodyDuration.value") as? NSTextField
         )
-        let useSelected = try XCTUnwrap(button(withIdentifier: "onboarding.useSelectedButton", in: contentView))
 
-        XCTAssertEqual(control.segmentCount, RestRhythmPreset.allCases.count)
-        XCTAssertEqual(control.selectedSegment, RestRhythmPreset.firstRunDefault.rawValue)
-        XCTAssertEqual(control.label(forSegment: RestRhythmPreset.recommended.rawValue), "Balanced")
-        XCTAssertEqual(control.label(forSegment: RestRhythmPreset.frequentEye.rawValue), "More Eye Rests")
-        XCTAssertEqual(control.label(forSegment: RestRhythmPreset.movement.rawValue), "More Movement")
-        XCTAssertTrue(RestRhythmPreset.frequentEye.usesRestGateIcon)
-        XCTAssertNotEqual(RestRhythmPreset.frequentEye.symbolName, "eye")
-        for preset in RestRhythmPreset.allCases {
-            XCTAssertEqual(control.image(forSegment: preset.rawValue)?.accessibilityDescription, preset.title)
-            XCTAssertEqual(control.toolTip(forSegment: preset.rawValue), preset.help)
-        }
-        let frequentEyeSegmentImage = try XCTUnwrap(control.image(forSegment: RestRhythmPreset.frequentEye.rawValue))
-        XCTAssertEqual(frequentEyeSegmentImage.size, NSSize(width: 18, height: 18))
-        XCTAssertTrue(frequentEyeSegmentImage.isTemplate)
-        XCTAssertEqual(description.stringValue, RestRhythmPreset.firstRunDefault.help)
-        XCTAssertEqual(description.toolTip, RestRhythmPreset.firstRunDefault.help)
-        XCTAssertEqual(description.accessibilityLabel(), RestRhythmPreset.firstRunDefault.help)
-        XCTAssertEqual(description.accessibilityHelp(), RestRhythmPreset.firstRunDefault.help)
-        XCTAssertEqual(control.accessibilityLabel(), L10n.tr("onboarding.rhythmTitle"))
-        XCTAssertEqual(control.accessibilityHelp(), RestRhythmPreset.firstRunDefault.help)
-        XCTAssertEqual(
-            icon.image?.accessibilityDescription,
-            "\(L10n.tr("onboarding.rhythmTitle")): \(RestRhythmPreset.firstRunDefault.title)"
-        )
-        XCTAssertEqual(icon.image?.size, NSSize(width: 18, height: 18))
-        XCTAssertTrue(icon.image?.isTemplate ?? false)
-        XCTAssertEqual(icon.accessibilityHelp(), RestRhythmPreset.firstRunDefault.help)
-        XCTAssertEqual(rationale.stringValue, RestRhythmPreset.firstRunDefault.onboardingRationale)
-        XCTAssertEqual(rationale.toolTip, RestRhythmPreset.firstRunDefault.onboardingRationale)
-        XCTAssertEqual(rationale.accessibilityLabel(), RestRhythmPreset.firstRunDefault.onboardingRationale)
-        XCTAssertEqual(rationale.accessibilityHelp(), RestRhythmPreset.firstRunDefault.onboardingRationale)
-        XCTAssertEqual(rationaleIcon.image?.accessibilityDescription, RestRhythmPreset.firstRunDefault.onboardingRationale)
-        XCTAssertEqual(rationaleIcon.accessibilityLabel(), RestRhythmPreset.firstRunDefault.onboardingRationale)
-        let recommendationText = L10n.format("onboarding.recommendedPresetBadge", RestRhythmPreset.firstRunDefault.title)
-        XCTAssertEqual(recommendation.stringValue, recommendationText)
-        XCTAssertEqual(recommendation.toolTip, recommendationText)
-        XCTAssertEqual(recommendation.accessibilityLabel(), recommendationText)
-        XCTAssertEqual(recommendation.accessibilityHelp(), recommendationText)
-        XCTAssertEqual(eyeInterval.stringValue, L10n.format("onboarding.metric.eyeIntervalValue", 10))
-        XCTAssertEqual(eyeDuration.stringValue, L10n.format("onboarding.metric.eyeDurationValue", 20))
-        XCTAssertEqual(bodyInterval.stringValue, L10n.format("onboarding.metric.bodyIntervalValue", 45))
-        XCTAssertEqual(bodyDuration.stringValue, L10n.format("onboarding.metric.bodyDurationValue", 5))
-        assertMetricHelp(eyeInterval, titleKey: "onboarding.metric.eyeInterval")
-        assertMetricHelp(eyeDuration, titleKey: "onboarding.metric.eyeDuration")
-        assertMetricHelp(bodyInterval, titleKey: "onboarding.metric.bodyInterval")
-        assertMetricHelp(bodyDuration, titleKey: "onboarding.metric.bodyDuration")
-        XCTAssertEqual(useSelected.title, L10n.tr("onboarding.useRecommended"))
-
-        control.selectedSegment = RestRhythmPreset.movement.rawValue
-        XCTAssertTrue(control.sendAction(control.action, to: control.target))
-
-        XCTAssertEqual(description.stringValue, RestRhythmPreset.movement.help)
-        XCTAssertEqual(description.toolTip, RestRhythmPreset.movement.help)
-        XCTAssertEqual(description.accessibilityLabel(), RestRhythmPreset.movement.help)
-        XCTAssertEqual(description.accessibilityHelp(), RestRhythmPreset.movement.help)
-        XCTAssertEqual(control.accessibilityHelp(), RestRhythmPreset.movement.help)
-        XCTAssertEqual(
-            icon.image?.accessibilityDescription,
-            "\(L10n.tr("onboarding.rhythmTitle")): \(RestRhythmPreset.movement.title)"
-        )
-        XCTAssertEqual(icon.accessibilityHelp(), RestRhythmPreset.movement.help)
-        XCTAssertEqual(rationale.stringValue, RestRhythmPreset.movement.onboardingRationale)
-        XCTAssertEqual(rationale.toolTip, RestRhythmPreset.movement.onboardingRationale)
-        XCTAssertEqual(rationale.accessibilityLabel(), RestRhythmPreset.movement.onboardingRationale)
-        XCTAssertEqual(rationale.accessibilityHelp(), RestRhythmPreset.movement.onboardingRationale)
-        XCTAssertEqual(rationaleIcon.image?.accessibilityDescription, RestRhythmPreset.movement.onboardingRationale)
-        XCTAssertEqual(rationaleIcon.accessibilityHelp(), RestRhythmPreset.movement.onboardingRationale)
+        XCTAssertEqual(description.stringValue, defaultRhythmDescription())
+        XCTAssertEqual(description.toolTip, defaultRhythmDescription())
+        XCTAssertEqual(description.accessibilityLabel(), defaultRhythmDescription())
+        XCTAssertEqual(description.accessibilityHelp(), defaultRhythmDescription())
+        XCTAssertEqual(icon.image?.accessibilityDescription, "\(L10n.tr("onboarding.rhythmTitle")): \(defaultRhythmDescription())")
+        XCTAssertNotNil(icon.image)
+        XCTAssertEqual(icon.accessibilityHelp(), defaultRhythmDescription())
+        XCTAssertEqual(rationale.stringValue, L10n.tr("onboarding.rhythmRationale"))
+        XCTAssertEqual(rationale.toolTip, L10n.tr("onboarding.rhythmRationale"))
+        XCTAssertEqual(rationale.accessibilityLabel(), L10n.tr("onboarding.rhythmRationale"))
+        XCTAssertEqual(rationale.accessibilityHelp(), L10n.tr("onboarding.rhythmRationale"))
+        XCTAssertEqual(rationaleIcon.image?.accessibilityDescription, L10n.tr("onboarding.rhythmRationale"))
+        XCTAssertEqual(rationaleIcon.accessibilityLabel(), L10n.tr("onboarding.rhythmRationale"))
         XCTAssertEqual(eyeInterval.stringValue, L10n.format("onboarding.metric.eyeIntervalValue", 20))
         XCTAssertEqual(eyeDuration.stringValue, L10n.format("onboarding.metric.eyeDurationValue", 20))
-        XCTAssertEqual(bodyInterval.stringValue, L10n.format("onboarding.metric.bodyIntervalValue", 45))
-        XCTAssertEqual(bodyDuration.stringValue, L10n.format("onboarding.metric.bodyDurationValue", 8))
+        XCTAssertEqual(bodyInterval.stringValue, L10n.format("onboarding.metric.bodyIntervalValue", 60))
+        XCTAssertEqual(bodyDuration.stringValue, L10n.format("onboarding.metric.bodyDurationValue", 3))
         assertMetricHelp(eyeInterval, titleKey: "onboarding.metric.eyeInterval")
         assertMetricHelp(eyeDuration, titleKey: "onboarding.metric.eyeDuration")
         assertMetricHelp(bodyInterval, titleKey: "onboarding.metric.bodyInterval")
         assertMetricHelp(bodyDuration, titleKey: "onboarding.metric.bodyDuration")
-        XCTAssertEqual(
-            useSelected.title,
-            L10n.format("onboarding.useSelectedWithPreset", RestRhythmPreset.movement.title)
-        )
-        XCTAssertEqual(useSelected.accessibilityLabel(), useSelected.title)
-        XCTAssertEqual(useSelected.image?.accessibilityDescription, useSelected.title)
-
-        useSelected.performClick(nil)
-
-        XCTAssertEqual(selectedPreset, .movement)
     }
 
-    func testOnboardingPrimaryActionUsesFrequentEyeFirstRunDefault() throws {
-        var selectedPreset: RestRhythmPreset?
+    func testOnboardingPrimaryActionCompletesWithoutApplyingPreset() throws {
+        var didStart = false
         let controller = OnboardingWindowController(
-            onUsePreset: { selectedPreset = $0 },
-            onOpenPreferences: { _ in },
+            onStart: { didStart = true },
+            onOpenPreferences: {},
             onLearnMore: {}
         )
         let contentView = try XCTUnwrap(controller.window?.contentView)
-        let useSelected = try XCTUnwrap(button(withIdentifier: "onboarding.useSelectedButton", in: contentView))
+        let start = try XCTUnwrap(button(withIdentifier: "onboarding.startButton", in: contentView))
 
-        XCTAssertEqual(useSelected.title, L10n.tr("onboarding.useRecommended"))
+        XCTAssertEqual(start.title, L10n.tr("onboarding.useRecommended"))
 
-        useSelected.performClick(nil)
+        start.performClick(nil)
 
-        XCTAssertEqual(selectedPreset, .frequentEye)
+        XCTAssertTrue(didStart)
     }
 
-    func testOnboardingOpenPreferencesUsesSelectedRhythmPreset() throws {
-        var selectedPreset: RestRhythmPreset?
+    func testOnboardingOpenPreferencesCompletesWithoutApplyingPreset() throws {
+        var didOpenPreferences = false
         let controller = OnboardingWindowController(
-            onUsePreset: { _ in },
-            onOpenPreferences: { selectedPreset = $0 },
+            onStart: {},
+            onOpenPreferences: { didOpenPreferences = true },
             onLearnMore: {}
         )
         let contentView = try XCTUnwrap(controller.window?.contentView)
-        let control = try XCTUnwrap(
-            contentView.descendant(withIdentifier: "onboarding.rhythmPresetControl") as? NSSegmentedControl
-        )
-
-        control.selectedSegment = RestRhythmPreset.movement.rawValue
-        XCTAssertTrue(control.sendAction(control.action, to: control.target))
-
         let buttons = buttonsByTitle(in: contentView)
         let preferences = try XCTUnwrap(buttons[L10n.tr("onboarding.preferences")])
+
         preferences.performClick(nil)
 
-        XCTAssertEqual(selectedPreset, .movement)
+        XCTAssertTrue(didOpenPreferences)
     }
 
-    func testRhythmPresetAppliesScheduleValuesToSettings() {
-        var settings = RestSettings.defaults
-        settings.eyeGate.isEnabled = false
-        settings.bodyBreak.isEnabled = false
-
-        RestRhythmPreset.frequentEye.apply(to: &settings)
-
-        XCTAssertTrue(settings.eyeGate.isEnabled)
-        XCTAssertTrue(settings.bodyBreak.isEnabled)
-        XCTAssertEqual(settings.eyeGate.interval, 10 * 60)
-        XCTAssertEqual(settings.eyeGate.duration, 20)
-        XCTAssertEqual(settings.bodyBreak.interval, 45 * 60)
-        XCTAssertEqual(settings.bodyBreak.duration, 5 * 60)
+    func testDefaultRhythmUsesSingleRecommendedScheduleValues() {
+        XCTAssertTrue(RestSettings.defaults.eyeGate.isEnabled)
+        XCTAssertTrue(RestSettings.defaults.bodyBreak.isEnabled)
+        XCTAssertEqual(RestSettings.defaults.eyeGate.interval, 20 * 60)
+        XCTAssertEqual(RestSettings.defaults.eyeGate.duration, 20)
+        XCTAssertEqual(RestSettings.defaults.bodyBreak.interval, 60 * 60)
+        XCTAssertEqual(RestSettings.defaults.bodyBreak.duration, 3 * 60)
+        XCTAssertFalse(RestSettings.defaults.bodyBreak.manualFinishEnabled)
+        XCTAssertEqual(RestSettings.defaults.naturalBreaks.inactivityResetTime, 10 * 60)
     }
+}
+
+@MainActor
+private func defaultRhythmDescription() -> String {
+    L10n.format("onboarding.rhythmDescription", 20, 20, 60, 3)
 }
 
 @MainActor
@@ -289,7 +209,46 @@ private func assertMetricHelp(
     XCTAssertEqual(label.accessibilityHelp(), expectedHelp, file: file, line: line)
 }
 
+@MainActor
+private func button(withIdentifier identifier: String, in view: NSView) -> NSButton? {
+    view.descendant(withIdentifier: identifier) as? NSButton
+}
+
+@MainActor
+private func buttonsByTitle(in view: NSView) -> [String: NSButton] {
+    var result: [String: NSButton] = [:]
+    collectButtons(in: view, into: &result)
+    return result
+}
+
+@MainActor
+private func collectButtons(in view: NSView, into result: inout [String: NSButton]) {
+    if let button = view as? NSButton {
+        result[button.title] = button
+    }
+    for subview in view.subviews {
+        collectButtons(in: subview, into: &result)
+    }
+}
+
+@MainActor
+private func visibleTexts(in view: NSView, ancestorHidden: Bool = false) -> [String] {
+    let hidden = ancestorHidden || view.isHidden
+    var texts: [String] = []
+    if !hidden, let label = view as? NSTextField, !label.stringValue.isEmpty {
+        texts.append(label.stringValue)
+    }
+    if !hidden, let button = view as? NSButton, !button.title.isEmpty {
+        texts.append(button.title)
+    }
+    for subview in view.subviews {
+        texts.append(contentsOf: visibleTexts(in: subview, ancestorHidden: hidden))
+    }
+    return texts
+}
+
 private extension NSView {
+    @MainActor
     func descendant(withIdentifier rawIdentifier: String) -> NSView? {
         if identifier?.rawValue == rawIdentifier {
             return self
@@ -301,47 +260,4 @@ private extension NSView {
         }
         return nil
     }
-}
-
-@MainActor
-private func visibleTexts(in view: NSView, ancestorHidden: Bool = false) -> [String] {
-    let hidden = ancestorHidden || view.isHidden
-    var texts: [String] = []
-    if !hidden {
-        if let button = view as? NSButton, !button.title.isEmpty {
-            texts.append(button.title)
-        } else if let textField = view as? NSTextField, !textField.stringValue.isEmpty {
-            texts.append(textField.stringValue)
-        }
-    }
-    for subview in view.subviews {
-        texts.append(contentsOf: visibleTexts(in: subview, ancestorHidden: hidden))
-    }
-    return texts
-}
-
-@MainActor
-private func buttonsByTitle(in view: NSView, ancestorHidden: Bool = false) -> [String: NSButton] {
-    let hidden = ancestorHidden || view.isHidden
-    var buttons: [String: NSButton] = [:]
-    if !hidden, let button = view as? NSButton, !button.title.isEmpty {
-        buttons[button.title] = button
-    }
-    for subview in view.subviews {
-        buttons.merge(buttonsByTitle(in: subview, ancestorHidden: hidden)) { current, _ in current }
-    }
-    return buttons
-}
-
-@MainActor
-private func button(withIdentifier identifier: String, in view: NSView) -> NSButton? {
-    if view.identifier?.rawValue == identifier {
-        return view as? NSButton
-    }
-    for subview in view.subviews {
-        if let button = button(withIdentifier: identifier, in: subview) {
-            return button
-        }
-    }
-    return nil
 }

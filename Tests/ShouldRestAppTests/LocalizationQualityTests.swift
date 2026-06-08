@@ -489,14 +489,13 @@ final class LocalizationQualityTests: XCTestCase {
         let retiredBodyBreakGateCopy = ["Next Body Break", "after"].joined(separator: " ")
         XCTAssertFalse(englishValues.contains(retiredBodyBreakGateCopy))
         XCTAssertTrue(englishValues.contains("%@ active, %@ remaining"))
-        XCTAssertTrue(englishValues.contains("Balanced"))
-        XCTAssertTrue(englishValues.contains("More Eye Rests"))
-        XCTAssertTrue(englishValues.contains("More Eye Rests (Recommended)"))
+        XCTAssertTrue(englishValues.contains("Recommended starting rhythm"))
+        XCTAssertTrue(englishValues.contains("Eye Gate every %d min for %d sec. Body Break every %d active-use min for %d min."))
         XCTAssertTrue(englishValues.contains("About ShouldRest"))
         XCTAssertTrue(englishValues.contains("Useful controls, not loopholes"))
         XCTAssertTrue(englishValues.contains("Emergency stays in the overlay"))
-        XCTAssertTrue(englishValues.contains("Start With This Rhythm"))
-        XCTAssertTrue(englishValues.contains("screen-covering 20-second Eye Gates"))
+        XCTAssertTrue(englishValues.contains("Start ShouldRest"))
+        XCTAssertTrue(englishValues.contains("20-minute Eye Gates"))
         XCTAssertTrue(englishValues.contains("Brief screen-covering rests"))
         XCTAssertTrue(englishValues.contains("Full-screen coverage protects brief 20-second rests from skip muscle memory"))
         XCTAssertTrue(englishValues.contains("Add Idea"))
@@ -554,13 +553,13 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(simplifiedChineseValues.contains("显示休息压力指示器"))
         XCTAssertFalse(simplifiedChineseValues.contains("压力 %d/10"))
         XCTAssertFalse(simplifiedChineseValues.contains("错过或延后休息累积休息欠账时，在菜单栏显示紧凑指示器。"))
-        XCTAssertTrue(simplifiedChineseValues.contains("均衡"))
-        XCTAssertTrue(simplifiedChineseValues.contains("更多护眼"))
+        XCTAssertTrue(simplifiedChineseValues.contains("推荐起始节奏"))
+        XCTAssertTrue(simplifiedChineseValues.contains("护眼休息每 %d 分钟 %d 秒；活动休息每累计 %d 分钟主动使用后 %d 分钟。"))
         XCTAssertTrue(simplifiedChineseValues.contains("关于 ShouldRest"))
         XCTAssertTrue(simplifiedChineseValues.contains("有用控制，不留绕过入口"))
         XCTAssertTrue(simplifiedChineseValues.contains("覆盖层内紧急退出"))
-        XCTAssertTrue(simplifiedChineseValues.contains("使用这个节奏开始"))
-        XCTAssertTrue(simplifiedChineseValues.contains("覆盖屏幕的 20 秒护眼休息"))
+        XCTAssertTrue(simplifiedChineseValues.contains("开始使用 ShouldRest"))
+        XCTAssertTrue(simplifiedChineseValues.contains("20 分钟护眼休息"))
         XCTAssertTrue(simplifiedChineseValues.contains("短暂覆盖屏幕的护眼休息"))
         XCTAssertTrue(simplifiedChineseValues.contains("全屏覆盖让短短 20 秒护眼休息不被习惯性跳过"))
         XCTAssertTrue(simplifiedChineseValues.contains("添加提示"))
@@ -1263,48 +1262,34 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(L10n.tr("onboarding.emergencyFeatureBody").contains("另一个窗口"))
     }
 
-    func testOnboardingPrimaryActionNamesSelectedRhythm() {
+    func testOnboardingPrimaryActionUsesSingleRecommendedRhythm() {
         defer { L10n.languageOverride = nil }
 
         L10n.languageOverride = "en"
         XCTAssertEqual(L10n.tr("onboarding.preferences"), "Customize in Preferences")
-        XCTAssertTrue(L10n.tr("onboarding.preferencesHelp").contains("Apply the selected rhythm"))
-        XCTAssertTrue(L10n.tr("onboarding.preferencesHelp").contains("adjust the details"))
+        XCTAssertTrue(L10n.tr("onboarding.preferencesHelp").contains("adjust the schedule"))
         XCTAssertNotEqual(L10n.tr("onboarding.preferences"), "Open Preferences")
-        XCTAssertTrue(L10n.tr("onboarding.rhythmPreset.frequentEyeRationale").contains("Recommended first"))
-        XCTAssertEqual(L10n.tr("prefs.rhythmPreset.frequentEyeRecommended"), "More Eye Rests (Recommended)")
         XCTAssertEqual(
-            L10n.format("onboarding.recommendedPresetBadge", "More Eye Rests"),
-            "Recommended: More Eye Rests"
+            L10n.format("onboarding.rhythmDescription", 20, 20, 60, 3),
+            "Eye Gate every 20 min for 20 sec. Body Break every 60 active-use min for 3 min."
         )
-        XCTAssertEqual(L10n.tr("onboarding.useRecommended"), "Start Recommended Rhythm")
-        XCTAssertTrue(L10n.tr("onboarding.rhythmPreset.frequentEyeRationale").contains("frequent 20-second Eye Gates"))
-        XCTAssertTrue(L10n.tr("onboarding.rhythmPreset.recommendedRationale").contains("less often"))
-        XCTAssertTrue(L10n.tr("onboarding.rhythmPreset.movementRationale").contains("posture"))
-        XCTAssertEqual(
-            L10n.format("onboarding.useSelectedWithPreset", "More Eye Rests"),
-            "Start With More Eye Rests"
-        )
+        XCTAssertTrue(L10n.tr("onboarding.body").contains("10-minute away rule"))
+        XCTAssertTrue(L10n.tr("onboarding.bodyFeatureBody").contains("finish automatically by default"))
+        XCTAssertEqual(L10n.tr("onboarding.useRecommended"), "Start ShouldRest")
+        XCTAssertTrue(L10n.tr("onboarding.rhythmRationale").contains("low cost"))
 
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(L10n.tr("onboarding.preferences"), "在偏好设置中自定义")
-        XCTAssertTrue(L10n.tr("onboarding.preferencesHelp").contains("先应用当前选择的节奏"))
-        XCTAssertTrue(L10n.tr("onboarding.preferencesHelp").contains("调整细节"))
+        XCTAssertTrue(L10n.tr("onboarding.preferencesHelp").contains("调整休息节奏"))
         XCTAssertNotEqual(L10n.tr("onboarding.preferences"), "打开偏好设置")
-        XCTAssertTrue(L10n.tr("onboarding.rhythmPreset.frequentEyeRationale").contains("首次推荐"))
-        XCTAssertEqual(L10n.tr("prefs.rhythmPreset.frequentEyeRecommended"), "更多护眼（推荐）")
         XCTAssertEqual(
-            L10n.format("onboarding.recommendedPresetBadge", "更多护眼"),
-            "推荐：更多护眼"
+            L10n.format("onboarding.rhythmDescription", 20, 20, 60, 3),
+            "护眼休息每 20 分钟 20 秒；活动休息每累计 60 分钟主动使用后 3 分钟。"
         )
-        XCTAssertEqual(L10n.tr("onboarding.useRecommended"), "使用推荐节奏开始")
-        XCTAssertTrue(L10n.tr("onboarding.rhythmPreset.frequentEyeRationale").contains("频繁的 20 秒护眼休息"))
-        XCTAssertTrue(L10n.tr("onboarding.rhythmPreset.recommendedRationale").contains("出现频率更低"))
-        XCTAssertTrue(L10n.tr("onboarding.rhythmPreset.movementRationale").contains("姿势"))
-        XCTAssertEqual(
-            L10n.format("onboarding.useSelectedWithPreset", "更多护眼休息"),
-            "使用更多护眼休息开始"
-        )
+        XCTAssertTrue(L10n.tr("onboarding.body").contains("10 分钟离开阈值"))
+        XCTAssertTrue(L10n.tr("onboarding.bodyFeatureBody").contains("默认到点自动结束"))
+        XCTAssertEqual(L10n.tr("onboarding.useRecommended"), "开始使用 ShouldRest")
+        XCTAssertTrue(L10n.tr("onboarding.rhythmRationale").contains("成本低"))
     }
 
     func testBlockedActionNotificationsUseUserActionLanguage() {

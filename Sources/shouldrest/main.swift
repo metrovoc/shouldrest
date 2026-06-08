@@ -1838,11 +1838,11 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         onboardingWindowController = OnboardingWindowController(
-            onUsePreset: { [weak self] preset in
-                self?.completeOnboarding(rhythmPreset: preset, openPreferences: false)
+            onStart: { [weak self] in
+                self?.completeOnboarding(openPreferences: false)
             },
-            onOpenPreferences: { [weak self] preset in
-                self?.completeOnboarding(rhythmPreset: preset, openPreferences: true)
+            onOpenPreferences: { [weak self] in
+                self?.completeOnboarding(openPreferences: true)
             },
             onLearnMore: { [weak self] in
                 self?.showAboutPanel()
@@ -1853,9 +1853,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         logger.log("Onboarding shown")
     }
 
-    private func completeOnboarding(rhythmPreset: RestRhythmPreset, openPreferences shouldOpenPreferences: Bool) {
+    private func completeOnboarding(openPreferences shouldOpenPreferences: Bool) {
         var nextSettings = settings
-        rhythmPreset.apply(to: &nextSettings)
         nextSettings.operations.hasCompletedOnboarding = true
         nextSettings.operations.showOnboardingOnNextLaunch = false
         do {

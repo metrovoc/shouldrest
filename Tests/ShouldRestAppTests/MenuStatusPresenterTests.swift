@@ -25,7 +25,7 @@ final class MenuStatusPresenterTests: XCTestCase {
         XCTAssertTrue(lines[0].contains(" in "))
         XCTAssertTrue(lines[0].contains("("))
         XCTAssertFalse(lines[0].contains("eyeGate"))
-        XCTAssertEqual(lines[1], "Body Break in 45m")
+        XCTAssertEqual(lines[1], "Body Break in 1h")
     }
 
     func testScheduledStatusShowsRelativeAndClockTimeInLocalizedCopy() {
@@ -54,7 +54,7 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         XCTAssertTrue(tooltip.hasPrefix("ShouldRest - Short eye rests, protected\n\n"))
         XCTAssertTrue(tooltip.contains("Next: Eye Gate"))
-        XCTAssertTrue(tooltip.contains("Body Break in 45m"))
+        XCTAssertTrue(tooltip.contains("Body Break in 1h"))
         XCTAssertTrue(tooltip.contains("Rest debt: 0/10"))
     }
 
@@ -100,7 +100,7 @@ final class MenuStatusPresenterTests: XCTestCase {
             content.primary,
             "Next: Eye Gate in 10m (\(start.addingTimeInterval(10 * 60).formatted(date: .omitted, time: .shortened)))"
         )
-        XCTAssertEqual(content.secondary, "Body Break in 45m")
+        XCTAssertEqual(content.secondary, "Body Break in 1h")
         XCTAssertEqual(content.healthBadge, "Debt 3/10")
         XCTAssertEqual(content.icon, .restGate)
     }
@@ -146,7 +146,7 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         XCTAssertTrue(description.hasPrefix("ShouldRest: Next: Eye Gate in "))
         XCTAssertTrue(description.contains("("))
-        XCTAssertTrue(description.contains("Body Break in 45m"))
+        XCTAssertTrue(description.contains("Body Break in 1h"))
         XCTAssertFalse(description.contains("The rest reminder app"))
         XCTAssertFalse(description.contains("\n"))
         XCTAssertFalse(description.contains("Rest debt: 0/10"))
@@ -420,7 +420,7 @@ final class MenuStatusPresenterTests: XCTestCase {
             now: start
         )
 
-        XCTAssertEqual(lines[1], "Body Break in 30m")
+        XCTAssertEqual(lines[1], "Body Break in 45m")
     }
 
     func testActiveStatusUsesLocalizedBodyBreakName() {
@@ -430,10 +430,10 @@ final class MenuStatusPresenterTests: XCTestCase {
         let lines = MenuStatusPresenter.lines(state: engine.state, settings: engine.settings, now: start.addingTimeInterval(5))
 
         XCTAssertTrue(lines[0].contains("Body Break active"))
-        XCTAssertTrue(lines[0].contains("5m remaining"))
+        XCTAssertTrue(lines[0].contains("3m remaining"))
         XCTAssertFalse(lines[0].contains("295s"))
         XCTAssertFalse(lines[0].contains("bodyBreak"))
-        XCTAssertEqual(lines[1], "Use available menu or overlay controls to postpone, skip, or finish.")
+        XCTAssertEqual(lines[1], "Use available menu or overlay controls to postpone or skip.")
     }
 
     func testManualFinishBodyBreakStatusUsesFinishOnlyGuidance() {

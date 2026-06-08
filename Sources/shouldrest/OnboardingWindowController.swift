@@ -1,5 +1,5 @@
 import AppKit
-import Foundation
+import ShouldRestCore
 
 private enum OnboardingFeatureIcon {
     case restGate
@@ -8,33 +8,30 @@ private enum OnboardingFeatureIcon {
 
 @MainActor
 final class OnboardingWindowController: NSWindowController {
-    private let onUsePreset: (RestRhythmPreset) -> Void
-    private let onOpenPreferences: (RestRhythmPreset) -> Void
+    private let onStart: () -> Void
+    private let onOpenPreferences: () -> Void
     private let onLearnMore: () -> Void
-    private let rhythmPresetControl = NSSegmentedControl()
-    private let rhythmPresetIcon = NSImageView()
-    private let rhythmPresetDescription = NSTextField(labelWithString: "")
-    private let rhythmPresetRationale = NSTextField(labelWithString: "")
-    private let rhythmPresetRationaleIcon = NSImageView()
-    private let rhythmPresetRecommendation = NSTextField(labelWithString: "")
+    private let rhythmIcon = NSImageView()
+    private let rhythmDescription = NSTextField(labelWithString: "")
+    private let rhythmRationale = NSTextField(labelWithString: "")
+    private let rhythmRationaleIcon = NSImageView()
     private let rhythmMetricEyeInterval = NSTextField(labelWithString: "")
     private let rhythmMetricEyeDuration = NSTextField(labelWithString: "")
     private let rhythmMetricBodyInterval = NSTextField(labelWithString: "")
     private let rhythmMetricBodyDuration = NSTextField(labelWithString: "")
-    private var useSelectedButton: NSButton?
-    private var selectedRhythmPreset: RestRhythmPreset = .firstRunDefault
+    private var startButton: NSButton?
 
     init(
-        onUsePreset: @escaping (RestRhythmPreset) -> Void,
-        onOpenPreferences: @escaping (RestRhythmPreset) -> Void,
+        onStart: @escaping () -> Void,
+        onOpenPreferences: @escaping () -> Void,
         onLearnMore: @escaping () -> Void
     ) {
-        self.onUsePreset = onUsePreset
+        self.onStart = onStart
         self.onOpenPreferences = onOpenPreferences
         self.onLearnMore = onLearnMore
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 680, height: 590),
+            contentRect: NSRect(x: 0, y: 0, width: 680, height: 560),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
@@ -64,7 +61,7 @@ final class OnboardingWindowController: NSWindowController {
 
         stack.addArrangedSubview(heroView())
         stack.addArrangedSubview(featureList())
-        stack.addArrangedSubview(rhythmPresetPanel())
+        stack.addArrangedSubview(rhythmPanel())
         stack.addArrangedSubview(buttonRow())
 
         NSLayoutConstraint.activate([
@@ -184,9 +181,9 @@ final class OnboardingWindowController: NSWindowController {
             imageView.identifier = NSUserInterfaceItemIdentifier("\(identifier).restGateIcon")
         case let .systemSymbol(symbolName):
             imageView.image = symbolImage(symbolName, accessibilityDescription: title)
-            imageView.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 17, weight: .medium)
             imageView.identifier = NSUserInterfaceItemIdentifier("\(identifier).systemIcon")
         }
+        imageView.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 17, weight: .medium)
         imageView.contentTintColor = .secondaryLabelColor
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.widthAnchor.constraint(equalToConstant: 24).isActive = true
@@ -214,9 +211,9 @@ final class OnboardingWindowController: NSWindowController {
         return row
     }
 
-    private func rhythmPresetPanel() -> NSView {
+    private func rhythmPanel() -> NSView {
         let panel = NSView()
-        panel.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmPresetPanel")
+        panel.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmPanel")
         panel.wantsLayer = true
         panel.layer?.cornerRadius = 8
         panel.layer?.borderWidth = 1
@@ -235,33 +232,28 @@ final class OnboardingWindowController: NSWindowController {
         titleRow.alignment = .centerY
         titleRow.spacing = 8
 
-        rhythmPresetIcon.image = symbolImage(
-            "timer",
-            accessibilityDescription: rhythmPresetAccessibilityTitle()
-        )
-        rhythmPresetIcon.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmPresetIcon")
-        rhythmPresetIcon.symbolConfiguration = .init(pointSize: 14, weight: .semibold)
-        rhythmPresetIcon.contentTintColor = .secondaryLabelColor
-        rhythmPresetIcon.setAccessibilityLabel(L10n.tr("onboarding.rhythmTitle"))
-        rhythmPresetIcon.widthAnchor.constraint(equalToConstant: 18).isActive = true
-        rhythmPresetIcon.heightAnchor.constraint(equalToConstant: 18).isActive = true
-        titleRow.addArrangedSubview(rhythmPresetIcon)
+        rhythmIcon.image = symbolImage("timer", accessibilityDescription: rhythmAccessibilityTitle())
+        rhythmIcon.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmIcon")
+        rhythmIcon.symbolConfiguration = .init(pointSize: 14, weight: .semibold)
+        rhythmIcon.contentTintColor = .secondaryLabelColor
+        rhythmIcon.setAccessibilityLabel(L10n.tr("onboarding.rhythmTitle"))
+        rhythmIcon.setAccessibilityHelp(rhythmDescriptionText)
+        rhythmIcon.widthAnchor.constraint(equalToConstant: 18).isActive = true
+        rhythmIcon.heightAnchor.constraint(equalToConstant: 18).isActive = true
+        titleRow.addArrangedSubview(rhythmIcon)
 
         let title = NSTextField(labelWithString: L10n.tr("onboarding.rhythmTitle"))
         title.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmTitle")
         title.font = .systemFont(ofSize: 13, weight: .semibold)
         titleRow.addArrangedSubview(title)
 
-        configureRhythmPresetRecommendation()
-        titleRow.addArrangedSubview(rhythmPresetRecommendation)
-
-        configureRhythmPresetControl()
-        configureRhythmPresetDescription()
+        configureRhythmDescription()
+        configureRhythmRationale()
+        updateRhythmMetricValues()
 
         stack.addArrangedSubview(titleRow)
-        stack.addArrangedSubview(rhythmPresetControl)
-        stack.addArrangedSubview(rhythmPresetDescription)
-        stack.addArrangedSubview(rhythmPresetRationaleRow())
+        stack.addArrangedSubview(rhythmDescription)
+        stack.addArrangedSubview(rhythmRationaleRow())
         stack.addArrangedSubview(rhythmMetricsView())
 
         NSLayoutConstraint.activate([
@@ -272,6 +264,55 @@ final class OnboardingWindowController: NSWindowController {
         ])
         panel.widthAnchor.constraint(equalToConstant: 620).isActive = true
         return panel
+    }
+
+    private func configureRhythmDescription() {
+        rhythmDescription.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmDescription")
+        rhythmDescription.stringValue = rhythmDescriptionText
+        rhythmDescription.font = .systemFont(ofSize: 12, weight: .regular)
+        rhythmDescription.textColor = .secondaryLabelColor
+        rhythmDescription.lineBreakMode = .byWordWrapping
+        rhythmDescription.maximumNumberOfLines = 2
+        rhythmDescription.widthAnchor.constraint(lessThanOrEqualToConstant: 560).isActive = true
+        rhythmDescription.toolTip = rhythmDescriptionText
+        rhythmDescription.setAccessibilityLabel(rhythmDescriptionText)
+        rhythmDescription.setAccessibilityHelp(rhythmDescriptionText)
+    }
+
+    private func configureRhythmRationale() {
+        let rationale = L10n.tr("onboarding.rhythmRationale")
+        rhythmRationale.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmRationale")
+        rhythmRationale.stringValue = rationale
+        rhythmRationale.font = .systemFont(ofSize: 11.5, weight: .medium)
+        rhythmRationale.textColor = .labelColor
+        rhythmRationale.lineBreakMode = .byWordWrapping
+        rhythmRationale.maximumNumberOfLines = 2
+        rhythmRationale.widthAnchor.constraint(lessThanOrEqualToConstant: 540).isActive = true
+        rhythmRationale.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        rhythmRationale.setContentCompressionResistancePriority(.required, for: .vertical)
+        rhythmRationale.toolTip = rationale
+        rhythmRationale.setAccessibilityLabel(rationale)
+        rhythmRationale.setAccessibilityHelp(rationale)
+
+        rhythmRationaleIcon.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmRationaleIcon")
+        rhythmRationaleIcon.image = symbolImage("checkmark.seal", accessibilityDescription: rationale)
+        rhythmRationaleIcon.symbolConfiguration = .init(pointSize: 12, weight: .semibold)
+        rhythmRationaleIcon.contentTintColor = .controlAccentColor
+        rhythmRationaleIcon.setAccessibilityLabel(rationale)
+        rhythmRationaleIcon.setAccessibilityHelp(rationale)
+        rhythmRationaleIcon.widthAnchor.constraint(equalToConstant: 16).isActive = true
+        rhythmRationaleIcon.heightAnchor.constraint(equalToConstant: 16).isActive = true
+    }
+
+    private func rhythmRationaleRow() -> NSView {
+        let row = NSStackView()
+        row.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmRationaleRow")
+        row.orientation = .horizontal
+        row.alignment = .top
+        row.spacing = 6
+        row.addArrangedSubview(rhythmRationaleIcon)
+        row.addArrangedSubview(rhythmRationale)
+        return row
     }
 
     private func rhythmMetricsView() -> NSView {
@@ -307,8 +348,6 @@ final class OnboardingWindowController: NSWindowController {
             title: L10n.tr("onboarding.metric.bodyDuration"),
             valueLabel: rhythmMetricBodyDuration
         ))
-
-        updateRhythmPresetSelectionUI()
         return row
     }
 
@@ -358,80 +397,6 @@ final class OnboardingWindowController: NSWindowController {
         return column
     }
 
-    private func configureRhythmPresetControl() {
-        rhythmPresetControl.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmPresetControl")
-        rhythmPresetControl.segmentCount = RestRhythmPreset.allCases.count
-        rhythmPresetControl.segmentStyle = .rounded
-        rhythmPresetControl.trackingMode = .selectOne
-        rhythmPresetControl.selectedSegment = selectedRhythmPreset.rawValue
-        rhythmPresetControl.target = self
-        rhythmPresetControl.action = #selector(rhythmPresetChanged(_:))
-        rhythmPresetControl.setAccessibilityLabel(L10n.tr("onboarding.rhythmTitle"))
-        rhythmPresetControl.setContentHuggingPriority(.required, for: .horizontal)
-        rhythmPresetControl.setContentCompressionResistancePriority(.required, for: .horizontal)
-
-        for preset in RestRhythmPreset.allCases {
-            rhythmPresetControl.setLabel(preset.title, forSegment: preset.rawValue)
-            rhythmPresetControl.setImage(
-                rhythmPresetSegmentImage(for: preset),
-                forSegment: preset.rawValue
-            )
-            rhythmPresetControl.setWidth(176, forSegment: preset.rawValue)
-            rhythmPresetControl.setToolTip(preset.help, forSegment: preset.rawValue)
-        }
-    }
-
-    private func configureRhythmPresetDescription() {
-        rhythmPresetDescription.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmPresetDescription")
-        rhythmPresetDescription.font = .systemFont(ofSize: 12, weight: .regular)
-        rhythmPresetDescription.textColor = .secondaryLabelColor
-        rhythmPresetDescription.lineBreakMode = .byWordWrapping
-        rhythmPresetDescription.maximumNumberOfLines = 2
-        rhythmPresetDescription.widthAnchor.constraint(lessThanOrEqualToConstant: 560).isActive = true
-        updateRhythmPresetSelectionUI()
-    }
-
-    private func configureRhythmPresetRecommendation() {
-        let title = L10n.format("onboarding.recommendedPresetBadge", RestRhythmPreset.firstRunDefault.title)
-        rhythmPresetRecommendation.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmPresetRecommendation")
-        rhythmPresetRecommendation.stringValue = title
-        rhythmPresetRecommendation.font = .systemFont(ofSize: 11, weight: .semibold)
-        rhythmPresetRecommendation.textColor = .controlAccentColor
-        rhythmPresetRecommendation.lineBreakMode = .byTruncatingTail
-        rhythmPresetRecommendation.maximumNumberOfLines = 1
-        rhythmPresetRecommendation.toolTip = title
-        rhythmPresetRecommendation.setAccessibilityLabel(title)
-        rhythmPresetRecommendation.setAccessibilityHelp(title)
-    }
-
-    private func rhythmPresetRationaleRow() -> NSView {
-        let row = NSStackView()
-        row.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmPresetRationaleRow")
-        row.orientation = .horizontal
-        row.alignment = .top
-        row.spacing = 6
-
-        rhythmPresetRationaleIcon.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmPresetRationaleIcon")
-        rhythmPresetRationaleIcon.symbolConfiguration = .init(pointSize: 12, weight: .semibold)
-        rhythmPresetRationaleIcon.contentTintColor = .controlAccentColor
-        rhythmPresetRationaleIcon.widthAnchor.constraint(equalToConstant: 16).isActive = true
-        rhythmPresetRationaleIcon.heightAnchor.constraint(equalToConstant: 16).isActive = true
-
-        rhythmPresetRationale.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmPresetRationale")
-        rhythmPresetRationale.font = .systemFont(ofSize: 11.5, weight: .medium)
-        rhythmPresetRationale.textColor = .labelColor
-        rhythmPresetRationale.lineBreakMode = .byWordWrapping
-        rhythmPresetRationale.maximumNumberOfLines = 2
-        rhythmPresetRationale.widthAnchor.constraint(lessThanOrEqualToConstant: 540).isActive = true
-        rhythmPresetRationale.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-        rhythmPresetRationale.setContentCompressionResistancePriority(.required, for: .vertical)
-
-        row.addArrangedSubview(rhythmPresetRationaleIcon)
-        row.addArrangedSubview(rhythmPresetRationale)
-        updateRhythmPresetSelectionUI()
-        return row
-    }
-
     private func buttonRow() -> NSView {
         let row = NSStackView()
         row.orientation = .horizontal
@@ -453,15 +418,15 @@ final class OnboardingWindowController: NSWindowController {
             help: L10n.tr("onboarding.preferencesHelp"),
             action: #selector(openPreferences)
         )
-        let useSelectedButton = onboardingButton(
-            title: primaryActionTitle(for: selectedRhythmPreset),
-            identifier: "onboarding.useSelectedButton",
+        let startButton = onboardingButton(
+            title: L10n.tr("onboarding.useRecommended"),
+            identifier: "onboarding.startButton",
             symbolName: "checkmark.circle.fill",
-            help: L10n.tr("onboarding.useSelectedHelp"),
-            action: #selector(useSelectedPreset)
+            help: L10n.tr("onboarding.startHelp"),
+            action: #selector(start)
         )
-        useSelectedButton.keyEquivalent = "\r"
-        self.useSelectedButton = useSelectedButton
+        startButton.keyEquivalent = "\r"
+        self.startButton = startButton
 
         let spacer = NSView()
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
@@ -470,7 +435,7 @@ final class OnboardingWindowController: NSWindowController {
         row.addArrangedSubview(learnMoreButton)
         row.addArrangedSubview(spacer)
         row.addArrangedSubview(preferencesButton)
-        row.addArrangedSubview(useSelectedButton)
+        row.addArrangedSubview(startButton)
         return row
     }
 
@@ -489,102 +454,50 @@ final class OnboardingWindowController: NSWindowController {
         return button
     }
 
-    private func brandImage() -> NSImage {
-        if let appIcon = NSImage(named: "AppIcon") {
-            return appIcon
-        }
-        return RestGateIcon.fallbackAppImage(size: 64, accessibilityDescription: L10n.tr("app.name"))
-    }
-
-    private func symbolImage(_ symbolName: String, accessibilityDescription: String?) -> NSImage {
-        NSImage(systemSymbolName: symbolName, accessibilityDescription: accessibilityDescription)
-            ?? NSImage(systemSymbolName: "circle", accessibilityDescription: accessibilityDescription)
-            ?? NSImage(size: NSSize(width: 16, height: 16))
-    }
-
-    @objc private func rhythmPresetChanged(_ sender: NSSegmentedControl) {
-        guard let preset = RestRhythmPreset(rawValue: sender.selectedSegment) else {
-            sender.selectedSegment = selectedRhythmPreset.rawValue
-            return
-        }
-        selectedRhythmPreset = preset
-        updateRhythmPresetSelectionUI()
-    }
-
-    private func updateRhythmPresetSelectionUI() {
-        rhythmPresetDescription.stringValue = selectedRhythmPreset.help
-        rhythmPresetDescription.toolTip = selectedRhythmPreset.help
-        rhythmPresetDescription.setAccessibilityLabel(selectedRhythmPreset.help)
-        rhythmPresetDescription.setAccessibilityHelp(selectedRhythmPreset.help)
-        rhythmPresetControl.toolTip = selectedRhythmPreset.help
-        rhythmPresetControl.setAccessibilityHelp(selectedRhythmPreset.help)
-        rhythmPresetIcon.image = rhythmPresetHeaderImage(for: selectedRhythmPreset)
-        rhythmPresetIcon.setAccessibilityHelp(selectedRhythmPreset.help)
-        let rationale = selectedRhythmPreset.onboardingRationale
-        rhythmPresetRationale.stringValue = rationale
-        rhythmPresetRationale.toolTip = rationale
-        rhythmPresetRationale.setAccessibilityLabel(rationale)
-        rhythmPresetRationale.setAccessibilityHelp(rationale)
-        rhythmPresetRationaleIcon.image = rhythmPresetRationaleImage(
-            for: selectedRhythmPreset,
-            accessibilityDescription: rationale
+    private var rhythmDescriptionText: String {
+        L10n.format(
+            "onboarding.rhythmDescription",
+            defaultEyeIntervalMinutes,
+            defaultEyeDurationSeconds,
+            defaultBodyIntervalMinutes,
+            defaultBodyDurationMinutes
         )
-        rhythmPresetRationaleIcon.setAccessibilityLabel(rationale)
-        rhythmPresetRationaleIcon.setAccessibilityHelp(rationale)
+    }
+
+    private var defaultEyeIntervalMinutes: Int {
+        Int(RestSettings.defaults.eyeGate.interval / 60)
+    }
+
+    private var defaultEyeDurationSeconds: Int {
+        Int(RestSettings.defaults.eyeGate.duration)
+    }
+
+    private var defaultBodyIntervalMinutes: Int {
+        Int(RestSettings.defaults.bodyBreak.interval / 60)
+    }
+
+    private var defaultBodyDurationMinutes: Int {
+        Int(RestSettings.defaults.bodyBreak.duration / 60)
+    }
+
+    private func updateRhythmMetricValues() {
         rhythmMetricEyeInterval.stringValue = L10n.format(
             "onboarding.metric.eyeIntervalValue",
-            selectedRhythmPreset.eyeIntervalMinutes
+            defaultEyeIntervalMinutes
         )
         rhythmMetricEyeDuration.stringValue = L10n.format(
             "onboarding.metric.eyeDurationValue",
-            selectedRhythmPreset.eyeDurationSeconds
+            defaultEyeDurationSeconds
         )
         rhythmMetricBodyInterval.stringValue = L10n.format(
             "onboarding.metric.bodyIntervalValue",
-            selectedRhythmPreset.bodyIntervalMinutes
+            defaultBodyIntervalMinutes
         )
         rhythmMetricBodyDuration.stringValue = L10n.format(
             "onboarding.metric.bodyDurationValue",
-            selectedRhythmPreset.bodyDurationMinutes
+            defaultBodyDurationMinutes
         )
         updateRhythmMetricAccessibility()
-
-        guard let useSelectedButton else { return }
-        let title = primaryActionTitle(for: selectedRhythmPreset)
-        useSelectedButton.title = title
-        useSelectedButton.setAccessibilityLabel(title)
-        useSelectedButton.setAccessibilityHelp(useSelectedButton.toolTip)
-        useSelectedButton.image?.accessibilityDescription = title
-    }
-
-    private func rhythmPresetAccessibilityTitle() -> String {
-        "\(L10n.tr("onboarding.rhythmTitle")): \(selectedRhythmPreset.title)"
-    }
-
-    private func rhythmPresetHeaderImage(for preset: RestRhythmPreset) -> NSImage {
-        rhythmPresetImage(for: preset, accessibilityDescription: rhythmPresetAccessibilityTitle(for: preset))
-    }
-
-    private func rhythmPresetSegmentImage(for preset: RestRhythmPreset) -> NSImage {
-        rhythmPresetImage(for: preset, accessibilityDescription: preset.title)
-    }
-
-    private func rhythmPresetRationaleImage(for preset: RestRhythmPreset, accessibilityDescription: String?) -> NSImage {
-        guard preset != .firstRunDefault else {
-            return symbolImage("checkmark.seal", accessibilityDescription: accessibilityDescription)
-        }
-        return rhythmPresetImage(for: preset, accessibilityDescription: accessibilityDescription)
-    }
-
-    private func rhythmPresetImage(for preset: RestRhythmPreset, accessibilityDescription: String?) -> NSImage {
-        if preset.usesRestGateIcon {
-            return RestGateIcon.menuBarImage(accessibilityDescription: accessibilityDescription)
-        }
-        return symbolImage(preset.symbolName, accessibilityDescription: accessibilityDescription)
-    }
-
-    private func rhythmPresetAccessibilityTitle(for preset: RestRhythmPreset) -> String {
-        "\(L10n.tr("onboarding.rhythmTitle")): \(preset.title)"
     }
 
     private func updateRhythmMetricAccessibility() {
@@ -613,20 +526,30 @@ final class OnboardingWindowController: NSWindowController {
         valueLabel.setAccessibilityHelp(help)
     }
 
-    private func primaryActionTitle(for preset: RestRhythmPreset) -> String {
-        if preset == .firstRunDefault {
-            return L10n.tr("onboarding.useRecommended")
-        }
-        return L10n.format("onboarding.useSelectedWithPreset", preset.title)
+    private func rhythmAccessibilityTitle() -> String {
+        "\(L10n.tr("onboarding.rhythmTitle")): \(rhythmDescriptionText)"
     }
 
-    @objc private func useSelectedPreset() {
-        onUsePreset(selectedRhythmPreset)
+    private func brandImage() -> NSImage {
+        if let appIcon = NSImage(named: "AppIcon") {
+            return appIcon
+        }
+        return RestGateIcon.fallbackAppImage(size: 64, accessibilityDescription: L10n.tr("app.name"))
+    }
+
+    private func symbolImage(_ symbolName: String, accessibilityDescription: String?) -> NSImage {
+        NSImage(systemSymbolName: symbolName, accessibilityDescription: accessibilityDescription)
+            ?? NSImage(systemSymbolName: "circle", accessibilityDescription: accessibilityDescription)
+            ?? NSImage(size: NSSize(width: 16, height: 16))
+    }
+
+    @objc private func start() {
+        onStart()
         close()
     }
 
     @objc private func openPreferences() {
-        onOpenPreferences(selectedRhythmPreset)
+        onOpenPreferences()
         close()
     }
 

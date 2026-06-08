@@ -302,7 +302,7 @@ public struct RestRule: Codable, Equatable, Sendable {
 
     public static let eyeGateDefault = RestRule(
         isEnabled: true,
-        interval: 10 * 60,
+        interval: 20 * 60,
         duration: 20,
         ordinarySkipEnabled: false,
         postpone: .disabled,
@@ -317,11 +317,11 @@ public struct RestRule: Codable, Equatable, Sendable {
 
     public static let bodyBreakDefault = RestRule(
         isEnabled: true,
-        interval: 45 * 60,
-        duration: 5 * 60,
+        interval: 60 * 60,
+        duration: 3 * 60,
         ordinarySkipEnabled: true,
         postpone: PostponePolicy(isEnabled: true, duration: 5 * 60, maxCount: 1, allowedDuringFirstPercent: 30),
-        manualFinishEnabled: true,
+        manualFinishEnabled: false,
         emergencyOverride: .disabled,
         enforcement: .bodyBreakDefault,
         content: .richRestIdea,
@@ -750,7 +750,7 @@ public struct NaturalBreakSettings: Codable, Equatable, Sendable {
 
     public static let defaults = NaturalBreakSettings(
         isEnabled: true,
-        inactivityResetTime: 5 * 60
+        inactivityResetTime: 10 * 60
     )
 
     public func normalized() -> NaturalBreakSettings {

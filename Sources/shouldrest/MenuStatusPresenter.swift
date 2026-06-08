@@ -205,6 +205,9 @@ enum MenuStatusPresenter {
             if isManualFinishReady(session, now: now) {
                 return L10n.tr("status.bodyBreakReadyGuidance")
             }
+            guard session.manualFinishEnabled else {
+                return L10n.tr("status.bodyBreakActiveAutomaticGuidance")
+            }
             return L10n.tr("status.bodyBreakActiveGuidance")
         }
     }

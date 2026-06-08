@@ -9,15 +9,15 @@ final class RestEngineTests: XCTestCase {
         let engine = RestEngine(settings: .defaults, now: start)
 
         XCTAssertEqual(engine.state.scheduled?.kind, .eyeGate)
-        XCTAssertEqual(engine.state.scheduled?.dueAt, start.addingTimeInterval(10 * 60))
-        XCTAssertEqual(engine.settings.bodyBreak.interval, 45 * 60)
+        XCTAssertEqual(engine.state.scheduled?.dueAt, start.addingTimeInterval(20 * 60))
+        XCTAssertEqual(engine.settings.bodyBreak.interval, 60 * 60)
         XCTAssertEqual(engine.state.eyeDebt, 0)
         XCTAssertEqual(engine.state.bodyDebt, 0)
     }
 
     func testEyeGateStartsWhenDue() {
         var engine = RestEngine(settings: .defaults, now: start)
-        let result = engine.evaluate(now: start.addingTimeInterval(10 * 60))
+        let result = engine.evaluate(now: start.addingTimeInterval(20 * 60))
 
         guard case .started(let session) = result else {
             return XCTFail("Expected Eye Gate to start")
@@ -319,7 +319,7 @@ final class RestEngineTests: XCTestCase {
     }
 
     func testNaturalIdleDoesNotBypassFocusModeDeferral() {
-        var engine = RestEngine(settings: .defaults, now: start)
+        var engine = RestEngine(settings: bodyFirstSettings(), now: start)
         advanceUntilBodyBreakIsNext(&engine)
         let bodyDue = engine.state.scheduled!.dueAt
 
@@ -346,7 +346,7 @@ final class RestEngineTests: XCTestCase {
             appliesTo: [.bodyBreak],
             isEnabled: true
         )
-        var settings = RestSettings.defaults
+        var settings = bodyFirstSettings()
         settings.appExclusions = [rule]
         var engine = RestEngine(settings: settings, now: start)
         advanceUntilBodyBreakIsNext(&engine)
@@ -366,19 +366,19 @@ final class RestEngineTests: XCTestCase {
     }
 
     func testFocusModeDefersBodyBreakButNotEyeGateByDefault() {
-        var engine = RestEngine(settings: .defaults, now: start)
-        advanceUntilBodyBreakIsNext(&engine)
+        var bodyEngine = RestEngine(settings: bodyFirstSettings(), now: start)
+        advanceUntilBodyBreakIsNext(&bodyEngine)
 
-        let bodyDue = engine.state.scheduled!.dueAt
-        let bodyResult = engine.evaluate(
+        let bodyDue = bodyEngine.state.scheduled!.dueAt
+        let bodyResult = bodyEngine.evaluate(
             now: bodyDue,
             context: RestContext(focusModeActive: true)
         )
         XCTAssertEqual(bodyResult, .deferred(.bodyBreak, .focusMode))
 
-        _ = engine.reset(now: start)
-        let eyeDue = engine.state.scheduled!.dueAt
-        let eyeResult = engine.evaluate(
+        var eyeEngine = RestEngine(settings: .defaults, now: start)
+        let eyeDue = eyeEngine.state.scheduled!.dueAt
+        let eyeResult = eyeEngine.evaluate(
             now: eyeDue,
             context: RestContext(focusModeActive: true)
         )
@@ -389,7 +389,7 @@ final class RestEngineTests: XCTestCase {
     }
 
     func testContinuousContextDeferralEscalatesOnceAndStartsImmediatelyWhenCleared() {
-        var engine = RestEngine(settings: .defaults, now: start)
+        var engine = RestEngine(settings: bodyFirstSettings(), now: start)
         advanceUntilBodyBreakIsNext(&engine)
 
         let bodyDue = engine.state.scheduled!.dueAt
@@ -427,7 +427,7 @@ final class RestEngineTests: XCTestCase {
     }
 
     func testSettingsUpdatePreservesDeferredRestUntilContextClears() {
-        var engine = RestEngine(settings: .defaults, now: start)
+        var engine = RestEngine(settings: bodyFirstSettings(), now: start)
         advanceUntilBodyBreakIsNext(&engine)
 
         let bodyDue = engine.state.scheduled!.dueAt
@@ -459,7 +459,7 @@ final class RestEngineTests: XCTestCase {
     }
 
     func testSettingsUpdateDropsDeferredRestWhenThatRestIsDisabled() {
-        var engine = RestEngine(settings: .defaults, now: start)
+        var engine = RestEngine(settings: bodyFirstSettings(), now: start)
         advanceUntilBodyBreakIsNext(&engine)
 
         let bodyDue = engine.state.scheduled!.dueAt
@@ -482,7 +482,7 @@ final class RestEngineTests: XCTestCase {
     }
 
     func testDisablingBreakHealthModeResetsDangerScore() {
-        var engine = RestEngine(settings: .defaults, now: start)
+        var engine = RestEngine(settings: bodyFirstSettings(), now: start)
         advanceUntilBodyBreakIsNext(&engine)
 
         let bodyDue = engine.state.scheduled!.dueAt
@@ -505,7 +505,7 @@ final class RestEngineTests: XCTestCase {
             appliesTo: [.bodyBreak],
             isEnabled: true
         )
-        var settings = RestSettings.defaults
+        var settings = bodyFirstSettings()
         settings.appExclusions = [rule]
 
         var engine = RestEngine(settings: settings, now: start)
@@ -528,7 +528,7 @@ final class RestEngineTests: XCTestCase {
             appliesTo: [.bodyBreak],
             isEnabled: true
         )
-        var settings = RestSettings.defaults
+        var settings = bodyFirstSettings()
         settings.appExclusions = [rule]
 
         var engine = RestEngine(settings: settings, now: start)
@@ -617,7 +617,7 @@ final class RestEngineTests: XCTestCase {
             appliesTo: [.bodyBreak],
             isEnabled: true
         )
-        var settings = RestSettings.defaults
+        var settings = bodyFirstSettings()
         settings.appExclusions = [rule]
 
         var engine = RestEngine(settings: settings, now: start)
@@ -652,7 +652,7 @@ final class RestEngineTests: XCTestCase {
             appliesTo: [.bodyBreak],
             isEnabled: true
         )
-        var settings = RestSettings.defaults
+        var settings = bodyFirstSettings()
         settings.appExclusions = [rule]
 
         var engine = RestEngine(settings: settings, now: start)
@@ -680,7 +680,7 @@ final class RestEngineTests: XCTestCase {
             appliesTo: [.bodyBreak],
             isEnabled: true
         )
-        var settings = RestSettings.defaults
+        var settings = bodyFirstSettings()
         settings.appExclusions = [rule]
 
         var engine = RestEngine(settings: settings, now: start)
@@ -903,6 +903,53 @@ final class RestEngineTests: XCTestCase {
         XCTAssertNotNil(migratedContentLibrary["localImagePaths"])
         XCTAssertNotNil(migratedAdmin["customPreferencesMessage"])
         XCTAssertEqual(try JSONDecoder().decode(RestSettings.self, from: migratedData), loaded)
+    }
+
+    func testSettingsStoreMigratesLegacyGateBasedRhythmDefaults() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let url = directory.appendingPathComponent("settings.json")
+        let store = SettingsStore(fileURL: url)
+        var legacy = RestSettings.defaults
+        legacy.eyeGate.interval = 10 * 60
+        legacy.bodyBreak.interval = 20 * 60
+        legacy.bodyBreak.duration = 5 * 60
+        legacy.bodyBreak.manualFinishEnabled = true
+        legacy.naturalBreaks.inactivityResetTime = 5 * 60
+
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try settingsDataWithLegacyBodyBreakAfterEyeGates(legacy, count: 4).write(to: url, options: [.atomic])
+
+        let loaded = try store.load()
+
+        XCTAssertEqual(loaded.eyeGate.interval, 20 * 60)
+        XCTAssertEqual(loaded.eyeGate.duration, 20)
+        XCTAssertEqual(loaded.bodyBreak.interval, 60 * 60)
+        XCTAssertEqual(loaded.bodyBreak.duration, 3 * 60)
+        XCTAssertFalse(loaded.bodyBreak.manualFinishEnabled)
+        XCTAssertEqual(loaded.naturalBreaks.inactivityResetTime, 10 * 60)
+        let migratedData = try Data(contentsOf: url)
+        XCTAssertFalse(String(data: migratedData, encoding: .utf8)?.contains("bodyBreakAfterEyeGates") ?? true)
+    }
+
+    func testSettingsStoreMigratesLeakedIndependentBodyDefault() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let url = directory.appendingPathComponent("settings.json")
+        let store = SettingsStore(fileURL: url)
+        var leaked = RestSettings.defaults
+        leaked.bodyBreak.interval = 20 * 60
+
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try JSONEncoder().encode(leaked).write(to: url, options: [.atomic])
+
+        let loaded = try store.load()
+
+        XCTAssertEqual(loaded.eyeGate.interval, 20 * 60)
+        XCTAssertEqual(loaded.bodyBreak.interval, 60 * 60)
+        XCTAssertEqual(loaded.bodyBreak.duration, 3 * 60)
+        XCTAssertFalse(loaded.bodyBreak.manualFinishEnabled)
+        XCTAssertEqual(loaded.naturalBreaks.inactivityResetTime, 10 * 60)
     }
 
     func testSettingsStoreReturnsLoadedSettingsWhenMigrationCannotBePersisted() throws {
@@ -1257,6 +1304,13 @@ final class RestEngineTests: XCTestCase {
         XCTFail("Body Break did not become the next projected rest")
     }
 
+    private func bodyFirstSettings() -> RestSettings {
+        var settings = RestSettings.defaults
+        settings.eyeGate.interval = 60 * 60
+        settings.bodyBreak.interval = 10 * 60
+        return settings
+    }
+
     private func settingsDataWithLegacyEmergencyHold(
         _ settings: RestSettings,
         eyeGateHold: TimeInterval,
@@ -1332,6 +1386,13 @@ final class RestEngineTests: XCTestCase {
         admin.removeValue(forKey: "customPreferencesMessage")
         object["admin"] = admin
 
+        return try JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys])
+    }
+
+    private func settingsDataWithLegacyBodyBreakAfterEyeGates(_ settings: RestSettings, count: Int) throws -> Data {
+        let data = try JSONEncoder().encode(settings)
+        var object = try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        object["bodyBreakAfterEyeGates"] = count
         return try JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys])
     }
 
