@@ -691,19 +691,21 @@ public struct RestEngine: Equatable, Sendable {
 
     private func isAway(context: RestContext) -> Bool {
         guard settings.naturalBreaks.isEnabled else { return false }
-        let eyeThreshold = settings.eyeGate.isEnabled ? settings.eyeGate.duration : .infinity
-        let bodyThreshold = settings.bodyBreak.isEnabled ? bodyNaturalRecoveryThreshold : .infinity
-        return context.idleDuration >= min(eyeThreshold, bodyThreshold)
+        return context.idleDuration >= naturalRecoveryThreshold
+    }
+
+    private var naturalRecoveryThreshold: TimeInterval {
+        settings.naturalBreaks.inactivityResetTime
     }
 
     private var bodyNaturalRecoveryThreshold: TimeInterval {
-        max(settings.bodyBreak.duration, settings.naturalBreaks.inactivityResetTime)
+        max(settings.bodyBreak.duration, naturalRecoveryThreshold)
     }
 
     private mutating func settleNaturalAwayIfNeeded(idleDuration: TimeInterval) -> Set<RestKind> {
         var credited = Set<RestKind>()
         if settings.eyeGate.isEnabled,
-           idleDuration >= settings.eyeGate.duration,
+           idleDuration >= naturalRecoveryThreshold,
            state.eyeDebt > 0 {
             state.eyeDebt = 0
             incrementCompleted(.eyeGate)

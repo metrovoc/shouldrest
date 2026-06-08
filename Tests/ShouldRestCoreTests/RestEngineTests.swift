@@ -231,39 +231,49 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.pause, pause)
     }
 
-    func testNaturalIdleCreditsEyeGateFromShortAwayAndOnlyWhenDebtExists() {
-        var engine = RestEngine(settings: .defaults, now: start)
+    func testNaturalIdleCreditsEyeGateOnlyAfterConfiguredAwayThresholdAndOnlyWhenDebtExists() {
+        var settings = RestSettings.defaults
+        settings.bodyBreak.isEnabled = false
+        var engine = RestEngine(settings: settings, now: start)
         _ = engine.evaluate(now: start.addingTimeInterval(60), context: RestContext(idleDuration: 0))
         XCTAssertGreaterThan(engine.state.eyeDebt, 0)
 
-        let result = engine.evaluate(
+        let shortIdleResult = engine.evaluate(
             now: start.addingTimeInterval(80),
             context: RestContext(idleDuration: engine.settings.eyeGate.duration)
         )
+        XCTAssertEqual(shortIdleResult, .noChange)
+        XCTAssertGreaterThan(engine.state.eyeDebt, 0)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 0)
 
+        let awayThreshold = engine.settings.naturalBreaks.inactivityResetTime
+        let result = engine.evaluate(
+            now: start.addingTimeInterval(60 + awayThreshold),
+            context: RestContext(idleDuration: awayThreshold)
+        )
         XCTAssertEqual(result, .naturalRestsCredited([.eyeGate]))
         XCTAssertEqual(engine.state.statistics.completedEyeGates, 1)
         XCTAssertEqual(engine.state.statistics.naturalEyeGates, 1)
         XCTAssertEqual(engine.state.eyeDebt, 0)
 
         let repeatedIdleResult = engine.evaluate(
-            now: start.addingTimeInterval(81),
-            context: RestContext(idleDuration: engine.settings.eyeGate.duration + 1)
+            now: start.addingTimeInterval(61 + awayThreshold),
+            context: RestContext(idleDuration: awayThreshold + 1)
         )
         XCTAssertEqual(repeatedIdleResult, .noChange)
         XCTAssertEqual(engine.state.statistics.naturalEyeGates, 1)
 
         _ = engine.evaluate(
-            now: start.addingTimeInterval(82),
+            now: start.addingTimeInterval(62 + awayThreshold),
             context: RestContext(idleDuration: 0)
         )
         _ = engine.evaluate(
-            now: start.addingTimeInterval(142),
+            now: start.addingTimeInterval(122 + awayThreshold),
             context: RestContext(idleDuration: 0)
         )
         let nextIdleResult = engine.evaluate(
-            now: start.addingTimeInterval(162),
-            context: RestContext(idleDuration: engine.settings.eyeGate.duration)
+            now: start.addingTimeInterval(122 + awayThreshold * 2),
+            context: RestContext(idleDuration: awayThreshold)
         )
         XCTAssertEqual(nextIdleResult, .naturalRestsCredited([.eyeGate]))
         XCTAssertEqual(engine.state.statistics.naturalEyeGates, 2)
@@ -309,12 +319,17 @@ final class RestEngineTests: XCTestCase {
 
         let result = engine.evaluate(
             now: dueAt,
-            context: RestContext(idleDuration: settings.eyeGate.duration, inWorkingHours: false)
+            context: RestContext(
+                idleDuration: settings.naturalBreaks.inactivityResetTime,
+                inWorkingHours: false
+            )
         )
 
-        XCTAssertEqual(result, .naturalRestsCredited([.eyeGate]))
+        XCTAssertEqual(result, .naturalRestsCredited([.eyeGate, .bodyBreak]))
         XCTAssertEqual(engine.state.statistics.completedEyeGates, 1)
         XCTAssertEqual(engine.state.statistics.naturalEyeGates, 1)
+        XCTAssertEqual(engine.state.statistics.completedBodyBreaks, 1)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 1)
         XCTAssertNil(engine.state.activeDeferral)
     }
 

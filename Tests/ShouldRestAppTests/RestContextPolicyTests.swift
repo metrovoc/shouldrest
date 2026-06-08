@@ -125,9 +125,9 @@ final class RestContextPolicyTests: XCTestCase {
 
     func testSystemResumeAfterAutoPauseCreditsSuspendIdleAsNaturalRecoveryWhenDebtExists() {
         let sleepAt = Date(timeIntervalSinceReferenceDate: 3_000)
-        let wakeAt = sleepAt.addingTimeInterval(2 * 60)
         var settings = RestSettings.defaults
         settings.bodyBreak.isEnabled = false
+        let wakeAt = sleepAt.addingTimeInterval(settings.naturalBreaks.inactivityResetTime)
         var engine = RestEngine(settings: settings, now: sleepAt.addingTimeInterval(-60))
 
         _ = engine.evaluate(now: sleepAt, context: RestContext(idleDuration: 0))
