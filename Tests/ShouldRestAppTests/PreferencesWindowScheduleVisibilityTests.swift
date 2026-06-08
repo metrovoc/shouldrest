@@ -19,7 +19,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertNotNil(icon.image)
         XCTAssertEqual(
             label.stringValue,
-            L10n.format("prefs.scheduleSummary.eyeAndBody", 10, 20, 4, 5)
+            L10n.format("prefs.scheduleSummary.eyeAndBody", 10, 20, 45, 5)
         )
         XCTAssertEqual(label.toolTip, label.stringValue)
         XCTAssertEqual(label.accessibilityLabel(), label.stringValue)
@@ -77,17 +77,19 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         let preset = try XCTUnwrap(view(withIdentifier: "prefs.rhythmPreset.frequentEye", in: contentView) as? NSButton)
         let eyeInterval = try XCTUnwrap(view(withIdentifier: "eyeIntervalField", in: contentView) as? NSTextField)
         let eyeIntervalSlider = try XCTUnwrap(view(withIdentifier: "eyeIntervalSlider", in: contentView) as? NSSlider)
-        let bodyAfterEyeGates = try XCTUnwrap(view(withIdentifier: "bodyAfterEyeGatesField", in: contentView) as? NSTextField)
+        let bodyInterval = try XCTUnwrap(view(withIdentifier: "bodyIntervalField", in: contentView) as? NSTextField)
+        let bodyIntervalSlider = try XCTUnwrap(view(withIdentifier: "bodyIntervalSlider", in: contentView) as? NSSlider)
         let summary = try XCTUnwrap(view(withIdentifier: "prefs.scheduleSummaryLabel", in: contentView) as? NSTextField)
 
         XCTAssertTrue(sendAction(from: preset))
 
         XCTAssertEqual(eyeInterval.stringValue, "10")
         XCTAssertEqual(eyeIntervalSlider.doubleValue, 10)
-        XCTAssertEqual(bodyAfterEyeGates.stringValue, "4")
+        XCTAssertEqual(bodyInterval.stringValue, "45")
+        XCTAssertEqual(bodyIntervalSlider.doubleValue, 45)
         XCTAssertEqual(
             summary.stringValue,
-            L10n.format("prefs.scheduleSummary.eyeAndBody", 10, 20, 4, 5)
+            L10n.format("prefs.scheduleSummary.eyeAndBody", 10, 20, 45, 5)
         )
         XCTAssertEqual(summary.accessibilityLabel(), summary.stringValue)
         waitUntilSavedSettingsArrive(savedSettings)
@@ -95,7 +97,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertEqual(savedSettings.value?.bodyBreak.isEnabled, true)
         XCTAssertEqual(savedSettings.value?.eyeGate.interval, 10 * 60)
         XCTAssertEqual(savedSettings.value?.eyeGate.duration, 20)
-        XCTAssertEqual(savedSettings.value?.bodyBreakAfterEyeGates, 4)
+        XCTAssertEqual(savedSettings.value?.bodyBreak.interval, 45 * 60)
         XCTAssertEqual(savedSettings.value?.bodyBreak.duration, 5 * 60)
     }
 
@@ -123,9 +125,6 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
             ("bodyDurationField", "prefs.bodyDurationHelp"),
             ("bodyDurationStepper", "prefs.bodyDurationHelp"),
             ("bodyDurationSlider", "prefs.bodyDurationHelp"),
-            ("bodyAfterEyeGatesField", "prefs.bodyAfterEyeGatesHelp"),
-            ("bodyAfterEyeGatesStepper", "prefs.bodyAfterEyeGatesHelp"),
-            ("bodyAfterEyeGatesSlider", "prefs.bodyAfterEyeGatesHelp"),
             ("prefs.bodyNotify", "prefs.notifyBodyBreakHelp"),
             ("bodyLeadField", "prefs.notificationLeadHelp"),
             ("bodyLeadStepper", "prefs.notificationLeadHelp"),
@@ -180,7 +179,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
 
         XCTAssertEqual(
             label.stringValue,
-            L10n.format("prefs.scheduleSummary.eyeAndBody", 45, 20, 4, 5)
+            L10n.format("prefs.scheduleSummary.eyeAndBody", 45, 20, 45, 5)
         )
         XCTAssertEqual(label.accessibilityLabel(), label.stringValue)
         waitUntilSavedSettingsArrive(savedSettings)
@@ -261,7 +260,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
 
         XCTAssertEqual(
             label.stringValue,
-            L10n.format("prefs.scheduleSummary.bodyOnly", 20, 5)
+            L10n.format("prefs.scheduleSummary.bodyOnly", 45, 5)
         )
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(savedSettings.value?.eyeGate.isEnabled, false)
@@ -336,14 +335,10 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertTrue(try view(withIdentifier: "prefs.eyeEmergencyOverride", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.eyeEmergencyOverrideHelpRow", in: contentView).isHidden)
         XCTAssertNil(findView(withIdentifier: "prefs.eyeEmergencyHoldRow", in: contentView))
-        XCTAssertTrue(try view(withIdentifier: "prefs.bodyAfterEyeGatesRow", in: contentView).isHidden)
-
-        let visibleTexts = visibleTexts(in: contentView)
-        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.everyMinutes")))
-        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.afterEyeGates")))
+        XCTAssertFalse(try view(withIdentifier: "prefs.bodyIntervalRow", in: contentView).isHidden)
     }
 
-    func testReenablingEyeGateShowsBodyAfterEyeGatesAndAutosaves() throws {
+    func testReenablingEyeGateKeepsBodyIntervalIndependentAndAutosaves() throws {
         var settings = RestSettings.defaults
         settings.eyeGate.isEnabled = false
         settings.bodyBreak.isEnabled = true
@@ -353,12 +348,12 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
 
         try selectScheduleTab(in: contentView)
         let eyeEnabled = try XCTUnwrap(view(withIdentifier: "prefs.eyeEnabled", in: contentView) as? NSButton)
-        XCTAssertTrue(try view(withIdentifier: "prefs.bodyAfterEyeGatesRow", in: contentView).isHidden)
+        XCTAssertFalse(try view(withIdentifier: "prefs.bodyIntervalRow", in: contentView).isHidden)
 
         eyeEnabled.state = .on
         XCTAssertTrue(sendAction(from: eyeEnabled))
 
-        XCTAssertFalse(try view(withIdentifier: "prefs.bodyAfterEyeGatesRow", in: contentView).isHidden)
+        XCTAssertFalse(try view(withIdentifier: "prefs.bodyIntervalRow", in: contentView).isHidden)
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(savedSettings.value?.eyeGate.isEnabled, true)
     }
@@ -420,7 +415,6 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertFalse(try view(withIdentifier: "prefs.bodyEnabled", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyIntervalRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyDurationRow", in: contentView).isHidden)
-        XCTAssertTrue(try view(withIdentifier: "prefs.bodyAfterEyeGatesRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyColorRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyNotify", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyLeadRow", in: contentView).isHidden)
@@ -438,8 +432,6 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyDisplaySummaryLabel", in: contentView).isHidden)
 
         let visibleTexts = visibleTexts(in: contentView)
-        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.bodyIntervalMinutes")))
-        XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.afterEyeGates")))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.maxPostpones")))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.bodyContentDisplay")))
     }

@@ -30,7 +30,7 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 
 - Enable or disable Eye Gate and Body Break independently.
 - Configure intervals and durations.
-- Support a Body Break after a configurable number of Eye Gates.
+- Support an independent Body Break interval based on accumulated active computer use.
 - Support pre-break notifications.
 - Support manual "take break now" actions.
 - Support reset, pause, resume, and skip-to-next commands for non-Eye-Gate flows.
@@ -48,7 +48,7 @@ These Stretchly-compatible behaviors are intentionally not copied as-is.
 
 ### Context Awareness
 
-- Natural break detection using idle time, with at most one rest credited per idle episode before user activity resumes.
+- Natural break detection using idle time, crediting each rest dimension whose recovery threshold is satisfied before user activity resumes.
 - Suspend, lock, resume, and unlock correction.
 - Configurable pause-on-suspend-or-lock behavior.
 - Do Not Disturb / Focus awareness.

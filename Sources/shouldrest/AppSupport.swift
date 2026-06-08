@@ -477,7 +477,7 @@ enum CommandLineAutomation {
         guard let wait else {
             return L10n.tr("cli.requestedBodyNow")
         }
-        return L10n.format("cli.requestedBodyAfter", Int(wait))
+        return L10n.format("cli.requestedBodyDelay", Int(wait))
     }
 
     private static func post(_ request: AutomationRequest) {

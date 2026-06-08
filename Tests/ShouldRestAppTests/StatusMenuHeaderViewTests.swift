@@ -9,13 +9,13 @@ final class StatusMenuHeaderViewTests: XCTestCase {
             content: MenuStatusPresenter.HeaderContent(
                 title: "ShouldRest",
                 primary: "Next: Eye Gate at 8:00 PM",
-                secondary: "Next Body Break after 2 Eye Gates",
+                secondary: "Body Break in 30m",
                 healthBadge: "Debt 3/10",
                 icon: .restGate
             )
         )
 
-        let expectedSummary = "ShouldRest. Next: Eye Gate at 8:00 PM. Next Body Break after 2 Eye Gates. Debt 3/10"
+        let expectedSummary = "ShouldRest. Next: Eye Gate at 8:00 PM. Body Break in 30m. Debt 3/10"
         XCTAssertEqual(view.frame.size, NSSize(width: 318, height: 82))
         XCTAssertEqual(view.toolTip, expectedSummary)
         XCTAssertEqual(view.accessibilityLabel(), expectedSummary)
@@ -27,7 +27,7 @@ final class StatusMenuHeaderViewTests: XCTestCase {
         XCTAssertEqual(icon.toolTip, "ShouldRest")
         assertTextField("statusMenu.headerTitle", in: view, text: "ShouldRest")
         assertTextField("statusMenu.headerPrimary", in: view, text: "Next: Eye Gate at 8:00 PM")
-        assertTextField("statusMenu.headerSecondary", in: view, text: "Next Body Break after 2 Eye Gates", isHidden: false)
+        assertTextField("statusMenu.headerSecondary", in: view, text: "Body Break in 30m", isHidden: false)
         assertTextField("statusMenu.headerBadge", in: view, text: "Debt 3/10", isHidden: false)
     }
 

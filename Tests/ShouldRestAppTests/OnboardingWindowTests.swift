@@ -36,7 +36,7 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmMetricRow"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.metric.eyeInterval"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.metric.eyeDuration"))
-        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.metric.bodyAfter"))
+        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.metric.bodyInterval"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.metric.bodyDuration"))
     }
 
@@ -61,7 +61,7 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertTrue(texts.contains(RestRhythmPreset.firstRunDefault.onboardingRationale))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.metric.eyeInterval")))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.metric.eyeDuration")))
-        XCTAssertTrue(texts.contains(L10n.tr("onboarding.metric.bodyAfter")))
+        XCTAssertTrue(texts.contains(L10n.tr("onboarding.metric.bodyInterval")))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.metric.bodyDuration")))
     }
 
@@ -126,8 +126,8 @@ final class OnboardingWindowTests: XCTestCase {
         let eyeDuration = try XCTUnwrap(
             contentView.descendant(withIdentifier: "onboarding.metric.eyeDuration.value") as? NSTextField
         )
-        let bodyAfter = try XCTUnwrap(
-            contentView.descendant(withIdentifier: "onboarding.metric.bodyAfter.value") as? NSTextField
+        let bodyInterval = try XCTUnwrap(
+            contentView.descendant(withIdentifier: "onboarding.metric.bodyInterval.value") as? NSTextField
         )
         let bodyDuration = try XCTUnwrap(
             contentView.descendant(withIdentifier: "onboarding.metric.bodyDuration.value") as? NSTextField
@@ -174,11 +174,11 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertEqual(recommendation.accessibilityHelp(), recommendationText)
         XCTAssertEqual(eyeInterval.stringValue, L10n.format("onboarding.metric.eyeIntervalValue", 10))
         XCTAssertEqual(eyeDuration.stringValue, L10n.format("onboarding.metric.eyeDurationValue", 20))
-        XCTAssertEqual(bodyAfter.stringValue, L10n.format("onboarding.metric.bodyAfterValue", 4))
+        XCTAssertEqual(bodyInterval.stringValue, L10n.format("onboarding.metric.bodyIntervalValue", 45))
         XCTAssertEqual(bodyDuration.stringValue, L10n.format("onboarding.metric.bodyDurationValue", 5))
         assertMetricHelp(eyeInterval, titleKey: "onboarding.metric.eyeInterval")
         assertMetricHelp(eyeDuration, titleKey: "onboarding.metric.eyeDuration")
-        assertMetricHelp(bodyAfter, titleKey: "onboarding.metric.bodyAfter")
+        assertMetricHelp(bodyInterval, titleKey: "onboarding.metric.bodyInterval")
         assertMetricHelp(bodyDuration, titleKey: "onboarding.metric.bodyDuration")
         XCTAssertEqual(useSelected.title, L10n.tr("onboarding.useRecommended"))
 
@@ -203,11 +203,11 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertEqual(rationaleIcon.accessibilityHelp(), RestRhythmPreset.movement.onboardingRationale)
         XCTAssertEqual(eyeInterval.stringValue, L10n.format("onboarding.metric.eyeIntervalValue", 20))
         XCTAssertEqual(eyeDuration.stringValue, L10n.format("onboarding.metric.eyeDurationValue", 20))
-        XCTAssertEqual(bodyAfter.stringValue, L10n.format("onboarding.metric.bodyAfterValue", 2))
+        XCTAssertEqual(bodyInterval.stringValue, L10n.format("onboarding.metric.bodyIntervalValue", 45))
         XCTAssertEqual(bodyDuration.stringValue, L10n.format("onboarding.metric.bodyDurationValue", 8))
         assertMetricHelp(eyeInterval, titleKey: "onboarding.metric.eyeInterval")
         assertMetricHelp(eyeDuration, titleKey: "onboarding.metric.eyeDuration")
-        assertMetricHelp(bodyAfter, titleKey: "onboarding.metric.bodyAfter")
+        assertMetricHelp(bodyInterval, titleKey: "onboarding.metric.bodyInterval")
         assertMetricHelp(bodyDuration, titleKey: "onboarding.metric.bodyDuration")
         XCTAssertEqual(
             useSelected.title,
@@ -271,8 +271,7 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertTrue(settings.bodyBreak.isEnabled)
         XCTAssertEqual(settings.eyeGate.interval, 10 * 60)
         XCTAssertEqual(settings.eyeGate.duration, 20)
-        XCTAssertEqual(settings.bodyBreak.interval, 20 * 60)
-        XCTAssertEqual(settings.bodyBreakAfterEyeGates, 4)
+        XCTAssertEqual(settings.bodyBreak.interval, 45 * 60)
         XCTAssertEqual(settings.bodyBreak.duration, 5 * 60)
     }
 }

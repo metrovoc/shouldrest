@@ -5,7 +5,11 @@ public struct RestEngineState: Codable, Equatable, Sendable {
     public var activeSession: RestSession?
     public var pause: PauseState?
     public var activeDeferral: RestDeferral?
-    public var eyeGatesSinceBodyBreak: Int
+    public var eyeDebt: TimeInterval
+    public var bodyDebt: TimeInterval
+    public var lastEvaluatedAt: Date?
+    public var lastIdleDuration: TimeInterval
+    public var bodySuppressedUntil: Date?
     public var postponesInCurrentCycle: Int
     public var dangerScore: Int
     public var statistics: RestStatistics
@@ -15,7 +19,11 @@ public struct RestEngineState: Codable, Equatable, Sendable {
         activeSession: RestSession? = nil,
         pause: PauseState? = nil,
         activeDeferral: RestDeferral? = nil,
-        eyeGatesSinceBodyBreak: Int = 0,
+        eyeDebt: TimeInterval = 0,
+        bodyDebt: TimeInterval = 0,
+        lastEvaluatedAt: Date? = nil,
+        lastIdleDuration: TimeInterval = 0,
+        bodySuppressedUntil: Date? = nil,
         postponesInCurrentCycle: Int = 0,
         dangerScore: Int = 0,
         statistics: RestStatistics = RestStatistics()
@@ -24,7 +32,11 @@ public struct RestEngineState: Codable, Equatable, Sendable {
         self.activeSession = activeSession
         self.pause = pause
         self.activeDeferral = activeDeferral
-        self.eyeGatesSinceBodyBreak = eyeGatesSinceBodyBreak
+        self.eyeDebt = max(0, eyeDebt)
+        self.bodyDebt = max(0, bodyDebt)
+        self.lastEvaluatedAt = lastEvaluatedAt
+        self.lastIdleDuration = max(0, lastIdleDuration)
+        self.bodySuppressedUntil = bodySuppressedUntil
         self.postponesInCurrentCycle = postponesInCurrentCycle
         self.dangerScore = dangerScore
         self.statistics = statistics
@@ -162,7 +174,7 @@ public enum RestEngineResult: Equatable, Sendable {
     case notificationDue(RestKind)
     case started(RestSession)
     case completed(RestSession, RestCompletionReason)
-    case naturalRestCredited(RestKind)
+    case naturalRestsCredited(Set<RestKind>)
     case postponed(RestKind, until: Date)
     case deferred(RestKind, ContextDeferralReason)
     case paused(PauseState)
@@ -174,59 +186,66 @@ public enum RestEngineResult: Equatable, Sendable {
 public struct RestEngine: Equatable, Sendable {
     public private(set) var settings: RestSettings
     public private(set) var state: RestEngineState
-    private var hasCreditedNaturalRestInCurrentIdleEpisode: Bool
 
     public init(settings: RestSettings = .defaults, now: Date = Date()) {
         self.settings = settings.normalizedForCurrentDesign()
-        self.state = RestEngineState()
-        self.hasCreditedNaturalRestInCurrentIdleEpisode = false
-        scheduleNextRest(from: now)
+        self.state = RestEngineState(lastEvaluatedAt: now)
+        refreshProjectedSchedule(now: now, preserveNotificationStateFrom: nil)
     }
 
     public mutating func updateSettings(_ settings: RestSettings, now: Date = Date()) {
         let enforcedSettings = settings.normalizedForCurrentDesign()
         self.settings = enforcedSettings
-        if !enforcedSettings.naturalBreaks.isEnabled {
-            hasCreditedNaturalRestInCurrentIdleEpisode = false
-        }
         if !enforcedSettings.presentation.breakHealthMode {
             state.dangerScore = 0
         }
         if state.activeSession == nil && state.pause == nil {
-            refreshScheduleAfterSettingsUpdate(from: now)
+            refreshScheduleAfterSettingsUpdate(now: now)
         }
     }
 
     @discardableResult
     public mutating func evaluate(now: Date = Date(), context: RestContext = RestContext()) -> RestEngineResult {
-        if !settings.naturalBreaks.isEnabled || context.idleDuration < naturalIdleEpisodeExitThreshold {
-            hasCreditedNaturalRestInCurrentIdleEpisode = false
-        }
-
         if let pause = state.pause {
             if pause.isActive(at: now) {
+                markNonWorkingEvaluation(now: now, idleDuration: context.idleDuration)
                 return .paused(pause)
             }
             state.pause = nil
-            scheduleNextRest(from: now)
+            markNonWorkingEvaluation(now: now, idleDuration: context.idleDuration)
+            refreshProjectedSchedule(now: now)
         }
 
         if let active = state.activeSession {
             if context.idleDuration >= active.duration,
-               settings.naturalBreaks.isEnabled,
-               !hasCreditedNaturalRestInCurrentIdleEpisode {
-                hasCreditedNaturalRestInCurrentIdleEpisode = true
+               settings.naturalBreaks.isEnabled {
                 return completeActive(now: now, reason: .natural)
             }
+            markNonWorkingEvaluation(now: now, idleDuration: context.idleDuration)
             return .started(active)
         }
 
-        if settings.naturalBreaks.isEnabled, let natural = creditNaturalRestIfPossible(context: context, now: now) {
-            return natural
+        let previousSchedule = state.scheduled
+        let creditedNaturally = updateDebt(now: now, context: context)
+
+        if !creditedNaturally.isEmpty {
+            clearDeferrals(satisfiedBy: creditedNaturally)
+            refreshProjectedSchedule(now: now, preserveNotificationStateFrom: previousSchedule)
+            return .naturalRestsCredited(creditedNaturally)
+        }
+
+        if let deferredResult = evaluateActiveDeferral(now: now, context: context) {
+            return deferredResult
+        }
+
+        refreshProjectedSchedule(now: now, preserveNotificationStateFrom: previousSchedule)
+
+        if isAway(context: context) {
+            return .noChange
         }
 
         guard var scheduled = state.scheduled else {
-            scheduleNextRest(from: now)
+            refreshProjectedSchedule(now: now)
             if let scheduled = state.scheduled {
                 return .scheduled(scheduled)
             }
@@ -246,11 +265,22 @@ public struct RestEngine: Equatable, Sendable {
             return .noChange
         }
 
-        if let reason = deferralReason(for: scheduled.kind, context: context) {
-            return deferScheduledRest(scheduled, reason: reason, now: now)
+        let dueCandidates = dueRestCandidates(now: now)
+        for candidate in dueCandidates {
+            let candidateSchedule = projectedRest(kind: candidate, now: now, remaining: 0)
+            if let reason = deferralReason(for: candidate, context: context) {
+                _ = deferScheduledRest(candidateSchedule, reason: reason, now: now)
+                continue
+            }
+            return startScheduledRest(candidateSchedule, now: now)
         }
 
-        return startScheduledRest(scheduled, now: now)
+        if let candidate = dueCandidates.first,
+           let reason = deferralReason(for: candidate, context: context) {
+            return deferScheduledRest(projectedRest(kind: candidate, now: now, remaining: 0), reason: reason, now: now)
+        }
+
+        return .noChange
     }
 
     @discardableResult
@@ -283,6 +313,7 @@ public struct RestEngine: Equatable, Sendable {
         guard settings.rule(for: kind).isEnabled else {
             return .denied(.actionDisabled)
         }
+        markNonWorkingEvaluation(now: now, idleDuration: 0)
 
         let scheduled = ScheduledRest(
             kind: kind,
@@ -302,7 +333,8 @@ public struct RestEngine: Equatable, Sendable {
         state.activeSession = nil
         recordCompletion(kind: session.kind, reason: reason)
         state.postponesInCurrentCycle = 0
-        scheduleNextRest(from: now)
+        markNonWorkingEvaluation(now: now, idleDuration: 0)
+        refreshProjectedSchedule(now: now)
         return .completed(session, reason)
     }
 
@@ -332,7 +364,12 @@ public struct RestEngine: Equatable, Sendable {
         state.statistics.postpones += 1
         increaseDanger(for: session.kind)
         let dueAt = now.addingTimeInterval(rule.postpone.duration)
-        state.scheduled = scheduledRest(kind: session.kind, dueAt: dueAt)
+        if session.kind == .bodyBreak {
+            state.bodyDebt = settings.bodyBreak.interval
+            state.bodySuppressedUntil = dueAt
+        }
+        markNonWorkingEvaluation(now: now, idleDuration: 0)
+        refreshProjectedSchedule(now: now)
         return .postponed(session.kind, until: dueAt)
     }
 
@@ -382,41 +419,31 @@ public struct RestEngine: Equatable, Sendable {
         state.pause = pause
         state.scheduled = nil
         state.activeDeferral = nil
+        markNonWorkingEvaluation(now: now, idleDuration: 0)
         return .paused(pause)
     }
 
     @discardableResult
     public mutating func resume(now: Date = Date()) -> RestEngineResult {
         state.pause = nil
-        scheduleNextRest(from: now)
+        markNonWorkingEvaluation(now: now, idleDuration: 0)
+        refreshProjectedSchedule(now: now)
         return .resumed
     }
 
     @discardableResult
     public mutating func reset(now: Date = Date()) -> RestEngineResult {
-        state = RestEngineState()
-        hasCreditedNaturalRestInCurrentIdleEpisode = false
-        scheduleNextRest(from: now)
+        state = RestEngineState(lastEvaluatedAt: now)
+        refreshProjectedSchedule(now: now)
         return .reset
     }
 
-    private mutating func scheduleNextRest(from now: Date) {
-        guard state.pause == nil, state.activeSession == nil, let kind = nextRestKind() else {
-            state.scheduled = nil
-            state.activeDeferral = nil
-            return
-        }
-        let dueAt = now.addingTimeInterval(intervalForNextRest(kind))
-        state.scheduled = scheduledRest(kind: kind, dueAt: dueAt)
-        state.activeDeferral = nil
-    }
-
-    private mutating func refreshScheduleAfterSettingsUpdate(from now: Date) {
+    private mutating func refreshScheduleAfterSettingsUpdate(now: Date) {
         guard let activeDeferral = state.activeDeferral,
               let scheduled = state.scheduled,
               activeDeferral.kind == scheduled.kind,
               settings.rule(for: scheduled.kind).isEnabled else {
-            scheduleNextRest(from: now)
+            refreshProjectedSchedule(now: now)
             return
         }
     }
@@ -432,10 +459,41 @@ public struct RestEngine: Equatable, Sendable {
         return ScheduledRest(kind: kind, dueAt: dueAt, notificationAt: notificationAt)
     }
 
+    private func projectedRest(kind: RestKind, now: Date, remaining: TimeInterval) -> ScheduledRest {
+        scheduledRest(kind: kind, dueAt: now.addingTimeInterval(max(0, remaining)))
+    }
+
+    private mutating func evaluateActiveDeferral(now: Date, context: RestContext) -> RestEngineResult? {
+        guard let activeDeferral = state.activeDeferral,
+              let scheduled = state.scheduled,
+              activeDeferral.kind == scheduled.kind else {
+            return nil
+        }
+
+        guard settings.rule(for: scheduled.kind).isEnabled else {
+            state.activeDeferral = nil
+            refreshProjectedSchedule(now: now)
+            return state.scheduled.map(RestEngineResult.scheduled) ?? .noChange
+        }
+
+        if isAway(context: context) {
+            return .noChange
+        }
+
+        if let reason = deferralReason(for: scheduled.kind, context: context) {
+            return deferScheduledRest(scheduled, reason: reason, now: now)
+        }
+
+        guard now >= scheduled.dueAt else {
+            return .noChange
+        }
+        return startScheduledRest(scheduled, now: now)
+    }
+
     private mutating func startScheduledRest(_ scheduled: ScheduledRest, now: Date) -> RestEngineResult {
         let rule = settings.rule(for: scheduled.kind)
         guard rule.isEnabled else {
-            scheduleNextRest(from: now)
+            refreshProjectedSchedule(now: now)
             return .noChange
         }
 
@@ -447,8 +505,11 @@ public struct RestEngine: Equatable, Sendable {
             manualFinishEnabled: rule.manualFinishEnabled
         )
         state.scheduled = nil
-        state.activeDeferral = nil
+        if state.activeDeferral?.kind == scheduled.kind {
+            state.activeDeferral = nil
+        }
         state.activeSession = session
+        markNonWorkingEvaluation(now: now, idleDuration: 0)
         return .started(session)
     }
 
@@ -472,27 +533,6 @@ public struct RestEngine: Equatable, Sendable {
         }
 
         return .deferred(scheduled.kind, reason)
-    }
-
-    private func nextRestKind() -> RestKind? {
-        if settings.bodyBreak.isEnabled,
-           (!settings.eyeGate.isEnabled || state.eyeGatesSinceBodyBreak >= settings.bodyBreakAfterEyeGates) {
-            return .bodyBreak
-        }
-        if settings.eyeGate.isEnabled {
-            return .eyeGate
-        }
-        if settings.bodyBreak.isEnabled {
-            return .bodyBreak
-        }
-        return nil
-    }
-
-    private func intervalForNextRest(_ kind: RestKind) -> TimeInterval {
-        if kind == .bodyBreak, settings.eyeGate.isEnabled, state.eyeGatesSinceBodyBreak >= settings.bodyBreakAfterEyeGates {
-            return settings.eyeGate.interval
-        }
-        return settings.rule(for: kind).interval
     }
 
     private func deferralReason(for kind: RestKind, context: RestContext) -> ContextDeferralReason? {
@@ -520,6 +560,13 @@ public struct RestEngine: Equatable, Sendable {
         return nil
     }
 
+    private mutating func clearDeferrals(satisfiedBy creditedKinds: Set<RestKind>) {
+        if let activeDeferral = state.activeDeferral,
+           creditedKinds.contains(activeDeferral.kind) {
+            state.activeDeferral = nil
+        }
+    }
+
     private func activeAppExclusionInterruptionReason(
         for kind: RestKind,
         context: RestContext
@@ -535,76 +582,26 @@ public struct RestEngine: Equatable, Sendable {
         return nil
     }
 
-    private mutating func creditNaturalRestIfPossible(context: RestContext, now: Date) -> RestEngineResult? {
-        guard context.idleDuration > 0,
-              !hasCreditedNaturalRestInCurrentIdleEpisode else {
-            return nil
-        }
-
-        if let scheduled = state.scheduled {
-            let rule = settings.rule(for: scheduled.kind)
-            guard deferralReason(for: scheduled.kind, context: context) == nil else {
-                return nil
-            }
-            let requiredIdleDuration = max(rule.duration, settings.naturalBreaks.inactivityResetTime)
-            guard context.idleDuration >= requiredIdleDuration else {
-                return nil
-            }
-            hasCreditedNaturalRestInCurrentIdleEpisode = true
-            recordCompletion(kind: scheduled.kind, reason: .natural)
-            state.postponesInCurrentCycle = 0
-            scheduleNextRest(from: now)
-            return .naturalRestCredited(scheduled.kind)
-        }
-
-        if context.idleDuration >= settings.naturalBreaks.inactivityResetTime {
-            scheduleNextRest(from: now)
-            return .scheduled(state.scheduled!)
-        }
-
-        return nil
-    }
-
-    private var naturalIdleEpisodeExitThreshold: TimeInterval {
-        RestKind.allCases
-            .map { settings.rule(for: $0) }
-            .filter(\.isEnabled)
-            .map(\.duration)
-            .min()
-            ?? settings.naturalBreaks.inactivityResetTime
-    }
-
     private mutating func recordCompletion(kind: RestKind, reason: RestCompletionReason) {
         switch reason {
         case .completed, .manual:
             incrementCompleted(kind)
             decreaseDanger(for: kind)
-            advanceCycle(for: kind, satisfied: true)
+            satisfyDebt(for: kind)
         case .natural:
             incrementCompleted(kind)
             incrementNatural(kind)
             decreaseDanger(for: kind)
-            advanceCycle(for: kind, satisfied: true)
+            satisfyDebt(for: kind)
         case .skipped, .appExclusion:
             incrementSkipped(kind)
             increaseDanger(for: kind)
-            advanceCycle(for: kind, satisfied: kind == .bodyBreak)
+            suppressOrDischargeMissedDebt(for: kind)
         case .emergencyOverride:
             state.statistics.emergencyOverrides += 1
             incrementSkipped(kind)
             increaseDanger(for: kind)
-            advanceCycle(for: kind, satisfied: false)
-        }
-    }
-
-    private mutating func advanceCycle(for kind: RestKind, satisfied: Bool) {
-        switch kind {
-        case .eyeGate:
-            if satisfied {
-                state.eyeGatesSinceBodyBreak += 1
-            }
-        case .bodyBreak:
-            state.eyeGatesSinceBodyBreak = 0
+            suppressOrDischargeMissedDebt(for: kind)
         }
     }
 
@@ -643,5 +640,170 @@ public struct RestEngine: Equatable, Sendable {
     private mutating func decreaseDanger(for kind: RestKind) {
         guard settings.presentation.breakHealthMode else { return }
         state.dangerScore = max(0, state.dangerScore - kind.defaultHealthWeight)
+    }
+
+    private mutating func updateDebt(now: Date, context: RestContext) -> Set<RestKind> {
+        let activeDelta = activeUseDelta(now: now, idleDuration: context.idleDuration)
+        if settings.eyeGate.isEnabled {
+            state.eyeDebt = min(settings.eyeGate.interval, state.eyeDebt + activeDelta)
+        } else {
+            state.eyeDebt = 0
+        }
+        if settings.bodyBreak.isEnabled {
+            state.bodyDebt = min(settings.bodyBreak.interval, state.bodyDebt + activeDelta)
+        } else {
+            state.bodyDebt = 0
+            state.bodySuppressedUntil = nil
+        }
+
+        state.lastEvaluatedAt = now
+        state.lastIdleDuration = context.idleDuration
+
+        guard settings.naturalBreaks.isEnabled else {
+            return []
+        }
+        return settleNaturalAwayIfNeeded(idleDuration: context.idleDuration)
+    }
+
+    private func activeUseDelta(now: Date, idleDuration: TimeInterval) -> TimeInterval {
+        guard state.pause == nil,
+              state.activeSession == nil,
+              let lastEvaluatedAt = state.lastEvaluatedAt else {
+            return 0
+        }
+
+        let elapsed = max(0, now.timeIntervalSince(lastEvaluatedAt))
+        let previousIdle = max(0, state.lastIdleDuration)
+        let currentIdle = max(0, idleDuration)
+        guard currentIdle <= previousIdle else {
+            return max(0, elapsed - (currentIdle - previousIdle))
+        }
+        guard currentIdle == 0 else {
+            return 0
+        }
+        return elapsed
+    }
+
+    private mutating func markNonWorkingEvaluation(now: Date, idleDuration: TimeInterval) {
+        state.lastEvaluatedAt = now
+        state.lastIdleDuration = max(0, idleDuration)
+    }
+
+    private func isAway(context: RestContext) -> Bool {
+        guard settings.naturalBreaks.isEnabled else { return false }
+        let eyeThreshold = settings.eyeGate.isEnabled ? settings.eyeGate.duration : .infinity
+        let bodyThreshold = settings.bodyBreak.isEnabled ? bodyNaturalRecoveryThreshold : .infinity
+        return context.idleDuration >= min(eyeThreshold, bodyThreshold)
+    }
+
+    private var bodyNaturalRecoveryThreshold: TimeInterval {
+        max(settings.bodyBreak.duration, settings.naturalBreaks.inactivityResetTime)
+    }
+
+    private mutating func settleNaturalAwayIfNeeded(idleDuration: TimeInterval) -> Set<RestKind> {
+        var credited = Set<RestKind>()
+        if settings.eyeGate.isEnabled,
+           idleDuration >= settings.eyeGate.duration,
+           state.eyeDebt > 0 {
+            state.eyeDebt = 0
+            incrementCompleted(.eyeGate)
+            incrementNatural(.eyeGate)
+            decreaseDanger(for: .eyeGate)
+            credited.insert(.eyeGate)
+        }
+        if settings.bodyBreak.isEnabled,
+           idleDuration >= bodyNaturalRecoveryThreshold,
+           state.bodyDebt > 0 {
+            state.bodyDebt = 0
+            state.bodySuppressedUntil = nil
+            state.postponesInCurrentCycle = 0
+            incrementCompleted(.bodyBreak)
+            incrementNatural(.bodyBreak)
+            decreaseDanger(for: .bodyBreak)
+            credited.insert(.bodyBreak)
+        }
+        return credited
+    }
+
+    private mutating func refreshProjectedSchedule(
+        now: Date,
+        preserveNotificationStateFrom previous: ScheduledRest? = nil
+    ) {
+        guard state.pause == nil, state.activeSession == nil else {
+            state.scheduled = nil
+            state.activeDeferral = nil
+            return
+        }
+
+        let candidates = projectedCandidates(now: now)
+        guard let candidate = candidates.first else {
+            state.scheduled = nil
+            state.activeDeferral = nil
+            return
+        }
+
+        var next = projectedRest(kind: candidate.kind, now: now, remaining: candidate.remaining)
+        if let previous,
+           previous.kind == next.kind,
+           abs(previous.dueAt.timeIntervalSince(next.dueAt)) < 1 {
+            next.notificationSent = previous.notificationSent
+        }
+        state.scheduled = next
+        if state.activeDeferral?.kind != next.kind || next.dueAt > now {
+            state.activeDeferral = nil
+        }
+    }
+
+    private func projectedCandidates(now: Date) -> [(kind: RestKind, remaining: TimeInterval, priority: Int)] {
+        var candidates: [(kind: RestKind, remaining: TimeInterval, priority: Int)] = []
+        if settings.eyeGate.isEnabled {
+            candidates.append((
+                .eyeGate,
+                max(0, settings.eyeGate.interval - state.eyeDebt),
+                1
+            ))
+        }
+        if settings.bodyBreak.isEnabled {
+            let debtRemaining = max(0, settings.bodyBreak.interval - state.bodyDebt)
+            let suppressionRemaining = state.bodySuppressedUntil.map { max(0, $0.timeIntervalSince(now)) } ?? 0
+            candidates.append((
+                .bodyBreak,
+                max(debtRemaining, suppressionRemaining),
+                0
+            ))
+        }
+        return candidates.sorted { left, right in
+            if left.remaining == right.remaining {
+                return left.priority < right.priority
+            }
+            return left.remaining < right.remaining
+        }
+    }
+
+    private func dueRestCandidates(now: Date) -> [RestKind] {
+        projectedCandidates(now: now)
+            .filter { $0.remaining <= 0 }
+            .map(\.kind)
+    }
+
+    private mutating func satisfyDebt(for kind: RestKind) {
+        switch kind {
+        case .eyeGate:
+            state.eyeDebt = 0
+        case .bodyBreak:
+            state.bodyDebt = 0
+            state.eyeDebt = 0
+            state.bodySuppressedUntil = nil
+        }
+    }
+
+    private mutating func suppressOrDischargeMissedDebt(for kind: RestKind) {
+        switch kind {
+        case .eyeGate:
+            state.eyeDebt = 0
+        case .bodyBreak:
+            state.bodyDebt = 0
+            state.bodySuppressedUntil = nil
+        }
     }
 }

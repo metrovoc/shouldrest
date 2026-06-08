@@ -72,15 +72,13 @@ enum RestRhythmPreset: Int, CaseIterable, Equatable {
     }
 
     var bodyIntervalMinutes: Int {
-        20
-    }
-
-    var bodyAfterEyeGateCount: Int {
         switch self {
-        case .recommended, .movement:
-            2
+        case .recommended:
+            60
         case .frequentEye:
-            4
+            45
+        case .movement:
+            45
         }
     }
 
@@ -99,7 +97,6 @@ enum RestRhythmPreset: Int, CaseIterable, Equatable {
         settings.eyeGate.interval = TimeInterval(eyeIntervalMinutes * 60)
         settings.eyeGate.duration = TimeInterval(eyeDurationSeconds)
         settings.bodyBreak.interval = TimeInterval(bodyIntervalMinutes * 60)
-        settings.bodyBreakAfterEyeGates = bodyAfterEyeGateCount
         settings.bodyBreak.duration = TimeInterval(bodyDurationMinutes * 60)
     }
 }

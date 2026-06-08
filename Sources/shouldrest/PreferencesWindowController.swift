@@ -581,7 +581,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let bodyEnabled = NSButton(checkboxWithTitle: L10n.tr("prefs.enableBodyBreak"), target: nil, action: nil)
     private let bodyInterval = NSTextField()
     private let bodyDuration = NSTextField()
-    private let bodyAfterEyeGates = NSTextField()
     private let bodyColor = NSColorWell()
     private let bodyNotify = NSButton(checkboxWithTitle: L10n.tr("prefs.notifyBodyBreak"), target: nil, action: nil)
     private let bodyLead = NSTextField()
@@ -596,7 +595,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let bodyCoveredDisplay = NSPopUpButton()
     private var bodyIntervalRow: NSView?
     private var bodyDurationRow: NSView?
-    private var bodyAfterEyeGatesRow: NSView?
     private var bodyColorRow: NSView?
     private var bodyLeadRow: NSView?
     private var bodyPostponeMinutesRow: NSView?
@@ -984,19 +982,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         bodyDurationRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyDurationRow")
         self.bodyDurationRow = bodyDurationRow
         scheduleStack.addArrangedSubview(bodyDurationRow)
-        let bodyAfterEyeGatesRow = numberRow(
-            L10n.tr("prefs.afterEyeGates"),
-            bodyAfterEyeGates,
-            unit: L10n.tr("prefs.unit.eyeGates"),
-            accessibilityUnit: L10n.tr("prefs.unitAccessibility.eyeGates"),
-            min: 1,
-            max: 99,
-            identifier: "bodyAfterEyeGates",
-            showsSlider: true
-        )
-        bodyAfterEyeGatesRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyAfterEyeGatesRow")
-        self.bodyAfterEyeGatesRow = bodyAfterEyeGatesRow
-        scheduleStack.addArrangedSubview(bodyAfterEyeGatesRow)
         let bodyColorRow = row(L10n.tr("prefs.overlayColor"), bodyColor)
         bodyColorRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyColorRow")
         self.bodyColorRow = bodyColorRow
@@ -1816,7 +1801,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func configureFieldWidths() {
         let compactFields = [
-            eyeInterval, eyeDuration, bodyInterval, bodyDuration, bodyAfterEyeGates, eyeLead, bodyLead,
+            eyeInterval, eyeDuration, bodyInterval, bodyDuration, eyeLead, bodyLead,
             bodyPostponeMinutes, bodyPostponeLimit, bodyPostponeWindowPercent, naturalIdleMinutes,
             pauseUntilMorningHour,
             pauseUntilMorningLatitude, pauseUntilMorningLongitude
@@ -2402,7 +2387,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         setHelp(L10n.tr("prefs.enableBodyBreakHelp"), on: bodyEnabled)
         setNumberInputHelp(L10n.tr("prefs.bodyIntervalHelp"), on: bodyInterval)
         setNumberInputHelp(L10n.tr("prefs.bodyDurationHelp"), on: bodyDuration)
-        setNumberInputHelp(L10n.tr("prefs.bodyAfterEyeGatesHelp"), on: bodyAfterEyeGates)
         setHelp(L10n.tr("prefs.overlayColorHelp"), on: bodyColor)
         setHelp(L10n.tr("prefs.notifyBodyBreakHelp"), on: bodyNotify)
         setNumberInputHelp(L10n.tr("prefs.notificationLeadHelp"), on: bodyLead)
@@ -2471,7 +2455,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func configureAutosave() {
         let textFields = [
-            eyeInterval, eyeDuration, eyeLead, bodyInterval, bodyDuration, bodyAfterEyeGates,
+            eyeInterval, eyeDuration, eyeLead, bodyInterval, bodyDuration,
             bodyLead, bodyPostponeMinutes, bodyPostponeLimit, bodyPostponeWindowPercent, naturalIdleMinutes,
             appExclusionName, appExclusionTerms,
             customBodyTitle, localImagePath,
@@ -2681,7 +2665,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         bodyEnabled.state = state(settings.bodyBreak.isEnabled)
         bodyInterval.stringValue = String(Int(settings.bodyBreak.interval / 60))
         bodyDuration.stringValue = String(Int(settings.bodyBreak.duration / 60))
-        bodyAfterEyeGates.stringValue = String(settings.bodyBreakAfterEyeGates)
         bodyColor.color = NSColor(hex: settings.bodyBreak.colorHex, fallback: RestSettings.defaults.bodyBreak.colorHex)
         bodyNotify.state = state(settings.notifications.bodyBreakEnabled)
         bodyLead.stringValue = String(Int(settings.notifications.bodyBreakLeadTime))
@@ -2843,7 +2826,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
         next.bodyBreak.interval = TimeInterval(max(1, intValue(bodyInterval)) * 60)
         next.bodyBreak.duration = TimeInterval(max(1, intValue(bodyDuration)) * 60)
-        next.bodyBreakAfterEyeGates = max(1, intValue(bodyAfterEyeGates))
         next.bodyBreak.colorHex = hexString(from: bodyColor.color, fallback: RestSettings.defaults.bodyBreak.colorHex)
         next.notifications.bodyBreakEnabled = isOn(bodyNotify)
         next.notifications.bodyBreakLeadTime = TimeInterval(max(0, intValue(bodyLead)))
@@ -3275,9 +3257,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             bodyInterval, bodyDuration, bodyLead, bodyPostponeMinutes,
             bodyPostponeLimit, bodyPostponeWindowPercent
         ].forEach { setNumberInputEnabled($0, bodyBreakEnabled) }
-        let bodyAfterEyeGatesVisible = bodyBreakEnabled && eyeGateEnabled
-        bodyAfterEyeGatesRow?.isHidden = !bodyAfterEyeGatesVisible
-        setNumberInputEnabled(bodyAfterEyeGates, bodyAfterEyeGatesVisible)
         let bodyPostponeEnabled = bodyBreakEnabled && intValue(bodyPostponeLimit) > 0
         [bodyPostponeMinutesRow, bodyPostponeWindowPercentRow].forEach { $0?.isHidden = !bodyPostponeEnabled }
         [bodyPostponeMinutes, bodyPostponeWindowPercent].forEach { setNumberInputEnabled($0, bodyPostponeEnabled) }
@@ -3474,7 +3453,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let eyeDurationSeconds = max(1, intValue(eyeDuration))
         let bodyIntervalMinutes = max(1, intValue(bodyInterval))
         let bodyDurationMinutes = max(1, intValue(bodyDuration))
-        let bodyAfterEyeGateCount = max(1, intValue(bodyAfterEyeGates))
 
         let summary: String
         if eyeGateEnabled && bodyBreakEnabled {
@@ -3482,7 +3460,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
                 "prefs.scheduleSummary.eyeAndBody",
                 eyeIntervalMinutes,
                 eyeDurationSeconds,
-                bodyAfterEyeGateCount,
+                bodyIntervalMinutes,
                 bodyDurationMinutes
             )
         } else if eyeGateEnabled {
@@ -3525,14 +3503,12 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let eyeDurationSeconds = max(1, intValue(eyeDuration))
         let bodyIntervalMinutes = max(1, intValue(bodyInterval))
         let bodyDurationMinutes = max(1, intValue(bodyDuration))
-        let bodyAfterEyeGateCount = max(1, intValue(bodyAfterEyeGates))
 
         return RestRhythmPreset.allCases.first { preset in
             preset.eyeIntervalMinutes == eyeIntervalMinutes &&
                 preset.eyeDurationSeconds == eyeDurationSeconds &&
                 preset.bodyIntervalMinutes == bodyIntervalMinutes &&
-                preset.bodyDurationMinutes == bodyDurationMinutes &&
-                preset.bodyAfterEyeGateCount == bodyAfterEyeGateCount
+                preset.bodyDurationMinutes == bodyDurationMinutes
         }
     }
 
@@ -3829,7 +3805,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         eyeInterval.stringValue = String(preset.eyeIntervalMinutes)
         eyeDuration.stringValue = String(preset.eyeDurationSeconds)
         bodyInterval.stringValue = String(preset.bodyIntervalMinutes)
-        bodyAfterEyeGates.stringValue = String(preset.bodyAfterEyeGateCount)
         bodyDuration.stringValue = String(preset.bodyDurationMinutes)
         syncNumberControlsFromFields()
         updateDependentControlEnablement()

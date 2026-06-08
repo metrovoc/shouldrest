@@ -25,7 +25,7 @@ final class MenuStatusPresenterTests: XCTestCase {
         XCTAssertTrue(lines[0].contains(" in "))
         XCTAssertTrue(lines[0].contains("("))
         XCTAssertFalse(lines[0].contains("eyeGate"))
-        XCTAssertEqual(lines[1], "Next Body Break after 4 Eye Gates")
+        XCTAssertEqual(lines[1], "Body Break in 45m")
     }
 
     func testScheduledStatusShowsRelativeAndClockTimeInLocalizedCopy() {
@@ -54,7 +54,7 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         XCTAssertTrue(tooltip.hasPrefix("ShouldRest - Short eye rests, protected\n\n"))
         XCTAssertTrue(tooltip.contains("Next: Eye Gate"))
-        XCTAssertTrue(tooltip.contains("Next Body Break after 4 Eye Gates"))
+        XCTAssertTrue(tooltip.contains("Body Break in 45m"))
         XCTAssertTrue(tooltip.contains("Rest debt: 0/10"))
     }
 
@@ -100,7 +100,7 @@ final class MenuStatusPresenterTests: XCTestCase {
             content.primary,
             "Next: Eye Gate in 10m (\(start.addingTimeInterval(10 * 60).formatted(date: .omitted, time: .shortened)))"
         )
-        XCTAssertEqual(content.secondary, "Next Body Break after 4 Eye Gates")
+        XCTAssertEqual(content.secondary, "Body Break in 45m")
         XCTAssertEqual(content.healthBadge, "Debt 3/10")
         XCTAssertEqual(content.icon, .restGate)
     }
@@ -146,7 +146,7 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         XCTAssertTrue(description.hasPrefix("ShouldRest: Next: Eye Gate in "))
         XCTAssertTrue(description.contains("("))
-        XCTAssertTrue(description.contains("Next Body Break after 4 Eye Gates"))
+        XCTAssertTrue(description.contains("Body Break in 45m"))
         XCTAssertFalse(description.contains("The rest reminder app"))
         XCTAssertFalse(description.contains("\n"))
         XCTAssertFalse(description.contains("Rest debt: 0/10"))
@@ -408,14 +408,19 @@ final class MenuStatusPresenterTests: XCTestCase {
         XCTAssertFalse(lines.first?.contains("0s") ?? true)
     }
 
-    func testBodyBreakCountdownCountsScheduledEyeGateTowardBodyBreak() {
-        var engine = RestEngine(settings: .defaults, now: start)
-        _ = engine.takeNow(.eyeGate, now: start)
-        _ = engine.completeActive(now: start.addingTimeInterval(20), reason: .completed)
+    func testBodyBreakCountdownUsesIndependentBodyDebt() {
+        let state = RestEngineState(
+            scheduled: ScheduledRest(kind: .eyeGate, dueAt: start.addingTimeInterval(10 * 60), notificationAt: nil),
+            bodyDebt: 15 * 60
+        )
 
-        let lines = MenuStatusPresenter.lines(state: engine.state, settings: engine.settings, now: start)
+        let lines = MenuStatusPresenter.lines(
+            state: state,
+            settings: .defaults,
+            now: start
+        )
 
-        XCTAssertEqual(lines[1], "Next Body Break after 3 Eye Gates")
+        XCTAssertEqual(lines[1], "Body Break in 30m")
     }
 
     func testActiveStatusUsesLocalizedBodyBreakName() {

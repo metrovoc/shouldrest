@@ -82,7 +82,7 @@ It is intended to catch gaps that are easy to miss when a behavior is exposed on
 | `microbreakDuration` | Implemented as Eye Gate duration. |
 | `microbreakInterval` | Implemented as Eye Gate interval. |
 | `breakDuration` | Implemented as Body Break duration. |
-| `breakInterval` | Implemented as `bodyBreakAfterEyeGates`. |
+| `breakInterval` | Implemented as an independent Body Break active-use interval. |
 | `breakNotification` | Implemented as Body Break pre-rest notification enablement. |
 | `microbreakNotification` | Implemented as Eye Gate pre-rest notification enablement. |
 | `breakNotificationInterval` | Implemented as Body Break notification lead time. |
@@ -187,7 +187,7 @@ ShouldRest must implement or exceed these Stretchly capabilities except where ex
 
 - Independent enablement of Eye Gate and Body Break.
 - Configurable interval and duration for both rest kinds.
-- Body Break after a configurable number of Eye Gates.
+- Independent Body Break interval based on accumulated active computer use.
 - Pre-rest notification lead times.
 - Manual take-now controls for both rest kinds.
 - Reset, pause, resume, and Body Break skip-to-next.
@@ -306,7 +306,7 @@ Implemented now:
 - Packaged app build with default ad-hoc signing, optional Developer ID signing hook, optional hardened runtime hook, and strict `codesign` verification.
 - Release packaging automation for Developer ID identity selection, hardened-runtime app signing, DMG creation, optional DMG signing, optional Apple notarization, and stapling validation.
 - Continuous context-deferral state for Focus, working-hours, and app-exclusion gates: first deferral raises break-health danger, repeated ticks do not double-count, and the due rest starts immediately when context clears.
-- Natural rest credit is bounded to one credited rest per idle episode, then resets only after user activity resumes, matching Stretchly's natural-break lifecycle while preserving ShouldRest's short Eye Gate credit.
+- Natural rest credit is bounded by independent Eye Gate and Body Break recovery thresholds, so one sufficiently long idle episode can satisfy both dimensions before user activity resumes.
 - Stretchly-style display targeting for Body Break: all displays or a selected single display, primary/cursor/configured-display selection, separate content-display selection, optional secondary-display blanking, and backward-compatible settings decoding. Eye Gate still forces all-display coverage.
 - Sanitized Body Break rich-text rendering with remote/inline HTML images stripped; images remain available through the explicit safe local-image channel.
 - Preference surface for enabling/disabling built-in rest ideas while preserving custom Body Break ideas.
@@ -322,7 +322,7 @@ Implemented now:
 - Silent-notifications policy honors Stretchly semantics across pre-break/update notifications and configured rest start/finish sounds.
 - Stretchly-style automatic resume notification is shown when a timed user pause or pause-until-morning expires; explicit manual resume paths stay quiet.
 - Break-health danger is visible in the menu status surface, not only in diagnostics output.
-- Menu status uses localized rest-kind names and shows the Stretchly-style Body Break countdown in Eye Gate units when both rest kinds are enabled.
+- Menu status uses localized rest-kind names and shows Body Break countdown from independent active-use debt when both rest kinds are enabled.
 - Menu bar tooltip mirrors the Stretchly tray tooltip structure: product header plus dynamic status lines.
 - Paused menu status includes recovery context: timed pauses show the remaining time until automatic resume, while indefinite pauses tell users to resume from the menu when ready.
 - Manual indefinite pause asks for default-cancel confirmation when no rest overlay is active, reducing accidental long-term disablement while avoiding system-modal confirmations behind active overlays.

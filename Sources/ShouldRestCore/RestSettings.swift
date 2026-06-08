@@ -30,7 +30,6 @@ extension KeyedDecodingContainer {
 public struct RestSettings: Codable, Equatable, Sendable {
     public var eyeGate: RestRule
     public var bodyBreak: RestRule
-    public var bodyBreakAfterEyeGates: Int
     public var notifications: NotificationSettings
     public var naturalBreaks: NaturalBreakSettings
     public var focusMode: FocusModeSettings
@@ -45,7 +44,6 @@ public struct RestSettings: Codable, Equatable, Sendable {
     public init(
         eyeGate: RestRule,
         bodyBreak: RestRule,
-        bodyBreakAfterEyeGates: Int,
         notifications: NotificationSettings,
         naturalBreaks: NaturalBreakSettings,
         focusMode: FocusModeSettings,
@@ -59,7 +57,6 @@ public struct RestSettings: Codable, Equatable, Sendable {
     ) {
         self.eyeGate = eyeGate
         self.bodyBreak = bodyBreak
-        self.bodyBreakAfterEyeGates = max(1, bodyBreakAfterEyeGates)
         self.notifications = notifications
         self.naturalBreaks = naturalBreaks
         self.focusMode = focusMode
@@ -75,7 +72,6 @@ public struct RestSettings: Codable, Equatable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case eyeGate
         case bodyBreak
-        case bodyBreakAfterEyeGates
         case notifications
         case naturalBreaks
         case focusMode
@@ -94,11 +90,6 @@ public struct RestSettings: Codable, Equatable, Sendable {
         self.init(
             eyeGate: Self.decodeRule(.eyeGate, from: container, fallback: defaults.eyeGate),
             bodyBreak: Self.decodeRule(.bodyBreak, from: container, fallback: defaults.bodyBreak),
-            bodyBreakAfterEyeGates: container.decodeLossy(
-                Int.self,
-                forKey: .bodyBreakAfterEyeGates,
-                default: defaults.bodyBreakAfterEyeGates
-            ),
             notifications: container.decodeLossy(NotificationSettings.self, forKey: .notifications, default: defaults.notifications),
             naturalBreaks: container.decodeLossy(NaturalBreakSettings.self, forKey: .naturalBreaks, default: defaults.naturalBreaks),
             focusMode: container.decodeLossy(FocusModeSettings.self, forKey: .focusMode, default: defaults.focusMode),
@@ -122,7 +113,6 @@ public struct RestSettings: Codable, Equatable, Sendable {
     public static let defaults = RestSettings(
         eyeGate: .eyeGateDefault,
         bodyBreak: .bodyBreakDefault,
-        bodyBreakAfterEyeGates: 4,
         notifications: .defaults,
         naturalBreaks: .defaults,
         focusMode: .defaults,
@@ -162,7 +152,6 @@ public struct RestSettings: Codable, Equatable, Sendable {
         RestSettings(
             eyeGate: eyeGate.normalized(fallback: .eyeGateDefault),
             bodyBreak: bodyBreak.normalized(fallback: .bodyBreakDefault),
-            bodyBreakAfterEyeGates: bodyBreakAfterEyeGates,
             notifications: notifications.normalized(),
             naturalBreaks: naturalBreaks.normalized(),
             focusMode: focusMode,
@@ -328,7 +317,7 @@ public struct RestRule: Codable, Equatable, Sendable {
 
     public static let bodyBreakDefault = RestRule(
         isEnabled: true,
-        interval: 20 * 60,
+        interval: 45 * 60,
         duration: 5 * 60,
         ordinarySkipEnabled: true,
         postpone: PostponePolicy(isEnabled: true, duration: 5 * 60, maxCount: 1, allowedDuringFirstPercent: 30),

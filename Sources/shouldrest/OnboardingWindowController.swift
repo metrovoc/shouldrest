@@ -19,7 +19,7 @@ final class OnboardingWindowController: NSWindowController {
     private let rhythmPresetRecommendation = NSTextField(labelWithString: "")
     private let rhythmMetricEyeInterval = NSTextField(labelWithString: "")
     private let rhythmMetricEyeDuration = NSTextField(labelWithString: "")
-    private let rhythmMetricBodyAfter = NSTextField(labelWithString: "")
+    private let rhythmMetricBodyInterval = NSTextField(labelWithString: "")
     private let rhythmMetricBodyDuration = NSTextField(labelWithString: "")
     private var useSelectedButton: NSButton?
     private var selectedRhythmPreset: RestRhythmPreset = .firstRunDefault
@@ -296,10 +296,10 @@ final class OnboardingWindowController: NSWindowController {
             valueLabel: rhythmMetricEyeDuration
         ))
         row.addArrangedSubview(rhythmMetricColumn(
-            identifier: "onboarding.metric.bodyAfter",
+            identifier: "onboarding.metric.bodyInterval",
             symbolName: "arrow.triangle.2.circlepath",
-            title: L10n.tr("onboarding.metric.bodyAfter"),
-            valueLabel: rhythmMetricBodyAfter
+            title: L10n.tr("onboarding.metric.bodyInterval"),
+            valueLabel: rhythmMetricBodyInterval
         ))
         row.addArrangedSubview(rhythmMetricColumn(
             identifier: "onboarding.metric.bodyDuration",
@@ -539,9 +539,9 @@ final class OnboardingWindowController: NSWindowController {
             "onboarding.metric.eyeDurationValue",
             selectedRhythmPreset.eyeDurationSeconds
         )
-        rhythmMetricBodyAfter.stringValue = L10n.format(
-            "onboarding.metric.bodyAfterValue",
-            selectedRhythmPreset.bodyAfterEyeGateCount
+        rhythmMetricBodyInterval.stringValue = L10n.format(
+            "onboarding.metric.bodyIntervalValue",
+            selectedRhythmPreset.bodyIntervalMinutes
         )
         rhythmMetricBodyDuration.stringValue = L10n.format(
             "onboarding.metric.bodyDurationValue",
@@ -597,8 +597,8 @@ final class OnboardingWindowController: NSWindowController {
             valueLabel: rhythmMetricEyeDuration
         )
         updateRhythmMetricAccessibility(
-            title: L10n.tr("onboarding.metric.bodyAfter"),
-            valueLabel: rhythmMetricBodyAfter
+            title: L10n.tr("onboarding.metric.bodyInterval"),
+            valueLabel: rhythmMetricBodyInterval
         )
         updateRhythmMetricAccessibility(
             title: L10n.tr("onboarding.metric.bodyDuration"),

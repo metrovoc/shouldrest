@@ -99,7 +99,7 @@ final class RestContextPolicyTests: XCTestCase {
         XCTAssertFalse(SystemSuspendPausePolicy.shouldPauseScheduler(state: RestEngineState(activeSession: active)))
     }
 
-    func testSystemResumeIdlePolicyKeepsOrdinaryIdleButIgnoresAutoPausedSuspendIdle() {
+    func testSystemResumeIdlePolicyKeepsSuspendIdleForNaturalRecovery() {
         XCTAssertEqual(
             SystemResumeIdlePolicy.effectiveIdleDuration(
                 suspendedIdleDuration: 120,
@@ -112,7 +112,7 @@ final class RestContextPolicyTests: XCTestCase {
                 suspendedIdleDuration: 120,
                 didPauseScheduler: true
             ),
-            0
+            120
         )
         XCTAssertEqual(
             SystemResumeIdlePolicy.effectiveIdleDuration(
@@ -123,11 +123,15 @@ final class RestContextPolicyTests: XCTestCase {
         )
     }
 
-    func testSystemResumeAfterAutoPauseDoesNotCreditSuspendTimeAsNaturalRest() {
+    func testSystemResumeAfterAutoPauseCreditsSuspendIdleAsNaturalRecoveryWhenDebtExists() {
         let sleepAt = Date(timeIntervalSinceReferenceDate: 3_000)
-        let wakeAt = sleepAt.addingTimeInterval(5 * 60)
-        let settings = RestSettings.defaults
-        var engine = RestEngine(settings: settings, now: sleepAt)
+        let wakeAt = sleepAt.addingTimeInterval(2 * 60)
+        var settings = RestSettings.defaults
+        settings.bodyBreak.isEnabled = false
+        var engine = RestEngine(settings: settings, now: sleepAt.addingTimeInterval(-60))
+
+        _ = engine.evaluate(now: sleepAt, context: RestContext(idleDuration: 0))
+        XCTAssertGreaterThan(engine.state.eyeDebt, 0)
 
         _ = engine.pause(for: nil, now: sleepAt, reason: .suspendOrLock)
         XCTAssertEqual(engine.resume(now: wakeAt), .resumed)
@@ -143,9 +147,9 @@ final class RestContextPolicyTests: XCTestCase {
             appExclusions: []
         )
 
-        XCTAssertEqual(engine.evaluate(now: wakeAt, context: context), .noChange)
-        XCTAssertEqual(engine.state.statistics.completedEyeGates, 0)
-        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 0)
+        XCTAssertEqual(engine.evaluate(now: wakeAt, context: context), .naturalRestsCredited([.eyeGate]))
+        XCTAssertEqual(engine.state.statistics.completedEyeGates, 1)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 1)
         XCTAssertEqual(engine.state.scheduled?.kind, .eyeGate)
         XCTAssertEqual(engine.state.scheduled?.dueAt, wakeAt.addingTimeInterval(settings.eyeGate.interval))
     }

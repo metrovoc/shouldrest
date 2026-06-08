@@ -49,7 +49,7 @@ enum MenuStatusPresenter {
             lines.append(deferralSecondaryStatusText())
             return lines
         }
-        if let bodyBreakStatus = nextBodyBreakStatusText(state: state, settings: settings) {
+        if let bodyBreakStatus = nextBodyBreakStatusText(state: state, settings: settings, now: now) {
             lines.append(bodyBreakStatus)
         }
         return lines
@@ -262,7 +262,7 @@ enum MenuStatusPresenter {
         return L10n.format("status.durationHoursMinutes", hours, remainingMinutes)
     }
 
-    private static func nextBodyBreakStatusText(state: RestEngineState, settings: RestSettings) -> String? {
+    private static func nextBodyBreakStatusText(state: RestEngineState, settings: RestSettings, now: Date) -> String? {
         guard settings.eyeGate.isEnabled,
               settings.bodyBreak.isEnabled,
               state.activeSession == nil,
@@ -271,10 +271,9 @@ enum MenuStatusPresenter {
               state.scheduled?.kind == .eyeGate else {
             return nil
         }
-        let remainingEyeGates = max(1, settings.bodyBreakAfterEyeGates - state.eyeGatesSinceBodyBreak)
-        if remainingEyeGates == 1 {
-            return L10n.tr("status.nextBodyAfterOneEyeGate")
-        }
-        return L10n.format("status.nextBodyAfterEyeGates", remainingEyeGates)
+        let debtRemaining = max(0, settings.bodyBreak.interval - state.bodyDebt)
+        let suppressionRemaining = state.bodySuppressedUntil.map { max(0, $0.timeIntervalSince(now)) } ?? 0
+        let remaining = Int(ceil(max(debtRemaining, suppressionRemaining)))
+        return L10n.format("status.nextBodyIn", compactDurationText(seconds: remaining))
     }
 }

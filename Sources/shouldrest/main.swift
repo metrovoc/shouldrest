@@ -307,9 +307,9 @@ enum SystemSuspendPausePolicy {
 enum SystemResumeIdlePolicy {
     static func effectiveIdleDuration(
         suspendedIdleDuration: TimeInterval,
-        didPauseScheduler: Bool
+        didPauseScheduler _: Bool
     ) -> TimeInterval {
-        didPauseScheduler ? 0 : max(0, suspendedIdleDuration)
+        max(0, suspendedIdleDuration)
     }
 }
 

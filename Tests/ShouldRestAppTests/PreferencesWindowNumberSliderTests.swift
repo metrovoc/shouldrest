@@ -13,8 +13,7 @@ final class PreferencesWindowNumberSliderTests: XCTestCase {
             ("eyeIntervalSlider", 1, 240),
             ("eyeDurationSlider", 1, 300),
             ("bodyIntervalSlider", 1, 720),
-            ("bodyDurationSlider", 1, 180),
-            ("bodyAfterEyeGatesSlider", 1, 99)
+            ("bodyDurationSlider", 1, 180)
         ]
 
         for expected in expectedSliders {
@@ -65,11 +64,11 @@ final class PreferencesWindowNumberSliderTests: XCTestCase {
                 )
             ),
             (
-                "bodyAfterEyeGates",
+                "bodyInterval",
                 L10n.format(
                     "prefs.numberInputAccessibilityLabel",
-                    L10n.tr("prefs.afterEyeGates"),
-                    L10n.tr("prefs.unitAccessibility.eyeGates")
+                    L10n.tr("prefs.bodyIntervalMinutes"),
+                    L10n.tr("prefs.unitAccessibility.minutes")
                 )
             ),
             (
