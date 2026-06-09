@@ -154,17 +154,20 @@ public struct RestContext: Equatable, Sendable {
     public var focusModeActive: Bool
     public var inWorkingHours: Bool
     public var appExclusions: [AppExclusionEvaluation]
+    public var allowsNaturalRecovery: Bool
 
     public init(
         idleDuration: TimeInterval = 0,
         focusModeActive: Bool = false,
         inWorkingHours: Bool = true,
-        appExclusions: [AppExclusionEvaluation] = []
+        appExclusions: [AppExclusionEvaluation] = [],
+        allowsNaturalRecovery: Bool = false
     ) {
         self.idleDuration = max(0, idleDuration)
         self.focusModeActive = focusModeActive
         self.inWorkingHours = inWorkingHours
         self.appExclusions = appExclusions
+        self.allowsNaturalRecovery = allowsNaturalRecovery
     }
 }
 
@@ -643,14 +646,15 @@ public struct RestEngine: Equatable, Sendable {
     }
 
     private mutating func updateDebt(now: Date, context: RestContext) -> Set<RestKind> {
-        let activeDelta = activeUseDelta(now: now, idleDuration: context.idleDuration)
+        let screenDelta = screenExposureDelta(now: now, context: context)
+        let inputDelta = inputActiveDelta(now: now, idleDuration: context.idleDuration)
         if settings.eyeGate.isEnabled {
-            state.eyeDebt = min(settings.eyeGate.interval, state.eyeDebt + activeDelta)
+            state.eyeDebt = min(settings.eyeGate.interval, state.eyeDebt + screenDelta)
         } else {
             state.eyeDebt = 0
         }
         if settings.bodyBreak.isEnabled {
-            state.bodyDebt = min(settings.bodyBreak.interval, state.bodyDebt + activeDelta)
+            state.bodyDebt = min(settings.bodyBreak.interval, state.bodyDebt + inputDelta)
         } else {
             state.bodyDebt = 0
             state.bodySuppressedUntil = nil
@@ -659,13 +663,29 @@ public struct RestEngine: Equatable, Sendable {
         state.lastEvaluatedAt = now
         state.lastIdleDuration = context.idleDuration
 
-        guard settings.naturalBreaks.isEnabled else {
+        guard settings.naturalBreaks.isEnabled,
+              context.allowsNaturalRecovery else {
             return []
         }
         return settleNaturalAwayIfNeeded(idleDuration: context.idleDuration)
     }
 
-    private func activeUseDelta(now: Date, idleDuration: TimeInterval) -> TimeInterval {
+    private func screenExposureDelta(now: Date, context: RestContext) -> TimeInterval {
+        guard state.pause == nil,
+              state.activeSession == nil,
+              let lastEvaluatedAt = state.lastEvaluatedAt else {
+            return 0
+        }
+
+        if context.allowsNaturalRecovery,
+           isLongIdle(idleDuration: context.idleDuration) {
+            return 0
+        }
+
+        return max(0, now.timeIntervalSince(lastEvaluatedAt))
+    }
+
+    private func inputActiveDelta(now: Date, idleDuration: TimeInterval) -> TimeInterval {
         guard state.pause == nil,
               state.activeSession == nil,
               let lastEvaluatedAt = state.lastEvaluatedAt else {
@@ -694,7 +714,8 @@ public struct RestEngine: Equatable, Sendable {
     }
 
     private func isAway(context: RestContext) -> Bool {
-        guard settings.naturalBreaks.isEnabled else { return false }
+        guard context.allowsNaturalRecovery,
+              settings.naturalBreaks.isEnabled else { return false }
         return isNaturallyAway(idleDuration: context.idleDuration)
     }
 

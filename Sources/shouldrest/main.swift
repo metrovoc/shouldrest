@@ -287,13 +287,15 @@ enum RestContextPolicy {
         now: Date,
         idleDuration: TimeInterval,
         focusModeActive: Bool,
-        appExclusions: [AppExclusionEvaluation]
+        appExclusions: [AppExclusionEvaluation],
+        allowsNaturalRecovery: Bool = false
     ) -> RestContext {
         RestContext(
             idleDuration: idleDuration,
             focusModeActive: focusModeActive,
             inWorkingHours: settings.workingHours.contains(now),
-            appExclusions: appExclusions
+            appExclusions: appExclusions,
+            allowsNaturalRecovery: allowsNaturalRecovery
         )
     }
 }
@@ -893,7 +895,11 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         lastFocusCheck = now
     }
 
-    private func currentContext(now: Date, idleDuration: TimeInterval? = nil) -> RestContext {
+    private func currentContext(
+        now: Date,
+        idleDuration: TimeInterval? = nil,
+        allowsNaturalRecovery: Bool = false
+    ) -> RestContext {
         let appExclusions = settings.appExclusions.map { rule in
             AppExclusionEvaluation(rule: rule, isMatched: RunningApplications.matches(rule: rule))
         }
@@ -902,7 +908,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             now: now,
             idleDuration: idleDuration ?? SystemIdleTime.seconds(),
             focusModeActive: focusModeActive,
-            appExclusions: appExclusions
+            appExclusions: appExclusions,
+            allowsNaturalRecovery: allowsNaturalRecovery
         )
     }
 
@@ -2276,7 +2283,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             suspendedIdleDuration: idleDuration,
             didPauseScheduler: didPauseScheduler
         )
-        let context = currentContext(now: now, idleDuration: restIdleDuration)
+        let context = currentContext(now: now, idleDuration: restIdleDuration, allowsNaturalRecovery: true)
         if engine.state.activeSession != nil {
             handleActiveRestLifecycle(
                 now: now,

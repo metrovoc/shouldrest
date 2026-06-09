@@ -34,6 +34,7 @@ final class RestContextPolicyTests: XCTestCase {
         XCTAssertTrue(context.focusModeActive)
         XCTAssertFalse(context.inWorkingHours)
         XCTAssertEqual(context.appExclusions, appExclusions)
+        XCTAssertFalse(context.allowsNaturalRecovery)
     }
 
     func testWakeEvaluationDefersDueRestOutsideWorkingHours() throws {
@@ -144,7 +145,8 @@ final class RestContextPolicyTests: XCTestCase {
                 didPauseScheduler: true
             ),
             focusModeActive: false,
-            appExclusions: []
+            appExclusions: [],
+            allowsNaturalRecovery: true
         )
 
         XCTAssertEqual(engine.evaluate(now: wakeAt, context: context), .naturalRestsCredited([.eyeGate]))

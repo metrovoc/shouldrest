@@ -233,15 +233,15 @@ final class RestEngineTests: XCTestCase {
 
     func testNotificationLeadFiresOnceWhenProjectedDueDriftsWithinSameCycle() {
         var settings = RestSettings.defaults
-        settings.bodyBreak.isEnabled = false
+        settings.eyeGate.isEnabled = false
         var engine = RestEngine(settings: settings, now: start)
         let notificationAt = start.addingTimeInterval(
-            settings.eyeGate.interval - settings.notifications.eyeGateLeadTime
+            settings.bodyBreak.interval - settings.notifications.bodyBreakLeadTime
         )
 
         XCTAssertEqual(
             engine.evaluate(now: notificationAt, context: RestContext(idleDuration: 0)),
-            .notificationDue(.eyeGate)
+            .notificationDue(.bodyBreak)
         )
         XCTAssertTrue(engine.state.scheduled?.notificationSent ?? false)
 
@@ -254,7 +254,43 @@ final class RestEngineTests: XCTestCase {
         XCTAssertTrue(engine.state.scheduled?.notificationSent ?? false)
         XCTAssertEqual(
             engine.state.scheduled?.dueAt,
-            start.addingTimeInterval(settings.eyeGate.interval + 2)
+            start.addingTimeInterval(settings.bodyBreak.interval + 2)
+        )
+    }
+
+    func testEyeGateAccruesDuringInputIdleBecauseScreenExposureStillMatters() {
+        var settings = RestSettings.defaults
+        settings.bodyBreak.isEnabled = false
+        var engine = RestEngine(settings: settings, now: start)
+
+        let result = engine.evaluate(
+            now: start.addingTimeInterval(settings.eyeGate.interval),
+            context: RestContext(idleDuration: settings.eyeGate.interval)
+        )
+
+        guard case .started(let session) = result else {
+            return XCTFail("Expected Eye Gate to start after screen exposure even without input")
+        }
+        XCTAssertEqual(session.kind, .eyeGate)
+        XCTAssertEqual(engine.state.eyeDebt, settings.eyeGate.interval)
+    }
+
+    func testBodyBreakDoesNotAccrueFromInputIdleAlone() {
+        var settings = RestSettings.defaults
+        settings.eyeGate.isEnabled = false
+        var engine = RestEngine(settings: settings, now: start)
+
+        let result = engine.evaluate(
+            now: start.addingTimeInterval(settings.bodyBreak.interval),
+            context: RestContext(idleDuration: settings.bodyBreak.interval)
+        )
+
+        XCTAssertEqual(result, .noChange)
+        XCTAssertNil(engine.state.activeSession)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+        XCTAssertEqual(
+            engine.state.scheduled?.dueAt,
+            start.addingTimeInterval(settings.bodyBreak.interval * 2)
         )
     }
 
@@ -276,7 +312,7 @@ final class RestEngineTests: XCTestCase {
         let awayThreshold = engine.settings.naturalBreaks.inactivityResetTime
         let result = engine.evaluate(
             now: start.addingTimeInterval(60 + awayThreshold),
-            context: RestContext(idleDuration: awayThreshold)
+            context: RestContext(idleDuration: awayThreshold, allowsNaturalRecovery: true)
         )
         XCTAssertEqual(result, .naturalRestsCredited([.eyeGate]))
         XCTAssertEqual(engine.state.statistics.completedEyeGates, 1)
@@ -285,7 +321,7 @@ final class RestEngineTests: XCTestCase {
 
         let repeatedIdleResult = engine.evaluate(
             now: start.addingTimeInterval(64 + awayThreshold),
-            context: RestContext(idleDuration: awayThreshold + 1)
+            context: RestContext(idleDuration: awayThreshold + 1, allowsNaturalRecovery: true)
         )
         XCTAssertEqual(repeatedIdleResult, .noChange)
         XCTAssertEqual(engine.state.statistics.naturalEyeGates, 1)
@@ -301,19 +337,19 @@ final class RestEngineTests: XCTestCase {
         )
         let nextIdleResult = engine.evaluate(
             now: start.addingTimeInterval(125 + awayThreshold * 2),
-            context: RestContext(idleDuration: awayThreshold)
+            context: RestContext(idleDuration: awayThreshold, allowsNaturalRecovery: true)
         )
         XCTAssertEqual(nextIdleResult, .naturalRestsCredited([.eyeGate]))
         XCTAssertEqual(engine.state.statistics.naturalEyeGates, 2)
     }
 
-    func testLongIdleDoesNotAccumulateActiveDebtWhenNaturalBreaksAreDisabled() {
+    func testInputIdleDoesNotAccumulateBodyDebtWhenNaturalBreaksAreDisabled() {
         var settings = RestSettings.defaults
-        settings.bodyBreak.isEnabled = false
+        settings.eyeGate.isEnabled = false
         settings.naturalBreaks.isEnabled = false
         var engine = RestEngine(settings: settings, now: start)
         _ = engine.evaluate(now: start.addingTimeInterval(60), context: RestContext(idleDuration: 0))
-        let debtAfterActiveUse = engine.state.eyeDebt
+        let debtAfterActiveUse = engine.state.bodyDebt
 
         let awayThreshold = engine.settings.naturalBreaks.inactivityResetTime
         let longIdleResult = engine.evaluate(
@@ -321,14 +357,14 @@ final class RestEngineTests: XCTestCase {
             context: RestContext(idleDuration: awayThreshold)
         )
         XCTAssertEqual(longIdleResult, .noChange)
-        XCTAssertEqual(engine.state.eyeDebt, debtAfterActiveUse)
+        XCTAssertEqual(engine.state.bodyDebt, debtAfterActiveUse)
 
         _ = engine.evaluate(
             now: start.addingTimeInterval(64 + awayThreshold),
             context: RestContext(idleDuration: awayThreshold + 1)
         )
-        XCTAssertEqual(engine.state.eyeDebt, debtAfterActiveUse)
-        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 0)
+        XCTAssertEqual(engine.state.bodyDebt, debtAfterActiveUse)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 0)
     }
 
     func testNaturalIdleCompletesActiveRestOnlyOncePerIdleEpisode() {
@@ -368,12 +404,14 @@ final class RestEngineTests: XCTestCase {
         )
         var engine = RestEngine(settings: settings, now: start)
         let dueAt = engine.state.scheduled!.dueAt
+        _ = engine.evaluate(now: start.addingTimeInterval(60), context: RestContext(idleDuration: 0))
 
         let result = engine.evaluate(
             now: dueAt,
             context: RestContext(
                 idleDuration: settings.naturalBreaks.inactivityResetTime,
-                inWorkingHours: false
+                inWorkingHours: false,
+                allowsNaturalRecovery: true
             )
         )
 
