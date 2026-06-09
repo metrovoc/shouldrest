@@ -675,6 +675,10 @@ public struct RestEngine: Equatable, Sendable {
         let elapsed = max(0, now.timeIntervalSince(lastEvaluatedAt))
         let previousIdle = max(0, state.lastIdleDuration)
         let currentIdle = max(0, idleDuration)
+        if isLongIdle(idleDuration: currentIdle),
+           isLongIdle(idleDuration: previousIdle) {
+            return 0
+        }
         guard currentIdle <= previousIdle else {
             return max(0, elapsed - (currentIdle - previousIdle))
         }
@@ -691,7 +695,15 @@ public struct RestEngine: Equatable, Sendable {
 
     private func isAway(context: RestContext) -> Bool {
         guard settings.naturalBreaks.isEnabled else { return false }
-        return context.idleDuration >= naturalRecoveryThreshold
+        return isNaturallyAway(idleDuration: context.idleDuration)
+    }
+
+    private func isNaturallyAway(idleDuration: TimeInterval) -> Bool {
+        settings.naturalBreaks.isEnabled && isLongIdle(idleDuration: idleDuration)
+    }
+
+    private func isLongIdle(idleDuration: TimeInterval) -> Bool {
+        idleDuration >= naturalRecoveryThreshold
     }
 
     private var naturalRecoveryThreshold: TimeInterval {
@@ -746,14 +758,36 @@ public struct RestEngine: Equatable, Sendable {
 
         var next = projectedRest(kind: candidate.kind, now: now, remaining: candidate.remaining)
         if let previous,
-           previous.kind == next.kind,
-           abs(previous.dueAt.timeIntervalSince(next.dueAt)) < 1 {
-            next.notificationSent = previous.notificationSent
+           shouldPreserveNotificationSent(from: previous, to: next, now: now) {
+            next.notificationSent = true
         }
         state.scheduled = next
         if state.activeDeferral?.kind != next.kind || next.dueAt > now {
             state.activeDeferral = nil
         }
+    }
+
+    private func shouldPreserveNotificationSent(
+        from previous: ScheduledRest,
+        to next: ScheduledRest,
+        now: Date
+    ) -> Bool {
+        guard previous.kind == next.kind,
+              previous.notificationSent else {
+            return false
+        }
+
+        let dueDrift = abs(previous.dueAt.timeIntervalSince(next.dueAt))
+        guard dueDrift >= 1 else { return true }
+
+        guard previous.notificationAt != nil,
+              next.notificationAt != nil,
+              now < next.dueAt else {
+            return false
+        }
+
+        let sameCycleDriftTolerance = max(60, settings.notifications.leadTime(for: next.kind) * 2)
+        return dueDrift <= sameCycleDriftTolerance
     }
 
     private func projectedCandidates(now: Date) -> [(kind: RestKind, remaining: TimeInterval, priority: Int)] {

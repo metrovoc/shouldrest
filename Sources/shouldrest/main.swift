@@ -879,6 +879,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         case .notificationDue(let kind):
             showNotification(for: kind)
             logger.log("Notification due for \(kind.rawValue)")
+        case .naturalRestsCredited(let kinds):
+            let credited = kinds.map(\.rawValue).sorted().joined(separator: ",")
+            logger.log("Natural rests credited kinds=\(credited)")
         default:
             break
         }
@@ -2522,6 +2525,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             "activeSession=\(String(describing: engine.state.activeSession))",
             "pause=\(String(describing: engine.state.pause))",
             "activeDeferral=\(String(describing: engine.state.activeDeferral))",
+            "eyeDebt=\(engine.state.eyeDebt)",
+            "bodyDebt=\(engine.state.bodyDebt)",
+            "lastEvaluatedAt=\(String(describing: engine.state.lastEvaluatedAt))",
+            "lastIdleDuration=\(engine.state.lastIdleDuration)",
+            "bodySuppressedUntil=\(String(describing: engine.state.bodySuppressedUntil))",
+            "postponesInCurrentCycle=\(engine.state.postponesInCurrentCycle)",
             "dangerScore=\(engine.state.dangerScore)",
             "statistics=\(engine.state.statistics)",
             "focusModeActive=\(focusModeActive)",

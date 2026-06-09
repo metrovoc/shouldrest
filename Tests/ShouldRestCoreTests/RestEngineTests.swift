@@ -231,6 +231,33 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.pause, pause)
     }
 
+    func testNotificationLeadFiresOnceWhenProjectedDueDriftsWithinSameCycle() {
+        var settings = RestSettings.defaults
+        settings.bodyBreak.isEnabled = false
+        var engine = RestEngine(settings: settings, now: start)
+        let notificationAt = start.addingTimeInterval(
+            settings.eyeGate.interval - settings.notifications.eyeGateLeadTime
+        )
+
+        XCTAssertEqual(
+            engine.evaluate(now: notificationAt, context: RestContext(idleDuration: 0)),
+            .notificationDue(.eyeGate)
+        )
+        XCTAssertTrue(engine.state.scheduled?.notificationSent ?? false)
+
+        let driftedResult = engine.evaluate(
+            now: notificationAt.addingTimeInterval(4),
+            context: RestContext(idleDuration: 2)
+        )
+
+        XCTAssertEqual(driftedResult, .noChange)
+        XCTAssertTrue(engine.state.scheduled?.notificationSent ?? false)
+        XCTAssertEqual(
+            engine.state.scheduled?.dueAt,
+            start.addingTimeInterval(settings.eyeGate.interval + 2)
+        )
+    }
+
     func testNaturalIdleCreditsEyeGateOnlyAfterConfiguredAwayThresholdAndOnlyWhenDebtExists() {
         var settings = RestSettings.defaults
         settings.bodyBreak.isEnabled = false
@@ -257,26 +284,51 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.eyeDebt, 0)
 
         let repeatedIdleResult = engine.evaluate(
-            now: start.addingTimeInterval(61 + awayThreshold),
+            now: start.addingTimeInterval(64 + awayThreshold),
             context: RestContext(idleDuration: awayThreshold + 1)
         )
         XCTAssertEqual(repeatedIdleResult, .noChange)
         XCTAssertEqual(engine.state.statistics.naturalEyeGates, 1)
+        XCTAssertEqual(engine.state.eyeDebt, 0)
 
         _ = engine.evaluate(
-            now: start.addingTimeInterval(62 + awayThreshold),
+            now: start.addingTimeInterval(65 + awayThreshold),
             context: RestContext(idleDuration: 0)
         )
         _ = engine.evaluate(
-            now: start.addingTimeInterval(122 + awayThreshold),
+            now: start.addingTimeInterval(125 + awayThreshold),
             context: RestContext(idleDuration: 0)
         )
         let nextIdleResult = engine.evaluate(
-            now: start.addingTimeInterval(122 + awayThreshold * 2),
+            now: start.addingTimeInterval(125 + awayThreshold * 2),
             context: RestContext(idleDuration: awayThreshold)
         )
         XCTAssertEqual(nextIdleResult, .naturalRestsCredited([.eyeGate]))
         XCTAssertEqual(engine.state.statistics.naturalEyeGates, 2)
+    }
+
+    func testLongIdleDoesNotAccumulateActiveDebtWhenNaturalBreaksAreDisabled() {
+        var settings = RestSettings.defaults
+        settings.bodyBreak.isEnabled = false
+        settings.naturalBreaks.isEnabled = false
+        var engine = RestEngine(settings: settings, now: start)
+        _ = engine.evaluate(now: start.addingTimeInterval(60), context: RestContext(idleDuration: 0))
+        let debtAfterActiveUse = engine.state.eyeDebt
+
+        let awayThreshold = engine.settings.naturalBreaks.inactivityResetTime
+        let longIdleResult = engine.evaluate(
+            now: start.addingTimeInterval(60 + awayThreshold),
+            context: RestContext(idleDuration: awayThreshold)
+        )
+        XCTAssertEqual(longIdleResult, .noChange)
+        XCTAssertEqual(engine.state.eyeDebt, debtAfterActiveUse)
+
+        _ = engine.evaluate(
+            now: start.addingTimeInterval(64 + awayThreshold),
+            context: RestContext(idleDuration: awayThreshold + 1)
+        )
+        XCTAssertEqual(engine.state.eyeDebt, debtAfterActiveUse)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 0)
     }
 
     func testNaturalIdleCompletesActiveRestOnlyOncePerIdleEpisode() {
