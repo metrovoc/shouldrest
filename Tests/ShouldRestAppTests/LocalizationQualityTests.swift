@@ -490,7 +490,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(englishValues.contains(retiredBodyBreakGateCopy))
         XCTAssertTrue(englishValues.contains("%@ active, %@ remaining"))
         XCTAssertTrue(englishValues.contains("Recommended starting rhythm"))
-        XCTAssertTrue(englishValues.contains("Eye Gate every %d min for %d sec. Body Break every %d active-use min for %d min."))
+        XCTAssertTrue(englishValues.contains("Eye Gate every %d min for %d sec. Body Break every %d min for %d min."))
         XCTAssertTrue(englishValues.contains("About ShouldRest"))
         XCTAssertTrue(englishValues.contains("Useful controls, not loopholes"))
         XCTAssertTrue(englishValues.contains("Emergency stays in the overlay"))
@@ -554,7 +554,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(simplifiedChineseValues.contains("压力 %d/10"))
         XCTAssertFalse(simplifiedChineseValues.contains("错过或延后休息累积休息欠账时，在菜单栏显示紧凑指示器。"))
         XCTAssertTrue(simplifiedChineseValues.contains("推荐起始节奏"))
-        XCTAssertTrue(simplifiedChineseValues.contains("护眼休息每 %d 分钟 %d 秒；活动休息每累计 %d 分钟主动使用后 %d 分钟。"))
+        XCTAssertTrue(simplifiedChineseValues.contains("护眼休息每 %d 分钟 %d 秒；活动休息每 %d 分钟 %d 分钟。"))
         XCTAssertTrue(simplifiedChineseValues.contains("关于 ShouldRest"))
         XCTAssertTrue(simplifiedChineseValues.contains("有用控制，不留绕过入口"))
         XCTAssertTrue(simplifiedChineseValues.contains("覆盖层内紧急退出"))
@@ -1271,7 +1271,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertNotEqual(L10n.tr("onboarding.preferences"), "Open Preferences")
         XCTAssertEqual(
             L10n.format("onboarding.rhythmDescription", 20, 20, 60, 3),
-            "Eye Gate every 20 min for 20 sec. Body Break every 60 active-use min for 3 min."
+            "Eye Gate every 20 min for 20 sec. Body Break every 60 min for 3 min."
         )
         XCTAssertTrue(L10n.tr("onboarding.body").contains("10-minute away rule"))
         XCTAssertTrue(L10n.tr("onboarding.bodyFeatureBody").contains("finish automatically by default"))
@@ -1284,7 +1284,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertNotEqual(L10n.tr("onboarding.preferences"), "打开偏好设置")
         XCTAssertEqual(
             L10n.format("onboarding.rhythmDescription", 20, 20, 60, 3),
-            "护眼休息每 20 分钟 20 秒；活动休息每累计 60 分钟主动使用后 3 分钟。"
+            "护眼休息每 20 分钟 20 秒；活动休息每 60 分钟 3 分钟。"
         )
         XCTAssertTrue(L10n.tr("onboarding.body").contains("10 分钟离开阈值"))
         XCTAssertTrue(L10n.tr("onboarding.bodyFeatureBody").contains("默认到点自动结束"))

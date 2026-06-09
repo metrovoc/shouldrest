@@ -26,7 +26,7 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.activeSession?.kind, .eyeGate)
     }
 
-    func testBodyBreakUsesIndependentActiveUseDebt() {
+    func testBodyBreakUsesIndependentWallClockDebt() {
         var settings = RestSettings.defaults
         settings.eyeGate.interval = 10 * 60
         settings.bodyBreak.interval = 25 * 60
@@ -203,6 +203,160 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.dangerScore, RestKind.bodyBreak.defaultHealthWeight)
     }
 
+    func testPauseCompletesElapsedAutomaticBodyBreakBeforePausing() {
+        let settings = RestSettings.defaults
+        var engine = RestEngine(settings: settings, now: start)
+        _ = engine.takeNow(.bodyBreak, now: start)
+
+        let result = engine.pause(
+            for: nil,
+            now: start.addingTimeInterval(settings.bodyBreak.duration),
+            reason: .user
+        )
+
+        guard case .paused = result else {
+            return XCTFail("Expected pause after completing elapsed Body Break")
+        }
+        XCTAssertNil(engine.state.activeSession)
+        XCTAssertNotNil(engine.state.pause)
+        XCTAssertEqual(engine.state.statistics.completedBodyBreaks, 1)
+        XCTAssertEqual(engine.state.statistics.skippedBodyBreaks, 0)
+        XCTAssertEqual(engine.state.dangerScore, 0)
+    }
+
+    func testPauseNaturallyCompletesManualBodyBreakBeforePausing() {
+        var settings = RestSettings.defaults
+        settings.bodyBreak.manualFinishEnabled = true
+        var engine = RestEngine(settings: settings, now: start)
+        _ = engine.takeNow(.bodyBreak, now: start)
+
+        let result = engine.pause(
+            for: nil,
+            now: start.addingTimeInterval(settings.naturalBreaks.inactivityResetTime),
+            reason: .user,
+            idleDuration: settings.naturalBreaks.inactivityResetTime,
+            preserveAwayCandidate: true
+        )
+
+        guard case .paused = result else {
+            return XCTFail("Expected pause after naturally completing Body Break")
+        }
+        XCTAssertNil(engine.state.activeSession)
+        XCTAssertNotNil(engine.state.pause)
+        XCTAssertEqual(engine.state.statistics.completedBodyBreaks, 1)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 1)
+        XCTAssertEqual(engine.state.statistics.skippedBodyBreaks, 0)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+        XCTAssertEqual(engine.state.eyeDebt, 0)
+    }
+
+    func testPauseCompletesElapsedEyeGateBeforeApplyingPause() {
+        let settings = RestSettings.defaults
+        var engine = RestEngine(settings: settings, now: start)
+        _ = engine.takeNow(.eyeGate, now: start)
+
+        let result = engine.pause(
+            for: nil,
+            now: start.addingTimeInterval(settings.eyeGate.duration),
+            reason: .user
+        )
+
+        guard case .paused = result else {
+            return XCTFail("Expected pause after completing elapsed Eye Gate")
+        }
+        XCTAssertNil(engine.state.activeSession)
+        XCTAssertNotNil(engine.state.pause)
+        XCTAssertEqual(engine.state.statistics.completedEyeGates, 1)
+        XCTAssertEqual(engine.state.statistics.skippedEyeGates, 0)
+    }
+
+    func testPauseSkippingActiveBodyBreakKeepsOriginalAwaySnapshotForRollback() {
+        var settings = RestSettings.defaults
+        settings.naturalBreaks.isEnabled = false
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+
+        let startedAt = start.addingTimeInterval(9 * 60)
+        let started = engine.takeNow(
+            .bodyBreak,
+            now: startedAt,
+            idleDuration: 9 * 60,
+            preserveAwayCandidate: true
+        )
+        guard case .started = started else {
+            return XCTFail("Expected Body Break to start during the short idle candidate")
+        }
+        XCTAssertEqual(engine.state.awayCandidate?.eyeDebt, 0)
+        XCTAssertEqual(engine.state.awayCandidate?.bodyDebt, 0)
+
+        let pauseAt = start.addingTimeInterval(9 * 60 + 30)
+        let paused = engine.pause(
+            for: nil,
+            now: pauseAt,
+            reason: .user,
+            idleDuration: 9 * 60 + 30,
+            preserveAwayCandidate: true
+        )
+        guard case .paused = paused else {
+            return XCTFail("Expected pause to skip active Body Break and pause")
+        }
+        XCTAssertEqual(engine.state.awayCandidate?.startedAt, start)
+        XCTAssertEqual(engine.state.awayCandidate?.eyeDebt, 0)
+        XCTAssertEqual(engine.state.awayCandidate?.bodyDebt, 0)
+
+        let awayAt = start.addingTimeInterval(settings.naturalBreaks.inactivityResetTime)
+        _ = engine.evaluate(
+            now: awayAt,
+            context: RestContext(idleDuration: settings.naturalBreaks.inactivityResetTime)
+        )
+
+        XCTAssertEqual(engine.state.eyeDebt, 0)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+        XCTAssertEqual(engine.state.statistics.skippedBodyBreaks, 1)
+    }
+
+    func testPauseSkippingActiveBodyBreakDoesNotRestoreNaturallyCreditedEyeSnapshot() {
+        var settings = RestSettings.defaults
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        settings.bodyBreak.duration = 20 * 60
+        var engine = RestEngine(settings: settings, now: start)
+        _ = engine.evaluate(now: start.addingTimeInterval(60), context: RestContext(idleDuration: 0))
+
+        let idleStartedAt = start.addingTimeInterval(60)
+        let activeAt = idleStartedAt.addingTimeInterval(8 * 60)
+        let started = engine.takeNow(
+            .bodyBreak,
+            now: activeAt,
+            idleDuration: 8 * 60,
+            preserveAwayCandidate: true
+        )
+        guard case .started = started else {
+            return XCTFail("Expected Body Break to start during short idle")
+        }
+        XCTAssertEqual(engine.state.awayCandidate?.startedAt, idleStartedAt)
+        XCTAssertEqual(engine.state.awayCandidate?.eyeDebt, 60)
+
+        let awayAt = idleStartedAt.addingTimeInterval(settings.naturalBreaks.inactivityResetTime)
+        _ = engine.pause(
+            for: nil,
+            now: awayAt,
+            reason: .user,
+            idleDuration: settings.naturalBreaks.inactivityResetTime,
+            preserveAwayCandidate: true
+        )
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 1)
+        XCTAssertEqual(engine.state.awayCandidate?.eyeDebt, 0)
+        XCTAssertEqual(engine.state.awayCandidate?.bodyDebt, 0)
+
+        _ = engine.evaluate(
+            now: awayAt.addingTimeInterval(1),
+            context: RestContext(idleDuration: settings.naturalBreaks.inactivityResetTime + 1)
+        )
+
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 1)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 0)
+    }
+
     func testPauseCannotBypassStrictBodyBreakSkipPolicy() {
         var settings = RestSettings.defaults
         settings.bodyBreak.ordinarySkipEnabled = false
@@ -231,7 +385,7 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.pause, pause)
     }
 
-    func testNotificationLeadFiresOnceWhenProjectedDueDriftsWithinSameCycle() {
+    func testNotificationLeadFiresOnceWithoutDueDriftDuringShortIdle() {
         var settings = RestSettings.defaults
         settings.eyeGate.isEnabled = false
         var engine = RestEngine(settings: settings, now: start)
@@ -254,13 +408,14 @@ final class RestEngineTests: XCTestCase {
         XCTAssertTrue(engine.state.scheduled?.notificationSent ?? false)
         XCTAssertEqual(
             engine.state.scheduled?.dueAt,
-            start.addingTimeInterval(settings.bodyBreak.interval + 2)
+            start.addingTimeInterval(settings.bodyBreak.interval)
         )
     }
 
-    func testEyeGateAccruesDuringInputIdleBecauseScreenExposureStillMatters() {
+    func testEyeGateAccruesDuringIdleUntilConfiguredAwayThreshold() {
         var settings = RestSettings.defaults
         settings.bodyBreak.isEnabled = false
+        settings.naturalBreaks.inactivityResetTime = settings.eyeGate.interval + 60
         var engine = RestEngine(settings: settings, now: start)
 
         let result = engine.evaluate(
@@ -275,9 +430,10 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.eyeDebt, settings.eyeGate.interval)
     }
 
-    func testBodyBreakDoesNotAccrueFromInputIdleAlone() {
+    func testBodyBreakAccruesDuringIdleUntilConfiguredAwayThreshold() {
         var settings = RestSettings.defaults
         settings.eyeGate.isEnabled = false
+        settings.naturalBreaks.inactivityResetTime = settings.bodyBreak.interval + 60
         var engine = RestEngine(settings: settings, now: start)
 
         let result = engine.evaluate(
@@ -285,13 +441,11 @@ final class RestEngineTests: XCTestCase {
             context: RestContext(idleDuration: settings.bodyBreak.interval)
         )
 
-        XCTAssertEqual(result, .noChange)
-        XCTAssertNil(engine.state.activeSession)
-        XCTAssertEqual(engine.state.bodyDebt, 0)
-        XCTAssertEqual(
-            engine.state.scheduled?.dueAt,
-            start.addingTimeInterval(settings.bodyBreak.interval * 2)
-        )
+        guard case .started(let session) = result else {
+            return XCTFail("Expected Body Break to start from wall-clock computer use")
+        }
+        XCTAssertEqual(session.kind, .bodyBreak)
+        XCTAssertEqual(engine.state.bodyDebt, settings.bodyBreak.interval)
     }
 
     func testNaturalIdleCreditsEyeGateOnlyAfterConfiguredAwayThresholdAndOnlyWhenDebtExists() {
@@ -312,7 +466,7 @@ final class RestEngineTests: XCTestCase {
         let awayThreshold = engine.settings.naturalBreaks.inactivityResetTime
         let result = engine.evaluate(
             now: start.addingTimeInterval(60 + awayThreshold),
-            context: RestContext(idleDuration: awayThreshold, allowsNaturalRecovery: true)
+            context: RestContext(idleDuration: awayThreshold)
         )
         XCTAssertEqual(result, .naturalRestsCredited([.eyeGate]))
         XCTAssertEqual(engine.state.statistics.completedEyeGates, 1)
@@ -321,7 +475,7 @@ final class RestEngineTests: XCTestCase {
 
         let repeatedIdleResult = engine.evaluate(
             now: start.addingTimeInterval(64 + awayThreshold),
-            context: RestContext(idleDuration: awayThreshold + 1, allowsNaturalRecovery: true)
+            context: RestContext(idleDuration: awayThreshold + 1)
         )
         XCTAssertEqual(repeatedIdleResult, .noChange)
         XCTAssertEqual(engine.state.statistics.naturalEyeGates, 1)
@@ -337,19 +491,26 @@ final class RestEngineTests: XCTestCase {
         )
         let nextIdleResult = engine.evaluate(
             now: start.addingTimeInterval(125 + awayThreshold * 2),
-            context: RestContext(idleDuration: awayThreshold, allowsNaturalRecovery: true)
+            context: RestContext(idleDuration: awayThreshold)
         )
         XCTAssertEqual(nextIdleResult, .naturalRestsCredited([.eyeGate]))
         XCTAssertEqual(engine.state.statistics.naturalEyeGates, 2)
     }
 
-    func testInputIdleDoesNotAccumulateBodyDebtWhenNaturalBreaksAreDisabled() {
+    func testAwayThresholdRollsBackCandidateIdleDebtWhenNaturalBreakCreditsAreDisabled() {
         var settings = RestSettings.defaults
         settings.eyeGate.isEnabled = false
         settings.naturalBreaks.isEnabled = false
         var engine = RestEngine(settings: settings, now: start)
         _ = engine.evaluate(now: start.addingTimeInterval(60), context: RestContext(idleDuration: 0))
-        let debtAfterActiveUse = engine.state.bodyDebt
+        XCTAssertEqual(engine.state.bodyDebt, 60)
+
+        let shortIdleResult = engine.evaluate(
+            now: start.addingTimeInterval(120),
+            context: RestContext(idleDuration: 60)
+        )
+        XCTAssertEqual(shortIdleResult, .noChange)
+        XCTAssertEqual(engine.state.bodyDebt, 120)
 
         let awayThreshold = engine.settings.naturalBreaks.inactivityResetTime
         let longIdleResult = engine.evaluate(
@@ -357,25 +518,454 @@ final class RestEngineTests: XCTestCase {
             context: RestContext(idleDuration: awayThreshold)
         )
         XCTAssertEqual(longIdleResult, .noChange)
-        XCTAssertEqual(engine.state.bodyDebt, debtAfterActiveUse)
+        XCTAssertEqual(engine.state.bodyDebt, 60)
 
         _ = engine.evaluate(
             now: start.addingTimeInterval(64 + awayThreshold),
-            context: RestContext(idleDuration: awayThreshold + 1)
+            context: RestContext(idleDuration: awayThreshold + 4)
         )
-        XCTAssertEqual(engine.state.bodyDebt, debtAfterActiveUse)
+        XCTAssertEqual(engine.state.bodyDebt, 60)
         XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 0)
     }
 
-    func testNaturalIdleCompletesActiveRestOnlyOncePerIdleEpisode() {
+    func testSuspendResumeKeepsPreSuspendIdleEpisodeForAwayRollback() {
+        var settings = RestSettings.defaults
+        settings.eyeGate.isEnabled = false
+        settings.naturalBreaks.isEnabled = false
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+
+        let idleStartedAt = start.addingTimeInterval(60)
+        _ = engine.evaluate(now: idleStartedAt, context: RestContext(idleDuration: 0))
+        XCTAssertEqual(engine.state.bodyDebt, 60)
+
+        let sleepAt = idleStartedAt.addingTimeInterval(9 * 60)
+        _ = engine.pause(
+            for: nil,
+            now: sleepAt,
+            reason: .suspendOrLock,
+            idleDuration: 9 * 60,
+            preserveAwayCandidate: true
+        )
+        XCTAssertEqual(engine.state.awayCandidate?.startedAt, idleStartedAt)
+        XCTAssertEqual(engine.state.awayCandidate?.bodyDebt, 60)
+
+        let wakeAt = sleepAt.addingTimeInterval(60)
+        _ = engine.resume(
+            now: wakeAt,
+            idleDuration: 10 * 60,
+            preserveAwayCandidate: true
+        )
+        XCTAssertEqual(engine.state.awayCandidate?.startedAt, idleStartedAt)
+
+        let result = engine.evaluate(
+            now: wakeAt,
+            context: RestContext(idleDuration: 10 * 60)
+        )
+
+        XCTAssertEqual(result, .noChange)
+        XCTAssertEqual(engine.state.bodyDebt, 60)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 0)
+    }
+
+    func testUserPauseDuringShortIdlePreservesAwaySnapshotForResumeRollback() {
+        var settings = RestSettings.defaults
+        settings.naturalBreaks.isEnabled = false
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+
+        let shortIdleAt = start.addingTimeInterval(9 * 60)
+        _ = engine.evaluate(now: shortIdleAt, context: RestContext(idleDuration: 9 * 60))
+        XCTAssertEqual(engine.state.eyeDebt, 9 * 60)
+        XCTAssertEqual(engine.state.bodyDebt, 9 * 60)
+        XCTAssertEqual(engine.state.awayCandidate?.startedAt, start)
+        XCTAssertEqual(engine.state.awayCandidate?.eyeDebt, 0)
+        XCTAssertEqual(engine.state.awayCandidate?.bodyDebt, 0)
+
+        _ = engine.pause(
+            for: nil,
+            now: shortIdleAt,
+            reason: .user,
+            idleDuration: 9 * 60,
+            preserveAwayCandidate: true
+        )
+        XCTAssertEqual(engine.state.awayCandidate?.startedAt, start)
+
+        let awayAt = start.addingTimeInterval(settings.naturalBreaks.inactivityResetTime)
+        _ = engine.resume(
+            now: awayAt,
+            idleDuration: settings.naturalBreaks.inactivityResetTime,
+            preserveAwayCandidate: true
+        )
+        let result = engine.evaluate(
+            now: awayAt,
+            context: RestContext(idleDuration: settings.naturalBreaks.inactivityResetTime)
+        )
+
+        XCTAssertEqual(result, .noChange)
+        XCTAssertEqual(engine.state.eyeDebt, 0)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 0)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 0)
+    }
+
+    func testUserResumeDuringShortIdleKeepsAwaySnapshotUntilThreshold() {
+        var settings = RestSettings.defaults
+        settings.naturalBreaks.isEnabled = false
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+
+        let pauseAt = start.addingTimeInterval(9 * 60)
+        _ = engine.evaluate(now: pauseAt, context: RestContext(idleDuration: 9 * 60))
+        _ = engine.pause(
+            for: nil,
+            now: pauseAt,
+            reason: .user,
+            idleDuration: 9 * 60,
+            preserveAwayCandidate: true
+        )
+        XCTAssertEqual(engine.state.awayCandidate?.startedAt, start)
+
+        let resumeAt = start.addingTimeInterval(9 * 60 + 30)
+        _ = engine.resume(
+            now: resumeAt,
+            idleDuration: 9 * 60 + 30,
+            preserveAwayCandidate: true
+        )
+        XCTAssertEqual(engine.state.awayCandidate?.startedAt, start)
+
+        let awayAt = start.addingTimeInterval(settings.naturalBreaks.inactivityResetTime)
+        _ = engine.evaluate(
+            now: awayAt,
+            context: RestContext(idleDuration: settings.naturalBreaks.inactivityResetTime)
+        )
+
+        XCTAssertEqual(engine.state.eyeDebt, 0)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 0)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 0)
+    }
+
+    func testPausedTickCrossingAwayThresholdRollsBackBeforeResumeInputResetsIdle() {
+        var settings = RestSettings.defaults
+        settings.naturalBreaks.isEnabled = false
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+
+        let pauseAt = start.addingTimeInterval(9 * 60)
+        _ = engine.evaluate(now: pauseAt, context: RestContext(idleDuration: 9 * 60))
+        XCTAssertEqual(engine.state.eyeDebt, 9 * 60)
+        XCTAssertEqual(engine.state.bodyDebt, 9 * 60)
+        _ = engine.pause(
+            for: nil,
+            now: pauseAt,
+            reason: .user,
+            idleDuration: 9 * 60,
+            preserveAwayCandidate: true
+        )
+
+        let awayAt = start.addingTimeInterval(settings.naturalBreaks.inactivityResetTime)
+        let pausedAway = engine.evaluate(
+            now: awayAt,
+            context: RestContext(idleDuration: settings.naturalBreaks.inactivityResetTime)
+        )
+        guard case .paused = pausedAway else {
+            return XCTFail("Expected pause to remain active while the away threshold is reached")
+        }
+        XCTAssertEqual(engine.state.eyeDebt, 0)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+
+        _ = engine.resume(now: awayAt.addingTimeInterval(1), idleDuration: 0, preserveAwayCandidate: false)
+        XCTAssertEqual(engine.state.eyeDebt, 0)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+        XCTAssertNil(engine.state.awayCandidate)
+    }
+
+    func testPausedTickDoesNotCreateNaturalCreditFromPreIdlePauseTime() {
+        var settings = RestSettings.defaults
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+        _ = engine.pause(for: nil, now: start, reason: .user)
+
+        let result = engine.evaluate(
+            now: start.addingTimeInterval(700),
+            context: RestContext(idleDuration: 10 * 60)
+        )
+
+        guard case .paused = result else {
+            return XCTFail("Expected pause to remain active")
+        }
+        XCTAssertEqual(engine.state.eyeDebt, 0)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 0)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 0)
+    }
+
+    func testPausedTickWithoutNaturalBreaksDoesNotInventDebtFromPreIdlePauseTime() {
+        var settings = RestSettings.defaults
+        settings.naturalBreaks.isEnabled = false
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+        _ = engine.pause(for: nil, now: start, reason: .user)
+
+        _ = engine.evaluate(
+            now: start.addingTimeInterval(700),
+            context: RestContext(idleDuration: 10 * 60)
+        )
+
+        XCTAssertEqual(engine.state.eyeDebt, 0)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 0)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 0)
+    }
+
+    func testActiveManualRestCrossingAwayThresholdRollsBackWithoutNaturalBreaks() {
+        var settings = RestSettings.defaults
+        settings.eyeGate.manualFinishEnabled = true
+        settings.naturalBreaks.isEnabled = false
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+
+        let automationAt = start.addingTimeInterval(9 * 60)
+        let started = engine.takeNow(
+            .eyeGate,
+            now: automationAt,
+            idleDuration: 9 * 60,
+            preserveAwayCandidate: true
+        )
+        guard case .started = started else {
+            return XCTFail("Expected Eye Gate to start during the short idle candidate")
+        }
+        XCTAssertEqual(engine.state.bodyDebt, 9 * 60)
+
+        let awayAt = start.addingTimeInterval(settings.naturalBreaks.inactivityResetTime)
+        let activeAfterAway = engine.evaluate(
+            now: awayAt,
+            context: RestContext(idleDuration: settings.naturalBreaks.inactivityResetTime)
+        )
+        guard case .started = activeAfterAway else {
+            return XCTFail("Expected manual active rest to remain active when natural breaks are disabled")
+        }
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+
+        _ = engine.completeActive(now: awayAt.addingTimeInterval(1), reason: .manual)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+        XCTAssertNil(engine.state.awayCandidate)
+    }
+
+    func testActivePresentAppLifecycleTickRollsBackAwayDebtWithoutDeferral() {
+        var settings = RestSettings.defaults
+        settings.eyeGate.manualFinishEnabled = true
+        settings.naturalBreaks.isEnabled = false
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+
+        let automationAt = start.addingTimeInterval(9 * 60)
+        _ = engine.takeNow(
+            .eyeGate,
+            now: automationAt,
+            idleDuration: 9 * 60,
+            preserveAwayCandidate: true
+        )
+        XCTAssertEqual(engine.state.bodyDebt, 9 * 60)
+
+        let awayAt = start.addingTimeInterval(settings.naturalBreaks.inactivityResetTime)
+        let presentTickResult = engine.deferActiveForAppExclusion(
+            now: awayAt,
+            context: RestContext(idleDuration: settings.naturalBreaks.inactivityResetTime)
+        )
+
+        XCTAssertEqual(presentTickResult, .noChange)
+        XCTAssertEqual(engine.state.activeSession?.kind, .eyeGate)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+
+        _ = engine.completeActive(now: awayAt.addingTimeInterval(1), reason: .manual)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+        XCTAssertNil(engine.state.awayCandidate)
+    }
+
+    func testElapsedAutomaticCompletionCrossingAwayThresholdRollsBackBeforeClearingCandidate() {
+        var settings = RestSettings.defaults
+        settings.naturalBreaks.isEnabled = false
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+
+        let automationAt = start.addingTimeInterval(9 * 60 + 50)
+        _ = engine.takeNow(
+            .eyeGate,
+            now: automationAt,
+            idleDuration: 9 * 60 + 50,
+            preserveAwayCandidate: true
+        )
+        XCTAssertEqual(engine.state.bodyDebt, 9 * 60 + 50)
+
+        let completedAt = automationAt.addingTimeInterval(settings.eyeGate.duration)
+        let completed = engine.completeActive(
+            now: completedAt,
+            reason: .completed,
+            idleDuration: 10 * 60 + 10,
+            preserveAwayCandidate: true
+        )
+
+        guard case .completed(let session, let reason) = completed else {
+            return XCTFail("Expected automatic Eye Gate completion")
+        }
+        XCTAssertEqual(session.kind, .eyeGate)
+        XCTAssertEqual(reason, .completed)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+
+        _ = engine.evaluate(now: completedAt.addingTimeInterval(1), context: RestContext(idleDuration: 0))
+        XCTAssertEqual(engine.state.bodyDebt, 1)
+        XCTAssertNil(engine.state.awayCandidate)
+    }
+
+    func testAwayRollbackRefreshesDeferredScheduleBeforeReturn() {
+        var settings = bodyFirstSettings()
+        settings.naturalBreaks.isEnabled = false
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+
+        let idleStartedAt = start.addingTimeInterval(settings.bodyBreak.interval - 60)
+        _ = engine.evaluate(now: idleStartedAt, context: RestContext(idleDuration: 0))
+        XCTAssertEqual(engine.state.bodyDebt, settings.bodyBreak.interval - 60)
+
+        let deferredAt = idleStartedAt.addingTimeInterval(60)
+        let deferred = engine.evaluate(
+            now: deferredAt,
+            context: RestContext(idleDuration: 60, focusModeActive: true)
+        )
+        XCTAssertEqual(deferred, .deferred(.bodyBreak, .focusMode))
+        XCTAssertEqual(engine.state.scheduled?.dueAt, deferredAt)
+        XCTAssertEqual(engine.state.activeDeferral?.kind, .bodyBreak)
+
+        let awayAt = idleStartedAt.addingTimeInterval(settings.naturalBreaks.inactivityResetTime)
+        let awayResult = engine.evaluate(
+            now: awayAt,
+            context: RestContext(idleDuration: settings.naturalBreaks.inactivityResetTime, focusModeActive: true)
+        )
+        XCTAssertEqual(awayResult, .noChange)
+        XCTAssertNil(engine.state.activeDeferral)
+        XCTAssertEqual(engine.state.bodyDebt, settings.bodyBreak.interval - 60)
+        XCTAssertEqual(engine.state.scheduled?.dueAt, awayAt.addingTimeInterval(60))
+
+        let returnAt = awayAt.addingTimeInterval(1)
+        let returnResult = engine.evaluate(
+            now: returnAt,
+            context: RestContext(idleDuration: 0, focusModeActive: false)
+        )
+        if case .started = returnResult {
+            XCTFail("Away rollback should move the deferred Body Break back into the future")
+        }
+        XCTAssertNil(engine.state.activeSession)
+        XCTAssertEqual(engine.state.scheduled?.dueAt, returnAt.addingTimeInterval(59))
+    }
+
+    func testNaturalCreditAlsoClearsDeferredRestMovedIntoFutureByAwayRollback() {
+        var settings = RestSettings.defaults
+        settings.eyeGate.isEnabled = false
+        settings.bodyBreak.interval = 20 * 60
+        settings.focusMode.deferEyeGate = true
+        var engine = RestEngine(settings: settings, now: start)
+
+        let idleStartedAt = start.addingTimeInterval(5 * 60)
+        _ = engine.evaluate(now: idleStartedAt, context: RestContext(idleDuration: 0))
+        XCTAssertEqual(engine.state.eyeDebt, 0)
+        XCTAssertEqual(engine.state.bodyDebt, 5 * 60)
+
+        var updated = engine.settings
+        updated.eyeGate.isEnabled = true
+        updated.eyeGate.interval = 60
+        engine.updateSettings(updated, now: idleStartedAt)
+
+        let shortIdleAt = idleStartedAt.addingTimeInterval(60)
+        let shortIdleDeferral = engine.evaluate(
+            now: shortIdleAt,
+            context: RestContext(idleDuration: 60, focusModeActive: true)
+        )
+        XCTAssertEqual(shortIdleDeferral, .deferred(.eyeGate, .focusMode))
+        XCTAssertEqual(engine.state.activeDeferral?.kind, .eyeGate)
+        XCTAssertEqual(engine.state.eyeDebt, 60)
+        XCTAssertEqual(engine.state.bodyDebt, 6 * 60)
+
+        let awayAt = idleStartedAt.addingTimeInterval(updated.naturalBreaks.inactivityResetTime)
+        let awayResult = engine.evaluate(
+            now: awayAt,
+            context: RestContext(
+                idleDuration: updated.naturalBreaks.inactivityResetTime,
+                focusModeActive: true
+            )
+        )
+
+        XCTAssertEqual(awayResult, .naturalRestsCredited([.eyeGate, .bodyBreak]))
+        XCTAssertEqual(engine.state.eyeDebt, 0)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+        XCTAssertNil(engine.state.activeDeferral)
+        XCTAssertEqual(engine.state.scheduled?.kind, .eyeGate)
+        XCTAssertEqual(engine.state.scheduled?.dueAt, awayAt.addingTimeInterval(60))
+    }
+
+    func testNaturalBodyBreakSatisfiesDeferredEyeGateEvenWhenEyeNaturalThresholdIsLonger() {
+        var settings = RestSettings.defaults
+        settings.naturalBreaks.inactivityResetTime = 60
+        settings.eyeGate.interval = 60
+        settings.eyeGate.duration = 10 * 60
+        settings.bodyBreak.duration = 3 * 60
+        settings.focusMode.deferEyeGate = true
+        settings.focusMode.deferBodyBreak = false
+        var engine = RestEngine(settings: settings, now: start)
+
+        let eyeDue = start.addingTimeInterval(settings.eyeGate.interval)
+        let eyeDeferred = engine.evaluate(
+            now: eyeDue,
+            context: RestContext(focusModeActive: true)
+        )
+        XCTAssertEqual(eyeDeferred, .deferred(.eyeGate, .focusMode))
+        XCTAssertEqual(engine.state.activeDeferral?.kind, .eyeGate)
+
+        let bodyNaturallySatisfiedAt = eyeDue.addingTimeInterval(settings.bodyBreak.duration)
+        let awayResult = engine.evaluate(
+            now: bodyNaturallySatisfiedAt,
+            context: RestContext(
+                idleDuration: settings.bodyBreak.duration,
+                focusModeActive: true
+            )
+        )
+
+        XCTAssertEqual(awayResult, .naturalRestsCredited([.eyeGate, .bodyBreak]))
+        XCTAssertEqual(engine.state.eyeDebt, 0)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 0)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 1)
+        XCTAssertNil(engine.state.activeDeferral)
+
+        let focusCleared = engine.evaluate(
+            now: bodyNaturallySatisfiedAt.addingTimeInterval(1),
+            context: RestContext(focusModeActive: false)
+        )
+        if case .started(let session) = focusCleared, session.kind == .eyeGate {
+            XCTFail("Natural Body Break already satisfied the deferred Eye Gate")
+        }
+    }
+
+    func testNaturalIdleCompletesActiveRestOnlyAfterAwayThreshold() {
         var engine = RestEngine(settings: .defaults, now: start)
         _ = engine.takeNow(.eyeGate, now: start)
 
-        let result = engine.evaluate(
+        let shortIdleResult = engine.evaluate(
             now: start.addingTimeInterval(30),
             context: RestContext(idleDuration: engine.settings.eyeGate.duration)
         )
+        guard case .started(let active) = shortIdleResult else {
+            return XCTFail("Expected short idle to keep active rest running")
+        }
+        XCTAssertEqual(active.kind, .eyeGate)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 0)
 
+        let awayThreshold = engine.settings.naturalBreaks.inactivityResetTime
+        let result = engine.evaluate(
+            now: start.addingTimeInterval(awayThreshold),
+            context: RestContext(idleDuration: awayThreshold)
+        )
         guard case .completed(let session, let reason) = result else {
             return XCTFail("Expected active rest to complete naturally")
         }
@@ -386,13 +976,425 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.statistics.naturalEyeGates, 1)
 
         let repeatedIdleResult = engine.evaluate(
-            now: start.addingTimeInterval(31),
-            context: RestContext(idleDuration: engine.settings.eyeGate.duration + 1)
+            now: start.addingTimeInterval(awayThreshold + 1),
+            context: RestContext(idleDuration: awayThreshold + 1)
         )
 
         XCTAssertEqual(repeatedIdleResult, .noChange)
         XCTAssertEqual(engine.state.statistics.completedEyeGates, 1)
         XCTAssertEqual(engine.state.statistics.naturalEyeGates, 1)
+    }
+
+    func testNaturalIdleCompletesActiveRestOnlyAfterRestDurationWhenDurationExceedsAwayThreshold() {
+        var settings = RestSettings.defaults
+        settings.bodyBreak.duration = 20 * 60
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+        _ = engine.takeNow(.bodyBreak, now: start)
+
+        let thresholdResult = engine.evaluate(
+            now: start.addingTimeInterval(settings.naturalBreaks.inactivityResetTime),
+            context: RestContext(idleDuration: settings.naturalBreaks.inactivityResetTime)
+        )
+        guard case .started(let active) = thresholdResult else {
+            return XCTFail("Expected Body Break to keep running until its configured duration is naturally satisfied")
+        }
+        XCTAssertEqual(active.kind, .bodyBreak)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 0)
+
+        let durationResult = engine.evaluate(
+            now: start.addingTimeInterval(settings.bodyBreak.duration),
+            context: RestContext(idleDuration: settings.bodyBreak.duration)
+        )
+        guard case .completed(let session, let reason) = durationResult else {
+            return XCTFail("Expected Body Break to complete naturally after the longer duration threshold")
+        }
+        XCTAssertEqual(session.kind, .bodyBreak)
+        XCTAssertEqual(reason, .natural)
+        XCTAssertNil(engine.state.activeSession)
+        XCTAssertEqual(engine.state.statistics.completedBodyBreaks, 1)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 1)
+    }
+
+    func testActiveNaturalCompletionUsesFrozenSessionDurationAfterSettingsChange() {
+        var settings = RestSettings.defaults
+        settings.bodyBreak.duration = 3 * 60
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+        _ = engine.takeNow(.bodyBreak, now: start)
+
+        var updated = engine.settings
+        updated.bodyBreak.duration = 20 * 60
+        engine.updateSettings(updated, now: start.addingTimeInterval(1))
+
+        let result = engine.evaluate(
+            now: start.addingTimeInterval(settings.naturalBreaks.inactivityResetTime),
+            context: RestContext(idleDuration: settings.naturalBreaks.inactivityResetTime)
+        )
+
+        guard case .completed(let session, let reason) = result else {
+            return XCTFail("Expected active Body Break to use its frozen session duration")
+        }
+        XCTAssertEqual(session.kind, .bodyBreak)
+        XCTAssertEqual(session.duration, 3 * 60)
+        XCTAssertEqual(reason, .natural)
+        XCTAssertNil(engine.state.activeSession)
+    }
+
+    func testNaturalBodyCompletionAlsoSettlesExistingEyeDebt() {
+        var settings = RestSettings.defaults
+        settings.bodyBreak.duration = 3 * 60
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+
+        _ = engine.evaluate(now: start.addingTimeInterval(60), context: RestContext(idleDuration: 0))
+        XCTAssertEqual(engine.state.eyeDebt, 60)
+
+        _ = engine.takeNow(.bodyBreak, now: start.addingTimeInterval(60))
+        let result = engine.evaluate(
+            now: start.addingTimeInterval(60 + settings.naturalBreaks.inactivityResetTime),
+            context: RestContext(idleDuration: settings.naturalBreaks.inactivityResetTime)
+        )
+
+        guard case .completed(let session, let reason) = result else {
+            return XCTFail("Expected active Body Break to complete naturally")
+        }
+        XCTAssertEqual(session.kind, .bodyBreak)
+        XCTAssertEqual(reason, .natural)
+        XCTAssertEqual(engine.state.eyeDebt, 0)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+        XCTAssertEqual(engine.state.statistics.completedEyeGates, 1)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 1)
+        XCTAssertEqual(engine.state.statistics.completedBodyBreaks, 1)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 1)
+    }
+
+    func testScheduledRestPreservesAwaySnapshotForNaturalCompletionDuringIdleEpisode() {
+        var settings = RestSettings.defaults
+        settings.eyeGate.interval = 2 * 60
+        settings.bodyBreak.interval = 5 * 60
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+
+        _ = engine.evaluate(now: start.addingTimeInterval(60), context: RestContext(idleDuration: 0))
+        XCTAssertEqual(engine.state.eyeDebt, 60)
+        XCTAssertEqual(engine.state.bodyDebt, 60)
+
+        let startedDuringIdle = engine.evaluate(
+            now: start.addingTimeInterval(2 * 60),
+            context: RestContext(idleDuration: 60)
+        )
+        guard case .started(let session) = startedDuringIdle else {
+            return XCTFail("Expected Eye Gate to start during the short idle candidate")
+        }
+        XCTAssertEqual(session.kind, .eyeGate)
+        XCTAssertEqual(engine.state.eyeDebt, settings.eyeGate.interval)
+        XCTAssertEqual(engine.state.bodyDebt, 2 * 60)
+        XCTAssertEqual(engine.state.awayCandidate?.eyeDebt, 60)
+        XCTAssertEqual(engine.state.awayCandidate?.bodyDebt, 60)
+
+        let completedAfterAway = engine.evaluate(
+            now: start.addingTimeInterval(60 + settings.naturalBreaks.inactivityResetTime),
+            context: RestContext(idleDuration: settings.naturalBreaks.inactivityResetTime)
+        )
+        guard case .completed(let completed, let reason) = completedAfterAway else {
+            return XCTFail("Expected active Eye Gate to complete naturally after the idle candidate becomes away")
+        }
+        XCTAssertEqual(completed.kind, .eyeGate)
+        XCTAssertEqual(reason, .natural)
+        XCTAssertNil(engine.state.activeSession)
+        XCTAssertNil(engine.state.awayCandidate)
+        XCTAssertEqual(engine.state.eyeDebt, 0)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 1)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 1)
+        XCTAssertEqual(engine.state.scheduled?.kind, .eyeGate)
+        XCTAssertEqual(
+            engine.state.scheduled?.dueAt,
+            start.addingTimeInterval(60 + settings.naturalBreaks.inactivityResetTime + settings.eyeGate.interval)
+        )
+    }
+
+    func testElapsedCompletionDuringShortIdlePreservesAwayRollbackForRemainingDebt() {
+        var settings = RestSettings.defaults
+        settings.eyeGate.interval = 2 * 60
+        settings.bodyBreak.interval = 5 * 60
+        settings.naturalBreaks.isEnabled = false
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+
+        _ = engine.evaluate(now: start.addingTimeInterval(60), context: RestContext(idleDuration: 0))
+        XCTAssertEqual(engine.state.eyeDebt, 60)
+        XCTAssertEqual(engine.state.bodyDebt, 60)
+
+        let startedDuringIdle = engine.evaluate(
+            now: start.addingTimeInterval(2 * 60),
+            context: RestContext(idleDuration: 60)
+        )
+        guard case .started(let session) = startedDuringIdle else {
+            return XCTFail("Expected Eye Gate to start during the short idle candidate")
+        }
+        XCTAssertEqual(session.kind, .eyeGate)
+        XCTAssertEqual(engine.state.awayCandidate?.eyeDebt, 60)
+        XCTAssertEqual(engine.state.awayCandidate?.bodyDebt, 60)
+
+        let stillActive = engine.evaluate(
+            now: start.addingTimeInterval(2 * 60 + 10),
+            context: RestContext(idleDuration: 70)
+        )
+        guard case .started = stillActive else {
+            return XCTFail("Expected active rest tick to preserve the idle candidate")
+        }
+        XCTAssertEqual(engine.state.awayCandidate?.bodyDebt, 60)
+
+        let elapsedCompletion = engine.completeActive(
+            now: start.addingTimeInterval(2 * 60 + settings.eyeGate.duration),
+            reason: .completed,
+            idleDuration: 60 + settings.eyeGate.duration,
+            preserveAwayCandidate: true
+        )
+        guard case .completed(let completed, let reason) = elapsedCompletion else {
+            return XCTFail("Expected elapsed Eye Gate completion")
+        }
+        XCTAssertEqual(completed.kind, .eyeGate)
+        XCTAssertEqual(reason, .completed)
+        XCTAssertEqual(engine.state.awayCandidate?.eyeDebt, 0)
+        XCTAssertEqual(engine.state.awayCandidate?.bodyDebt, 60)
+
+        let longIdleResult = engine.evaluate(
+            now: start.addingTimeInterval(60 + settings.naturalBreaks.inactivityResetTime),
+            context: RestContext(idleDuration: settings.naturalBreaks.inactivityResetTime)
+        )
+
+        XCTAssertEqual(longIdleResult, .noChange)
+        XCTAssertEqual(engine.state.eyeDebt, 0)
+        XCTAssertEqual(engine.state.bodyDebt, 60)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 0)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 0)
+    }
+
+    func testSuspendPauseTicksPreserveAwaySnapshotForResumeRollback() {
+        var settings = RestSettings.defaults
+        settings.naturalBreaks.isEnabled = false
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+
+        let shortIdleAt = start.addingTimeInterval(9 * 60)
+        _ = engine.evaluate(now: shortIdleAt, context: RestContext(idleDuration: 9 * 60))
+        XCTAssertEqual(engine.state.eyeDebt, 9 * 60)
+        XCTAssertEqual(engine.state.bodyDebt, 9 * 60)
+        XCTAssertEqual(engine.state.awayCandidate?.startedAt, start)
+        XCTAssertEqual(engine.state.awayCandidate?.eyeDebt, 0)
+        XCTAssertEqual(engine.state.awayCandidate?.bodyDebt, 0)
+
+        _ = engine.pause(
+            for: nil,
+            now: shortIdleAt,
+            reason: .suspendOrLock,
+            idleDuration: 9 * 60,
+            preserveAwayCandidate: true
+        )
+
+        let pausedTick = engine.evaluate(
+            now: start.addingTimeInterval(9 * 60 + 1),
+            context: RestContext(idleDuration: 9 * 60 + 1)
+        )
+        guard case .paused = pausedTick else {
+            return XCTFail("Expected suspend/lock pause to stay active")
+        }
+        XCTAssertEqual(engine.state.awayCandidate?.startedAt, start)
+        XCTAssertEqual(engine.state.awayCandidate?.eyeDebt, 0)
+        XCTAssertEqual(engine.state.awayCandidate?.bodyDebt, 0)
+
+        let awayAt = start.addingTimeInterval(settings.naturalBreaks.inactivityResetTime)
+        XCTAssertEqual(
+            engine.resume(
+                now: awayAt,
+                idleDuration: settings.naturalBreaks.inactivityResetTime,
+                preserveAwayCandidate: true
+            ),
+            .resumed
+        )
+        _ = engine.evaluate(
+            now: awayAt,
+            context: RestContext(idleDuration: settings.naturalBreaks.inactivityResetTime)
+        )
+
+        XCTAssertEqual(engine.state.eyeDebt, 0)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 0)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 0)
+    }
+
+    func testTakeNowDuringIdlePreservesAwaySnapshotForRollback() {
+        var settings = RestSettings.defaults
+        settings.naturalBreaks.isEnabled = false
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+
+        let automationAt = start.addingTimeInterval(9 * 60)
+        let started = engine.takeNow(
+            .eyeGate,
+            now: automationAt,
+            idleDuration: 9 * 60,
+            preserveAwayCandidate: true
+        )
+        guard case .started(let session) = started else {
+            return XCTFail("Expected automation-started Eye Gate")
+        }
+        XCTAssertEqual(session.kind, .eyeGate)
+        XCTAssertEqual(engine.state.eyeDebt, 9 * 60)
+        XCTAssertEqual(engine.state.bodyDebt, 9 * 60)
+        XCTAssertEqual(engine.state.awayCandidate?.eyeDebt, 0)
+        XCTAssertEqual(engine.state.awayCandidate?.bodyDebt, 0)
+
+        _ = engine.completeActive(
+            now: automationAt.addingTimeInterval(settings.eyeGate.duration),
+            reason: .completed,
+            idleDuration: 9 * 60 + settings.eyeGate.duration,
+            preserveAwayCandidate: true
+        )
+        XCTAssertEqual(engine.state.awayCandidate?.bodyDebt, 0)
+
+        _ = engine.evaluate(
+            now: start.addingTimeInterval(settings.naturalBreaks.inactivityResetTime),
+            context: RestContext(idleDuration: settings.naturalBreaks.inactivityResetTime)
+        )
+
+        XCTAssertEqual(engine.state.eyeDebt, 0)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+    }
+
+    func testTakeNowDuringNaturalAwayCreditsRestInsteadOfStartingOverlay() {
+        var settings = RestSettings.defaults
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+
+        _ = engine.evaluate(now: start.addingTimeInterval(10 * 60), context: RestContext(idleDuration: 0))
+        XCTAssertEqual(engine.state.eyeDebt, 10 * 60)
+        XCTAssertEqual(engine.state.bodyDebt, 10 * 60)
+
+        let automationAt = start.addingTimeInterval(21 * 60)
+        let result = engine.takeNow(
+            .eyeGate,
+            now: automationAt,
+            idleDuration: 11 * 60,
+            preserveAwayCandidate: true
+        )
+
+        guard case .naturalRestsCredited(let credited) = result else {
+            return XCTFail("Expected away automation to credit natural rests instead of starting Eye Gate")
+        }
+        XCTAssertEqual(credited, [.eyeGate, .bodyBreak])
+        XCTAssertNil(engine.state.activeSession)
+        XCTAssertEqual(engine.state.eyeDebt, 0)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 1)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 1)
+    }
+
+    func testActiveRestReplacesAwaySnapshotWhenIdleEpisodeChanges() {
+        var settings = RestSettings.defaults
+        settings.eyeGate.interval = 2 * 60
+        settings.bodyBreak.interval = 5 * 60
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+
+        _ = engine.evaluate(now: start.addingTimeInterval(60), context: RestContext(idleDuration: 0))
+        let startedDuringIdle = engine.evaluate(
+            now: start.addingTimeInterval(2 * 60),
+            context: RestContext(idleDuration: 60)
+        )
+        guard case .started = startedDuringIdle else {
+            return XCTFail("Expected Eye Gate to start during the first short idle candidate")
+        }
+        XCTAssertEqual(engine.state.awayCandidate?.startedAt, start.addingTimeInterval(60))
+
+        let sameIdleTick = engine.evaluate(
+            now: start.addingTimeInterval(2 * 60 + 10),
+            context: RestContext(idleDuration: 70)
+        )
+        guard case .started = sameIdleTick else {
+            return XCTFail("Expected active rest to keep running during the same idle episode")
+        }
+        XCTAssertEqual(engine.state.awayCandidate?.startedAt, start.addingTimeInterval(60))
+
+        let changedIdleEpisode = engine.evaluate(
+            now: start.addingTimeInterval(3 * 60),
+            context: RestContext(idleDuration: 5)
+        )
+        guard case .started = changedIdleEpisode else {
+            return XCTFail("Expected active rest to keep running after the new idle episode starts")
+        }
+        XCTAssertEqual(engine.state.awayCandidate?.startedAt, start.addingTimeInterval(3 * 60 - 5))
+    }
+
+    func testActiveRestIdleSnapshotDoesNotAccrueOverlayTimeBeforeIdleStarted() {
+        var settings = RestSettings.defaults
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+        _ = engine.takeNow(.bodyBreak, now: start)
+
+        let shortIdleDuringOverlay = engine.evaluate(
+            now: start.addingTimeInterval(700),
+            context: RestContext(idleDuration: 500)
+        )
+        guard case .started = shortIdleDuringOverlay else {
+            return XCTFail("Expected active Body Break to keep running before natural-away completion")
+        }
+        XCTAssertEqual(engine.state.awayCandidate?.startedAt, start.addingTimeInterval(200))
+        XCTAssertEqual(engine.state.awayCandidate?.eyeDebt, 0)
+        XCTAssertEqual(engine.state.awayCandidate?.bodyDebt, 0)
+
+        let naturalCompletion = engine.evaluate(
+            now: start.addingTimeInterval(800),
+            context: RestContext(idleDuration: settings.naturalBreaks.inactivityResetTime)
+        )
+
+        guard case .completed(let completed, let reason) = naturalCompletion else {
+            return XCTFail("Expected active Body Break to complete naturally")
+        }
+        XCTAssertEqual(completed.kind, .bodyBreak)
+        XCTAssertEqual(reason, .natural)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 0)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 1)
+        XCTAssertEqual(engine.state.eyeDebt, 0)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+    }
+
+    func testActiveNaturalCompletionIgnoresStaleAwaySnapshotFromPreviousIdleEpisode() {
+        var settings = RestSettings.defaults
+        settings.eyeGate.interval = 30 * 60
+        settings.bodyBreak.interval = 60
+        settings.naturalBreaks.inactivityResetTime = 10 * 60
+        var engine = RestEngine(settings: settings, now: start)
+
+        let firstIdleBodyDue = start.addingTimeInterval(60)
+        let startedDuringFirstIdle = engine.evaluate(
+            now: firstIdleBodyDue,
+            context: RestContext(idleDuration: 60)
+        )
+        guard case .started(let session) = startedDuringFirstIdle else {
+            return XCTFail("Expected Body Break to start during the first short idle candidate")
+        }
+        XCTAssertEqual(session.kind, .bodyBreak)
+        XCTAssertEqual(engine.state.awayCandidate?.startedAt, start)
+        XCTAssertEqual(engine.state.awayCandidate?.eyeDebt, 0)
+        XCTAssertEqual(engine.state.eyeDebt, 60)
+
+        let completedDuringSecondIdle = engine.evaluate(
+            now: start.addingTimeInterval(11 * 60 + 40),
+            context: RestContext(idleDuration: 10 * 60)
+        )
+
+        guard case .completed(let completed, let reason) = completedDuringSecondIdle else {
+            return XCTFail("Expected active Body Break to complete naturally during the second idle episode")
+        }
+        XCTAssertEqual(completed.kind, .bodyBreak)
+        XCTAssertEqual(reason, .natural)
+        XCTAssertNil(engine.state.awayCandidate)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 1)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 1)
     }
 
     func testNaturalIdleCreditsAwayRecoveryOutsideWorkingHoursWithoutPrompting() {
@@ -410,8 +1412,7 @@ final class RestEngineTests: XCTestCase {
             now: dueAt,
             context: RestContext(
                 idleDuration: settings.naturalBreaks.inactivityResetTime,
-                inWorkingHours: false,
-                allowsNaturalRecovery: true
+                inWorkingHours: false
             )
         )
 
@@ -493,6 +1494,109 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(session.kind, .eyeGate)
     }
 
+    func testBodyOnlyDeferralDoesNotStarveDueEyeGate() {
+        var settings = bodyFirstSettings()
+        settings.eyeGate.interval = 20 * 60
+        var engine = RestEngine(settings: settings, now: start)
+
+        let bodyDue = start.addingTimeInterval(settings.bodyBreak.interval)
+        let bodyResult = engine.evaluate(
+            now: bodyDue,
+            context: RestContext(focusModeActive: true)
+        )
+        XCTAssertEqual(bodyResult, .deferred(.bodyBreak, .focusMode))
+        XCTAssertEqual(engine.state.activeDeferral?.kind, .bodyBreak)
+
+        let eyeDue = start.addingTimeInterval(settings.eyeGate.interval)
+        let eyeResult = engine.evaluate(
+            now: eyeDue,
+            context: RestContext(focusModeActive: true)
+        )
+
+        guard case .started(let session) = eyeResult else {
+            return XCTFail("Expected Eye Gate to start even while Body Break remains deferred")
+        }
+        XCTAssertEqual(session.kind, .eyeGate)
+        XCTAssertEqual(engine.state.activeDeferral?.kind, .bodyBreak)
+    }
+
+    func testBodyBreakCompletionClearsDeferredEyeGateSatisfiedByBodyBreak() {
+        var settings = RestSettings.defaults
+        settings.eyeGate.interval = 10 * 60
+        settings.bodyBreak.interval = 20 * 60
+        settings.focusMode.deferEyeGate = true
+        settings.focusMode.deferBodyBreak = false
+        var engine = RestEngine(settings: settings, now: start)
+
+        let eyeDue = start.addingTimeInterval(settings.eyeGate.interval)
+        let eyeDeferred = engine.evaluate(
+            now: eyeDue,
+            context: RestContext(focusModeActive: true)
+        )
+        XCTAssertEqual(eyeDeferred, .deferred(.eyeGate, .focusMode))
+        XCTAssertEqual(engine.state.activeDeferral?.kind, .eyeGate)
+
+        let bodyDue = start.addingTimeInterval(settings.bodyBreak.interval)
+        let bodyStarted = engine.evaluate(
+            now: bodyDue,
+            context: RestContext(focusModeActive: true)
+        )
+        guard case .started(let bodySession) = bodyStarted else {
+            return XCTFail("Expected Body Break to start through an Eye-only deferral")
+        }
+        XCTAssertEqual(bodySession.kind, .bodyBreak)
+        XCTAssertEqual(engine.state.activeDeferral?.kind, .eyeGate)
+
+        _ = engine.completeActive(
+            now: bodyDue.addingTimeInterval(settings.bodyBreak.duration),
+            reason: .completed
+        )
+        XCTAssertEqual(engine.state.eyeDebt, 0)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+        XCTAssertNil(engine.state.activeDeferral)
+
+        let afterFocusClears = engine.evaluate(
+            now: bodyDue.addingTimeInterval(settings.bodyBreak.duration + 1),
+            context: RestContext(focusModeActive: false)
+        )
+        if case .started(let session) = afterFocusClears, session.kind == .eyeGate {
+            XCTFail("Body Break already satisfied the deferred Eye Gate debt")
+        }
+    }
+
+    func testActiveBodyNaturalEyeCreditClearsDeferredEyeGate() {
+        var settings = RestSettings.defaults
+        settings.eyeGate.interval = 10 * 60
+        settings.bodyBreak.duration = 20 * 60
+        settings.focusMode.deferEyeGate = true
+        settings.focusMode.deferBodyBreak = false
+        var engine = RestEngine(settings: settings, now: start)
+
+        let eyeDue = start.addingTimeInterval(settings.eyeGate.interval)
+        _ = engine.evaluate(now: eyeDue, context: RestContext(focusModeActive: true))
+        XCTAssertEqual(engine.state.activeDeferral?.kind, .eyeGate)
+
+        let bodyStartedAt = eyeDue.addingTimeInterval(1)
+        _ = engine.takeNow(.bodyBreak, now: bodyStartedAt)
+        XCTAssertEqual(engine.state.activeSession?.kind, .bodyBreak)
+        XCTAssertEqual(engine.state.activeDeferral?.kind, .eyeGate)
+
+        let awayAt = bodyStartedAt.addingTimeInterval(settings.naturalBreaks.inactivityResetTime)
+        let activeResult = engine.evaluate(
+            now: awayAt,
+            context: RestContext(
+                idleDuration: settings.naturalBreaks.inactivityResetTime,
+                focusModeActive: true
+            )
+        )
+        guard case .started(let active) = activeResult else {
+            return XCTFail("Expected long Body Break to remain active until its own duration is satisfied")
+        }
+        XCTAssertEqual(active.kind, .bodyBreak)
+        XCTAssertEqual(engine.state.statistics.naturalEyeGates, 1)
+        XCTAssertNil(engine.state.activeDeferral)
+    }
+
     func testContinuousContextDeferralEscalatesOnceAndStartsImmediatelyWhenCleared() {
         var engine = RestEngine(settings: bodyFirstSettings(), now: start)
         advanceUntilBodyBreakIsNext(&engine)
@@ -541,7 +1645,7 @@ final class RestEngineTests: XCTestCase {
             context: RestContext(focusModeActive: true)
         )
 
-        var updated = RestSettings.defaults
+        var updated = engine.settings
         updated.presentation.showCurrentTimeDuringBodyBreak = true
         let savedAt = bodyDue.addingTimeInterval(5)
         engine.updateSettings(updated, now: savedAt)
@@ -561,6 +1665,34 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(session.kind, .bodyBreak)
         XCTAssertEqual(session.scheduledAt, bodyDue)
         XCTAssertNil(engine.state.activeDeferral)
+    }
+
+    func testSettingsUpdateClearsDeferredRestMovedIntoFutureByRhythmChange() {
+        var engine = RestEngine(settings: bodyFirstSettings(), now: start)
+        advanceUntilBodyBreakIsNext(&engine)
+
+        let bodyDue = engine.state.scheduled!.dueAt
+        _ = engine.evaluate(
+            now: bodyDue,
+            context: RestContext(focusModeActive: true)
+        )
+        XCTAssertEqual(engine.state.activeDeferral?.kind, .bodyBreak)
+
+        let savedAt = bodyDue.addingTimeInterval(5)
+        engine.updateSettings(.defaults, now: savedAt)
+
+        XCTAssertNil(engine.state.activeDeferral)
+        XCTAssertEqual(engine.state.scheduled?.kind, .eyeGate)
+        XCTAssertGreaterThan(engine.state.scheduled?.dueAt ?? savedAt, savedAt)
+
+        let resumed = engine.evaluate(
+            now: savedAt.addingTimeInterval(1),
+            context: RestContext(focusModeActive: false)
+        )
+        if case .started(let session) = resumed {
+            XCTFail("Expected rhythm change to move deferred rest into the future, got \(session.kind)")
+        }
+        XCTAssertNil(engine.state.activeSession)
     }
 
     func testSettingsUpdateDropsDeferredRestWhenThatRestIsDisabled() {
@@ -584,6 +1716,24 @@ final class RestEngineTests: XCTestCase {
             savedAt.addingTimeInterval(max(0, updated.eyeGate.interval - engine.state.eyeDebt))
         )
         XCTAssertNil(engine.state.activeDeferral)
+    }
+
+    func testSettingsUpdateClearsDisabledBodyDebtAndSuppression() {
+        var engine = RestEngine(settings: .defaults, now: start)
+        _ = engine.takeNow(.bodyBreak, now: start)
+        _ = engine.postponeActive(now: start.addingTimeInterval(1))
+        XCTAssertEqual(engine.state.bodyDebt, engine.settings.bodyBreak.interval)
+        XCTAssertNotNil(engine.state.bodySuppressedUntil)
+
+        var updated = engine.settings
+        updated.bodyBreak.isEnabled = false
+        let savedAt = start.addingTimeInterval(2)
+        engine.updateSettings(updated, now: savedAt)
+
+        XCTAssertFalse(engine.settings.bodyBreak.isEnabled)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+        XCTAssertNil(engine.state.bodySuppressedUntil)
+        XCTAssertNotEqual(engine.state.scheduled?.kind, .bodyBreak)
     }
 
     func testDisablingBreakHealthModeResetsDangerScore() {
@@ -650,6 +1800,7 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.scheduled?.kind, .bodyBreak)
         XCTAssertEqual(engine.state.scheduled?.dueAt, interruptedAt)
         XCTAssertEqual(engine.state.activeDeferral?.reason, .appExclusion("Presentation"))
+        XCTAssertEqual(engine.state.lastEvaluatedAt, interruptedAt)
 
         let dangerAfterInterruption = engine.state.dangerScore
         let stillDeferred = engine.evaluate(
@@ -657,6 +1808,8 @@ final class RestEngineTests: XCTestCase {
             context: RestContext(appExclusions: [AppExclusionEvaluation(rule: rule, isMatched: true)])
         )
         XCTAssertEqual(stillDeferred, .deferred(.bodyBreak, .appExclusion("Presentation")))
+        XCTAssertEqual(engine.state.eyeDebt, 10, accuracy: 0.001)
+        XCTAssertEqual(engine.state.bodyDebt, 10, accuracy: 0.001)
         XCTAssertEqual(engine.state.dangerScore, dangerAfterInterruption)
 
         let resumed = engine.evaluate(
@@ -669,6 +1822,61 @@ final class RestEngineTests: XCTestCase {
         }
         XCTAssertEqual(session.kind, .bodyBreak)
         XCTAssertNil(engine.state.activeDeferral)
+    }
+
+    func testNaturalAwayCompletionWinsOverActiveBodyBreakAppExclusionDeferral() {
+        let rule = AppExclusionRule(
+            id: "presentation",
+            name: "Presentation",
+            matchTerms: ["Keynote"],
+            mode: .pauseWhenMatched,
+            appliesTo: [.bodyBreak],
+            isEnabled: true
+        )
+        var settings = RestSettings.defaults
+        settings.appExclusions = [rule]
+        var engine = RestEngine(settings: settings, now: start)
+        _ = engine.takeNow(.bodyBreak, now: start)
+
+        let awayAt = start.addingTimeInterval(settings.naturalBreaks.inactivityResetTime)
+        let context = RestContext(
+            idleDuration: settings.naturalBreaks.inactivityResetTime,
+            appExclusions: [AppExclusionEvaluation(rule: rule, isMatched: true)]
+        )
+
+        XCTAssertEqual(engine.deferActiveForAppExclusion(now: awayAt, context: context), .noChange)
+        let completed = engine.evaluate(now: awayAt, context: context)
+
+        guard case .completed(let session, let reason) = completed else {
+            return XCTFail("Expected active Body Break to complete naturally before app exclusion deferral")
+        }
+        XCTAssertEqual(session.kind, .bodyBreak)
+        XCTAssertEqual(reason, .natural)
+        XCTAssertNil(engine.state.activeDeferral)
+        XCTAssertEqual(engine.state.statistics.naturalBodyBreaks, 1)
+    }
+
+    func testElapsedAutomaticBodyBreakCompletionWinsOverAppExclusionDeferral() {
+        let rule = AppExclusionRule(
+            id: "presentation",
+            name: "Presentation",
+            matchTerms: ["Keynote"],
+            mode: .pauseWhenMatched,
+            appliesTo: [.bodyBreak],
+            isEnabled: true
+        )
+        var settings = RestSettings.defaults
+        settings.appExclusions = [rule]
+        XCTAssertFalse(settings.bodyBreak.manualFinishEnabled)
+        var engine = RestEngine(settings: settings, now: start)
+        _ = engine.takeNow(.bodyBreak, now: start)
+
+        let elapsedAt = start.addingTimeInterval(settings.bodyBreak.duration)
+        let context = RestContext(appExclusions: [AppExclusionEvaluation(rule: rule, isMatched: true)])
+
+        XCTAssertEqual(engine.deferActiveForAppExclusion(now: elapsedAt, context: context), .noChange)
+        XCTAssertNil(engine.state.activeDeferral)
+        XCTAssertEqual(engine.state.activeSession?.kind, .bodyBreak)
     }
 
     func testAppExclusionDoesNotInterruptEyeGateOrResumeOnlyActiveBodyBreak() {
@@ -1037,6 +2245,28 @@ final class RestEngineTests: XCTestCase {
         XCTAssertFalse(String(data: migratedData, encoding: .utf8)?.contains("bodyBreakAfterEyeGates") ?? true)
     }
 
+    func testSettingsStoreMigratesDisabledLegacyBodyDefaults() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let url = directory.appendingPathComponent("settings.json")
+        let store = SettingsStore(fileURL: url)
+        var legacy = RestSettings.defaults
+        legacy.bodyBreak.isEnabled = false
+        legacy.bodyBreak.interval = 20 * 60
+        legacy.bodyBreak.duration = 5 * 60
+        legacy.bodyBreak.manualFinishEnabled = true
+
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try JSONEncoder().encode(legacy).write(to: url, options: [.atomic])
+
+        let loaded = try store.load()
+
+        XCTAssertFalse(loaded.bodyBreak.isEnabled)
+        XCTAssertEqual(loaded.bodyBreak.interval, 60 * 60)
+        XCTAssertEqual(loaded.bodyBreak.duration, 3 * 60)
+        XCTAssertFalse(loaded.bodyBreak.manualFinishEnabled)
+    }
+
     func testSettingsStoreMigratesLeakedIndependentBodyDefault() throws {
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -1044,6 +2274,65 @@ final class RestEngineTests: XCTestCase {
         let store = SettingsStore(fileURL: url)
         var leaked = RestSettings.defaults
         leaked.bodyBreak.interval = 20 * 60
+
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try JSONEncoder().encode(leaked).write(to: url, options: [.atomic])
+
+        let loaded = try store.load()
+
+        XCTAssertEqual(loaded.eyeGate.interval, 20 * 60)
+        XCTAssertEqual(loaded.bodyBreak.interval, 60 * 60)
+        XCTAssertEqual(loaded.bodyBreak.duration, 3 * 60)
+        XCTAssertFalse(loaded.bodyBreak.manualFinishEnabled)
+        XCTAssertEqual(loaded.naturalBreaks.inactivityResetTime, 10 * 60)
+    }
+
+    func testSettingsStoreMigratesStandaloneOldAwayThresholdDefault() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let url = directory.appendingPathComponent("settings.json")
+        let store = SettingsStore(fileURL: url)
+        var legacy = RestSettings.defaults
+        legacy.eyeGate.interval = 25 * 60
+        legacy.bodyBreak.interval = 45 * 60
+        legacy.naturalBreaks.inactivityResetTime = 5 * 60
+
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try JSONEncoder().encode(legacy).write(to: url, options: [.atomic])
+
+        let loaded = try store.load()
+
+        XCTAssertEqual(loaded.eyeGate.interval, 25 * 60)
+        XCTAssertEqual(loaded.bodyBreak.interval, 45 * 60)
+        XCTAssertEqual(loaded.naturalBreaks.inactivityResetTime, 10 * 60)
+    }
+
+    func testSettingsStoreMigratesDisabledStandaloneOldAwayThresholdDefault() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let url = directory.appendingPathComponent("settings.json")
+        let store = SettingsStore(fileURL: url)
+        var legacy = RestSettings.defaults
+        legacy.naturalBreaks.isEnabled = false
+        legacy.naturalBreaks.inactivityResetTime = 5 * 60
+
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try JSONEncoder().encode(legacy).write(to: url, options: [.atomic])
+
+        let loaded = try store.load()
+
+        XCTAssertFalse(loaded.naturalBreaks.isEnabled)
+        XCTAssertEqual(loaded.naturalBreaks.inactivityResetTime, 10 * 60)
+    }
+
+    func testSettingsStoreMigratesLeakedIndependentBodyDefaultWithOldAwayThreshold() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        let url = directory.appendingPathComponent("settings.json")
+        let store = SettingsStore(fileURL: url)
+        var leaked = RestSettings.defaults
+        leaked.bodyBreak.interval = 20 * 60
+        leaked.naturalBreaks.inactivityResetTime = 5 * 60
 
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         try JSONEncoder().encode(leaked).write(to: url, options: [.atomic])

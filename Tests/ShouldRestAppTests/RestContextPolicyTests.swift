@@ -34,7 +34,6 @@ final class RestContextPolicyTests: XCTestCase {
         XCTAssertTrue(context.focusModeActive)
         XCTAssertFalse(context.inWorkingHours)
         XCTAssertEqual(context.appExclusions, appExclusions)
-        XCTAssertFalse(context.allowsNaturalRecovery)
     }
 
     func testWakeEvaluationDefersDueRestOutsideWorkingHours() throws {
@@ -80,6 +79,22 @@ final class RestContextPolicyTests: XCTestCase {
         XCTAssertEqual(engine.state.pause, userPause)
     }
 
+    func testDuplicateSystemSuspendNotificationKeepsAutoPauseResumeOwnership() {
+        let start = Date(timeIntervalSinceReferenceDate: 1_500)
+        var engine = RestEngine(settings: .defaults, now: start)
+
+        XCTAssertTrue(SystemSuspendPausePolicy.shouldPauseScheduler(state: engine.state))
+        _ = engine.pause(for: nil, now: start, reason: .suspendOrLock)
+
+        XCTAssertFalse(SystemSuspendPausePolicy.shouldPauseScheduler(state: engine.state))
+        XCTAssertTrue(SystemSuspendPausePolicy.hasSuspendOrLockPause(state: engine.state))
+
+        let duplicatePauseNotificationShouldKeepResumeOwnership =
+            SystemSuspendPausePolicy.hasSuspendOrLockPause(state: engine.state)
+        XCTAssertTrue(duplicatePauseNotificationShouldKeepResumeOwnership)
+        XCTAssertEqual(engine.resume(now: start.addingTimeInterval(600)), .resumed)
+    }
+
     func testSystemSuspendAutoPauseOnlyTargetsIdleSchedule() {
         let start = Date(timeIntervalSinceReferenceDate: 2_000)
         let active = RestSession(
@@ -122,6 +137,14 @@ final class RestContextPolicyTests: XCTestCase {
             ),
             0
         )
+        XCTAssertEqual(
+            SystemResumeIdlePolicy.effectiveIdleDuration(
+                preSuspendIdleDuration: 9 * 60,
+                suspendedIdleDuration: 60,
+                didPauseScheduler: true
+            ),
+            10 * 60
+        )
     }
 
     func testSystemResumeAfterAutoPauseCreditsSuspendIdleAsNaturalRecoveryWhenDebtExists() {
@@ -145,8 +168,7 @@ final class RestContextPolicyTests: XCTestCase {
                 didPauseScheduler: true
             ),
             focusModeActive: false,
-            appExclusions: [],
-            allowsNaturalRecovery: true
+            appExclusions: []
         )
 
         XCTAssertEqual(engine.evaluate(now: wakeAt, context: context), .naturalRestsCredited([.eyeGate]))

@@ -250,7 +250,7 @@
 "prefs.tabShortcuts" = "Shortcuts";
 "prefs.tabAdvanced" = "Advanced";
 "prefs.sectionEyeGate" = "Eye Gate";
-"prefs.scheduleSummary.eyeAndBody" = "Eye Gate runs every %d min for %d sec. Body Break runs every %d active-use min for %d min.";
+"prefs.scheduleSummary.eyeAndBody" = "Eye Gate runs every %d min for %d sec. Body Break runs every %d min for %d min.";
 "prefs.scheduleSummary.eyeOnly" = "Eye Gate runs every %d min for %d sec. Body Break is off.";
 "prefs.scheduleSummary.bodyOnly" = "Eye Gate is off. Body Break runs every %d min for %d min.";
 "prefs.scheduleSummary.none" = "At least one rest type must stay enabled.";
@@ -264,7 +264,7 @@
 "prefs.notificationLeadHelp" = "How early the notification appears before the overlay covers the screen.";
 "prefs.sectionBodyBreak" = "Body Break";
 "prefs.bodyIntervalMinutes" = "Repeat every";
-"prefs.bodyIntervalHelp" = "How much active computer use builds up before Body Break is due.";
+"prefs.bodyIntervalHelp" = "How often Body Break is due during a computer-use episode.";
 "prefs.durationMinutes" = "Cover screen for";
 "prefs.bodyDurationHelp" = "How long each Body Break stays on screen.";
 "prefs.postponeMinutes" = "Postpone by";
@@ -669,7 +669,7 @@
 "onboarding.title" = "Welcome to ShouldRest";
 "onboarding.heading" = "Start with one clear rest rhythm";
 "onboarding.subtitle" = "Short eye rests first. Movement breaks stay flexible.";
-"onboarding.body" = "The defaults use one clear rhythm: 20-minute Eye Gates, 60-minute active-use Body Breaks, and a 10-minute away rule.";
+"onboarding.body" = "The defaults use one clear rhythm: 20-minute Eye Gates, 60-minute Body Breaks, and a 10-minute away rule.";
 "onboarding.eyeFeatureTitle" = "Short, frequent Eye Gates";
 "onboarding.eyeFeatureBody" = "Brief screen-covering rests protect the habit from skip muscle memory and visual drift.";
 "onboarding.emergencyFeatureTitle" = "Emergency stays in the overlay";
@@ -677,7 +677,7 @@
 "onboarding.bodyFeatureTitle" = "Configurable Body Breaks";
 "onboarding.bodyFeatureBody" = "Longer movement breaks can use postpones, images, display rules, and finish automatically by default.";
 "onboarding.rhythmTitle" = "Recommended starting rhythm";
-"onboarding.rhythmDescription" = "Eye Gate every %d min for %d sec. Body Break every %d active-use min for %d min.";
+"onboarding.rhythmDescription" = "Eye Gate every %d min for %d sec. Body Break every %d min for %d min.";
 "onboarding.rhythmRationale" = "Short Eye Gates protect vision at low cost; Body Breaks stay less frequent because they cost more time.";
 "onboarding.metric.eyeInterval" = "Eye interval";
 "onboarding.metric.eyeIntervalValue" = "Every %d min";

@@ -4,6 +4,7 @@ public struct SettingsStore: Sendable {
     private static let legacyEmergencyTimingKey = Data(#""minimumHoldDuration""#.utf8)
     private static let legacyBodyBreakAfterEyeGatesKey = Data(#""bodyBreakAfterEyeGates""#.utf8)
     private static let leakedIndependentBodyDefaultInterval: TimeInterval = 20 * 60
+    private static let legacyInactivityResetTime: TimeInterval = 5 * 60
 
     public var fileURL: URL
     public var encoder: JSONEncoder
@@ -48,44 +49,52 @@ public struct SettingsStore: Sendable {
         _ settings: RestSettings,
         rawData: Data
     ) -> RestSettings {
-        guard rawData.range(of: legacyBodyBreakAfterEyeGatesKey) != nil ||
-            hasLeakedIndependentBodyDefault(in: settings) else {
-            return settings
-        }
+        let needsRhythmMigration = rawData.range(of: legacyBodyBreakAfterEyeGatesKey) != nil ||
+            hasLeakedIndependentBodyDefault(in: settings) ||
+            hasLegacyBodyBreakDefault(in: settings)
 
         var migrated = settings
+        if migrated.naturalBreaks.inactivityResetTime == legacyInactivityResetTime {
+            migrated.naturalBreaks.inactivityResetTime = NaturalBreakSettings.defaults.inactivityResetTime
+        }
+
+        guard needsRhythmMigration else {
+            return migrated
+        }
+
         if migrated.eyeGate.isEnabled,
            migrated.eyeGate.interval == 10 * 60,
            migrated.eyeGate.duration == RestRule.eyeGateDefault.duration {
             migrated.eyeGate.interval = RestRule.eyeGateDefault.interval
         }
-        if migrated.bodyBreak.isEnabled,
-           migrated.bodyBreak.interval == leakedIndependentBodyDefaultInterval {
+        if migrated.bodyBreak.interval == leakedIndependentBodyDefaultInterval {
             migrated.bodyBreak.interval = RestRule.bodyBreakDefault.interval
         }
-        if migrated.bodyBreak.isEnabled,
-           migrated.bodyBreak.duration == 5 * 60 {
+        if migrated.bodyBreak.duration == 5 * 60 {
             migrated.bodyBreak.duration = RestRule.bodyBreakDefault.duration
         }
-        if migrated.bodyBreak.isEnabled,
-           migrated.bodyBreak.manualFinishEnabled {
+        if migrated.bodyBreak.manualFinishEnabled {
             migrated.bodyBreak.manualFinishEnabled = RestRule.bodyBreakDefault.manualFinishEnabled
-        }
-        if migrated.naturalBreaks.isEnabled,
-           migrated.naturalBreaks.inactivityResetTime == 5 * 60 {
-            migrated.naturalBreaks.inactivityResetTime = NaturalBreakSettings.defaults.inactivityResetTime
         }
         return migrated
     }
 
     private static func hasLeakedIndependentBodyDefault(in settings: RestSettings) -> Bool {
         settings.eyeGate.isEnabled &&
-            settings.bodyBreak.isEnabled &&
             settings.eyeGate.interval == RestRule.eyeGateDefault.interval &&
             settings.eyeGate.duration == RestRule.eyeGateDefault.duration &&
             settings.bodyBreak.interval == leakedIndependentBodyDefaultInterval &&
             settings.bodyBreak.duration == RestRule.bodyBreakDefault.duration &&
             settings.bodyBreak.manualFinishEnabled == RestRule.bodyBreakDefault.manualFinishEnabled &&
-            settings.naturalBreaks.inactivityResetTime == NaturalBreakSettings.defaults.inactivityResetTime
+            (
+                settings.naturalBreaks.inactivityResetTime == NaturalBreakSettings.defaults.inactivityResetTime ||
+                    settings.naturalBreaks.inactivityResetTime == legacyInactivityResetTime
+            )
+    }
+
+    private static func hasLegacyBodyBreakDefault(in settings: RestSettings) -> Bool {
+        settings.bodyBreak.interval == leakedIndependentBodyDefaultInterval &&
+            settings.bodyBreak.duration == 5 * 60 &&
+            settings.bodyBreak.manualFinishEnabled
     }
 }

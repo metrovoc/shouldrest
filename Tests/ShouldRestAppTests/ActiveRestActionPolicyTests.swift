@@ -146,8 +146,9 @@ final class ActiveRestActionPolicyTests: XCTestCase {
         ).hasAvailableAction)
     }
 
-    func testResumeIdleCanNaturallyCompleteActiveRestBeforeRenderingManualFinish() {
+    func testAwayIdleCanNaturallyCompleteActiveRestBeforeRenderingManualFinish() {
         let start = Date()
+        let settings = RestSettings.defaults
         let session = RestSession(
             kind: .bodyBreak,
             startedAt: start,
@@ -159,16 +160,15 @@ final class ActiveRestActionPolicyTests: XCTestCase {
         XCTAssertEqual(
             ActiveRestLifecyclePolicy.decision(
                 for: session,
-                settings: .defaults,
-                now: start.addingTimeInterval(120),
-                context: RestContext(idleDuration: 60),
-                allowsNaturalCompletion: true
+                settings: settings,
+                now: start.addingTimeInterval(settings.naturalBreaks.inactivityResetTime),
+                context: RestContext(idleDuration: settings.naturalBreaks.inactivityResetTime)
             ),
             .naturalCompletion
         )
     }
 
-    func testRegularTickDoesNotNaturallyCompleteActiveRestFromIdleContext() {
+    func testShortIdleDoesNotNaturallyCompleteActiveRest() {
         let start = Date()
         let session = RestSession(
             kind: .bodyBreak,
@@ -183,8 +183,7 @@ final class ActiveRestActionPolicyTests: XCTestCase {
                 for: session,
                 settings: .defaults,
                 now: start.addingTimeInterval(120),
-                context: RestContext(idleDuration: 60),
-                allowsNaturalCompletion: false
+                context: RestContext(idleDuration: 60)
             ),
             .present(manualAwaiting: true)
         )
@@ -212,8 +211,7 @@ final class ActiveRestActionPolicyTests: XCTestCase {
                 for: manualSession,
                 settings: .defaults,
                 now: start.addingTimeInterval(60),
-                context: RestContext(),
-                allowsNaturalCompletion: true
+                context: RestContext()
             ),
             .present(manualAwaiting: true)
         )
@@ -222,8 +220,7 @@ final class ActiveRestActionPolicyTests: XCTestCase {
                 for: automaticSession,
                 settings: .defaults,
                 now: start.addingTimeInterval(20),
-                context: RestContext(),
-                allowsNaturalCompletion: true
+                context: RestContext()
             ),
             .elapsedCompletion
         )
@@ -244,8 +241,7 @@ final class ActiveRestActionPolicyTests: XCTestCase {
                 for: session,
                 settings: .defaults,
                 now: start.addingTimeInterval(19),
-                context: RestContext(),
-                allowsNaturalCompletion: true
+                context: RestContext()
             ),
             .present(manualAwaiting: false)
         )

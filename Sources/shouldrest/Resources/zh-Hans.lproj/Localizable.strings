@@ -250,7 +250,7 @@
 "prefs.tabShortcuts" = "快捷键";
 "prefs.tabAdvanced" = "高级";
 "prefs.sectionEyeGate" = "护眼休息";
-"prefs.scheduleSummary.eyeAndBody" = "护眼休息每 %d 分钟覆盖 %d 秒；活动休息每累计 %d 分钟主动使用后覆盖 %d 分钟。";
+"prefs.scheduleSummary.eyeAndBody" = "护眼休息每 %d 分钟覆盖 %d 秒；活动休息每 %d 分钟覆盖 %d 分钟。";
 "prefs.scheduleSummary.eyeOnly" = "护眼休息每 %d 分钟覆盖 %d 秒；活动休息已关闭。";
 "prefs.scheduleSummary.bodyOnly" = "护眼休息已关闭；活动休息每 %d 分钟覆盖 %d 分钟。";
 "prefs.scheduleSummary.none" = "至少需要保留一种休息类型。";
@@ -264,7 +264,7 @@
 "prefs.notificationLeadHelp" = "覆盖层遮住屏幕前，通知提前出现的时间。";
 "prefs.sectionBodyBreak" = "活动休息";
 "prefs.bodyIntervalMinutes" = "每隔";
-"prefs.bodyIntervalHelp" = "累计多少主动使用电脑时间后，活动休息到期。";
+"prefs.bodyIntervalHelp" = "活动休息在一次电脑使用过程中到期的频率。";
 "prefs.durationMinutes" = "覆盖屏幕";
 "prefs.bodyDurationHelp" = "每次活动休息覆盖屏幕的时长。";
 "prefs.postponeMinutes" = "每次推迟";
@@ -669,7 +669,7 @@
 "onboarding.title" = "欢迎使用 ShouldRest";
 "onboarding.heading" = "从清晰的单一休息节奏开始";
 "onboarding.subtitle" = "先保护眼睛，活动休息保持灵活。";
-"onboarding.body" = "默认值使用一个清晰节奏：20 分钟护眼休息、60 分钟主动使用后的活动休息，以及 10 分钟离开阈值。";
+"onboarding.body" = "默认值使用一个清晰节奏：20 分钟护眼休息、60 分钟活动休息，以及 10 分钟离开阈值。";
 "onboarding.eyeFeatureTitle" = "短而频繁的护眼休息";
 "onboarding.eyeFeatureBody" = "短暂覆盖屏幕的护眼休息，减少 20 秒休息被忽视或习惯性跳过。";
 "onboarding.emergencyFeatureTitle" = "覆盖层内紧急退出";
@@ -677,7 +677,7 @@
 "onboarding.bodyFeatureTitle" = "活动休息可配置";
 "onboarding.bodyFeatureBody" = "更长的活动休息支持推迟、图片和显示器规则；默认到点自动结束。";
 "onboarding.rhythmTitle" = "推荐起始节奏";
-"onboarding.rhythmDescription" = "护眼休息每 %d 分钟 %d 秒；活动休息每累计 %d 分钟主动使用后 %d 分钟。";
+"onboarding.rhythmDescription" = "护眼休息每 %d 分钟 %d 秒；活动休息每 %d 分钟 %d 分钟。";
 "onboarding.rhythmRationale" = "短暂护眼休息成本低、保护眼睛；活动休息成本更高，所以默认频率更低。";
 "onboarding.metric.eyeInterval" = "护眼间隔";
 "onboarding.metric.eyeIntervalValue" = "每 %d 分钟";

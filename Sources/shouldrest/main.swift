@@ -287,15 +287,13 @@ enum RestContextPolicy {
         now: Date,
         idleDuration: TimeInterval,
         focusModeActive: Bool,
-        appExclusions: [AppExclusionEvaluation],
-        allowsNaturalRecovery: Bool = false
+        appExclusions: [AppExclusionEvaluation]
     ) -> RestContext {
         RestContext(
             idleDuration: idleDuration,
             focusModeActive: focusModeActive,
             inWorkingHours: settings.workingHours.contains(now),
-            appExclusions: appExclusions,
-            allowsNaturalRecovery: allowsNaturalRecovery
+            appExclusions: appExclusions
         )
     }
 }
@@ -304,14 +302,19 @@ enum SystemSuspendPausePolicy {
     static func shouldPauseScheduler(state: RestEngineState) -> Bool {
         state.activeSession == nil && state.pause == nil
     }
+
+    static func hasSuspendOrLockPause(state: RestEngineState) -> Bool {
+        state.activeSession == nil && state.pause?.reason == .suspendOrLock
+    }
 }
 
 enum SystemResumeIdlePolicy {
     static func effectiveIdleDuration(
+        preSuspendIdleDuration: TimeInterval = 0,
         suspendedIdleDuration: TimeInterval,
         didPauseScheduler _: Bool
     ) -> TimeInterval {
-        max(0, suspendedIdleDuration)
+        max(0, preSuspendIdleDuration) + max(0, suspendedIdleDuration)
     }
 }
 
@@ -621,6 +624,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private var lastFocusCheck = Date.distantPast
     private var focusModeActive = false
     private var suspendedAt: Date?
+    private var suspendedIdleBeforePause: TimeInterval = 0
     private var pausedForSuspendOrLock = false
     private var manualAwaitingSessionID: UUID?
     private var latestReleaseURL: URL?
@@ -762,8 +766,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         if engine.state.activeSession != nil {
             handleActiveRestLifecycle(
                 now: now,
-                context: currentContext(now: now),
-                allowsNaturalCompletion: false
+                context: currentContext(now: now)
             )
             return
         }
@@ -785,8 +788,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     private func handleActiveRestLifecycle(
         now: Date,
-        context: RestContext,
-        allowsNaturalCompletion: Bool
+        context: RestContext
     ) {
         guard let active = engine.state.activeSession else {
             rebuildMenu()
@@ -797,44 +799,32 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             emergencyOverrideCoordinator.clear()
         }
 
-        if case .deferred(let kind, let reason) = engine.deferActiveForAppExclusion(
-            now: now,
-            context: context
-        ) {
-            unregisterActiveBreakShortcut()
-            unregisterEmergencyEscapeShortcut()
-            overlayController.dismiss()
-            emergencyOverrideCoordinator.clear(sessionID: active.id)
-            manualAwaitingSessionID = nil
-            bodyBreakIdeas.deferActiveIdeaToPending(for: active)
-            logger.log("Active \(kind.rawValue) deferred: \(MenuStatusPresenter.deferralReasonText(reason))")
-            rebuildMenu()
-            return
-        }
-
         switch ActiveRestLifecyclePolicy.decision(
             for: active,
             settings: settings,
             now: now,
-            context: context,
-            allowsNaturalCompletion: allowsNaturalCompletion
+            context: context
         ) {
         case .naturalCompletion:
             let result = engine.evaluate(now: now, context: context)
             if case .completed(let session, let reason) = result {
                 releaseActiveRestSurface(for: session)
-                logger.log("Completed \(session.kind.rawValue) during resume reason=\(reason)")
+                logger.log("Completed \(session.kind.rawValue) after natural away reason=\(reason)")
                 retryPendingAutomationStarts()
                 rebuildMenu()
                 return
             }
             handleActiveRestLifecycle(
                 now: now,
-                context: context,
-                allowsNaturalCompletion: false
+                context: context
             )
         case .elapsedCompletion:
-            if case .completed = engine.completeActive(now: now, reason: .completed) {
+            if case .completed = engine.completeActive(
+                now: now,
+                reason: .completed,
+                idleDuration: context.idleDuration,
+                preserveAwayCandidate: context.idleDuration > 0
+            ) {
                 releaseActiveRestSurface(for: active)
                 logger.log("Completed \(active.kind.rawValue)")
                 playRestSound(settings.rule(for: active.kind).finishSound)
@@ -842,6 +832,20 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             }
             rebuildMenu()
         case .present(let manualAwaiting):
+            if case .deferred(let kind, let reason) = engine.deferActiveForAppExclusion(
+                now: now,
+                context: context
+            ) {
+                unregisterActiveBreakShortcut()
+                unregisterEmergencyEscapeShortcut()
+                overlayController.dismiss()
+                emergencyOverrideCoordinator.clear(sessionID: active.id)
+                manualAwaitingSessionID = nil
+                bodyBreakIdeas.deferActiveIdeaToPending(for: active)
+                logger.log("Active \(kind.rawValue) deferred: \(MenuStatusPresenter.deferralReasonText(reason))")
+                rebuildMenu()
+                return
+            }
             refreshActiveBreakShortcut()
             refreshEmergencyEscapeShortcut()
             overlayController.update(
@@ -897,8 +901,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     private func currentContext(
         now: Date,
-        idleDuration: TimeInterval? = nil,
-        allowsNaturalRecovery: Bool = false
+        idleDuration: TimeInterval? = nil
     ) -> RestContext {
         let appExclusions = settings.appExclusions.map { rule in
             AppExclusionEvaluation(rule: rule, isMatched: RunningApplications.matches(rule: rule))
@@ -908,8 +911,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             now: now,
             idleDuration: idleDuration ?? SystemIdleTime.seconds(),
             focusModeActive: focusModeActive,
-            appExclusions: appExclusions,
-            allowsNaturalRecovery: allowsNaturalRecovery
+            appExclusions: appExclusions
         )
     }
 
@@ -1261,10 +1263,16 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     @discardableResult
     private func startEyeGateNow(source: String) -> RestEngineResult {
-        let result = engine.takeNow(.eyeGate)
+        let now = Date()
+        let context = currentContext(now: now)
+        let result = engine.takeNow(
+            .eyeGate,
+            now: now,
+            idleDuration: context.idleDuration,
+            preserveAwayCandidate: context.idleDuration > 0
+        )
         if case .started(let session) = result {
             playRestSound(settings.rule(for: session.kind).startSound)
-            let now = Date()
             overlayController.present(
                 session: session,
                 settings: settings,
@@ -1290,11 +1298,17 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     @discardableResult
     private func startBodyBreakNow(idea: RestIdea?, source: String = "Manual") -> RestEngineResult {
         let effectiveIdea = bodyBreakIdeas.ideaForStartAttempt(explicit: idea)
-        let result = engine.takeNow(.bodyBreak)
+        let now = Date()
+        let context = currentContext(now: now)
+        let result = engine.takeNow(
+            .bodyBreak,
+            now: now,
+            idleDuration: context.idleDuration,
+            preserveAwayCandidate: context.idleDuration > 0
+        )
         if case .started(let session) = result {
             bodyBreakIdeas.bindStartedIdea(effectiveIdea, to: session)
             playRestSound(settings.rule(for: session.kind).startSound)
-            let now = Date()
             overlayController.present(
                 session: session,
                 settings: overlaySettings(for: session),
@@ -1353,7 +1367,13 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             logger.log("Ignored unavailable finish for \(active.kind.rawValue)")
             return
         }
-        if case .completed = engine.completeActive(now: now, reason: .manual) {
+        let context = currentContext(now: now)
+        if case .completed = engine.completeActive(
+            now: now,
+            reason: .manual,
+            idleDuration: context.idleDuration,
+            preserveAwayCandidate: context.idleDuration > 0
+        ) {
             releaseActiveRestSurface(for: active)
             logger.log("Manually finished \(active.kind.rawValue)")
             playRestSound(settings.rule(for: active.kind).finishSound)
@@ -1697,7 +1717,13 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func resumeBreaks() {
-        _ = engine.resume()
+        let now = Date()
+        let context = currentContext(now: now)
+        _ = engine.resume(
+            now: now,
+            idleDuration: context.idleDuration,
+            preserveAwayCandidate: context.idleDuration > 0
+        )
         logger.log("Breaks resumed")
         retryPendingAutomationStarts()
         rebuildMenu()
@@ -1736,8 +1762,16 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func pause(for duration: TimeInterval?, reason: PauseReason) {
+        let now = Date()
+        let context = currentContext(now: now)
         let active = engine.state.activeSession
-        let result = engine.pause(for: duration, reason: reason)
+        let result = engine.pause(
+            for: duration,
+            now: now,
+            reason: reason,
+            idleDuration: context.idleDuration,
+            preserveAwayCandidate: context.idleDuration > 0
+        )
         if case .paused = result {
             unregisterActiveBreakShortcut()
             unregisterEmergencyEscapeShortcut()
@@ -2252,11 +2286,24 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func systemWillPause() {
-        suspendedAt = Date()
-        pausedForSuspendOrLock = false
-        if settings.operations.resolvedPauseForSuspendOrLock {
-            if SystemSuspendPausePolicy.shouldPauseScheduler(state: engine.state),
-               case .paused = engine.pause(for: nil, reason: .suspendOrLock) {
+        let now = Date()
+        let alreadyPausedForSuspendOrLock = SystemSuspendPausePolicy.hasSuspendOrLockPause(state: engine.state)
+        if !alreadyPausedForSuspendOrLock {
+            suspendedAt = now
+            suspendedIdleBeforePause = SystemIdleTime.seconds()
+            pausedForSuspendOrLock = false
+        }
+        if settings.operations.resolvedPauseForSuspendOrLock || alreadyPausedForSuspendOrLock {
+            if alreadyPausedForSuspendOrLock {
+                pausedForSuspendOrLock = true
+            } else if SystemSuspendPausePolicy.shouldPauseScheduler(state: engine.state),
+               case .paused = engine.pause(
+                    for: nil,
+                    now: now,
+                    reason: .suspendOrLock,
+                    idleDuration: suspendedIdleBeforePause,
+                    preserveAwayCandidate: suspendedIdleBeforePause > 0
+               ) {
                 pausedForSuspendOrLock = true
             }
             unregisterActiveBreakShortcut()
@@ -2271,26 +2318,36 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func systemDidResume() {
         let now = Date()
-        let idleDuration = suspendedAt.map { now.timeIntervalSince($0) } ?? 0
+        let suspendedDuration = suspendedAt.map { now.timeIntervalSince($0) } ?? 0
+        let preSuspendIdleDuration = suspendedIdleBeforePause
         suspendedAt = nil
-        let didPauseScheduler = pausedForSuspendOrLock
+        suspendedIdleBeforePause = 0
+        let didPauseScheduler = pausedForSuspendOrLock ||
+            SystemSuspendPausePolicy.hasSuspendOrLockPause(state: engine.state)
         refreshFocusMode(now: now, force: true)
-        if didPauseScheduler {
-            _ = engine.resume(now: now)
-            pausedForSuspendOrLock = false
-        }
         let restIdleDuration = SystemResumeIdlePolicy.effectiveIdleDuration(
-            suspendedIdleDuration: idleDuration,
+            preSuspendIdleDuration: preSuspendIdleDuration,
+            suspendedIdleDuration: suspendedDuration,
             didPauseScheduler: didPauseScheduler
         )
-        let context = currentContext(now: now, idleDuration: restIdleDuration, allowsNaturalRecovery: true)
+        if didPauseScheduler {
+            _ = engine.resume(
+                now: now,
+                idleDuration: restIdleDuration,
+                preserveAwayCandidate: restIdleDuration > 0
+            )
+            pausedForSuspendOrLock = false
+        }
+        let context = currentContext(now: now, idleDuration: restIdleDuration)
         if engine.state.activeSession != nil {
             handleActiveRestLifecycle(
                 now: now,
-                context: context,
-                allowsNaturalCompletion: true
+                context: context
             )
-            logger.log("System resume detected idleDuration=\(idleDuration) restIdleDuration=\(restIdleDuration)")
+            logger.log(
+                "System resume detected suspendedDuration=\(suspendedDuration) " +
+                    "preSuspendIdleDuration=\(preSuspendIdleDuration) restIdleDuration=\(restIdleDuration)"
+            )
             return
         }
         let result = engine.evaluate(now: now, context: context)
@@ -2298,7 +2355,10 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         retryPendingAutomationStarts()
         refreshActiveBreakShortcut()
         refreshEmergencyEscapeShortcut()
-        logger.log("System resume detected idleDuration=\(idleDuration) restIdleDuration=\(restIdleDuration)")
+        logger.log(
+            "System resume detected suspendedDuration=\(suspendedDuration) " +
+                "preSuspendIdleDuration=\(preSuspendIdleDuration) restIdleDuration=\(restIdleDuration)"
+        )
         rebuildMenu()
     }
 
@@ -2536,6 +2596,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             "bodyDebt=\(engine.state.bodyDebt)",
             "lastEvaluatedAt=\(String(describing: engine.state.lastEvaluatedAt))",
             "lastIdleDuration=\(engine.state.lastIdleDuration)",
+            "awayCandidate=\(String(describing: engine.state.awayCandidate))",
             "bodySuppressedUntil=\(String(describing: engine.state.bodySuppressedUntil))",
             "postponesInCurrentCycle=\(engine.state.postponesInCurrentCycle)",
             "dangerScore=\(engine.state.dangerScore)",
@@ -2618,12 +2679,10 @@ enum ActiveRestLifecyclePolicy {
         for session: RestSession,
         settings: RestSettings,
         now: Date,
-        context: RestContext,
-        allowsNaturalCompletion: Bool
+        context: RestContext
     ) -> ActiveRestLifecycleDecision {
-        if allowsNaturalCompletion,
-           settings.naturalBreaks.isEnabled,
-           context.idleDuration >= session.duration {
+        if settings.naturalBreaks.isEnabled,
+           context.idleDuration >= max(session.duration, settings.naturalBreaks.inactivityResetTime) {
             return .naturalCompletion
         }
 
