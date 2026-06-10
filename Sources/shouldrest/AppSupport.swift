@@ -6,6 +6,7 @@ enum AppPaths {
     static let supportDirectory = supportDirectory(environment: ProcessInfo.processInfo.environment)
 
     static let settingsURL = supportDirectory.appendingPathComponent("settings.json")
+    static let engineStateURL = supportDirectory.appendingPathComponent("engine-state.json")
     static let logURL = supportDirectory.appendingPathComponent("logs/shouldrest.log")
     static let emergencyRequestURL = supportDirectory.appendingPathComponent("emergency-request")
 
@@ -173,6 +174,34 @@ final class AppLogger {
         } catch {
             NSLog("ShouldRest log write failed: \(error.localizedDescription)")
         }
+    }
+}
+
+struct EngineStateStore {
+    var fileURL: URL
+    var encoder: JSONEncoder
+    var decoder: JSONDecoder
+
+    init(fileURL: URL) {
+        self.fileURL = fileURL
+        self.encoder = JSONEncoder()
+        self.encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        self.decoder = JSONDecoder()
+    }
+
+    func load() throws -> RestEngineState? {
+        guard FileManager.default.fileExists(atPath: fileURL.path) else {
+            return nil
+        }
+        let data = try Data(contentsOf: fileURL)
+        return try decoder.decode(RestEngineState.self, from: data)
+    }
+
+    func save(_ state: RestEngineState) throws {
+        let directory = fileURL.deletingLastPathComponent()
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let data = try encoder.encode(state)
+        try data.write(to: fileURL, options: [.atomic])
     }
 }
 

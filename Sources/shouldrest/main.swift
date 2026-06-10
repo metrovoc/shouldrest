@@ -605,6 +605,7 @@ struct BodyBreakIdeaAssignments: Equatable {
 @MainActor
 final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private let settingsStore: SettingsStore
+    private let engineStateStore: EngineStateStore
     private let logger = AppLogger()
     private var settings: RestSettings
     private var engine: RestEngine
@@ -641,12 +642,19 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private var lastActiveBreakShortcutFailureKey: String?
     private var automationTasks: [UUID: Task<Void, Never>] = [:]
     private var pendingAutomationStarts = PendingAutomationStartRequests()
+    private var lastEngineStatePersistedAt = Date.distantPast
 
     override init() {
         let store = SettingsStore(fileURL: AppPaths.settingsURL)
+        let stateStore = EngineStateStore(fileURL: AppPaths.engineStateURL)
         self.settingsStore = store
+        self.engineStateStore = stateStore
         self.settings = (try? store.load()) ?? .defaults
-        self.engine = RestEngine(settings: settings)
+        if let restoredState = try? stateStore.load() {
+            self.engine = RestEngine(settings: settings, restoring: restoredState)
+        } else {
+            self.engine = RestEngine(settings: settings)
+        }
         super.init()
     }
 
@@ -705,6 +713,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         unregisterEmergencyEscapeShortcut()
         preRestCueController.dismiss()
         overlayController.dismiss()
+        persistEngineState()
         logger.log("Application terminated")
     }
 
@@ -783,6 +792,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
         let result = engine.evaluate(now: now, context: currentContext(now: now))
         handleEngineResult(result, now: now)
+        persistEngineStateIfNeeded(now: now, force: result != .noChange)
         if let expiredPause, engine.state.pause == nil {
             notifyAutomaticResume(from: expiredPause)
         }
@@ -814,6 +824,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             if case .completed(let session, let reason) = result {
                 releaseActiveRestSurface(for: session)
                 logger.log("Completed \(session.kind.rawValue) after natural away reason=\(reason)")
+                persistEngineState()
                 retryPendingAutomationStarts()
                 rebuildMenu()
                 return
@@ -832,6 +843,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 releaseActiveRestSurface(for: active)
                 logger.log("Completed \(active.kind.rawValue)")
                 playRestSound(settings.rule(for: active.kind).finishSound)
+                persistEngineState()
                 retryPendingAutomationStarts()
             }
             rebuildMenu()
@@ -888,15 +900,32 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             refreshActiveBreakShortcut()
             refreshEmergencyEscapeShortcut()
             logger.log("Started \(session.kind.rawValue)")
+            persistEngineState()
         case .notificationDue(let kind):
             showPreRestCue(for: kind, now: now)
             logger.log("Pre-rest cue due for \(kind.rawValue)")
+            persistEngineState()
         case .naturalRestsCredited(let kinds):
             preRestCueController.dismiss()
             let credited = kinds.map(\.rawValue).sorted().joined(separator: ",")
             logger.log("Natural rests credited kinds=\(credited)")
+            persistEngineState()
         default:
             break
+        }
+    }
+
+    private func persistEngineStateIfNeeded(now: Date = Date(), force: Bool = false) {
+        guard force || now.timeIntervalSince(lastEngineStatePersistedAt) >= 15 else { return }
+        persistEngineState(now: now)
+    }
+
+    private func persistEngineState(now: Date = Date()) {
+        do {
+            try engineStateStore.save(engine.state)
+            lastEngineStatePersistedAt = now
+        } catch {
+            logger.log("Engine state save failed: \(error.localizedDescription)")
         }
     }
 
@@ -1294,6 +1323,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             refreshActiveBreakShortcut()
             refreshEmergencyEscapeShortcut()
             logger.log("\(source) Eye Gate started")
+            persistEngineState()
         } else if case .denied(let denial) = result {
             logger.log("\(source) Eye Gate start denied: \(denial)")
         }
@@ -1331,6 +1361,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             refreshActiveBreakShortcut()
             refreshEmergencyEscapeShortcut()
             logger.log("\(source) Body Break started")
+            persistEngineState()
         } else if case .denied(let denial) = result {
             logger.log("\(source) Body Break start denied: \(denial)")
         }
@@ -1364,6 +1395,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             emergencyOverrideCoordinator.clear(sessionID: active.id)
             clearActiveBodyBreakIdea(for: active)
             logger.log("Body Break postponed")
+            persistEngineState()
             retryPendingAutomationStarts()
         }
         rebuildMenu()
@@ -1389,6 +1421,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             releaseActiveRestSurface(for: active)
             logger.log("Manually finished \(active.kind.rawValue)")
             playRestSound(settings.rule(for: active.kind).finishSound)
+            persistEngineState()
             retryPendingAutomationStarts()
         }
         rebuildMenu()
@@ -1411,6 +1444,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             emergencyOverrideCoordinator.clear(sessionID: active.id)
             manualAwaitingSessionID = nil
             logger.log("Body Break skipped")
+            persistEngineState()
             retryPendingAutomationStarts()
         } else {
             logger.log("Body Break skip denied")
@@ -1438,6 +1472,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             emergencyOverrideCoordinator.clear(sessionID: active.id)
             clearActiveBodyBreakIdea(for: active)
             logger.log("Body Break postponed by end shortcut")
+            persistEngineState()
             retryPendingAutomationStarts()
         } else if availability.canSkip, case .completed = engine.skipActive(now: now) {
             unregisterActiveBreakShortcut()
@@ -1448,6 +1483,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             manualAwaitingSessionID = nil
             clearActiveBodyBreakIdea(for: active)
             logger.log("Body Break skipped by end shortcut")
+            persistEngineState()
             retryPendingAutomationStarts()
         } else {
             logger.log("Active rest end shortcut ignored because no action is available")
@@ -1597,6 +1633,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             if shouldPlaySound {
                 playRestSound(settings.rule(for: completedSession.kind).finishSound)
             }
+            persistEngineState()
             retryPendingAutomationStarts()
         } else {
             logger.log("Emergency override denied result=\(result)")
@@ -1741,6 +1778,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             preserveAwayCandidate: context.idleDuration > 0
         )
         logger.log("Breaks resumed")
+        persistEngineState()
         retryPendingAutomationStarts()
         rebuildMenu()
     }
@@ -1797,6 +1835,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 clearActiveBodyBreakIdea(for: active)
             }
             logger.log("Breaks paused reason=\(reason.rawValue) duration=\(String(describing: duration))")
+            persistEngineState()
         } else if case .denied = result {
             handleBlockedPauseRequest()
         }
@@ -1861,6 +1900,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         pendingAutomationStarts.clearAll()
         cancelAutomationTasks()
         logger.log("Schedule reset")
+        persistEngineState()
         rebuildMenu()
     }
 
@@ -2021,6 +2061,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         settings = normalizedSettings
         engine.updateSettings(normalizedSettings)
         preRestCueController.dismiss()
+        persistEngineState()
         applyLanguageSetting()
         applyAppearanceSetting()
         applyOpenAtLoginSetting()
@@ -2330,8 +2371,10 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             unregisterEmergencyEscapeShortcut()
             overlayController.dismiss()
             logger.log("System pause detected")
+            persistEngineState()
         } else {
             logger.log("System pause detected without scheduler pause")
+            persistEngineState()
         }
         rebuildMenu()
     }
@@ -2368,10 +2411,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 "System resume detected suspendedDuration=\(suspendedDuration) " +
                     "preSuspendIdleDuration=\(preSuspendIdleDuration) restIdleDuration=\(restIdleDuration)"
             )
+            persistEngineState()
             return
         }
         let result = engine.evaluate(now: now, context: context)
         handleEngineResult(result, now: now)
+        persistEngineState()
         retryPendingAutomationStarts()
         refreshActiveBreakShortcut()
         refreshEmergencyEscapeShortcut()

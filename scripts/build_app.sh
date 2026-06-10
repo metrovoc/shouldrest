@@ -20,11 +20,17 @@ if [[ -f "$ROOT/packaging/AppIcon.icns" ]]; then
     cp "$ROOT/packaging/AppIcon.icns" "$RESOURCES/AppIcon.icns"
 fi
 
-RESOURCE_BUNDLE="$(find "$ROOT/.build" -path '*release*' -iname '*shouldrest.bundle' -type d | head -n 1)"
-if [[ -n "${RESOURCE_BUNDLE:-}" ]]; then
-    cp -R "$RESOURCE_BUNDLE" "$RESOURCES/"
-    find "$RESOURCE_BUNDLE" -maxdepth 1 -type d -name "*.lproj" -exec cp -R {} "$RESOURCES/" \;
-fi
+SOURCE_RESOURCES="$ROOT/Sources/shouldrest/Resources"
+RESOURCE_BUNDLE="$RESOURCES/ShouldRest_shouldrest.bundle"
+mkdir -p "$RESOURCE_BUNDLE"
+cp "$SOURCE_RESOURCES/ThirdPartyNotices.txt" "$RESOURCE_BUNDLE/"
+cp "$SOURCE_RESOURCES"/audio/*.wav "$RESOURCE_BUNDLE/"
+for lproj in "$SOURCE_RESOURCES"/*.lproj; do
+    lproj_name="$(basename "$lproj" | tr '[:upper:]' '[:lower:]')"
+    rm -rf "$RESOURCE_BUNDLE/$lproj_name" "$RESOURCES/$lproj_name"
+    cp -R "$lproj" "$RESOURCE_BUNDLE/$lproj_name"
+    cp -R "$lproj" "$RESOURCES/$lproj_name"
+done
 
 chmod +x "$MACOS/shouldrest"
 

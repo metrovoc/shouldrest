@@ -221,6 +221,20 @@ public struct RestEngine: Equatable, Sendable {
         refreshProjectedSchedule(now: now, preserveNotificationStateFrom: nil)
     }
 
+    public init(settings: RestSettings = .defaults, restoring state: RestEngineState, now: Date = Date()) {
+        self.settings = settings.normalizedForCurrentDesign()
+        self.state = state
+        if !self.settings.presentation.breakHealthMode {
+            self.state.dangerScore = 0
+        }
+        normalizeDebtState()
+        if self.state.activeSession == nil,
+           self.state.pause == nil,
+           self.state.scheduled == nil {
+            refreshProjectedSchedule(now: now, preserveNotificationStateFrom: nil)
+        }
+    }
+
     public mutating func updateSettings(_ settings: RestSettings, now: Date = Date()) {
         let enforcedSettings = settings.normalizedForCurrentDesign()
         self.settings = enforcedSettings

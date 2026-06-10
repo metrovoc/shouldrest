@@ -62,8 +62,7 @@ enum SoundOption: Equatable {
 
     var bundledResourceURL: URL? {
         guard let bundledResourceName else { return nil }
-        return Bundle.module.url(forResource: bundledResourceName, withExtension: "wav", subdirectory: "audio")
-            ?? Bundle.module.url(forResource: bundledResourceName, withExtension: "wav")
+        return SoundResourceLocator.url(named: bundledResourceName)
     }
 
     var title: String {
@@ -81,5 +80,40 @@ enum SoundOption: Equatable {
         case .custom(let name):
             L10n.format("prefs.sound.custom", name)
         }
+    }
+}
+
+enum SoundResourceLocator {
+    static let resourceBundleName = AppResourceLocator.resourceBundleName
+
+    static func url(named name: String, bundle: Bundle = .main) -> URL? {
+        for candidate in candidateURLs(named: name, bundle: bundle) where FileManager.default.fileExists(atPath: candidate.path) {
+            return candidate
+        }
+        return nil
+    }
+
+    static func candidateURLs(named name: String, bundle: Bundle) -> [URL] {
+        var urls: [URL] = []
+        if let rootAudio = bundle.url(forResource: name, withExtension: "wav", subdirectory: "audio") {
+            urls.append(rootAudio)
+        }
+        if let root = bundle.url(forResource: name, withExtension: "wav") {
+            urls.append(root)
+        }
+        for resourceBundleURL in AppResourceLocator.resourceBundleURLs(bundle: bundle) {
+            if let resourceBundle = Bundle(url: resourceBundleURL) {
+                if let bundleAudio = resourceBundle.url(forResource: name, withExtension: "wav", subdirectory: "audio") {
+                    urls.append(bundleAudio)
+                }
+                if let bundleRoot = resourceBundle.url(forResource: name, withExtension: "wav") {
+                    urls.append(bundleRoot)
+                }
+            } else {
+                urls.append(resourceBundleURL.appendingPathComponent("audio/\(name).wav"))
+                urls.append(resourceBundleURL.appendingPathComponent("\(name).wav"))
+            }
+        }
+        return urls
     }
 }

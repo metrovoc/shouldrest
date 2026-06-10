@@ -1,4 +1,5 @@
 import XCTest
+import ShouldRestCore
 @testable import shouldrest
 
 final class AppPathsTests: XCTestCase {
@@ -7,6 +8,7 @@ final class AppPathsTests: XCTestCase {
 
         XCTAssertEqual(url.lastPathComponent, "ShouldRest")
         XCTAssertTrue(url.path.contains("Application Support"))
+        XCTAssertEqual(AppPaths.engineStateURL.lastPathComponent, "engine-state.json")
     }
 
     func testSupportDirectoryCanBeOverriddenForSmokeRuns() {
@@ -58,5 +60,28 @@ final class AppPathsTests: XCTestCase {
             ).rawValue,
             "dev.shouldrest.test.automation"
         )
+    }
+
+    func testEngineStateStoreRoundTripsRuntimeState() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString, isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let store = EngineStateStore(fileURL: directory.appendingPathComponent("engine-state.json"))
+        let state = RestEngineState(
+            scheduled: ScheduledRest(
+                kind: .eyeGate,
+                dueAt: Date(timeIntervalSinceReferenceDate: 200),
+                notificationAt: Date(timeIntervalSinceReferenceDate: 190),
+                notificationSent: false
+            ),
+            eyeDebt: 12,
+            bodyDebt: 34,
+            lastEvaluatedAt: Date(timeIntervalSinceReferenceDate: 100)
+        )
+
+        try store.save(state)
+
+        XCTAssertEqual(try store.load(), state)
     }
 }

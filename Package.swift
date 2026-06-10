@@ -25,9 +25,7 @@ let package = Package(
         .executableTarget(
             name: "shouldrest",
             dependencies: ["ShouldRestCore"],
-            resources: [
-                .process("Resources")
-            ]
+            exclude: ["Resources"]
         ),
         .testTarget(
             name: "ShouldRestCoreTests",

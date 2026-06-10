@@ -15,6 +15,18 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.bodyDebt, 0)
     }
 
+    func testRestoringStatePreservesExistingSchedule() throws {
+        let original = RestEngine(settings: .defaults, now: start)
+        let scheduled = try XCTUnwrap(original.state.scheduled)
+        let restartedAt = start.addingTimeInterval(90)
+
+        let restored = RestEngine(settings: .defaults, restoring: original.state, now: restartedAt)
+
+        XCTAssertEqual(restored.state.scheduled, scheduled)
+        XCTAssertEqual(restored.state.lastEvaluatedAt, original.state.lastEvaluatedAt)
+        XCTAssertEqual(restored.state.scheduled?.dueAt, start.addingTimeInterval(20 * 60))
+    }
+
     func testEyeGateStartsWhenDue() {
         var engine = RestEngine(settings: .defaults, now: start)
         let result = engine.evaluate(now: start.addingTimeInterval(20 * 60))
