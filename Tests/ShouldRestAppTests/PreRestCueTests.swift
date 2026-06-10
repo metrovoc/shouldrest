@@ -12,8 +12,10 @@ final class PreRestCueTests: XCTestCase {
         XCTAssertGreaterThan(eyeStyle.edgeThickness, 0)
         XCTAssertGreaterThan(eyeStyle.glowRadius, eyeStyle.edgeThickness)
         XCTAssertGreaterThan(eyeStyle.peakOpacity, eyeStyle.baseOpacity)
-        XCTAssertLessThanOrEqual(eyeStyle.peakOpacity, 0.35)
-        XCTAssertLessThanOrEqual(bodyStyle.peakOpacity, 0.35)
+        XCTAssertEqual(eyeStyle.edgeThickness, 56)
+        XCTAssertEqual(eyeStyle.glowRadius, 72)
+        XCTAssertLessThanOrEqual(eyeStyle.peakOpacity, 0.40)
+        XCTAssertLessThanOrEqual(bodyStyle.peakOpacity, 0.40)
         XCTAssertGreaterThan(try brightness(of: eyeStyle.accentColor), 0.45)
         XCTAssertGreaterThan(try brightness(of: bodyStyle.accentColor), 0.45)
     }

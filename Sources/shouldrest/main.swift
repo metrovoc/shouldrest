@@ -2762,22 +2762,22 @@ struct PreRestCueStyle {
         case .eyeGate:
             return PreRestCueStyle(
                 accentColor: NSColor(deviceRed: 0.47, green: 0.78, blue: 1, alpha: 1),
-                edgeThickness: 10,
-                glowRadius: 22,
+                edgeThickness: 56,
+                glowRadius: 72,
                 baseOpacity: 0.12,
-                peakOpacity: 0.34,
+                peakOpacity: 0.38,
                 reducedMotionOpacity: 0.20,
-                pulseDuration: 1.6
+                pulseDuration: 1.55
             )
         case .bodyBreak:
             return PreRestCueStyle(
                 accentColor: NSColor(deviceRed: 0.38, green: 0.92, blue: 0.68, alpha: 1),
-                edgeThickness: 10,
-                glowRadius: 22,
+                edgeThickness: 56,
+                glowRadius: 72,
                 baseOpacity: 0.12,
-                peakOpacity: 0.32,
+                peakOpacity: 0.38,
                 reducedMotionOpacity: 0.19,
-                pulseDuration: 1.8
+                pulseDuration: 1.55
             )
         }
     }
@@ -2982,14 +2982,16 @@ final class PreRestCueView: NSView {
         self.style = style
         self.reduceMotion = reduceMotion
         let solidColor = style.accentColor.withAlphaComponent(1).cgColor
+        let middleColor = style.accentColor.withAlphaComponent(0.38).cgColor
         let transparentColor = style.accentColor.withAlphaComponent(0).cgColor
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         for edgeLayer in edgeLayers {
-            edgeLayer.colors = [solidColor, transparentColor]
+            edgeLayer.colors = [solidColor, middleColor, transparentColor]
+            edgeLayer.locations = [0, 0.34, 1]
             edgeLayer.shadowColor = solidColor
-            edgeLayer.shadowOpacity = 0.7
+            edgeLayer.shadowOpacity = 0.78
             edgeLayer.shadowRadius = style.glowRadius
             edgeLayer.shadowOffset = .zero
             edgeLayer.removeAnimation(forKey: Self.pulseAnimationKey)
