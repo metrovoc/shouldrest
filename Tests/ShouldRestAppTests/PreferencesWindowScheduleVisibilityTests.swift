@@ -43,6 +43,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
             ("eyeDurationStepper", "prefs.eyeDurationHelp"),
             ("eyeDurationSlider", "prefs.eyeDurationHelp"),
             ("prefs.eyeNotify", "prefs.notifyEyeGateHelp"),
+            ("prefs.eyeFullScreenCue", "prefs.fullScreenCueHelp"),
             ("eyeLeadField", "prefs.notificationLeadHelp"),
             ("eyeLeadStepper", "prefs.notificationLeadHelp"),
             ("prefs.bodyEnabled", "prefs.enableBodyBreakHelp"),
@@ -53,6 +54,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
             ("bodyDurationStepper", "prefs.bodyDurationHelp"),
             ("bodyDurationSlider", "prefs.bodyDurationHelp"),
             ("prefs.bodyNotify", "prefs.notifyBodyBreakHelp"),
+            ("prefs.bodyFullScreenCue", "prefs.fullScreenCueHelp"),
             ("bodyLeadField", "prefs.notificationLeadHelp"),
             ("bodyLeadStepper", "prefs.notificationLeadHelp"),
             ("bodyPostponeMinutesField", "prefs.bodyPostponeMinutesHelp"),
@@ -81,6 +83,8 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.eyeManualFinishHelp")))
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.eyeEmergencyOverrideHelp")))
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.enableBodyBreakHelp")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.fullScreenCueEyeGate")))
+        XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.fullScreenCueBodyBreak")))
         XCTAssertTrue(visibleTexts.contains(L10n.tr("prefs.bodyAllowSkipHelp")))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.eyeIntervalHelp")))
         XCTAssertFalse(visibleTexts.contains(L10n.tr("prefs.bodyPostponeLimitHelp")))
@@ -214,6 +218,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertTrue(try view(withIdentifier: "prefs.eyeDurationRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.eyeColorRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.eyeNotify", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.eyeFullScreenCue", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.eyeLeadRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.eyeManualFinish", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.eyeManualFinishHelpRow", in: contentView).isHidden)
@@ -254,6 +259,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
 
         XCTAssertTrue(sendAction(from: notify))
         XCTAssertTrue(try view(withIdentifier: "prefs.eyeLeadRow", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.eyeFullScreenCue", in: contentView).isHidden)
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(savedSettings.value?.notifications.eyeGateEnabled, false)
 
@@ -302,6 +308,7 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyDurationRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyColorRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyNotify", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.bodyFullScreenCue", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyLeadRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyPostponeMinutesRow", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyPostponeLimitRow", in: contentView).isHidden)
@@ -368,8 +375,34 @@ final class PreferencesWindowScheduleVisibilityTests: XCTestCase {
 
         XCTAssertTrue(sendAction(from: notify))
         XCTAssertTrue(try view(withIdentifier: "prefs.bodyLeadRow", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.bodyFullScreenCue", in: contentView).isHidden)
         waitUntilSavedSettingsArrive(savedSettings)
         XCTAssertEqual(savedSettings.value?.notifications.bodyBreakEnabled, false)
+    }
+
+    func testFullScreenCueSwitchesSaveIndependentlyFromCueTiming() throws {
+        let savedSettings = SavedSettingsBox()
+        let controller = PreferencesWindowController(settings: .defaults) { savedSettings.value = $0 }
+        let contentView = try XCTUnwrap(controller.window?.contentView)
+
+        try selectScheduleTab(in: contentView)
+        let eyeFullScreenCue = try XCTUnwrap(view(withIdentifier: "prefs.eyeFullScreenCue", in: contentView) as? NSButton)
+        let bodyFullScreenCue = try XCTUnwrap(view(withIdentifier: "prefs.bodyFullScreenCue", in: contentView) as? NSButton)
+
+        eyeFullScreenCue.state = .off
+        XCTAssertTrue(sendAction(from: eyeFullScreenCue))
+        waitUntilSavedSettingsArrive(savedSettings)
+        XCTAssertEqual(savedSettings.value?.notifications.eyeGateFullScreenCueEnabled, false)
+        XCTAssertEqual(savedSettings.value?.notifications.eyeGateEnabled, true)
+        XCTAssertEqual(savedSettings.value?.notifications.eyeGateLeadTime, RestSettings.defaults.notifications.eyeGateLeadTime)
+
+        savedSettings.value = nil
+        bodyFullScreenCue.state = .off
+        XCTAssertTrue(sendAction(from: bodyFullScreenCue))
+        waitUntilSavedSettingsArrive(savedSettings)
+        XCTAssertEqual(savedSettings.value?.notifications.bodyBreakFullScreenCueEnabled, false)
+        XCTAssertEqual(savedSettings.value?.notifications.bodyBreakEnabled, true)
+        XCTAssertEqual(savedSettings.value?.notifications.bodyBreakLeadTime, RestSettings.defaults.notifications.bodyBreakLeadTime)
     }
 
     private func selectScheduleTab(in view: NSView) throws {

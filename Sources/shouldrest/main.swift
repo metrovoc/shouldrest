@@ -2795,34 +2795,52 @@ private func emergencyOverrideKeyHandling(for event: NSEvent) -> EmergencyOverri
 
 struct PreRestCueStyle {
     let accentColor: NSColor
+    let secondaryColor: NSColor
     let edgeThickness: CGFloat
     let glowRadius: CGFloat
     let baseOpacity: Float
     let peakOpacity: Float
     let reducedMotionOpacity: Float
     let pulseDuration: CFTimeInterval
+    let fullScreenCueEnabled: Bool
+    let fillBaseOpacity: Float
+    let fillPeakOpacity: Float
+    let vignetteBaseOpacity: Float
+    let vignettePeakOpacity: Float
 
     static func make(kind: RestKind, settings: RestSettings) -> PreRestCueStyle {
         switch kind {
         case .eyeGate:
             return PreRestCueStyle(
                 accentColor: NSColor(deviceRed: 0.47, green: 0.78, blue: 1, alpha: 1),
+                secondaryColor: NSColor(deviceRed: 0.42, green: 0.95, blue: 0.82, alpha: 1),
                 edgeThickness: 56,
                 glowRadius: 72,
                 baseOpacity: 0.12,
                 peakOpacity: 0.38,
                 reducedMotionOpacity: 0.20,
-                pulseDuration: 1.55
+                pulseDuration: 1.55,
+                fullScreenCueEnabled: settings.notifications.fullScreenCueEnabled(for: kind),
+                fillBaseOpacity: 0.10,
+                fillPeakOpacity: 0.30,
+                vignetteBaseOpacity: 0.22,
+                vignettePeakOpacity: 0.72
             )
         case .bodyBreak:
             return PreRestCueStyle(
                 accentColor: NSColor(deviceRed: 0.38, green: 0.92, blue: 0.68, alpha: 1),
+                secondaryColor: NSColor(deviceRed: 0.43, green: 0.78, blue: 1, alpha: 1),
                 edgeThickness: 56,
                 glowRadius: 72,
                 baseOpacity: 0.12,
                 peakOpacity: 0.38,
                 reducedMotionOpacity: 0.19,
-                pulseDuration: 1.55
+                pulseDuration: 1.55,
+                fullScreenCueEnabled: settings.notifications.fullScreenCueEnabled(for: kind),
+                fillBaseOpacity: 0.10,
+                fillPeakOpacity: 0.30,
+                vignetteBaseOpacity: 0.22,
+                vignettePeakOpacity: 0.72
             )
         }
     }
@@ -2993,6 +3011,8 @@ final class PreRestCueWindow: NSWindow {
 
 @MainActor
 final class PreRestCueView: NSView {
+    private let fillLayer = CAGradientLayer()
+    private let vignetteLayer = CAGradientLayer()
     private let topLayer = CAGradientLayer()
     private let bottomLayer = CAGradientLayer()
     private let leftLayer = CAGradientLayer()
@@ -3004,8 +3024,20 @@ final class PreRestCueView: NSView {
         edgeLayers.count
     }
 
+    var fullScreenLayerCountForTesting: Int {
+        fullScreenLayers.count
+    }
+
+    var fullScreenCueEnabledForTesting: Bool {
+        style.fullScreenCueEnabled
+    }
+
     private var edgeLayers: [CAGradientLayer] {
         [topLayer, bottomLayer, leftLayer, rightLayer]
+    }
+
+    private var fullScreenLayers: [CAGradientLayer] {
+        [fillLayer, vignetteLayer]
     }
 
     override init(frame frameRect: NSRect) {
@@ -3014,6 +3046,7 @@ final class PreRestCueView: NSView {
         layer?.backgroundColor = NSColor.clear.cgColor
         layer?.masksToBounds = false
         setAccessibilityElement(false)
+        fullScreenLayers.forEach { layer?.addSublayer($0) }
         edgeLayers.forEach { layer?.addSublayer($0) }
         configure(style: style, reduceMotion: false)
     }
@@ -3029,9 +3062,36 @@ final class PreRestCueView: NSView {
         let solidColor = style.accentColor.withAlphaComponent(1).cgColor
         let middleColor = style.accentColor.withAlphaComponent(0.38).cgColor
         let transparentColor = style.accentColor.withAlphaComponent(0).cgColor
+        let fillStartColor = style.accentColor.withAlphaComponent(0.20).cgColor
+        let fillMiddleColor = style.secondaryColor.withAlphaComponent(0.13).cgColor
+        let fillEndColor = style.accentColor.withAlphaComponent(0.18).cgColor
+        let vignetteCenterColor = NSColor.white.withAlphaComponent(0).cgColor
+        let vignetteMiddleColor = style.secondaryColor.withAlphaComponent(0.10).cgColor
+        let vignetteEdgeColor = style.accentColor.withAlphaComponent(0.28).cgColor
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)
+        fillLayer.colors = [fillStartColor, fillMiddleColor, fillEndColor]
+        fillLayer.locations = [0, 0.48, 1]
+        fillLayer.startPoint = CGPoint(x: 0, y: 0)
+        fillLayer.endPoint = CGPoint(x: 1, y: 1)
+        fillLayer.removeAnimation(forKey: Self.fillPulseAnimationKey)
+        fillLayer.opacity = style.fullScreenCueEnabled
+            ? (reduceMotion ? style.fillPeakOpacity : style.fillBaseOpacity)
+            : 0
+        fillLayer.isHidden = !style.fullScreenCueEnabled
+
+        vignetteLayer.type = .radial
+        vignetteLayer.colors = [vignetteCenterColor, vignetteMiddleColor, vignetteEdgeColor]
+        vignetteLayer.locations = [0, 0.58, 1]
+        vignetteLayer.startPoint = CGPoint(x: 0.5, y: 0.5)
+        vignetteLayer.endPoint = CGPoint(x: 1, y: 1)
+        vignetteLayer.removeAnimation(forKey: Self.vignettePulseAnimationKey)
+        vignetteLayer.opacity = style.fullScreenCueEnabled
+            ? (reduceMotion ? style.vignettePeakOpacity : style.vignetteBaseOpacity)
+            : 0
+        vignetteLayer.isHidden = !style.fullScreenCueEnabled
+
         for edgeLayer in edgeLayers {
             edgeLayer.colors = [solidColor, middleColor, transparentColor]
             edgeLayer.locations = [0, 0.34, 1]
@@ -3051,9 +3111,32 @@ final class PreRestCueView: NSView {
         rightLayer.startPoint = CGPoint(x: 1, y: 0.5)
         rightLayer.endPoint = CGPoint(x: 0, y: 0.5)
         layoutEdgeLayers()
+        layoutFullScreenLayers()
         CATransaction.commit()
 
         guard !reduceMotion else { return }
+        if style.fullScreenCueEnabled {
+            let fillAnimation = CABasicAnimation(keyPath: "opacity")
+            fillAnimation.fromValue = style.fillBaseOpacity
+            fillAnimation.toValue = style.fillPeakOpacity
+            fillAnimation.duration = 1.05
+            fillAnimation.autoreverses = true
+            fillAnimation.repeatCount = .infinity
+            fillAnimation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            fillAnimation.isRemovedOnCompletion = false
+            fillLayer.add(fillAnimation, forKey: Self.fillPulseAnimationKey)
+
+            let vignetteAnimation = CABasicAnimation(keyPath: "opacity")
+            vignetteAnimation.fromValue = style.vignetteBaseOpacity
+            vignetteAnimation.toValue = style.vignettePeakOpacity
+            vignetteAnimation.duration = 1.05
+            vignetteAnimation.autoreverses = true
+            vignetteAnimation.repeatCount = .infinity
+            vignetteAnimation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            vignetteAnimation.isRemovedOnCompletion = false
+            vignetteLayer.add(vignetteAnimation, forKey: Self.vignettePulseAnimationKey)
+        }
+
         for (index, edgeLayer) in edgeLayers.enumerated() {
             let animation = CABasicAnimation(keyPath: "opacity")
             animation.fromValue = style.baseOpacity
@@ -3072,8 +3155,14 @@ final class PreRestCueView: NSView {
         super.layout()
         CATransaction.begin()
         CATransaction.setDisableActions(true)
+        layoutFullScreenLayers()
         layoutEdgeLayers()
         CATransaction.commit()
+    }
+
+    private func layoutFullScreenLayers() {
+        fillLayer.frame = bounds
+        vignetteLayer.frame = bounds
     }
 
     private func layoutEdgeLayers() {
@@ -3085,6 +3174,8 @@ final class PreRestCueView: NSView {
     }
 
     private static let pulseAnimationKey = "shouldrest.preRestCuePulse"
+    private static let fillPulseAnimationKey = "shouldrest.preRestCueFillPulse"
+    private static let vignettePulseAnimationKey = "shouldrest.preRestCueVignettePulse"
 }
 
 @MainActor

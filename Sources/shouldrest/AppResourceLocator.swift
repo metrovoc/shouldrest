@@ -43,6 +43,10 @@ enum AppResourceLocator {
 
     private static func resourceBundleURLsUncached(bundle: Bundle) -> [URL] {
         var urls: [URL] = []
+        if bundle.bundleURL == Bundle.main.bundleURL,
+           let sourceResourcesURL {
+            urls.append(sourceResourcesURL)
+        }
         if let resourceURL = bundle.resourceURL {
             urls.append(resourceURL.appendingPathComponent(resourceBundleName, isDirectory: true))
         }
@@ -60,9 +64,6 @@ enum AppResourceLocator {
             if let resourceURL = loadedBundle.resourceURL {
                 urls.append(resourceURL.appendingPathComponent(resourceBundleName, isDirectory: true))
             }
-        }
-        if let sourceResourcesURL {
-            urls.append(sourceResourcesURL)
         }
         return unique(urls)
     }

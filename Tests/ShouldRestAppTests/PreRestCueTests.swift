@@ -18,15 +18,42 @@ final class PreRestCueTests: XCTestCase {
         XCTAssertLessThanOrEqual(bodyStyle.peakOpacity, 0.40)
         XCTAssertGreaterThan(try brightness(of: eyeStyle.accentColor), 0.45)
         XCTAssertGreaterThan(try brightness(of: bodyStyle.accentColor), 0.45)
+        XCTAssertTrue(eyeStyle.fullScreenCueEnabled)
+        XCTAssertTrue(bodyStyle.fullScreenCueEnabled)
+        XCTAssertGreaterThan(eyeStyle.fillPeakOpacity, eyeStyle.fillBaseOpacity)
+        XCTAssertGreaterThan(eyeStyle.vignettePeakOpacity, eyeStyle.vignetteBaseOpacity)
     }
 
-    func testCueViewBuildsFourScreenEdgeLayers() {
+    func testCueStyleCanDisableFullScreenPulseIndependently() {
+        var settings = RestSettings.defaults
+        settings.notifications.eyeGateFullScreenCueEnabled = false
+
+        let style = PreRestCueStyle.make(kind: .eyeGate, settings: settings)
+
+        XCTAssertFalse(style.fullScreenCueEnabled)
+    }
+
+    func testCueViewBuildsFullScreenAndScreenEdgeLayers() {
         let view = PreRestCueView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
 
         view.configure(style: PreRestCueStyle.make(kind: .eyeGate, settings: .defaults), reduceMotion: true)
 
         XCTAssertTrue(view.wantsLayer)
+        XCTAssertEqual(view.fullScreenLayerCountForTesting, 2)
         XCTAssertEqual(view.edgeLayerCountForTesting, 4)
+        XCTAssertTrue(view.fullScreenCueEnabledForTesting)
+    }
+
+    func testCueViewKeepsEdgeLayersWhenFullScreenPulseIsDisabled() {
+        var settings = RestSettings.defaults
+        settings.notifications.eyeGateFullScreenCueEnabled = false
+        let view = PreRestCueView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
+
+        view.configure(style: PreRestCueStyle.make(kind: .eyeGate, settings: settings), reduceMotion: true)
+
+        XCTAssertEqual(view.fullScreenLayerCountForTesting, 2)
+        XCTAssertEqual(view.edgeLayerCountForTesting, 4)
+        XCTAssertFalse(view.fullScreenCueEnabledForTesting)
     }
 
     func testCueWindowDoesNotStealInputOrFocus() throws {
@@ -50,6 +77,24 @@ final class PreRestCueTests: XCTestCase {
         XCTAssertTrue(window.collectionBehavior.contains(.stationary))
         XCTAssertTrue(window.collectionBehavior.contains(.ignoresCycle))
         XCTAssertEqual(window.cueView.edgeLayerCountForTesting, 4)
+    }
+
+    func testCueWindowKeepsContentInLocalCoordinatesForNonZeroScreenFrames() throws {
+        let screen = try XCTUnwrap(NSScreen.main)
+        let window = PreRestCueWindow(
+            screen: screen,
+            kind: .eyeGate,
+            settings: .defaults,
+            reduceMotion: true
+        )
+        defer { window.close() }
+        let frame = NSRect(x: 1800, y: 1169, width: 2560, height: 1440)
+
+        window.setFrame(frame, display: true)
+
+        XCTAssertEqual(window.frame, frame)
+        XCTAssertEqual(window.cueView.frame.origin, .zero)
+        XCTAssertEqual(window.cueView.frame.size, frame.size)
     }
 
     private func brightness(of color: NSColor, file: StaticString = #filePath, line: UInt = #line) throws -> CGFloat {

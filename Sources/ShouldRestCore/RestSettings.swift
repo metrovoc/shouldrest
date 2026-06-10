@@ -638,6 +638,8 @@ public struct NotificationSettings: Codable, Equatable, Sendable {
     public var bodyBreakEnabled: Bool
     public var eyeGateLeadTime: TimeInterval
     public var bodyBreakLeadTime: TimeInterval
+    public var eyeGateFullScreenCueEnabled: Bool
+    public var bodyBreakFullScreenCueEnabled: Bool
     public var silentNotifications: Bool
 
     public init(
@@ -645,12 +647,16 @@ public struct NotificationSettings: Codable, Equatable, Sendable {
         bodyBreakEnabled: Bool,
         eyeGateLeadTime: TimeInterval,
         bodyBreakLeadTime: TimeInterval,
+        eyeGateFullScreenCueEnabled: Bool = true,
+        bodyBreakFullScreenCueEnabled: Bool = true,
         silentNotifications: Bool
     ) {
         self.eyeGateEnabled = eyeGateEnabled
         self.bodyBreakEnabled = bodyBreakEnabled
         self.eyeGateLeadTime = SettingsNormalization.nonNegative(eyeGateLeadTime)
         self.bodyBreakLeadTime = SettingsNormalization.nonNegative(bodyBreakLeadTime)
+        self.eyeGateFullScreenCueEnabled = eyeGateFullScreenCueEnabled
+        self.bodyBreakFullScreenCueEnabled = bodyBreakFullScreenCueEnabled
         self.silentNotifications = silentNotifications
     }
 
@@ -659,6 +665,8 @@ public struct NotificationSettings: Codable, Equatable, Sendable {
         case bodyBreakEnabled
         case eyeGateLeadTime
         case bodyBreakLeadTime
+        case eyeGateFullScreenCueEnabled
+        case bodyBreakFullScreenCueEnabled
         case silentNotifications
     }
 
@@ -677,6 +685,16 @@ public struct NotificationSettings: Codable, Equatable, Sendable {
                 forKey: .bodyBreakLeadTime,
                 default: defaults.bodyBreakLeadTime
             ),
+            eyeGateFullScreenCueEnabled: container.decodeLossy(
+                Bool.self,
+                forKey: .eyeGateFullScreenCueEnabled,
+                default: defaults.eyeGateFullScreenCueEnabled
+            ),
+            bodyBreakFullScreenCueEnabled: container.decodeLossy(
+                Bool.self,
+                forKey: .bodyBreakFullScreenCueEnabled,
+                default: defaults.bodyBreakFullScreenCueEnabled
+            ),
             silentNotifications: container.decodeLossy(Bool.self, forKey: .silentNotifications, default: defaults.silentNotifications)
         )
     }
@@ -686,6 +704,8 @@ public struct NotificationSettings: Codable, Equatable, Sendable {
         bodyBreakEnabled: true,
         eyeGateLeadTime: 10,
         bodyBreakLeadTime: 30,
+        eyeGateFullScreenCueEnabled: true,
+        bodyBreakFullScreenCueEnabled: true,
         silentNotifications: false
     )
 
@@ -707,12 +727,23 @@ public struct NotificationSettings: Codable, Equatable, Sendable {
         }
     }
 
+    public func fullScreenCueEnabled(for kind: RestKind) -> Bool {
+        switch kind {
+        case .eyeGate:
+            eyeGateFullScreenCueEnabled
+        case .bodyBreak:
+            bodyBreakFullScreenCueEnabled
+        }
+    }
+
     public func normalized() -> NotificationSettings {
         NotificationSettings(
             eyeGateEnabled: eyeGateEnabled,
             bodyBreakEnabled: bodyBreakEnabled,
             eyeGateLeadTime: eyeGateLeadTime,
             bodyBreakLeadTime: bodyBreakLeadTime,
+            eyeGateFullScreenCueEnabled: eyeGateFullScreenCueEnabled,
+            bodyBreakFullScreenCueEnabled: bodyBreakFullScreenCueEnabled,
             silentNotifications: silentNotifications
         )
     }

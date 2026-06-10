@@ -202,6 +202,9 @@
 "prefs.cannotDisableBodyBreakLastRest" = "Turn on Eye Gate before turning off Body Break.";
 "prefs.notifyEyeGate" = "Show edge cue before Eye Gate";
 "prefs.notifyEyeGateHelp" = "Pulse the screen edge before the Eye Gate overlay starts.";
+"prefs.fullScreenCueEyeGate" = "Use full-screen cue for Eye Gate";
+"prefs.fullScreenCueBodyBreak" = "Use full-screen cue for Body Break";
+"prefs.fullScreenCueHelp" = "Add a low-opacity full-screen pulse to the pre-rest cue so it is easier to notice without blocking clicks.";
 "prefs.eyeManualFinish" = "Wait for me after Eye Gate ends";
 "prefs.eyeManualFinishHelp" = "When the Eye Gate timer ends, keep the overlay up until you finish it. Early dismissal stays disabled.";
 "prefs.eyeEmergencyOverride" = "Enable Emergency Exit";
@@ -261,7 +264,7 @@
 "prefs.overlayColor" = "Overlay color";
 "prefs.overlayColorHelp" = "Choose the tint used by this rest overlay.";
 "prefs.notificationLead" = "Cue lead time";
-"prefs.notificationLeadHelp" = "How early the screen-edge cue appears before the overlay covers the screen.";
+"prefs.notificationLeadHelp" = "How early the pre-rest cue appears before the overlay covers the screen.";
 "prefs.sectionBodyBreak" = "Body Break";
 "prefs.bodyIntervalMinutes" = "Repeat every";
 "prefs.bodyIntervalHelp" = "How often Body Break is due during a computer-use episode.";

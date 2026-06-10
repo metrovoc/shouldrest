@@ -2210,6 +2210,14 @@ final class RestEngineTests: XCTestCase {
         XCTAssertFalse(loaded.eyeGate.isEnabled)
         XCTAssertEqual(loaded.bodyBreak.colorHex, "#123456")
         XCTAssertEqual(loaded.notifications.silentNotifications, NotificationSettings.defaults.silentNotifications)
+        XCTAssertEqual(
+            loaded.notifications.eyeGateFullScreenCueEnabled,
+            NotificationSettings.defaults.eyeGateFullScreenCueEnabled
+        )
+        XCTAssertEqual(
+            loaded.notifications.bodyBreakFullScreenCueEnabled,
+            NotificationSettings.defaults.bodyBreakFullScreenCueEnabled
+        )
         XCTAssertEqual(loaded.shortcuts.reset, ShortcutSettings.defaults.reset)
         XCTAssertNil(loaded.shortcuts.endBodyBreak)
         XCTAssertNil(loaded.shortcuts.emergencyEyeGateOverride)
@@ -2769,6 +2777,8 @@ final class RestEngineTests: XCTestCase {
 
         var notifications = try XCTUnwrap(object["notifications"] as? [String: Any])
         notifications.removeValue(forKey: "silentNotifications")
+        notifications.removeValue(forKey: "eyeGateFullScreenCueEnabled")
+        notifications.removeValue(forKey: "bodyBreakFullScreenCueEnabled")
         object["notifications"] = notifications
 
         var shortcuts = try XCTUnwrap(object["shortcuts"] as? [String: Any])

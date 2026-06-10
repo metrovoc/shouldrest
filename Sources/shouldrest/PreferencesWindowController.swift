@@ -556,6 +556,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let eyeDuration = NSTextField()
     private let eyeColor = NSColorWell()
     private let eyeNotify = NSButton(checkboxWithTitle: L10n.tr("prefs.notifyEyeGate"), target: nil, action: nil)
+    private let eyeFullScreenCue = NSButton(checkboxWithTitle: L10n.tr("prefs.fullScreenCueEyeGate"), target: nil, action: nil)
     private let eyeLead = NSTextField()
     private let eyeManualFinish = NSButton(checkboxWithTitle: L10n.tr("prefs.eyeManualFinish"), target: nil, action: nil)
     private let eyeEmergencyOverride = NSButton(checkboxWithTitle: L10n.tr("prefs.eyeEmergencyOverride"), target: nil, action: nil)
@@ -573,6 +574,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let bodyDuration = NSTextField()
     private let bodyColor = NSColorWell()
     private let bodyNotify = NSButton(checkboxWithTitle: L10n.tr("prefs.notifyBodyBreak"), target: nil, action: nil)
+    private let bodyFullScreenCue = NSButton(checkboxWithTitle: L10n.tr("prefs.fullScreenCueBodyBreak"), target: nil, action: nil)
     private let bodyLead = NSTextField()
     private let bodyPostponeMinutes = NSTextField()
     private let bodyPostponeLimit = NSTextField()
@@ -901,6 +903,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         scheduleStack.addArrangedSubview(eyeColorRow)
         eyeNotify.identifier = NSUserInterfaceItemIdentifier("prefs.eyeNotify")
         scheduleStack.addArrangedSubview(eyeNotify)
+        eyeFullScreenCue.identifier = NSUserInterfaceItemIdentifier("prefs.eyeFullScreenCue")
+        scheduleStack.addArrangedSubview(eyeFullScreenCue)
         let eyeLeadRow = numberRow(
             L10n.tr("prefs.notificationLead"),
             eyeLead,
@@ -976,6 +980,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         scheduleStack.addArrangedSubview(bodyColorRow)
         bodyNotify.identifier = NSUserInterfaceItemIdentifier("prefs.bodyNotify")
         scheduleStack.addArrangedSubview(bodyNotify)
+        bodyFullScreenCue.identifier = NSUserInterfaceItemIdentifier("prefs.bodyFullScreenCue")
+        scheduleStack.addArrangedSubview(bodyFullScreenCue)
         let bodyLeadRow = numberRow(
             L10n.tr("prefs.notificationLead"),
             bodyLead,
@@ -2319,6 +2325,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         setNumberInputHelp(L10n.tr("prefs.eyeDurationHelp"), on: eyeDuration)
         setHelp(L10n.tr("prefs.overlayColorHelp"), on: eyeColor)
         setHelp(L10n.tr("prefs.notifyEyeGateHelp"), on: eyeNotify)
+        setHelp(L10n.tr("prefs.fullScreenCueHelp"), on: eyeFullScreenCue)
         setNumberInputHelp(L10n.tr("prefs.notificationLeadHelp"), on: eyeLead)
         setHelp(L10n.tr("prefs.eyeManualFinishHelp"), on: eyeManualFinish)
         setHelp(L10n.tr("prefs.eyeEmergencyOverrideHelp"), on: eyeEmergencyOverride)
@@ -2328,6 +2335,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         setNumberInputHelp(L10n.tr("prefs.bodyDurationHelp"), on: bodyDuration)
         setHelp(L10n.tr("prefs.overlayColorHelp"), on: bodyColor)
         setHelp(L10n.tr("prefs.notifyBodyBreakHelp"), on: bodyNotify)
+        setHelp(L10n.tr("prefs.fullScreenCueHelp"), on: bodyFullScreenCue)
         setNumberInputHelp(L10n.tr("prefs.notificationLeadHelp"), on: bodyLead)
         setNumberInputHelp(L10n.tr("prefs.bodyPostponeMinutesHelp"), on: bodyPostponeMinutes)
         setNumberInputHelp(L10n.tr("prefs.bodyPostponeLimitHelp"), on: bodyPostponeLimit)
@@ -2411,7 +2419,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         }
 
         let controls: [NSControl] = [
-            eyeColor, bodyColor, eyeNotify, eyeManualFinish, eyeEmergencyOverride, bodyNotify, bodyAllowSkip, bodyManualFinish, bodyCoversAllDisplays,
+            eyeColor, bodyColor, eyeNotify, eyeFullScreenCue, eyeManualFinish, eyeEmergencyOverride,
+            bodyNotify, bodyFullScreenCue, bodyAllowSkip, bodyManualFinish, bodyCoversAllDisplays,
             bodyBlankSecondaryDisplays, naturalBreaks, focusMonitor, focusDefersBody, workingHoursEnabled,
             appExclusionEnabled, appExclusionMode, appExclusionAppliesEye, appExclusionAppliesBody, themeSource,
             languageIdentifier, currentTimeInBodyBreak, breakHealth, silentNotifications,
@@ -2597,6 +2606,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         eyeDuration.stringValue = String(Int(settings.eyeGate.duration))
         eyeColor.color = NSColor(hex: settings.eyeGate.colorHex, fallback: RestSettings.defaults.eyeGate.colorHex)
         eyeNotify.state = state(settings.notifications.eyeGateEnabled)
+        eyeFullScreenCue.state = state(settings.notifications.eyeGateFullScreenCueEnabled)
         eyeLead.stringValue = String(Int(settings.notifications.eyeGateLeadTime))
         eyeManualFinish.state = state(settings.eyeGate.manualFinishEnabled)
         eyeEmergencyOverride.state = state(settings.eyeGate.emergencyOverride.isEnabled)
@@ -2606,6 +2616,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         bodyDuration.stringValue = String(Int(settings.bodyBreak.duration / 60))
         bodyColor.color = NSColor(hex: settings.bodyBreak.colorHex, fallback: RestSettings.defaults.bodyBreak.colorHex)
         bodyNotify.state = state(settings.notifications.bodyBreakEnabled)
+        bodyFullScreenCue.state = state(settings.notifications.bodyBreakFullScreenCueEnabled)
         bodyLead.stringValue = String(Int(settings.notifications.bodyBreakLeadTime))
         bodyPostponeMinutes.stringValue = String(Int(settings.bodyBreak.postpone.duration / 60))
         bodyPostponeLimit.stringValue = String(settings.bodyBreak.postpone.maxCount)
@@ -2750,6 +2761,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         next.eyeGate.duration = TimeInterval(max(1, intValue(eyeDuration)))
         next.eyeGate.colorHex = hexString(from: eyeColor.color, fallback: RestSettings.defaults.eyeGate.colorHex)
         next.notifications.eyeGateEnabled = isOn(eyeNotify)
+        next.notifications.eyeGateFullScreenCueEnabled = isOn(eyeFullScreenCue)
         next.notifications.eyeGateLeadTime = TimeInterval(max(0, intValue(eyeLead)))
         next.eyeGate.manualFinishEnabled = isOn(eyeManualFinish)
         next.eyeGate.emergencyOverride = EmergencyOverridePolicy(
@@ -2767,6 +2779,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         next.bodyBreak.duration = TimeInterval(max(1, intValue(bodyDuration)) * 60)
         next.bodyBreak.colorHex = hexString(from: bodyColor.color, fallback: RestSettings.defaults.bodyBreak.colorHex)
         next.notifications.bodyBreakEnabled = isOn(bodyNotify)
+        next.notifications.bodyBreakFullScreenCueEnabled = isOn(bodyFullScreenCue)
         next.notifications.bodyBreakLeadTime = TimeInterval(max(0, intValue(bodyLead)))
         next.bodyBreak.postpone = PostponePolicy(
             isEnabled: max(0, intValue(bodyPostponeLimit)) > 0,
@@ -3162,6 +3175,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         eyeColor.isEnabled = eyeGateEnabled
         eyeNotify.isEnabled = eyeGateEnabled
         let eyeNotificationEnabled = eyeGateEnabled && isOn(eyeNotify)
+        eyeFullScreenCue.isHidden = !eyeNotificationEnabled
+        eyeFullScreenCue.isEnabled = eyeNotificationEnabled
         eyeLeadRow?.isHidden = !eyeNotificationEnabled
         setNumberInputEnabled(eyeLead, eyeNotificationEnabled)
         eyeManualFinish.isEnabled = eyeGateEnabled
@@ -3183,13 +3198,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         ].forEach { $0?.isHidden = !bodyBreakEnabled }
         [
             bodyNotify,
+            bodyFullScreenCue,
             bodyManualFinish,
             bodyCoversAllDisplays
         ].forEach { $0.isHidden = !bodyBreakEnabled }
         bodyAllowSkip.isHidden = strictPreferencesHidden || !bodyBreakEnabled
         bodyAllowSkipHelpRow?.isHidden = strictPreferencesHidden || !bodyBreakEnabled
         [
-            bodyColor, bodyNotify, bodyAllowSkip, bodyManualFinish, bodyCoversAllDisplays,
+            bodyColor, bodyNotify, bodyFullScreenCue, bodyAllowSkip, bodyManualFinish, bodyCoversAllDisplays,
             bodyCoveredDisplay, bodyContentDisplay, bodyBlankSecondaryDisplays
         ].forEach { $0.isEnabled = bodyBreakEnabled }
         [
@@ -3200,6 +3216,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         [bodyPostponeMinutesRow, bodyPostponeWindowPercentRow].forEach { $0?.isHidden = !bodyPostponeEnabled }
         [bodyPostponeMinutes, bodyPostponeWindowPercent].forEach { setNumberInputEnabled($0, bodyPostponeEnabled) }
         let bodyNotificationEnabled = bodyBreakEnabled && isOn(bodyNotify)
+        bodyFullScreenCue.isHidden = !bodyNotificationEnabled
+        bodyFullScreenCue.isEnabled = bodyNotificationEnabled
         bodyLeadRow?.isHidden = !bodyNotificationEnabled
         setNumberInputEnabled(bodyLead, bodyNotificationEnabled)
         let coversAllDisplays = isOn(bodyCoversAllDisplays)
