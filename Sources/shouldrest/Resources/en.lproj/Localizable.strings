@@ -200,8 +200,8 @@
 "prefs.cannotDisableBothRestsHelp" = "Turn one rest type on before turning the other off.";
 "prefs.cannotDisableEyeGateLastRest" = "Turn on Body Break before turning off Eye Gate.";
 "prefs.cannotDisableBodyBreakLastRest" = "Turn on Eye Gate before turning off Body Break.";
-"prefs.notifyEyeGate" = "Notify before Eye Gate";
-"prefs.notifyEyeGateHelp" = "Send a notification before the Eye Gate overlay starts.";
+"prefs.notifyEyeGate" = "Show edge cue before Eye Gate";
+"prefs.notifyEyeGateHelp" = "Pulse the screen edge before the Eye Gate overlay starts.";
 "prefs.eyeManualFinish" = "Wait for me after Eye Gate ends";
 "prefs.eyeManualFinishHelp" = "When the Eye Gate timer ends, keep the overlay up until you finish it. Early dismissal stays disabled.";
 "prefs.eyeEmergencyOverride" = "Enable Emergency Exit";
@@ -209,8 +209,8 @@
 "prefs.eyeEmergencyOverrideDisabledHelp" = "Emergency Exit is off. During Eye Gate, quit, reset, and pause stay blocked until the timer ends or the rest is finished.";
 "prefs.enableBodyBreak" = "Enable Body Break";
 "prefs.enableBodyBreakHelp" = "Keep longer movement breaks active for posture and movement.";
-"prefs.notifyBodyBreak" = "Notify before Body Break";
-"prefs.notifyBodyBreakHelp" = "Send a notification before the Body Break overlay starts.";
+"prefs.notifyBodyBreak" = "Show edge cue before Body Break";
+"prefs.notifyBodyBreakHelp" = "Pulse the screen edge before the Body Break overlay starts.";
 "prefs.manualFinish" = "Wait for me after Body Break ends";
 "prefs.bodyManualFinishHelp" = "When the Body Break timer ends, keep the overlay up until you finish it instead of closing immediately.";
 "prefs.naturalBreaks" = "Count time away as rest";
@@ -260,8 +260,8 @@
 "prefs.eyeDurationHelp" = "How long each Eye Gate stays on screen.";
 "prefs.overlayColor" = "Overlay color";
 "prefs.overlayColorHelp" = "Choose the tint used by this rest overlay.";
-"prefs.notificationLead" = "Notification lead time";
-"prefs.notificationLeadHelp" = "How early the notification appears before the overlay covers the screen.";
+"prefs.notificationLead" = "Cue lead time";
+"prefs.notificationLeadHelp" = "How early the screen-edge cue appears before the overlay covers the screen.";
 "prefs.sectionBodyBreak" = "Body Break";
 "prefs.bodyIntervalMinutes" = "Repeat every";
 "prefs.bodyIntervalHelp" = "How often Body Break is due during a computer-use episode.";

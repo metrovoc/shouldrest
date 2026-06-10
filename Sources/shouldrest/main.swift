@@ -2,6 +2,7 @@ import AppKit
 import Carbon
 import Foundation
 import IOKit
+import QuartzCore
 import ShouldRestCore
 import UserNotifications
 
@@ -608,6 +609,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private var settings: RestSettings
     private var engine: RestEngine
     private let overlayController = OverlayController()
+    private let preRestCueController = PreRestCueController()
     private let focusDetector = FocusModeDetector()
     private let soundPlayer = SoundPlayer()
     private let globalShortcuts = GlobalShortcutManager()
@@ -701,6 +703,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         updateCheckTimer?.invalidate()
         unregisterActiveBreakShortcut()
         unregisterEmergencyEscapeShortcut()
+        preRestCueController.dismiss()
         overlayController.dismiss()
         logger.log("Application terminated")
     }
@@ -736,6 +739,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func screenParametersChanged() {
         overlayController.reconcile()
+        preRestCueController.reconcile()
     }
 
     private func createStatusItem() {
@@ -838,6 +842,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             ) {
                 unregisterActiveBreakShortcut()
                 unregisterEmergencyEscapeShortcut()
+                preRestCueController.dismiss()
                 overlayController.dismiss()
                 emergencyOverrideCoordinator.clear(sessionID: active.id)
                 manualAwaitingSessionID = nil
@@ -869,6 +874,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func handleEngineResult(_ result: RestEngineResult, now: Date) {
         switch result {
         case .started(let session):
+            preRestCueController.dismiss()
             bindPendingBodyBreakIdea(to: session)
             playRestSound(settings.rule(for: session.kind).startSound)
             overlayController.present(
@@ -883,9 +889,10 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             refreshEmergencyEscapeShortcut()
             logger.log("Started \(session.kind.rawValue)")
         case .notificationDue(let kind):
-            showNotification(for: kind)
-            logger.log("Notification due for \(kind.rawValue)")
+            showPreRestCue(for: kind, now: now)
+            logger.log("Pre-rest cue due for \(kind.rawValue)")
         case .naturalRestsCredited(let kinds):
+            preRestCueController.dismiss()
             let credited = kinds.map(\.rawValue).sorted().joined(separator: ",")
             logger.log("Natural rests credited kinds=\(credited)")
         default:
@@ -915,10 +922,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         )
     }
 
-    private func showNotification(for kind: RestKind) {
-        showAppNotification(
-            title: RestNotificationCopy.title(for: kind),
-            body: RestNotificationCopy.body(for: kind)
+    private func showPreRestCue(for kind: RestKind, now: Date) {
+        preRestCueController.present(
+            kind: kind,
+            settings: settings,
+            dismissAt: engine.state.scheduled?.dueAt,
+            now: now
         )
     }
 
@@ -1272,6 +1281,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             preserveAwayCandidate: context.idleDuration > 0
         )
         if case .started(let session) = result {
+            preRestCueController.dismiss()
             playRestSound(settings.rule(for: session.kind).startSound)
             overlayController.present(
                 session: session,
@@ -1307,6 +1317,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             preserveAwayCandidate: context.idleDuration > 0
         )
         if case .started(let session) = result {
+            preRestCueController.dismiss()
             bodyBreakIdeas.bindStartedIdea(effectiveIdea, to: session)
             playRestSound(settings.rule(for: session.kind).startSound)
             overlayController.present(
@@ -1348,6 +1359,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         if case .postponed = engine.postponeActive(now: now) {
             unregisterActiveBreakShortcut()
             unregisterEmergencyEscapeShortcut()
+            preRestCueController.dismiss()
             overlayController.dismiss()
             emergencyOverrideCoordinator.clear(sessionID: active.id)
             clearActiveBodyBreakIdea(for: active)
@@ -1393,6 +1405,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         if case .completed = engine.skipActive(now: now) {
             unregisterActiveBreakShortcut()
             unregisterEmergencyEscapeShortcut()
+            preRestCueController.dismiss()
             clearActiveBodyBreakIdea(for: active)
             overlayController.dismiss()
             emergencyOverrideCoordinator.clear(sessionID: active.id)
@@ -1420,6 +1433,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         if availability.canPostpone, case .postponed = engine.postponeActive(now: now) {
             unregisterActiveBreakShortcut()
             unregisterEmergencyEscapeShortcut()
+            preRestCueController.dismiss()
             overlayController.dismiss()
             emergencyOverrideCoordinator.clear(sessionID: active.id)
             clearActiveBodyBreakIdea(for: active)
@@ -1428,6 +1442,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         } else if availability.canSkip, case .completed = engine.skipActive(now: now) {
             unregisterActiveBreakShortcut()
             unregisterEmergencyEscapeShortcut()
+            preRestCueController.dismiss()
             overlayController.dismiss()
             emergencyOverrideCoordinator.clear(sessionID: active.id)
             manualAwaitingSessionID = nil
@@ -1624,6 +1639,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func releaseActiveRestSurface(for session: RestSession) {
         unregisterActiveBreakShortcut()
         unregisterEmergencyEscapeShortcut()
+        preRestCueController.dismiss()
         overlayController.dismiss()
         emergencyOverrideCoordinator.clear(sessionID: session.id)
         manualAwaitingSessionID = nil
@@ -1775,6 +1791,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         if case .paused = result {
             unregisterActiveBreakShortcut()
             unregisterEmergencyEscapeShortcut()
+            preRestCueController.dismiss()
             overlayController.dismiss()
             if let active {
                 clearActiveBodyBreakIdea(for: active)
@@ -1837,6 +1854,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         _ = engine.reset()
         unregisterActiveBreakShortcut()
         unregisterEmergencyEscapeShortcut()
+        preRestCueController.dismiss()
         overlayController.dismiss()
         manualAwaitingSessionID = nil
         bodyBreakIdeas.clearAll()
@@ -2002,6 +2020,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         try settingsStore.save(normalizedSettings)
         settings = normalizedSettings
         engine.updateSettings(normalizedSettings)
+        preRestCueController.dismiss()
         applyLanguageSetting()
         applyAppearanceSetting()
         applyOpenAtLoginSetting()
@@ -2287,6 +2306,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func systemWillPause() {
         let now = Date()
+        preRestCueController.dismiss()
         let alreadyPausedForSuspendOrLock = SystemSuspendPausePolicy.hasSuspendOrLockPause(state: engine.state)
         if !alreadyPausedForSuspendOrLock {
             suspendedAt = now
@@ -2726,6 +2746,298 @@ private enum EmergencyOverrideKeyHandling {
 private func emergencyOverrideKeyHandling(for event: NSEvent) -> EmergencyOverrideKeyHandling {
     guard isEmergencyOverrideKey(event) else { return .passThrough }
     return event.isARepeat ? .consumeRepeat : .trigger
+}
+
+struct PreRestCueStyle {
+    let accentColor: NSColor
+    let edgeThickness: CGFloat
+    let glowRadius: CGFloat
+    let baseOpacity: Float
+    let peakOpacity: Float
+    let reducedMotionOpacity: Float
+    let pulseDuration: CFTimeInterval
+
+    static func make(kind: RestKind, settings: RestSettings) -> PreRestCueStyle {
+        switch kind {
+        case .eyeGate:
+            return PreRestCueStyle(
+                accentColor: NSColor(deviceRed: 0.47, green: 0.78, blue: 1, alpha: 1),
+                edgeThickness: 10,
+                glowRadius: 22,
+                baseOpacity: 0.12,
+                peakOpacity: 0.34,
+                reducedMotionOpacity: 0.20,
+                pulseDuration: 1.6
+            )
+        case .bodyBreak:
+            return PreRestCueStyle(
+                accentColor: NSColor(deviceRed: 0.38, green: 0.92, blue: 0.68, alpha: 1),
+                edgeThickness: 10,
+                glowRadius: 22,
+                baseOpacity: 0.12,
+                peakOpacity: 0.32,
+                reducedMotionOpacity: 0.19,
+                pulseDuration: 1.8
+            )
+        }
+    }
+}
+
+@MainActor
+final class PreRestCueController {
+    private var windows: [CGDirectDisplayID: PreRestCueWindow] = [:]
+    private var kind: RestKind?
+    private var settings: RestSettings?
+    private var dismissTimer: Timer?
+
+    var windowsForTesting: [PreRestCueWindow] {
+        Array(windows.values)
+    }
+
+    var isVisible: Bool {
+        !windows.isEmpty
+    }
+
+    func present(kind: RestKind, settings: RestSettings, dismissAt: Date?, now: Date = Date()) {
+        let effectiveSettings = settings.normalizedForCurrentDesign()
+        self.kind = kind
+        self.settings = effectiveSettings
+        reconcileWindows(for: targetScreens(kind: kind, settings: effectiveSettings), kind: kind, settings: effectiveSettings)
+        scheduleDismiss(at: dismissAt, now: now)
+    }
+
+    func reconcile() {
+        guard let kind, let settings else { return }
+        reconcileWindows(for: targetScreens(kind: kind, settings: settings), kind: kind, settings: settings)
+    }
+
+    func dismiss() {
+        dismissTimer?.invalidate()
+        dismissTimer = nil
+        for window in windows.values {
+            window.close()
+        }
+        windows.removeAll()
+        kind = nil
+        settings = nil
+    }
+
+    private func scheduleDismiss(at dismissAt: Date?, now: Date) {
+        dismissTimer?.invalidate()
+        dismissTimer = nil
+
+        guard let dismissAt else { return }
+        let interval = dismissAt.timeIntervalSince(now)
+        guard interval > 0 else {
+            dismiss()
+            return
+        }
+
+        dismissTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: false) { [weak self] _ in
+            Task { @MainActor in
+                self?.dismiss()
+            }
+        }
+    }
+
+    private func reconcileWindows(for screens: [NSScreen], kind: RestKind, settings: RestSettings) {
+        let targetIDs = Set(screens.map(\.displayID))
+        for (id, window) in windows where !targetIDs.contains(id) {
+            window.close()
+        }
+        windows = windows.filter { targetIDs.contains($0.key) }
+
+        let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        for screen in screens {
+            let id = screen.displayID
+            if windows[id] == nil {
+                windows[id] = PreRestCueWindow(
+                    screen: screen,
+                    kind: kind,
+                    settings: settings,
+                    reduceMotion: reduceMotion
+                )
+            }
+            windows[id]?.setFrame(screen.frame, display: true)
+            windows[id]?.configure(kind: kind, settings: settings, reduceMotion: reduceMotion)
+            windows[id]?.orderFrontRegardless()
+        }
+    }
+
+    private func targetScreens(kind: RestKind, settings: RestSettings) -> [NSScreen] {
+        let allScreens = NSScreen.screens
+        guard !allScreens.isEmpty else { return [] }
+
+        let enforcement = settings.rule(for: kind).enforcement
+        if kind == .eyeGate || enforcement.coversAllDisplays {
+            return allScreens
+        }
+
+        let contentScreen = screen(for: enforcement.contentDisplay, enforcement: enforcement)
+        let fallbackSelection = contentScreen == nil ? DisplaySelection.primary : enforcement.contentDisplay
+        let selection = enforcement.coveredDisplay ?? fallbackSelection
+        return [screen(for: selection, enforcement: enforcement) ?? allScreens.first!]
+    }
+
+    private func screen(for selection: DisplaySelection, enforcement: EnforcementProfile) -> NSScreen? {
+        switch selection {
+        case .none, .all:
+            return nil
+        case .primary:
+            return NSScreen.screens.first
+        case .cursor:
+            return NSScreen.screens.first { NSMouseInRect(NSEvent.mouseLocation, $0.frame, false) } ?? NSScreen.screens.first
+        case .configured:
+            if let index = enforcement.configuredDisplayIndex,
+               NSScreen.screens.indices.contains(index) {
+                return NSScreen.screens[index]
+            }
+            return NSScreen.screens.first
+        }
+    }
+}
+
+@MainActor
+final class PreRestCueWindow: NSWindow {
+    let cueView: PreRestCueView
+
+    init(screen: NSScreen, kind: RestKind, settings: RestSettings, reduceMotion: Bool) {
+        self.cueView = PreRestCueView(frame: NSRect(origin: .zero, size: screen.frame.size))
+        super.init(
+            contentRect: screen.frame,
+            styleMask: [.borderless],
+            backing: .buffered,
+            defer: false
+        )
+        contentView = cueView
+        level = .screenSaver
+        collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
+        backgroundColor = .clear
+        isOpaque = false
+        hasShadow = false
+        ignoresMouseEvents = true
+        hidesOnDeactivate = false
+        isReleasedWhenClosed = false
+        isMovable = false
+        canHide = false
+        configure(kind: kind, settings: settings, reduceMotion: reduceMotion)
+        syncCueViewFrame(to: screen.frame.size)
+    }
+
+    func configure(kind: RestKind, settings: RestSettings, reduceMotion: Bool) {
+        cueView.configure(style: PreRestCueStyle.make(kind: kind, settings: settings), reduceMotion: reduceMotion)
+    }
+
+    override var canBecomeKey: Bool {
+        false
+    }
+
+    override var canBecomeMain: Bool {
+        false
+    }
+
+    override func setFrame(_ frameRect: NSRect, display flag: Bool) {
+        super.setFrame(frameRect, display: flag)
+        syncCueViewFrame(to: frameRect.size)
+    }
+
+    private func syncCueViewFrame(to size: NSSize) {
+        cueView.frame = NSRect(origin: .zero, size: size)
+    }
+}
+
+@MainActor
+final class PreRestCueView: NSView {
+    private let topLayer = CAGradientLayer()
+    private let bottomLayer = CAGradientLayer()
+    private let leftLayer = CAGradientLayer()
+    private let rightLayer = CAGradientLayer()
+    private var style = PreRestCueStyle.make(kind: .eyeGate, settings: .defaults)
+    private var reduceMotion = false
+
+    var edgeLayerCountForTesting: Int {
+        edgeLayers.count
+    }
+
+    private var edgeLayers: [CAGradientLayer] {
+        [topLayer, bottomLayer, leftLayer, rightLayer]
+    }
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        wantsLayer = true
+        layer?.backgroundColor = NSColor.clear.cgColor
+        layer?.masksToBounds = false
+        setAccessibilityElement(false)
+        edgeLayers.forEach { layer?.addSublayer($0) }
+        configure(style: style, reduceMotion: false)
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        nil
+    }
+
+    func configure(style: PreRestCueStyle, reduceMotion: Bool) {
+        self.style = style
+        self.reduceMotion = reduceMotion
+        let solidColor = style.accentColor.withAlphaComponent(1).cgColor
+        let transparentColor = style.accentColor.withAlphaComponent(0).cgColor
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        for edgeLayer in edgeLayers {
+            edgeLayer.colors = [solidColor, transparentColor]
+            edgeLayer.shadowColor = solidColor
+            edgeLayer.shadowOpacity = 0.7
+            edgeLayer.shadowRadius = style.glowRadius
+            edgeLayer.shadowOffset = .zero
+            edgeLayer.removeAnimation(forKey: Self.pulseAnimationKey)
+            edgeLayer.opacity = reduceMotion ? style.reducedMotionOpacity : style.baseOpacity
+        }
+        topLayer.startPoint = CGPoint(x: 0.5, y: 1)
+        topLayer.endPoint = CGPoint(x: 0.5, y: 0)
+        bottomLayer.startPoint = CGPoint(x: 0.5, y: 0)
+        bottomLayer.endPoint = CGPoint(x: 0.5, y: 1)
+        leftLayer.startPoint = CGPoint(x: 0, y: 0.5)
+        leftLayer.endPoint = CGPoint(x: 1, y: 0.5)
+        rightLayer.startPoint = CGPoint(x: 1, y: 0.5)
+        rightLayer.endPoint = CGPoint(x: 0, y: 0.5)
+        layoutEdgeLayers()
+        CATransaction.commit()
+
+        guard !reduceMotion else { return }
+        for (index, edgeLayer) in edgeLayers.enumerated() {
+            let animation = CABasicAnimation(keyPath: "opacity")
+            animation.fromValue = style.baseOpacity
+            animation.toValue = style.peakOpacity
+            animation.duration = style.pulseDuration
+            animation.beginTime = CACurrentMediaTime() + Double(index) * 0.08
+            animation.autoreverses = true
+            animation.repeatCount = .infinity
+            animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            animation.isRemovedOnCompletion = false
+            edgeLayer.add(animation, forKey: Self.pulseAnimationKey)
+        }
+    }
+
+    override func layout() {
+        super.layout()
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        layoutEdgeLayers()
+        CATransaction.commit()
+    }
+
+    private func layoutEdgeLayers() {
+        let thickness = style.edgeThickness
+        topLayer.frame = CGRect(x: 0, y: bounds.height - thickness, width: bounds.width, height: thickness)
+        bottomLayer.frame = CGRect(x: 0, y: 0, width: bounds.width, height: thickness)
+        leftLayer.frame = CGRect(x: 0, y: 0, width: thickness, height: bounds.height)
+        rightLayer.frame = CGRect(x: bounds.width - thickness, y: 0, width: thickness, height: bounds.height)
+    }
+
+    private static let pulseAnimationKey = "shouldrest.preRestCuePulse"
 }
 
 @MainActor
