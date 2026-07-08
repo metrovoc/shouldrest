@@ -205,6 +205,34 @@ final class MenuStatusPresenterTests: XCTestCase {
         XCTAssertTrue(content.secondary?.localizedCaseInsensitiveContains("shouldrest resume") ?? false)
     }
 
+    func testBodyBreakOnlyPauseKeepsScheduledEyeGateAsPrimaryStatus() {
+        let dueAt = start.addingTimeInterval(10 * 60)
+        let pausedUntil = start.addingTimeInterval(30 * 60)
+        let state = RestEngineState(
+            scheduled: ScheduledRest(kind: .eyeGate, dueAt: dueAt, notificationAt: nil),
+            pause: PauseState(
+                reason: .user,
+                startedAt: start,
+                until: pausedUntil,
+                appliesTo: [.bodyBreak]
+            )
+        )
+
+        let lines = MenuStatusPresenter.lines(state: state, settings: .defaults, now: start)
+        let content = MenuStatusPresenter.headerContent(state: state, settings: .defaults, now: start)
+
+        XCTAssertEqual(
+            lines[0],
+            "Next: Eye Gate in 10m (\(dueAt.formatted(date: .omitted, time: .shortened)))"
+        )
+        XCTAssertEqual(
+            lines[1],
+            "Body Break paused until \(pausedUntil.formatted(date: .omitted, time: .shortened))"
+        )
+        XCTAssertEqual(content.secondary, lines[1])
+        XCTAssertEqual(content.icon, .restGate)
+    }
+
     func testPauseStatusNamesNonManualPauseReasons() {
         let untilMorning = RestEngineState(
             pause: PauseState(

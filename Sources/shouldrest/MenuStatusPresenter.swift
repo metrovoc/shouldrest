@@ -36,14 +36,20 @@ enum MenuStatusPresenter {
     }
 
     static func lines(state: RestEngineState, settings: RestSettings, now: Date = Date()) -> [String] {
-        var lines = [primaryStatusText(state: state, now: now)]
+        var lines = [primaryStatusText(state: state, settings: settings, now: now)]
         if let active = state.activeSession {
             lines.append(activeSecondaryStatusText(active, settings: settings, now: now))
             return lines
         }
         if let pause = state.pause {
-            lines.append(pauseSecondaryStatusText(pause, now: now))
-            return lines
+            if pauseCoversAllEnabledRests(pause, settings: settings) {
+                lines.append(pauseSecondaryStatusText(pause, now: now))
+                return lines
+            }
+            if let scopedStatus = scopedPauseStatusText(pause, now: now) {
+                lines.append(scopedStatus)
+                return lines
+            }
         }
         if state.activeDeferral != nil {
             lines.append(deferralSecondaryStatusText())
@@ -98,14 +104,14 @@ enum MenuStatusPresenter {
         if let active = state.activeSession {
             return icon(for: active.kind)
         }
-        if state.pause != nil {
-            return .systemSymbol("pause.circle")
-        }
         if state.activeDeferral != nil {
             return .systemSymbol("clock")
         }
         if let scheduled = state.scheduled {
             return icon(for: scheduled.kind)
+        }
+        if state.pause != nil {
+            return .systemSymbol("pause.circle")
         }
         return icon(for: .eyeGate)
     }
@@ -154,7 +160,7 @@ enum MenuStatusPresenter {
         return L10n.format("status.healthBadge", state.dangerScore)
     }
 
-    private static func primaryStatusText(state: RestEngineState, now: Date) -> String {
+    private static func primaryStatusText(state: RestEngineState, settings: RestSettings, now: Date) -> String {
         if let active = state.activeSession {
             if isManualFinishReady(active, now: now) {
                 return L10n.format("status.readyToFinish", restKindName(active.kind))
@@ -163,10 +169,12 @@ enum MenuStatusPresenter {
             return L10n.format("status.active", restKindName(active.kind), activeRemainingText(seconds: remaining))
         }
         if let pause = state.pause {
-            if let until = pause.until {
-                return L10n.format("status.pausedUntil", until.formatted(date: .omitted, time: .shortened))
+            if pauseCoversAllEnabledRests(pause, settings: settings) {
+                if let until = pause.until {
+                    return L10n.format("status.pausedUntil", until.formatted(date: .omitted, time: .shortened))
+                }
+                return L10n.tr("status.pausedIndefinitely")
             }
-            return L10n.tr("status.pausedIndefinitely")
         }
         if let deferral = state.activeDeferral {
             return L10n.format(
@@ -183,6 +191,10 @@ enum MenuStatusPresenter {
                 compactDurationText(seconds: seconds),
                 scheduled.dueAt.formatted(date: .omitted, time: .shortened)
             )
+        }
+        if let pause = state.pause,
+           let scopedStatus = scopedPauseStatusText(pause, now: now) {
+            return scopedStatus
         }
         return L10n.tr("status.noRests")
     }
@@ -219,6 +231,19 @@ enum MenuStatusPresenter {
         }
         let seconds = max(0, Int(ceil(until.timeIntervalSince(now))))
         return L10n.format("status.pauseResumesInWithReason", reason, compactDurationText(seconds: seconds))
+    }
+
+    private static func scopedPauseStatusText(_ pause: PauseState, now: Date) -> String? {
+        guard pause.appliesTo == Set([RestKind.bodyBreak]) else { return nil }
+        let name = restKindName(.bodyBreak)
+        if let until = pause.until {
+            return L10n.format(
+                "status.restPausedUntil",
+                name,
+                until.formatted(date: .omitted, time: .shortened)
+            )
+        }
+        return L10n.format("status.restPausedIndefinitely", name)
     }
 
     private static func pauseReasonText(_ reason: PauseReason) -> String {
@@ -269,7 +294,7 @@ enum MenuStatusPresenter {
         guard settings.eyeGate.isEnabled,
               settings.bodyBreak.isEnabled,
               state.activeSession == nil,
-              state.pause == nil,
+              state.pause?.applies(to: .bodyBreak) != true,
               state.activeDeferral == nil,
               state.scheduled?.kind == .eyeGate else {
             return nil
@@ -278,5 +303,11 @@ enum MenuStatusPresenter {
         let suppressionRemaining = state.bodySuppressedUntil.map { max(0, $0.timeIntervalSince(now)) } ?? 0
         let remaining = Int(ceil(max(debtRemaining, suppressionRemaining)))
         return L10n.format("status.nextBodyIn", compactDurationText(seconds: remaining))
+    }
+
+    private static func pauseCoversAllEnabledRests(_ pause: PauseState, settings: RestSettings) -> Bool {
+        let enabledKinds = RestKind.allCases.filter { settings.rule(for: $0).isEnabled }
+        guard !enabledKinds.isEmpty else { return false }
+        return enabledKinds.allSatisfy { pause.applies(to: $0) }
     }
 }

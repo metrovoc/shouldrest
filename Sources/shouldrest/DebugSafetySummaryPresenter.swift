@@ -52,7 +52,8 @@ enum DebugSafetySummaryPresenter {
             }
         }
 
-        if state.pause != nil {
+        if let pause = state.pause,
+           pauseCoversAllEnabledRests(pause, settings: settings) {
             return DebugSafetySummary(
                 title: L10n.tr("debug.summaryPausedTitle"),
                 body: L10n.tr(
@@ -96,5 +97,11 @@ enum DebugSafetySummaryPresenter {
             symbolName: "checkmark.shield",
             severity: .ready
         )
+    }
+
+    private static func pauseCoversAllEnabledRests(_ pause: PauseState, settings: RestSettings) -> Bool {
+        let enabledKinds = RestKind.allCases.filter { settings.rule(for: $0).isEnabled }
+        guard !enabledKinds.isEmpty else { return false }
+        return enabledKinds.allSatisfy { pause.applies(to: $0) }
     }
 }

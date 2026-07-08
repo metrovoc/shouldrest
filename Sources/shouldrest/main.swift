@@ -219,6 +219,30 @@ enum PauseIndefinitelyConfirmation {
     }
 }
 
+enum PauseBodyBreakIndefinitelyConfirmation {
+    @MainActor
+    static func makeAlert() -> NSAlert {
+        let alert = NSAlert()
+        alert.messageText = L10n.tr("pause.bodyIndefiniteConfirmTitle")
+        alert.informativeText = L10n.tr("pause.bodyIndefiniteConfirmBody")
+        alert.alertStyle = .warning
+        let cancelButton = alert.addButton(withTitle: L10n.tr("pause.indefiniteConfirmCancel"))
+        let pauseButton = alert.addButton(withTitle: L10n.tr("pause.bodyIndefiniteConfirmAction"))
+        cancelButton.keyEquivalent = "\r"
+        pauseButton.keyEquivalent = ""
+        if #available(macOS 11.0, *) {
+            cancelButton.hasDestructiveAction = false
+            pauseButton.hasDestructiveAction = true
+        }
+        return alert
+    }
+
+    @MainActor
+    static func confirmed() -> Bool {
+        makeAlert().runModal() == .alertSecondButtonReturn
+    }
+}
+
 enum PauseMenuCopy {
     static func durationTitle(_ title: String, duration: TimeInterval, now: Date = Date()) -> String {
         let target = now.addingTimeInterval(duration)
@@ -338,13 +362,20 @@ enum StatusMenuActionIcon {
             return "clock.arrow.circlepath"
         case "skipBodyBreak":
             return "forward.end"
-        case "resumeBreaks":
+        case "resumeBreaks", "resumeBodyBreak":
             return "play.circle"
         case "pauseFor30Minutes", "pauseFor1Hour", "pauseFor2Hours", "pauseFor5Hours":
             return "pause.circle"
+        case "pauseBodyBreakFor30Minutes", "pauseBodyBreakFor1Hour", "pauseBodyBreakFor2Hours",
+             "pauseBodyBreakFor5Hours":
+            return "pause.circle"
         case "pauseUntilMorning":
             return "sunrise"
+        case "pauseBodyBreakUntilMorning":
+            return "sunrise"
         case "pauseIndefinitely":
+            return "infinity.circle"
+        case "pauseBodyBreakIndefinitely":
             return "infinity.circle"
         case "resetBreaks":
             return "arrow.counterclockwise"
@@ -393,12 +424,21 @@ enum StatusMenuActionHelp {
             return L10n.tr("menu.skipBodyBreakHelp")
         case "resumeBreaks":
             return L10n.tr("menu.resumeHelp")
+        case "resumeBodyBreak":
+            return L10n.tr("menu.resumeBodyBreakHelp")
         case "pauseFor30Minutes", "pauseFor1Hour", "pauseFor2Hours", "pauseFor5Hours":
             return L10n.tr("menu.pauseDurationHelp")
+        case "pauseBodyBreakFor30Minutes", "pauseBodyBreakFor1Hour", "pauseBodyBreakFor2Hours",
+             "pauseBodyBreakFor5Hours":
+            return L10n.tr("menu.pauseBodyBreakDurationHelp")
         case "pauseUntilMorning":
             return L10n.tr("menu.pauseUntilMorningHelp")
+        case "pauseBodyBreakUntilMorning":
+            return L10n.tr("menu.pauseBodyBreakUntilMorningHelp")
         case "pauseIndefinitely":
             return L10n.tr("menu.pauseIndefinitelyHelp")
+        case "pauseBodyBreakIndefinitely":
+            return L10n.tr("menu.pauseBodyBreakIndefinitelyHelp")
         case "resetBreaks":
             return L10n.tr("menu.resetHelp")
         case "openPreferences":
@@ -1034,9 +1074,17 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        if engine.state.pause != nil {
-            menu.addItem(actionItem(L10n.tr("menu.resume"), #selector(resumeBreaks)))
-        } else if engine.state.activeSession == nil {
+        let activePauseCoversAllEnabledRests = engine.state.pause.map(pauseCoversAllEnabledRests) ?? false
+        if let pause = engine.state.pause {
+            if pause.appliesTo == Set([RestKind.bodyBreak]) {
+                menu.addItem(actionItem(L10n.tr("menu.resumeBodyBreak"), #selector(resumeBodyBreak)))
+            } else {
+                menu.addItem(actionItem(L10n.tr("menu.resume"), #selector(resumeBreaks)))
+            }
+        }
+
+        if engine.state.activeSession == nil,
+           !activePauseCoversAllEnabledRests {
             let pauseMenu = NSMenu()
             pauseMenu.addItem(actionItem(PauseMenuCopy.durationTitle(L10n.tr("menu.pause30"), duration: 30 * 60, now: now), #selector(pauseFor30Minutes)))
             pauseMenu.addItem(actionItem(PauseMenuCopy.durationTitle(L10n.tr("menu.pause1h"), duration: 60 * 60, now: now), #selector(pauseFor1Hour)))
@@ -1048,6 +1096,41 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 PauseMenuCopy.indefiniteTitle(confirmsBeforePausing: shouldConfirmIndefinitePause()),
                 #selector(pauseIndefinitely)
             ))
+            if settings.bodyBreak.isEnabled,
+               engine.state.pause?.applies(to: .bodyBreak) != true {
+                pauseMenu.addItem(.separator())
+                let bodyBreakPauseItem = NSMenuItem(title: L10n.tr("menu.pauseBodyBreakOnly"), action: nil, keyEquivalent: "")
+                bodyBreakPauseItem.image = menuItemImage("figure.walk", accessibilityDescription: bodyBreakPauseItem.title)
+                setMenuItemHelp(L10n.tr("menu.pauseBodyBreakOnlyHelp"), on: bodyBreakPauseItem)
+                let bodyBreakPauseMenu = NSMenu()
+                bodyBreakPauseMenu.addItem(actionItem(
+                    PauseMenuCopy.durationTitle(L10n.tr("menu.pause30"), duration: 30 * 60, now: now),
+                    #selector(pauseBodyBreakFor30Minutes)
+                ))
+                bodyBreakPauseMenu.addItem(actionItem(
+                    PauseMenuCopy.durationTitle(L10n.tr("menu.pause1h"), duration: 60 * 60, now: now),
+                    #selector(pauseBodyBreakFor1Hour)
+                ))
+                bodyBreakPauseMenu.addItem(actionItem(
+                    PauseMenuCopy.durationTitle(L10n.tr("menu.pause2h"), duration: 2 * 60 * 60, now: now),
+                    #selector(pauseBodyBreakFor2Hours)
+                ))
+                bodyBreakPauseMenu.addItem(actionItem(
+                    PauseMenuCopy.durationTitle(L10n.tr("menu.pause5h"), duration: 5 * 60 * 60, now: now),
+                    #selector(pauseBodyBreakFor5Hours)
+                ))
+                bodyBreakPauseMenu.addItem(actionItem(
+                    PauseMenuCopy.untilMorningTitle(settings: settings, now: now),
+                    #selector(pauseBodyBreakUntilMorning)
+                ))
+                bodyBreakPauseMenu.addItem(.separator())
+                bodyBreakPauseMenu.addItem(actionItem(
+                    PauseMenuCopy.indefiniteTitle(confirmsBeforePausing: true),
+                    #selector(pauseBodyBreakIndefinitely)
+                ))
+                bodyBreakPauseItem.submenu = bodyBreakPauseMenu
+                pauseMenu.addItem(bodyBreakPauseItem)
+            }
             let pauseItem = NSMenuItem(title: L10n.tr("menu.pause"), action: nil, keyEquivalent: "")
             pauseItem.image = menuItemImage("pause.circle", accessibilityDescription: pauseItem.title)
             setMenuItemHelp(L10n.tr("menu.pauseHelp"), on: pauseItem)
@@ -1227,6 +1310,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     private func setMenuItemHelp(_ help: String?, on item: NSMenuItem) {
         StatusMenuItemPresentation.apply(help: help, to: item)
+    }
+
+    private func pauseCoversAllEnabledRests(_ pause: PauseState) -> Bool {
+        let enabledKinds = RestKind.allCases.filter { settings.rule(for: $0).isEnabled }
+        guard !enabledKinds.isEmpty else { return false }
+        return enabledKinds.allSatisfy { pause.applies(to: $0) }
     }
 
     private func canPostponeBodyBreak(_ session: RestSession, now: Date) -> Bool {
@@ -1690,7 +1779,10 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     private func notifyAutomaticResume(from pause: PauseState) {
         guard pause.reason == .user || pause.reason == .untilMorning else { return }
-        showAppNotification(title: L10n.tr("app.name"), body: L10n.tr("notification.resumingBreaks"))
+        let body = pause.appliesTo == Set([RestKind.bodyBreak])
+            ? L10n.tr("notification.resumingBodyBreak")
+            : L10n.tr("notification.resumingBreaks")
+        showAppNotification(title: L10n.tr("app.name"), body: body)
     }
 
     private func refreshActiveBreakShortcut() {
@@ -1770,6 +1862,14 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func resumeBreaks() {
+        performResumeBreaks(logMessage: "Breaks resumed")
+    }
+
+    @objc private func resumeBodyBreak() {
+        performResumeBreaks(logMessage: "Body Break resumed")
+    }
+
+    private func performResumeBreaks(logMessage: String) {
         let now = Date()
         let context = currentContext(now: now)
         _ = engine.resume(
@@ -1777,7 +1877,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             idleDuration: context.idleDuration,
             preserveAwayCandidate: context.idleDuration > 0
         )
-        logger.log("Breaks resumed")
+        logger.log(logMessage)
         persistEngineState()
         retryPendingAutomationStarts()
         rebuildMenu()
@@ -1799,8 +1899,28 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         pause(for: 5 * 60 * 60, reason: .user)
     }
 
+    @objc private func pauseBodyBreakFor30Minutes() {
+        pauseBodyBreak(for: 30 * 60, reason: .user)
+    }
+
+    @objc private func pauseBodyBreakFor1Hour() {
+        pauseBodyBreak(for: 60 * 60, reason: .user)
+    }
+
+    @objc private func pauseBodyBreakFor2Hours() {
+        pauseBodyBreak(for: 2 * 60 * 60, reason: .user)
+    }
+
+    @objc private func pauseBodyBreakFor5Hours() {
+        pauseBodyBreak(for: 5 * 60 * 60, reason: .user)
+    }
+
     @objc private func pauseUntilMorning() {
         pause(for: settings.operations.secondsUntilMorning(), reason: .untilMorning)
+    }
+
+    @objc private func pauseBodyBreakUntilMorning() {
+        pauseBodyBreak(for: settings.operations.secondsUntilMorning(), reason: .untilMorning)
     }
 
     @objc private func pauseIndefinitely() {
@@ -1811,11 +1931,27 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         pause(for: nil, reason: .user)
     }
 
+    @objc private func pauseBodyBreakIndefinitely() {
+        if !PauseBodyBreakIndefinitelyConfirmation.confirmed() {
+            logger.log("Indefinite Body Break pause canceled")
+            return
+        }
+        pauseBodyBreak(for: nil, reason: .user)
+    }
+
     private func shouldConfirmIndefinitePause() -> Bool {
         engine.state.activeSession == nil
     }
 
-    private func pause(for duration: TimeInterval?, reason: PauseReason) {
+    private func pauseBodyBreak(for duration: TimeInterval?, reason: PauseReason) {
+        pause(for: duration, reason: reason, appliesTo: [.bodyBreak])
+    }
+
+    private func pause(
+        for duration: TimeInterval?,
+        reason: PauseReason,
+        appliesTo: Set<RestKind> = Set(RestKind.allCases)
+    ) {
         let now = Date()
         let context = currentContext(now: now)
         let active = engine.state.activeSession
@@ -1823,6 +1959,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             for: duration,
             now: now,
             reason: reason,
+            appliesTo: appliesTo,
             idleDuration: context.idleDuration,
             preserveAwayCandidate: context.idleDuration > 0
         )
@@ -1834,7 +1971,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             if let active {
                 clearActiveBodyBreakIdea(for: active)
             }
-            logger.log("Breaks paused reason=\(reason.rawValue) duration=\(String(describing: duration))")
+            let pausedKinds = appliesTo.map(\.rawValue).sorted().joined(separator: ",")
+            logger.log("Breaks paused reason=\(reason.rawValue) appliesTo=\(pausedKinds) duration=\(String(describing: duration))")
             persistEngineState()
         } else if case .denied = result {
             handleBlockedPauseRequest()

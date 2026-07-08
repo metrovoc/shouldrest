@@ -63,6 +63,11 @@ final class LocalizationQualityTests: XCTestCase {
         defer { L10n.languageOverride = nil }
 
         XCTAssertEqual(L10n.tr("notification.resumingBreaks"), "Resuming rests")
+        XCTAssertEqual(L10n.tr("notification.resumingBodyBreak"), "Resuming Body Break")
+        XCTAssertEqual(L10n.tr("menu.resumeBodyBreak"), "Resume Body Break")
+        XCTAssertEqual(L10n.tr("menu.pauseBodyBreakOnly"), "Body Break only")
+        XCTAssertTrue(L10n.tr("menu.pauseBodyBreakOnlyHelp").contains("Eye Gate keeps running"))
+        XCTAssertTrue(L10n.tr("menu.pauseBodyBreakDurationHelp").contains("Eye Gate keeps running"))
         XCTAssertEqual(
             L10n.tr("prefs.pauseToggleShortcutHelp"),
             "Pause rests indefinitely when running, or resume them when already paused. This stays useful if you hide the menu bar icon."
@@ -88,8 +93,10 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(L10n.tr("pause.indefiniteConfirmBody").contains("Pause or resume shortcut"))
         XCTAssertTrue(L10n.tr("pause.indefiniteConfirmBody").contains("shouldrest resume"))
         XCTAssertFalse(L10n.tr("pause.indefiniteConfirmBody").contains("until you resume it from the menu"))
+        XCTAssertTrue(L10n.tr("pause.bodyIndefiniteConfirmBody").contains("Eye Gate will keep running"))
         XCTAssertTrue(L10n.tr("menu.pauseIndefinitelyHelp").contains("Pause or resume shortcut"))
         XCTAssertTrue(L10n.tr("menu.pauseIndefinitelyHelp").contains("shouldrest resume"))
+        XCTAssertTrue(L10n.tr("menu.pauseBodyBreakIndefinitelyHelp").contains("Eye Gate keeps running"))
         XCTAssertTrue(L10n.tr("status.pauseResumeManual").localizedCaseInsensitiveContains("shortcut"))
         XCTAssertTrue(L10n.tr("status.pauseResumeManual").localizedCaseInsensitiveContains("shouldrest resume"))
         XCTAssertFalse(L10n.tr("status.pauseResumeManual").localizedCaseInsensitiveContains("this menu"))
@@ -105,12 +112,18 @@ final class LocalizationQualityTests: XCTestCase {
             L10n.tr("prefs.pauseToggleShortcutHelp"),
             "运行中会无限期暂停休息；已暂停时会恢复休息。隐藏菜单栏图标后，这个快捷键仍然有用。"
         )
+        XCTAssertEqual(L10n.tr("notification.resumingBodyBreak"), "正在恢复活动休息")
+        XCTAssertEqual(L10n.tr("menu.resumeBodyBreak"), "恢复活动休息")
+        XCTAssertEqual(L10n.tr("menu.pauseBodyBreakOnly"), "仅活动休息")
+        XCTAssertTrue(L10n.tr("menu.pauseBodyBreakOnlyHelp").contains("护眼休息继续运行"))
         XCTAssertTrue(L10n.tr("prefs.pauseToggleShortcutHelp").contains("隐藏菜单栏图标"))
         XCTAssertTrue(L10n.tr("pause.indefiniteConfirmBody").contains("暂停或恢复快捷键"))
         XCTAssertTrue(L10n.tr("pause.indefiniteConfirmBody").contains("shouldrest resume"))
         XCTAssertFalse(L10n.tr("pause.indefiniteConfirmBody").contains("从菜单手动恢复"))
+        XCTAssertTrue(L10n.tr("pause.bodyIndefiniteConfirmBody").contains("护眼休息会继续运行"))
         XCTAssertTrue(L10n.tr("menu.pauseIndefinitelyHelp").contains("暂停或恢复快捷键"))
         XCTAssertTrue(L10n.tr("menu.pauseIndefinitelyHelp").contains("shouldrest resume"))
+        XCTAssertTrue(L10n.tr("menu.pauseBodyBreakIndefinitelyHelp").contains("护眼休息继续运行"))
         XCTAssertTrue(L10n.tr("status.pauseResumeManual").contains("快捷键"))
         XCTAssertTrue(L10n.tr("status.pauseResumeManual").contains("shouldrest resume"))
         XCTAssertFalse(L10n.tr("status.pauseResumeManual").contains("从此菜单恢复"))

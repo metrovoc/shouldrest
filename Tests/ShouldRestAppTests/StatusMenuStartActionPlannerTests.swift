@@ -75,6 +75,23 @@ final class StatusMenuStartActionPlannerTests: XCTestCase {
         )
     }
 
+    func testBodyBreakOnlyPauseKeepsEyeGateStartActionsAvailable() {
+        let state = RestEngineState(
+            scheduled: ScheduledRest(kind: .eyeGate, dueAt: start.addingTimeInterval(600), notificationAt: nil),
+            pause: PauseState(
+                reason: .user,
+                startedAt: start,
+                until: start.addingTimeInterval(60 * 60),
+                appliesTo: [.bodyBreak]
+            )
+        )
+
+        XCTAssertEqual(
+            StatusMenuStartActionPlanner.actions(state: state, settings: .defaults),
+            [.nextScheduled(.eyeGate)]
+        )
+    }
+
     func testStartActionTitlesStayUserFacingAndConcrete() {
         defer { L10n.languageOverride = nil }
         L10n.languageOverride = "en"

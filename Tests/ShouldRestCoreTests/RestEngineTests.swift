@@ -383,6 +383,40 @@ final class RestEngineTests: XCTestCase {
         XCTAssertEqual(engine.state.statistics.skippedBodyBreaks, 0)
     }
 
+    func testBodyBreakOnlyPauseKeepsEyeGateScheduled() throws {
+        var settings = RestSettings.defaults
+        settings.eyeGate.interval = 20 * 60
+        settings.bodyBreak.interval = 5 * 60
+        var engine = RestEngine(settings: settings, now: start)
+
+        let result = engine.pause(
+            for: 30 * 60,
+            now: start,
+            reason: .user,
+            appliesTo: [.bodyBreak]
+        )
+
+        guard case .paused(let pause) = result else {
+            return XCTFail("Expected Body Break-only pause")
+        }
+        XCTAssertEqual(pause.appliesTo, [.bodyBreak])
+        XCTAssertEqual(engine.state.pause, pause)
+        let scheduled = try XCTUnwrap(engine.state.scheduled)
+        XCTAssertEqual(scheduled.kind, .eyeGate)
+        XCTAssertEqual(scheduled.dueAt, start.addingTimeInterval(settings.eyeGate.interval))
+    }
+
+    func testBodyBreakOnlyPauseAccruesOnlyEyeGateDebt() {
+        var engine = RestEngine(settings: .defaults, now: start)
+
+        _ = engine.pause(for: 30 * 60, now: start, reason: .user, appliesTo: [.bodyBreak])
+        _ = engine.evaluate(now: start.addingTimeInterval(10 * 60), context: RestContext(idleDuration: 0))
+
+        XCTAssertEqual(engine.state.eyeDebt, 10 * 60)
+        XCTAssertEqual(engine.state.bodyDebt, 0)
+        XCTAssertEqual(engine.state.scheduled?.kind, .eyeGate)
+    }
+
     func testTakeNowCannotCreateActiveRestWhilePaused() {
         var engine = RestEngine(settings: .defaults, now: start)
         let pauseResult = engine.pause(for: 60 * 60, now: start, reason: .user)
