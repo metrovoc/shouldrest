@@ -527,8 +527,8 @@
 "prefs.pauseUntilMorningLocationHelp" = "选择用于估算“暂停到早晨”日出的城市。";
 "prefs.pauseUntilMorningLatitude" = "自定义纬度";
 "prefs.pauseUntilMorningLongitude" = "自定义经度";
-"prefs.pauseForSuspendOrLock" = "Mac 睡眠或锁屏时暂停休息";
-"prefs.pauseForSuspendOrLockHelp" = "Mac 睡眠或锁屏期间暂停后续休息，回来后继续。";
+"prefs.pauseForSuspendOrLock" = "Mac、显示器睡眠或锁屏时暂停休息";
+"prefs.pauseForSuspendOrLockHelp" = "Mac 或显示器睡眠、或会话锁屏期间暂停后续休息，回来后继续。";
 "prefs.updateFeedURL" = "更新来源";
 "prefs.updateFeedURLPlaceholder" = "https://example.com/releases/latest";
 "prefs.updateFeedURLHelp" = "ShouldRest 查找新版本的位置；如果自行管理更新，可以留空。";

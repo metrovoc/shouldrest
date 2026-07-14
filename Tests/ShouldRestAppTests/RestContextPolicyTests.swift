@@ -95,6 +95,87 @@ final class RestContextPolicyTests: XCTestCase {
         XCTAssertEqual(engine.resume(now: start.addingTimeInterval(600)), .resumed)
     }
 
+    func testDisplaySleepNotificationsAreRegisteredAsSuspensionPair() {
+        XCTAssertEqual(
+            SystemSuspensionNotifications.event(for: NSWorkspace.screensDidSleepNotification),
+            .began(.displaySleep)
+        )
+        XCTAssertEqual(
+            SystemSuspensionNotifications.event(for: NSWorkspace.screensDidWakeNotification),
+            .ended(.displaySleep)
+        )
+    }
+
+    func testNestedSuspensionSourcesResumeOnlyAfterEverySourceEnds() throws {
+        let displaySleepAt = Date(timeIntervalSinceReferenceDate: 2_000)
+        var state = SystemSuspensionState()
+
+        XCTAssertTrue(state.begin(source: .displaySleep, now: displaySleepAt, idleDuration: 120))
+        XCTAssertFalse(state.begin(
+            source: .systemSleep,
+            now: displaySleepAt.addingTimeInterval(5),
+            idleDuration: 0
+        ))
+        XCTAssertTrue(state.isSuspended)
+
+        XCTAssertNil(state.end(source: .displaySleep, now: displaySleepAt.addingTimeInterval(20)))
+        XCTAssertTrue(state.isSuspended)
+
+        let period = try XCTUnwrap(
+            state.end(source: .systemSleep, now: displaySleepAt.addingTimeInterval(60))
+        )
+        XCTAssertFalse(state.isSuspended)
+        XCTAssertEqual(period.startedAt, displaySleepAt)
+        XCTAssertEqual(period.duration, 60)
+        XCTAssertEqual(period.idleDurationBeforeSuspension, 120)
+    }
+
+    func testDuplicateSuspensionSourceDoesNotResetOriginalPeriod() throws {
+        let displaySleepAt = Date(timeIntervalSinceReferenceDate: 2_500)
+        var state = SystemSuspensionState()
+
+        XCTAssertTrue(state.begin(source: .displaySleep, now: displaySleepAt, idleDuration: 90))
+        XCTAssertFalse(state.begin(
+            source: .displaySleep,
+            now: displaySleepAt.addingTimeInterval(30),
+            idleDuration: 0
+        ))
+
+        let period = try XCTUnwrap(
+            state.end(source: .displaySleep, now: displaySleepAt.addingTimeInterval(120))
+        )
+        XCTAssertEqual(period.startedAt, displaySleepAt)
+        XCTAssertEqual(period.duration, 120)
+        XCTAssertEqual(period.idleDurationBeforeSuspension, 90)
+    }
+
+    func testDisplaySleepPausesDueScheduleBeforeNaturalIdleThreshold() throws {
+        let start = Date(timeIntervalSinceReferenceDate: 3_000)
+        var settings = RestSettings.defaults
+        settings.bodyBreak.isEnabled = false
+        var engine = RestEngine(settings: settings, now: start)
+        let displaySleepAt = start.addingTimeInterval(settings.eyeGate.interval - 60)
+
+        _ = engine.evaluate(now: displaySleepAt, context: RestContext(idleDuration: 0))
+        XCTAssertTrue(SystemSuspendPausePolicy.shouldPauseScheduler(state: engine.state))
+
+        var suspension = SystemSuspensionState()
+        XCTAssertTrue(suspension.begin(source: .displaySleep, now: displaySleepAt, idleDuration: 0))
+        let pauseResult = engine.pause(for: nil, now: displaySleepAt, reason: .suspendOrLock)
+        let pause = try XCTUnwrap(engine.state.pause)
+        XCTAssertEqual(
+            pauseResult,
+            .paused(pause)
+        )
+
+        let dueAt = start.addingTimeInterval(settings.eyeGate.interval)
+        XCTAssertEqual(
+            engine.evaluate(now: dueAt, context: RestContext(idleDuration: 60)),
+            .paused(pause)
+        )
+        XCTAssertNil(engine.state.activeSession)
+    }
+
     func testSystemSuspendAutoPauseOnlyTargetsIdleSchedule() {
         let start = Date(timeIntervalSinceReferenceDate: 2_000)
         let active = RestSession(

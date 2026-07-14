@@ -343,6 +343,107 @@ enum SystemResumeIdlePolicy {
     }
 }
 
+enum SystemSuspensionSource: String, Equatable, Hashable {
+    case systemSleep
+    case displaySleep
+    case inactiveSession
+}
+
+enum SystemSuspensionEvent: Equatable {
+    case began(SystemSuspensionSource)
+    case ended(SystemSuspensionSource)
+}
+
+struct SystemSuspensionNotificationRegistration: Equatable {
+    let source: SystemSuspensionSource
+    let beginName: Notification.Name
+    let endName: Notification.Name
+}
+
+enum SystemSuspensionNotifications {
+    static let registrations = [
+        SystemSuspensionNotificationRegistration(
+            source: .systemSleep,
+            beginName: NSWorkspace.willSleepNotification,
+            endName: NSWorkspace.didWakeNotification
+        ),
+        SystemSuspensionNotificationRegistration(
+            source: .displaySleep,
+            beginName: NSWorkspace.screensDidSleepNotification,
+            endName: NSWorkspace.screensDidWakeNotification
+        ),
+        SystemSuspensionNotificationRegistration(
+            source: .inactiveSession,
+            beginName: NSWorkspace.sessionDidResignActiveNotification,
+            endName: NSWorkspace.sessionDidBecomeActiveNotification
+        )
+    ]
+
+    static func event(for name: Notification.Name) -> SystemSuspensionEvent? {
+        for registration in registrations {
+            if name == registration.beginName {
+                return .began(registration.source)
+            }
+            if name == registration.endName {
+                return .ended(registration.source)
+            }
+        }
+        return nil
+    }
+}
+
+struct SystemSuspensionPeriod: Equatable {
+    let startedAt: Date
+    let resumedAt: Date
+    let idleDurationBeforeSuspension: TimeInterval
+
+    var duration: TimeInterval {
+        max(0, resumedAt.timeIntervalSince(startedAt))
+    }
+}
+
+struct SystemSuspensionState: Equatable {
+    private(set) var activeSources = Set<SystemSuspensionSource>()
+    private var startedAt: Date?
+    private var idleDurationBeforeSuspension: TimeInterval = 0
+
+    var isSuspended: Bool {
+        !activeSources.isEmpty
+    }
+
+    @discardableResult
+    mutating func begin(
+        source: SystemSuspensionSource,
+        now: Date,
+        idleDuration: TimeInterval
+    ) -> Bool {
+        let wasSuspended = isSuspended
+        guard activeSources.insert(source).inserted else { return false }
+        guard !wasSuspended else { return false }
+
+        startedAt = now
+        idleDurationBeforeSuspension = max(0, idleDuration)
+        return true
+    }
+
+    mutating func end(source: SystemSuspensionSource, now: Date) -> SystemSuspensionPeriod? {
+        guard activeSources.remove(source) != nil,
+              activeSources.isEmpty,
+              let startedAt else {
+            return nil
+        }
+
+        let period = SystemSuspensionPeriod(
+            startedAt: startedAt,
+            resumedAt: now,
+            idleDurationBeforeSuspension: idleDurationBeforeSuspension
+        )
+        self.startedAt = nil
+        idleDurationBeforeSuspension = 0
+        return period
+    }
+}
+
 enum StatusMenuActionIcon {
     static func symbolName(forActionName actionName: String) -> String? {
         switch actionName.replacingOccurrences(of: ":", with: "") {
@@ -666,8 +767,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private var updateCheckTimer: Timer?
     private var lastFocusCheck = Date.distantPast
     private var focusModeActive = false
-    private var suspendedAt: Date?
-    private var suspendedIdleBeforePause: TimeInterval = 0
+    private var systemSuspensionState = SystemSuspensionState()
     private var pausedForSuspendOrLock = false
     private var manualAwaitingSessionID: UUID?
     private var latestReleaseURL: URL?
@@ -723,10 +823,20 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             andEventID: AEEventID(kAEGetURL)
         )
         let workspaceNotifications = NSWorkspace.shared.notificationCenter
-        workspaceNotifications.addObserver(self, selector: #selector(systemWillPause), name: NSWorkspace.willSleepNotification, object: nil)
-        workspaceNotifications.addObserver(self, selector: #selector(systemDidResume), name: NSWorkspace.didWakeNotification, object: nil)
-        workspaceNotifications.addObserver(self, selector: #selector(systemWillPause), name: NSWorkspace.sessionDidResignActiveNotification, object: nil)
-        workspaceNotifications.addObserver(self, selector: #selector(systemDidResume), name: NSWorkspace.sessionDidBecomeActiveNotification, object: nil)
+        for registration in SystemSuspensionNotifications.registrations {
+            workspaceNotifications.addObserver(
+                self,
+                selector: #selector(systemSuspensionNotification(_:)),
+                name: registration.beginName,
+                object: nil
+            )
+            workspaceNotifications.addObserver(
+                self,
+                selector: #selector(systemSuspensionNotification(_:)),
+                name: registration.endName,
+                object: nil
+            )
+        }
         let timer = DispatchSource.makeTimerSource(queue: .main)
         timer.schedule(deadline: .now() + 1, repeating: 1)
         timer.setEventHandler { [weak self] in
@@ -809,6 +919,12 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     private func tick() {
         let now = Date()
+
+        guard !systemSuspensionState.isSuspended ||
+                !settings.operations.resolvedPauseForSuspendOrLock else {
+            persistEngineStateIfNeeded(now: now)
+            return
+        }
 
         refreshFocusMode(now: now)
 
@@ -2483,15 +2599,34 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         return copy
     }
 
-    @objc private func systemWillPause() {
+    @objc private func systemSuspensionNotification(_ notification: Notification) {
+        guard let event = SystemSuspensionNotifications.event(for: notification.name) else { return }
+        switch event {
+        case .began(let source):
+            systemWillPause(source: source)
+        case .ended(let source):
+            systemDidResume(source: source)
+        }
+    }
+
+    private func systemWillPause(source: SystemSuspensionSource) {
         let now = Date()
+        let idleDuration = SystemIdleTime.seconds()
+        guard systemSuspensionState.begin(
+            source: source,
+            now: now,
+            idleDuration: idleDuration
+        ) else {
+            logger.log(
+                "System pause source added source=\(source.rawValue) " +
+                    "activeSources=\(systemSuspensionSourceDescription)"
+            )
+            return
+        }
+
         preRestCueController.dismiss()
         let alreadyPausedForSuspendOrLock = SystemSuspendPausePolicy.hasSuspendOrLockPause(state: engine.state)
-        if !alreadyPausedForSuspendOrLock {
-            suspendedAt = now
-            suspendedIdleBeforePause = SystemIdleTime.seconds()
-            pausedForSuspendOrLock = false
-        }
+        pausedForSuspendOrLock = false
         if settings.operations.resolvedPauseForSuspendOrLock || alreadyPausedForSuspendOrLock {
             if alreadyPausedForSuspendOrLock {
                 pausedForSuspendOrLock = true
@@ -2500,29 +2635,61 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                     for: nil,
                     now: now,
                     reason: .suspendOrLock,
-                    idleDuration: suspendedIdleBeforePause,
-                    preserveAwayCandidate: suspendedIdleBeforePause > 0
+                    idleDuration: idleDuration,
+                    preserveAwayCandidate: idleDuration > 0
                ) {
                 pausedForSuspendOrLock = true
             }
             unregisterActiveBreakShortcut()
             unregisterEmergencyEscapeShortcut()
             overlayController.dismiss()
-            logger.log("System pause detected")
+            logger.log("System pause detected source=\(source.rawValue)")
             persistEngineState()
         } else {
-            logger.log("System pause detected without scheduler pause")
+            logger.log("System pause detected without scheduler pause source=\(source.rawValue)")
             persistEngineState()
         }
         rebuildMenu()
     }
 
-    @objc private func systemDidResume() {
+    private func systemDidResume(source: SystemSuspensionSource) {
         let now = Date()
-        let suspendedDuration = suspendedAt.map { now.timeIntervalSince($0) } ?? 0
-        let preSuspendIdleDuration = suspendedIdleBeforePause
-        suspendedAt = nil
-        suspendedIdleBeforePause = 0
+        let suspensionPeriod = systemSuspensionState.end(source: source, now: now)
+        guard let suspensionPeriod else {
+            if systemSuspensionState.isSuspended {
+                logger.log(
+                    "System resume deferred source=\(source.rawValue) " +
+                        "activeSources=\(systemSuspensionSourceDescription)"
+                )
+                return
+            }
+            guard SystemSuspendPausePolicy.hasSuspendOrLockPause(state: engine.state) else {
+                logger.log("Ignored unmatched system resume source=\(source.rawValue)")
+                return
+            }
+            resumeAfterSystemSuspension(
+                source: source,
+                suspendedDuration: 0,
+                preSuspendIdleDuration: 0,
+                now: now
+            )
+            return
+        }
+
+        resumeAfterSystemSuspension(
+            source: source,
+            suspendedDuration: suspensionPeriod.duration,
+            preSuspendIdleDuration: suspensionPeriod.idleDurationBeforeSuspension,
+            now: now
+        )
+    }
+
+    private func resumeAfterSystemSuspension(
+        source: SystemSuspensionSource,
+        suspendedDuration: TimeInterval,
+        preSuspendIdleDuration: TimeInterval,
+        now: Date
+    ) {
         let didPauseScheduler = pausedForSuspendOrLock ||
             SystemSuspendPausePolicy.hasSuspendOrLockPause(state: engine.state)
         refreshFocusMode(now: now, force: true)
@@ -2546,7 +2713,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 context: context
             )
             logger.log(
-                "System resume detected suspendedDuration=\(suspendedDuration) " +
+                "System resume detected source=\(source.rawValue) suspendedDuration=\(suspendedDuration) " +
                     "preSuspendIdleDuration=\(preSuspendIdleDuration) restIdleDuration=\(restIdleDuration)"
             )
             persistEngineState()
@@ -2559,10 +2726,17 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         refreshActiveBreakShortcut()
         refreshEmergencyEscapeShortcut()
         logger.log(
-            "System resume detected suspendedDuration=\(suspendedDuration) " +
+            "System resume detected source=\(source.rawValue) suspendedDuration=\(suspendedDuration) " +
                 "preSuspendIdleDuration=\(preSuspendIdleDuration) restIdleDuration=\(restIdleDuration)"
         )
         rebuildMenu()
+    }
+
+    private var systemSuspensionSourceDescription: String {
+        systemSuspensionState.activeSources
+            .map(\.rawValue)
+            .sorted()
+            .joined(separator: ",")
     }
 
     private func applyOpenAtLoginSetting() {

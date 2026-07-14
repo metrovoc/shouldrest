@@ -135,7 +135,7 @@ It is intended to catch gaps that are easy to miss when a behavior is exposed on
 | `showBreaksAsRegularWindows` | Explicit divergence: enforced rests use native overlay windows, not regular focusable windows. |
 | `appExclusions` | Implemented and strengthened with multiple rules plus per-rest-kind targeting. |
 | `appExclusionsCheckInterval` | Explicit divergence: ShouldRest uses a fixed native context evaluation loop instead of exposing a tuning knob. |
-| `pauseForSuspendOrLock` | Implemented for sleep/lock behavior. |
+| `pauseForSuspendOrLock` | Implemented for system sleep, display sleep, and lock behavior. |
 | `pauseBreaksToggleShortcut` | Implemented as pause/resume shortcut. |
 | `pauseBreaksFor30MinutesShortcut` | Implemented. |
 | `pauseBreaksFor1HourShortcut` | Implemented. |
@@ -273,8 +273,8 @@ Implemented now:
 - Custom rich-text sanitizer for Body Break content.
 - Settings-store round-trip coverage.
 - Open-at-login setting and ServiceManagement integration when running as a bundled app.
-- Sleep, wake, lock, and unlock correction hooks.
-- Stretchly-compatible `pauseForSuspendOrLock` preference: enabled by default, with an opt-out path that preserves schedule state and lets natural rest credit absorb sleep/lock idle time.
+- System-sleep, display-sleep, wake, lock, and unlock correction hooks, with overlapping causes held until every wake/unlock signal arrives.
+- Stretchly-compatible `pauseForSuspendOrLock` preference: enabled by default, with an opt-out path that preserves schedule state and lets natural rest credit absorb system-sleep, display-sleep, or lock idle time.
 - Diagnostics window with runtime state, timer state, settings/log/support paths, and Body Break image paths; admin path hiding removes all of those filesystem paths from copied/window diagnostics output and CLI path commands.
 - Global shortcut registration for pause, pause durations, take-now, Body Break skip-to-next, and reset.
 - Global shortcut parser tests cover Stretchly-style `CmdOrCtrl+X`, modifier aliases, whitespace/case normalization, and invalid shortcut rejection.

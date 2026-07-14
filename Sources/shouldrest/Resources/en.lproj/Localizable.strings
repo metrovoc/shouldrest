@@ -527,8 +527,8 @@
 "prefs.pauseUntilMorningLocationHelp" = "Choose the city used to estimate sunrise for Pause Until Morning.";
 "prefs.pauseUntilMorningLatitude" = "Custom latitude";
 "prefs.pauseUntilMorningLongitude" = "Custom longitude";
-"prefs.pauseForSuspendOrLock" = "Pause rests while Mac sleeps or locks";
-"prefs.pauseForSuspendOrLockHelp" = "Pause upcoming rests while your Mac sleeps or is locked, then resume when you return.";
+"prefs.pauseForSuspendOrLock" = "Pause rests while Mac or displays sleep, or while locked";
+"prefs.pauseForSuspendOrLockHelp" = "Pause upcoming rests while your Mac or its displays sleep, or while the session is locked, then resume when you return.";
 "prefs.updateFeedURL" = "Update source";
 "prefs.updateFeedURLPlaceholder" = "https://example.com/releases/latest";
 "prefs.updateFeedURLHelp" = "Where ShouldRest looks for new releases. Leave blank if you manage updates yourself.";
