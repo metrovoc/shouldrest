@@ -919,6 +919,13 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     private func tick() {
         let now = Date()
+        if DisplaySleepDetector.allDisplaysAsleep() {
+            if !systemSuspensionState.activeSources.contains(.displaySleep) {
+                systemWillPause(source: .displaySleep)
+            }
+        } else if systemSuspensionState.activeSources.contains(.displaySleep) {
+            systemDidResume(source: .displaySleep)
+        }
 
         guard !systemSuspensionState.isSuspended ||
                 !settings.operations.resolvedPauseForSuspendOrLock else {
@@ -1086,8 +1093,11 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func refreshFocusMode(now: Date, force: Bool = false) {
-        guard force || now.timeIntervalSince(lastFocusCheck) > 5 else { return }
+        guard force || now.timeIntervalSince(lastFocusCheck) >= 1 else { return }
         focusModeActive = focusDetector.isFocusModeActive()
+        if focusModeActive {
+            soundPlayer.stopAll()
+        }
         lastFocusCheck = now
     }
 
@@ -1888,8 +1898,18 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         clearActiveBodyBreakIdea(for: session)
     }
 
+    private func allowsReminderSound() -> Bool {
+        refreshFocusMode(now: Date(), force: true)
+        return ReminderSoundPolicy.allowsPlayback(
+            silentNotifications: settings.notifications.silentNotifications,
+            systemSuspended: systemSuspensionState.isSuspended,
+            displaysAsleep: DisplaySleepDetector.allDisplaysAsleep(),
+            focusModeActive: focusModeActive
+        )
+    }
+
     private func playRestSound(_ policy: SoundPolicy) {
-        guard !settings.notifications.silentNotifications else { return }
+        guard allowsReminderSound() else { return }
         soundPlayer.play(policy)
     }
 
@@ -2610,6 +2630,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func systemWillPause(source: SystemSuspensionSource) {
+        soundPlayer.stopAll()
         let now = Date()
         let idleDuration = SystemIdleTime.seconds()
         guard systemSuspensionState.begin(
@@ -2896,7 +2917,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         content.title = title
         content.body = body
         content.userInfo = AppNotificationUserInfo.payload(openURL: openURL)
-        if !settings.notifications.silentNotifications {
+        if allowsReminderSound() {
             content.sound = .default
         }
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
@@ -4703,6 +4724,16 @@ final class SoundPlayer: NSObject, NSSoundDelegate, @unchecked Sendable {
         }
     }
 
+    func stopAll() {
+        queue.async { [weak self] in
+            guard let self else { return }
+            for sound in activeSounds {
+                sound.stop()
+            }
+            activeSounds.removeAll()
+        }
+    }
+
     private func playOnQueue(_ policy: SoundPolicy) {
         switch policy {
         case .silent:
@@ -4789,6 +4820,12 @@ enum RunningApplications {
 
 final class FocusModeDetector {
     func isFocusModeActive() -> Bool {
+        let assertionsURL = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/DoNotDisturb/DB/Assertions.json")
+        if let data = try? Data(contentsOf: assertionsURL),
+           let active = Self.activeFocusFromAssertions(data) {
+            return active
+        }
         let keys = [
             "NSStatusItem VisibleCC FocusModes",
             "NSStatusItem Visible FocusModes"
@@ -4798,6 +4835,25 @@ final class FocusModeDetector {
             return true
         }
         return false
+    }
+
+    static func activeFocusFromAssertions(_ data: Data) -> Bool? {
+        guard let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let stores = root["data"] as? [[String: Any]],
+              !stores.isEmpty else { return nil }
+        var recognized = false
+        for store in stores {
+            guard let records = store["storeAssertionRecords"] as? [[String: Any]] else { continue }
+            recognized = true
+            if records.contains(where: { record in
+                let details = record["assertionDetails"] as? [String: Any]
+                let identifier = details?["assertionDetailsModeIdentifier"] as? String
+                return identifier?.isEmpty == false
+            }) {
+                return true
+            }
+        }
+        return recognized ? false : nil
     }
 
     private func defaultsReadControlCenter(_ key: String) -> String? {
