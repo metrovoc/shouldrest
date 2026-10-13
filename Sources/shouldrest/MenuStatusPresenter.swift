@@ -130,6 +130,8 @@ enum MenuStatusPresenter {
             return L10n.tr("deferral.outsideWorkingHours")
         case .focusMode:
             return L10n.tr("deferral.focusMode")
+        case .inCall:
+            return L10n.tr("deferral.inCall")
         case .appExclusion(let name):
             return L10n.format("deferral.appExclusion", name)
         }
@@ -184,6 +186,9 @@ enum MenuStatusPresenter {
             )
         }
         if let scheduled = state.scheduled {
+            guard scheduled.dueAt > now else {
+                return L10n.format("status.nextAtPause", restKindName(scheduled.kind))
+            }
             let seconds = max(0, Int(ceil(scheduled.dueAt.timeIntervalSince(now))))
             return L10n.format(
                 "status.nextWithCountdown",
@@ -299,7 +304,7 @@ enum MenuStatusPresenter {
               state.scheduled?.kind == .eyeGate else {
             return nil
         }
-        let debtRemaining = max(0, settings.bodyBreak.interval - state.bodyDebt)
+        let debtRemaining = max(0, settings.bodyBreak.interval - state.debt(for: .bodyBreak))
         let suppressionRemaining = state.bodySuppressedUntil.map { max(0, $0.timeIntervalSince(now)) } ?? 0
         let remaining = Int(ceil(max(debtRemaining, suppressionRemaining)))
         return L10n.format("status.nextBodyIn", compactDurationText(seconds: remaining))

@@ -111,6 +111,7 @@
 "status.durationHours" = "%d 小时";
 "status.durationHoursMinutes" = "%d 小时 %d 分钟";
 "status.nextWithCountdown" = "下一次：%@，%@后（%@）";
+"status.nextAtPause" = "下一次：%@，将在你停顿时开始";
 "status.nextBodyIn" = "活动休息还有 %@";
 "status.active" = "%@ 进行中，剩余 %@";
 "status.readyToFinish" = "%@ 已完成，等待结束";
@@ -133,6 +134,7 @@
 "kind.bodyBreakShort" = "动";
 "deferral.outsideWorkingHours" = "非工作时间";
 "deferral.focusMode" = "专注或勿扰模式";
+"deferral.inCall" = "通话或会议中";
 "deferral.appExclusion" = "应用规则：%@";
 "overlay.eyeTitle" = "看向远处";
 "overlay.eyeBody" = "放松对焦，慢慢眨眼，计时结束前不要看屏幕。";

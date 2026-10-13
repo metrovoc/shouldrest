@@ -205,7 +205,7 @@ ShouldRest must implement or exceed these Stretchly capabilities except where ex
 
 ### Context
 
-- Natural rest credit from idle time.
+- Natural rest credit from idle time, excluding playback or calls that keep the display awake, plus credit for verified screen-off periods.
 - Suspend/lock correction.
 - Focus/DND awareness.
 - App exclusions with pause and resume-only semantics, including active Body Break interruption for matching pause rules.
@@ -305,7 +305,7 @@ Implemented now:
 - Language override setting for bundled translations, while defaulting to the macOS system language. Current bundled translations are English and Simplified Chinese; additional languages are an expansion path, not a current claim.
 - Packaged app build with default ad-hoc signing, optional Developer ID signing hook, optional hardened runtime hook, and strict `codesign` verification.
 - Release packaging automation for Developer ID identity selection, hardened-runtime app signing, DMG creation, optional DMG signing, optional Apple notarization, and stapling validation.
-- Continuous context-deferral state for Focus, working-hours, and app-exclusion gates: first deferral raises break-health danger, repeated ticks do not double-count, and the due rest starts immediately when context clears.
+- Continuous context-deferral state for Focus, working-hours, call, and app-exclusion gates: first deferral raises break-health danger, repeated ticks do not double-count, and the due rest starts at the first natural pause after context clears.
 - Natural rest credit is bounded by independent Eye Gate and Body Break recovery thresholds, so one sufficiently long idle episode can satisfy both dimensions before user activity resumes.
 - Stretchly-style display targeting for Body Break: all displays or a selected single display, primary/cursor/configured-display selection, separate content-display selection, optional secondary-display blanking, and backward-compatible settings decoding. Eye Gate still forces all-display coverage.
 - Sanitized Body Break rich-text rendering with remote/inline HTML images stripped; images remain available through the explicit safe local-image channel.

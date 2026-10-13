@@ -311,11 +311,17 @@ enum RestContextPolicy {
         settings: RestSettings,
         now: Date,
         idleDuration: TimeInterval,
+        screenWatched: Bool = false,
+        inCall: Bool = false,
+        screenOffDuration: TimeInterval = 0,
         focusModeActive: Bool,
         appExclusions: [AppExclusionEvaluation]
     ) -> RestContext {
         RestContext(
             idleDuration: idleDuration,
+            screenWatched: screenWatched,
+            inCall: inCall,
+            screenOffDuration: screenOffDuration,
             focusModeActive: focusModeActive,
             inWorkingHours: settings.workingHours.contains(now),
             appExclusions: appExclusions
@@ -953,8 +959,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         let expiredPause = engine.state.pause.flatMap { pause in
             pause.isActive(at: now) ? nil : pause
         }
-        let result = engine.evaluate(now: now, context: currentContext(now: now))
-        handleEngineResult(result, now: now)
+        let context = currentContext(now: now)
+        let result = engine.evaluate(now: now, context: context)
+        handleEngineResult(result, now: now, context: context)
         persistEngineStateIfNeeded(now: now, force: result != .noChange)
         if let expiredPause, engine.state.pause == nil {
             notifyAutomaticResume(from: expiredPause)
@@ -997,12 +1004,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 context: context
             )
         case .elapsedCompletion:
-            if case .completed = engine.completeActive(
-                now: now,
-                reason: .completed,
-                idleDuration: context.idleDuration,
-                preserveAwayCandidate: context.idleDuration > 0
-            ) {
+            if case .completed = engine.completeActive(now: now, reason: .completed, context: context) {
                 releaseActiveRestSurface(for: active)
                 logger.log("Completed \(active.kind.rawValue)")
                 playRestSound(settings.rule(for: active.kind).finishSound)
@@ -1046,7 +1048,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func handleEngineResult(_ result: RestEngineResult, now: Date) {
+    private func handleEngineResult(_ result: RestEngineResult, now: Date, context: RestContext) {
         switch result {
         case .started(let session):
             preRestCueController.dismiss()
@@ -1062,7 +1064,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             )
             refreshActiveBreakShortcut()
             refreshEmergencyEscapeShortcut()
-            logger.log("Started \(session.kind.rawValue)")
+            logger.log("Started \(session.kind.rawValue) \(RestStartLogDetails.text(for: session, context: context))")
             persistEngineState()
         case .notificationDue(let kind):
             showPreRestCue(for: kind, now: now)
@@ -1073,6 +1075,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             let credited = kinds.map(\.rawValue).sorted().joined(separator: ",")
             logger.log("Natural rests credited kinds=\(credited)")
             persistEngineState()
+        case .deferred:
+            preRestCueController.dismiss()
         default:
             break
         }
@@ -1103,7 +1107,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     private func currentContext(
         now: Date,
-        idleDuration: TimeInterval? = nil
+        idleDuration: TimeInterval? = nil,
+        screenOffDuration: TimeInterval = 0
     ) -> RestContext {
         let appExclusions = settings.appExclusions.map { rule in
             AppExclusionEvaluation(rule: rule, isMatched: RunningApplications.matches(rule: rule))
@@ -1112,16 +1117,20 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             settings: settings,
             now: now,
             idleDuration: idleDuration ?? SystemIdleTime.seconds(),
+            screenWatched: ScreenAttentionDetector.isScreenWatched(),
+            inCall: MicrophoneActivityDetector.isInUse(),
+            screenOffDuration: screenOffDuration,
             focusModeActive: focusModeActive,
             appExclusions: appExclusions
         )
     }
 
     private func showPreRestCue(for kind: RestKind, now: Date) {
+        // The rest waits for a natural pause, so the cue stays until it starts or the window closes.
         preRestCueController.present(
             kind: kind,
             settings: settings,
-            dismissAt: engine.state.scheduled?.dueAt,
+            dismissAt: engine.startWindow(for: kind, now: now).deadline,
             now: now
         )
     }
@@ -1518,12 +1527,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func startEyeGateNow(source: String) -> RestEngineResult {
         let now = Date()
         let context = currentContext(now: now)
-        let result = engine.takeNow(
-            .eyeGate,
-            now: now,
-            idleDuration: context.idleDuration,
-            preserveAwayCandidate: context.idleDuration > 0
-        )
+        let result = engine.takeNow(.eyeGate, now: now, context: context)
         if case .started(let session) = result {
             preRestCueController.dismiss()
             playRestSound(settings.rule(for: session.kind).startSound)
@@ -1555,12 +1559,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         let effectiveIdea = bodyBreakIdeas.ideaForStartAttempt(explicit: idea)
         let now = Date()
         let context = currentContext(now: now)
-        let result = engine.takeNow(
-            .bodyBreak,
-            now: now,
-            idleDuration: context.idleDuration,
-            preserveAwayCandidate: context.idleDuration > 0
-        )
+        let result = engine.takeNow(.bodyBreak, now: now, context: context)
         if case .started(let session) = result {
             preRestCueController.dismiss()
             bodyBreakIdeas.bindStartedIdea(effectiveIdea, to: session)
@@ -1602,14 +1601,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             rebuildMenu()
             return
         }
-        if case .postponed = engine.postponeActive(now: now) {
-            unregisterActiveBreakShortcut()
-            unregisterEmergencyEscapeShortcut()
-            preRestCueController.dismiss()
-            overlayController.dismiss()
-            emergencyOverrideCoordinator.clear(sessionID: active.id)
-            clearActiveBodyBreakIdea(for: active)
+        if case .postponed = engine.postponeActive(now: now, context: currentContext(now: now)) {
             logger.log("Body Break postponed")
+            releaseEarlyEndedBodyBreakSurface(for: active, now: now)
             persistEngineState()
             retryPendingAutomationStarts()
         }
@@ -1627,12 +1621,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         let context = currentContext(now: now)
-        if case .completed = engine.completeActive(
-            now: now,
-            reason: .manual,
-            idleDuration: context.idleDuration,
-            preserveAwayCandidate: context.idleDuration > 0
-        ) {
+        if case .completed = engine.completeActive(now: now, reason: .manual, context: context) {
             releaseActiveRestSurface(for: active)
             logger.log("Manually finished \(active.kind.rawValue)")
             playRestSound(settings.rule(for: active.kind).finishSound)
@@ -1650,15 +1639,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             rebuildMenu()
             return
         }
-        if case .completed = engine.skipActive(now: now) {
-            unregisterActiveBreakShortcut()
-            unregisterEmergencyEscapeShortcut()
-            preRestCueController.dismiss()
-            clearActiveBodyBreakIdea(for: active)
-            overlayController.dismiss()
-            emergencyOverrideCoordinator.clear(sessionID: active.id)
-            manualAwaitingSessionID = nil
+        if case .completed = engine.skipActive(now: now, context: currentContext(now: now)) {
             logger.log("Body Break skipped")
+            releaseEarlyEndedBodyBreakSurface(for: active, now: now)
             persistEngineState()
             retryPendingAutomationStarts()
         } else {
@@ -1679,25 +1662,15 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
         guard active.kind == .bodyBreak else { return }
 
-        if availability.canPostpone, case .postponed = engine.postponeActive(now: now) {
-            unregisterActiveBreakShortcut()
-            unregisterEmergencyEscapeShortcut()
-            preRestCueController.dismiss()
-            overlayController.dismiss()
-            emergencyOverrideCoordinator.clear(sessionID: active.id)
-            clearActiveBodyBreakIdea(for: active)
+        let context = currentContext(now: now)
+        if availability.canPostpone, case .postponed = engine.postponeActive(now: now, context: context) {
             logger.log("Body Break postponed by end shortcut")
+            releaseEarlyEndedBodyBreakSurface(for: active, now: now)
             persistEngineState()
             retryPendingAutomationStarts()
-        } else if availability.canSkip, case .completed = engine.skipActive(now: now) {
-            unregisterActiveBreakShortcut()
-            unregisterEmergencyEscapeShortcut()
-            preRestCueController.dismiss()
-            overlayController.dismiss()
-            emergencyOverrideCoordinator.clear(sessionID: active.id)
-            manualAwaitingSessionID = nil
-            clearActiveBodyBreakIdea(for: active)
+        } else if availability.canSkip, case .completed = engine.skipActive(now: now, context: context) {
             logger.log("Body Break skipped by end shortcut")
+            releaseEarlyEndedBodyBreakSurface(for: active, now: now)
             persistEngineState()
             retryPendingAutomationStarts()
         } else {
@@ -1898,6 +1871,32 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         clearActiveBodyBreakIdea(for: session)
     }
 
+    /// When the engine continues a nearly due Eye Gate after a Body Break the user ended early, the
+    /// overlay switches to it in place instead of closing and reopening moments later.
+    private func releaseEarlyEndedBodyBreakSurface(for ended: RestSession, now: Date) {
+        guard let continuation = engine.state.activeSession else {
+            releaseActiveRestSurface(for: ended)
+            return
+        }
+        unregisterActiveBreakShortcut()
+        unregisterEmergencyEscapeShortcut()
+        preRestCueController.dismiss()
+        emergencyOverrideCoordinator.clear(sessionID: ended.id)
+        manualAwaitingSessionID = nil
+        clearActiveBodyBreakIdea(for: ended)
+        overlayController.present(
+            session: continuation,
+            settings: overlaySettings(for: continuation),
+            now: now,
+            emergencyOverrideAction: overlayEmergencyOverrideAction(for: continuation, now: now),
+            emergencyOverrideArmed: false,
+            bodyActions: overlayBodyActions(for: continuation, now: now)
+        )
+        refreshActiveBreakShortcut()
+        refreshEmergencyEscapeShortcut()
+        logger.log("Continued \(continuation.kind.rawValue) after Body Break remaining=\(Int(continuation.duration.rounded()))s")
+    }
+
     private func allowsReminderSound() -> Bool {
         refreshFocusMode(now: Date(), force: true)
         return ReminderSoundPolicy.allowsPlayback(
@@ -2007,12 +2006,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
 
     private func performResumeBreaks(logMessage: String) {
         let now = Date()
-        let context = currentContext(now: now)
-        _ = engine.resume(
-            now: now,
-            idleDuration: context.idleDuration,
-            preserveAwayCandidate: context.idleDuration > 0
-        )
+        _ = engine.resume(now: now)
         logger.log(logMessage)
         persistEngineState()
         retryPendingAutomationStarts()
@@ -2096,8 +2090,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             now: now,
             reason: reason,
             appliesTo: appliesTo,
-            idleDuration: context.idleDuration,
-            preserveAwayCandidate: context.idleDuration > 0
+            context: context
         )
         if case .paused = result {
             unregisterActiveBreakShortcut()
@@ -2656,8 +2649,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                     for: nil,
                     now: now,
                     reason: .suspendOrLock,
-                    idleDuration: idleDuration,
-                    preserveAwayCandidate: idleDuration > 0
+                    context: currentContext(now: now, idleDuration: idleDuration)
                ) {
                 pausedForSuspendOrLock = true
             }
@@ -2720,14 +2712,15 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             didPauseScheduler: didPauseScheduler
         )
         if didPauseScheduler {
-            _ = engine.resume(
-                now: now,
-                idleDuration: restIdleDuration,
-                preserveAwayCandidate: restIdleDuration > 0
-            )
+            _ = engine.resume(now: now)
             pausedForSuspendOrLock = false
         }
-        let context = currentContext(now: now, idleDuration: restIdleDuration)
+        // A sleeping or locked screen is verified time away from it, unlike ambiguous input idle.
+        let context = currentContext(
+            now: now,
+            idleDuration: restIdleDuration,
+            screenOffDuration: suspendedDuration
+        )
         if engine.state.activeSession != nil {
             handleActiveRestLifecycle(
                 now: now,
@@ -2741,7 +2734,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         let result = engine.evaluate(now: now, context: context)
-        handleEngineResult(result, now: now)
+        handleEngineResult(result, now: now, context: context)
         persistEngineState()
         retryPendingAutomationStarts()
         refreshActiveBreakShortcut()
@@ -2992,15 +2985,19 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             "activeDeferral=\(String(describing: engine.state.activeDeferral))",
             "eyeDebt=\(engine.state.eyeDebt)",
             "bodyDebt=\(engine.state.bodyDebt)",
+            "pendingEyeDebt=\(engine.state.pendingEyeDebt)",
+            "pendingBodyDebt=\(engine.state.pendingBodyDebt)",
             "lastEvaluatedAt=\(String(describing: engine.state.lastEvaluatedAt))",
-            "lastIdleDuration=\(engine.state.lastIdleDuration)",
-            "awayCandidate=\(String(describing: engine.state.awayCandidate))",
+            "lastWatchedAt=\(String(describing: engine.state.lastWatchedAt))",
+            "lastRestEndedAt=\(String(describing: engine.state.lastRestEndedAt))",
             "bodySuppressedUntil=\(String(describing: engine.state.bodySuppressedUntil))",
             "postponesInCurrentCycle=\(engine.state.postponesInCurrentCycle)",
             "dangerScore=\(engine.state.dangerScore)",
             "statistics=\(engine.state.statistics)",
             "focusModeActive=\(focusModeActive)",
             "idleSeconds=\(SystemIdleTime.seconds())",
+            "screenWatched=\(ScreenAttentionDetector.isScreenWatched())",
+            "inCall=\(MicrophoneActivityDetector.isInUse())",
             "openAtLogin=\(settings.operations.openAtLogin)",
             "loginItemAvailable=\(LoginItemManager.isAvailable)"
         ])
@@ -3103,6 +3100,20 @@ enum ActiveRestCountdown {
 
     static func remainingSeconds(for session: RestSession, now: Date) -> Int {
         remainingSeconds(duration: session.duration, elapsed: now.timeIntervalSince(session.startedAt))
+    }
+}
+
+/// Records how a scheduled rest landed relative to its due time and the user's activity, so start
+/// timing can be checked against real use.
+enum RestStartLogDetails {
+    static func text(for session: RestSession, context: RestContext) -> String {
+        let offset = Int(session.startedAt.timeIntervalSince(session.scheduledAt).rounded())
+        let idle = Int(context.idleDuration.rounded())
+        var text = "offset=\(offset >= 0 ? "+" : "")\(offset)s idle=\(idle)s"
+        if context.screenWatched {
+            text += " watched"
+        }
+        return text
     }
 }
 

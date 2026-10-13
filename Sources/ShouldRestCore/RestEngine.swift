@@ -5,11 +5,20 @@ public struct RestEngineState: Codable, Equatable, Sendable {
     public var activeSession: RestSession?
     public var pause: PauseState?
     public var activeDeferral: RestDeferral?
+    /// Screen exposure attributed to work since each rest was last satisfied. It may exceed the
+    /// interval while a due rest waits, which keeps the original due time stable.
     public var eyeDebt: TimeInterval
     public var bodyDebt: TimeInterval
+    /// Exposure accrued since the last sign of engagement. It becomes debt when the user is seen again
+    /// before the away threshold and is dropped when the unattended stretch turns out to be an absence.
+    public var pendingEyeDebt: TimeInterval
+    public var pendingBodyDebt: TimeInterval
     public var lastEvaluatedAt: Date?
-    public var lastIdleDuration: TimeInterval
-    public var awayCandidate: AwayCandidateSnapshot?
+    /// Last time another app held the display awake for playback, a call, or a presentation.
+    public var lastWatchedAt: Date?
+    /// Input stops during a rest, so a pause only counts as a moment to start the next rest once it
+    /// lasts beyond the end of the previous one.
+    public var lastRestEndedAt: Date?
     public var bodySuppressedUntil: Date?
     public var postponesInCurrentCycle: Int
     public var dangerScore: Int
@@ -22,9 +31,11 @@ public struct RestEngineState: Codable, Equatable, Sendable {
         activeDeferral: RestDeferral? = nil,
         eyeDebt: TimeInterval = 0,
         bodyDebt: TimeInterval = 0,
+        pendingEyeDebt: TimeInterval = 0,
+        pendingBodyDebt: TimeInterval = 0,
         lastEvaluatedAt: Date? = nil,
-        lastIdleDuration: TimeInterval = 0,
-        awayCandidate: AwayCandidateSnapshot? = nil,
+        lastWatchedAt: Date? = nil,
+        lastRestEndedAt: Date? = nil,
         bodySuppressedUntil: Date? = nil,
         postponesInCurrentCycle: Int = 0,
         dangerScore: Int = 0,
@@ -36,25 +47,64 @@ public struct RestEngineState: Codable, Equatable, Sendable {
         self.activeDeferral = activeDeferral
         self.eyeDebt = max(0, eyeDebt)
         self.bodyDebt = max(0, bodyDebt)
+        self.pendingEyeDebt = max(0, pendingEyeDebt)
+        self.pendingBodyDebt = max(0, pendingBodyDebt)
         self.lastEvaluatedAt = lastEvaluatedAt
-        self.lastIdleDuration = max(0, lastIdleDuration)
-        self.awayCandidate = awayCandidate
+        self.lastWatchedAt = lastWatchedAt
+        self.lastRestEndedAt = lastRestEndedAt
         self.bodySuppressedUntil = bodySuppressedUntil
         self.postponesInCurrentCycle = postponesInCurrentCycle
         self.dangerScore = dangerScore
         self.statistics = statistics
     }
-}
 
-public struct AwayCandidateSnapshot: Codable, Equatable, Sendable {
-    public var startedAt: Date
-    public var eyeDebt: TimeInterval
-    public var bodyDebt: TimeInterval
+    /// Debt including exposure from the current unattended stretch.
+    public func debt(for kind: RestKind) -> TimeInterval {
+        switch kind {
+        case .eyeGate:
+            eyeDebt + pendingEyeDebt
+        case .bodyBreak:
+            bodyDebt + pendingBodyDebt
+        }
+    }
 
-    public init(startedAt: Date, eyeDebt: TimeInterval, bodyDebt: TimeInterval) {
-        self.startedAt = startedAt
-        self.eyeDebt = max(0, eyeDebt)
-        self.bodyDebt = max(0, bodyDebt)
+    private enum CodingKeys: String, CodingKey {
+        case scheduled
+        case activeSession
+        case pause
+        case activeDeferral
+        case eyeDebt
+        case bodyDebt
+        case pendingEyeDebt
+        case pendingBodyDebt
+        case lastEvaluatedAt
+        case lastWatchedAt
+        case lastRestEndedAt
+        case bodySuppressedUntil
+        case postponesInCurrentCycle
+        case dangerScore
+        case statistics
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            scheduled: container.decodeLossyOptional(ScheduledRest.self, forKey: .scheduled),
+            activeSession: container.decodeLossyOptional(RestSession.self, forKey: .activeSession),
+            pause: container.decodeLossyOptional(PauseState.self, forKey: .pause),
+            activeDeferral: container.decodeLossyOptional(RestDeferral.self, forKey: .activeDeferral),
+            eyeDebt: container.decodeLossy(TimeInterval.self, forKey: .eyeDebt, default: 0),
+            bodyDebt: container.decodeLossy(TimeInterval.self, forKey: .bodyDebt, default: 0),
+            pendingEyeDebt: container.decodeLossy(TimeInterval.self, forKey: .pendingEyeDebt, default: 0),
+            pendingBodyDebt: container.decodeLossy(TimeInterval.self, forKey: .pendingBodyDebt, default: 0),
+            lastEvaluatedAt: container.decodeLossyOptional(Date.self, forKey: .lastEvaluatedAt),
+            lastWatchedAt: container.decodeLossyOptional(Date.self, forKey: .lastWatchedAt),
+            lastRestEndedAt: container.decodeLossyOptional(Date.self, forKey: .lastRestEndedAt),
+            bodySuppressedUntil: container.decodeLossyOptional(Date.self, forKey: .bodySuppressedUntil),
+            postponesInCurrentCycle: container.decodeLossy(Int.self, forKey: .postponesInCurrentCycle, default: 0),
+            dangerScore: container.decodeLossy(Int.self, forKey: .dangerScore, default: 0),
+            statistics: container.decodeLossy(RestStatistics.self, forKey: .statistics, default: RestStatistics())
+        )
     }
 }
 
@@ -69,6 +119,38 @@ public struct ScheduledRest: Codable, Equatable, Sendable {
         self.dueAt = dueAt
         self.notificationAt = notificationAt
         self.notificationSent = notificationSent
+    }
+}
+
+/// When a due rest may begin. It starts early only during a clear pause, at the first natural pause
+/// once due, and regardless of activity at the deadline.
+public struct RestStartWindow: Equatable, Sendable {
+    public var opensAt: Date
+    public var dueAt: Date
+    public var deadline: Date
+
+    public init(opensAt: Date, dueAt: Date, deadline: Date) {
+        self.opensAt = opensAt
+        self.dueAt = dueAt
+        self.deadline = deadline
+    }
+}
+
+public enum RestTiming {
+    /// An input gap of this length marks a natural pause once a rest is due. Writing research treats
+    /// gaps of two seconds or more as planning pauses between units of work.
+    public static let naturalPause: TimeInterval = 2
+    /// An input gap long enough to start a rest slightly early: the user is reading, watching, or away.
+    public static let clearPause: TimeInterval = 15
+
+    /// How far a rest may move around its due time to land on a pause.
+    public static func slack(forInterval interval: TimeInterval) -> TimeInterval {
+        min(5 * 60, max(10, interval * 0.05))
+    }
+
+    /// Rests due this close together share one interruption instead of arriving minutes apart.
+    public static func mergeHorizon(forInterval interval: TimeInterval) -> TimeInterval {
+        min(5 * 60, interval / 4)
     }
 }
 
@@ -214,18 +296,32 @@ public struct RestStatistics: Codable, Equatable, Sendable {
 }
 
 public struct RestContext: Equatable, Sendable {
+    /// Seconds since the last keyboard or pointer input.
     public var idleDuration: TimeInterval
+    /// Another app holds the display awake (video playback, a call, a presentation), so the user is
+    /// probably watching the screen even without input.
+    public var screenWatched: Bool
+    /// A microphone is in use, which usually means a call or meeting.
+    public var inCall: Bool
+    /// How long the screen was verifiably asleep or locked immediately before this evaluation.
+    public var screenOffDuration: TimeInterval
     public var focusModeActive: Bool
     public var inWorkingHours: Bool
     public var appExclusions: [AppExclusionEvaluation]
 
     public init(
         idleDuration: TimeInterval = 0,
+        screenWatched: Bool = false,
+        inCall: Bool = false,
+        screenOffDuration: TimeInterval = 0,
         focusModeActive: Bool = false,
         inWorkingHours: Bool = true,
         appExclusions: [AppExclusionEvaluation] = []
     ) {
         self.idleDuration = max(0, idleDuration)
+        self.screenWatched = screenWatched
+        self.inCall = inCall
+        self.screenOffDuration = max(0, screenOffDuration)
         self.focusModeActive = focusModeActive
         self.inWorkingHours = inWorkingHours
         self.appExclusions = appExclusions
@@ -247,6 +343,19 @@ public enum RestEngineResult: Equatable, Sendable {
     case denied(ActionDenial)
 }
 
+/// Schedules rests from screen exposure instead of wall-clock time.
+///
+/// Exposure accrues while the user is engaged: typing, pointing, or watching something that keeps
+/// the display awake. Idle time is ambiguous (reading looks like absence), so it accrues as pending
+/// debt that resolves once the evidence is in: it becomes debt when the user returns before the away
+/// threshold, and it is dropped and the rests are credited when the stretch reaches the threshold.
+/// A verified screen-off period (sleep, lock, display sleep) is unambiguous and credits each rest
+/// once it lasts as long as that rest.
+///
+/// A due rest starts at the first natural pause in input within its start window instead of cutting
+/// into a burst of work, and it may start slightly early during a clear pause. Rests due within a few
+/// minutes of each other share one interruption: an Eye Gate becomes a Body Break that is nearly due,
+/// and a nearly due Eye Gate continues a Body Break the user ends early.
 public struct RestEngine: Equatable, Sendable {
     public private(set) var settings: RestSettings
     public private(set) var state: RestEngineState
@@ -254,7 +363,7 @@ public struct RestEngine: Equatable, Sendable {
     public init(settings: RestSettings = .defaults, now: Date = Date()) {
         self.settings = settings.normalizedForCurrentDesign()
         self.state = RestEngineState(lastEvaluatedAt: now)
-        refreshProjectedSchedule(now: now, preserveNotificationStateFrom: nil)
+        refreshProjectedSchedule(now: now)
     }
 
     public init(settings: RestSettings = .defaults, restoring state: RestEngineState, now: Date = Date()) {
@@ -263,12 +372,16 @@ public struct RestEngine: Equatable, Sendable {
         if !self.settings.presentation.breakHealthMode {
             self.state.dangerScore = 0
         }
-        normalizeDebtState()
-        if let pause = self.state.pause, !pause.isActive(at: now) {
+        if let pause = self.state.pause,
+           pause.reason == .suspendOrLock || !pause.isActive(at: now) {
+            // A suspend pause belongs to the process that saw the suspension begin; a new process
+            // never sees it end.
             self.state.pause = nil
         }
+        normalizeDebtState()
+        let reconciledGap = reconcileUnobservedGap(now: now)
         if self.state.activeSession == nil,
-           self.state.scheduled == nil {
+           reconciledGap || self.state.scheduled == nil {
             refreshProjectedSchedule(now: now)
         }
     }
@@ -281,8 +394,26 @@ public struct RestEngine: Equatable, Sendable {
         }
         normalizeDebtState()
         if state.activeSession == nil && !activePauseBlocksAllEnabledRests(at: now) {
-            refreshScheduleAfterSettingsUpdate(now: now)
+            let previous = state.scheduled
+            clearDeferralMovedIntoFuture(now: now)
+            refreshProjectedSchedule(now: now, preserveNotificationStateFrom: previous)
         }
+    }
+
+    /// The window in which a rest of this kind may start, given the current debt.
+    public func startWindow(for kind: RestKind, now: Date = Date()) -> RestStartWindow {
+        let rule = settings.rule(for: kind)
+        let slack = RestTiming.slack(forInterval: rule.interval)
+        // Debt is accounted up to the last evaluation, so the due time does not drift between ticks.
+        let accountedAt = state.lastEvaluatedAt ?? now
+        var dueAt = accountedAt.addingTimeInterval(rule.interval - state.debt(for: kind))
+        var opensAt = dueAt.addingTimeInterval(-slack)
+        if kind == .bodyBreak, let suppressedUntil = state.bodySuppressedUntil {
+            // A postponed Body Break never returns before the time the user chose.
+            dueAt = max(dueAt, suppressedUntil)
+            opensAt = max(dueAt.addingTimeInterval(-slack), suppressedUntil)
+        }
+        return RestStartWindow(opensAt: opensAt, dueAt: dueAt, deadline: dueAt.addingTimeInterval(slack))
     }
 
     @discardableResult
@@ -290,114 +421,37 @@ public struct RestEngine: Equatable, Sendable {
         if let pause = state.pause {
             if pause.isActive(at: now) {
                 if pauseBlocksAllEnabledRests(pause) {
-                    _ = settleAwayWithoutAccrualIfNeeded(now: now, idleDuration: context.idleDuration)
+                    let observation = observe(now: now, context: context)
+                    clearDeferrals(satisfiedBy: observation.credited)
                     return .paused(pause)
                 }
             } else {
                 state.pause = nil
-                markNonWorkingEvaluation(
-                    now: now,
-                    idleDuration: context.idleDuration,
-                    preserveAwayCandidate: isCurrentAwayCandidate(now: now, idleDuration: context.idleDuration)
-                )
-                refreshProjectedSchedule(now: now)
             }
         }
 
         if let active = state.activeSession {
             if canNaturallyCompleteActive(active, idleDuration: context.idleDuration) {
-                return completeActiveAfterNaturalAway(now: now, idleDuration: context.idleDuration)
+                return completeActive(now: now, reason: .natural, context: context)
             }
-            let credited = settleAwayWithoutAccrualIfNeeded(
-                now: now,
-                idleDuration: context.idleDuration,
-                excluding: [active.kind]
-            )
-            if !credited.isEmpty {
-                clearDeferrals(satisfiedBy: credited)
-            }
+            let observation = observe(now: now, context: context, excluding: [active.kind])
+            clearDeferrals(satisfiedBy: observation.credited)
             return .started(active)
         }
 
         let previousSchedule = state.scheduled
-        let creditedNaturally = updateDebt(now: now, context: context)
-
-        if !creditedNaturally.isEmpty {
-            clearDeferrals(satisfiedBy: creditedNaturally)
-            if isAway(context: context) {
-                clearDeferralMovedIntoFuture(now: now)
-            }
-            refreshProjectedSchedule(now: now, preserveNotificationStateFrom: previousSchedule)
-            return .naturalRestsCredited(creditedNaturally)
-        }
-
-        if isAway(context: context) {
-            clearDeferralMovedIntoFuture(now: now)
-            refreshProjectedSchedule(now: now, preserveNotificationStateFrom: previousSchedule)
-            return .noChange
-        }
-
+        let observation = observe(now: now, context: context)
+        clearDeferrals(satisfiedBy: observation.credited)
+        clearDeferralMovedIntoFuture(now: now)
         refreshProjectedSchedule(now: now, preserveNotificationStateFrom: previousSchedule)
 
-        guard var scheduled = state.scheduled else {
-            refreshProjectedSchedule(now: now)
-            if let scheduled = state.scheduled {
-                return .scheduled(scheduled)
-            }
+        if !observation.credited.isEmpty {
+            return .naturalRestsCredited(observation.credited)
+        }
+        if observation.isAway {
             return .noChange
         }
-
-        let dueCandidates = dueRestCandidates(now: now)
-        var firstDeferredCandidate: (scheduled: ScheduledRest, reason: ContextDeferralReason)?
-        for candidate in dueCandidates {
-            let candidateSchedule = dueSchedule(for: candidate, current: scheduled, now: now)
-            if let reason = deferralReason(for: candidate, context: context) {
-                if firstDeferredCandidate == nil {
-                    firstDeferredCandidate = (candidateSchedule, reason)
-                }
-                continue
-            }
-            if let firstDeferredCandidate {
-                _ = deferScheduledRest(
-                    firstDeferredCandidate.scheduled,
-                    reason: firstDeferredCandidate.reason,
-                    now: now
-                )
-            }
-            return startScheduledRest(
-                candidateSchedule,
-                now: now,
-                idleDuration: context.idleDuration,
-                preserveAwayCandidate: context.idleDuration > 0
-            )
-        }
-
-        if let pendingDeferralResult = evaluatePendingDeferral(now: now, context: context) {
-            return pendingDeferralResult
-        }
-
-        if let firstDeferredCandidate {
-            return deferScheduledRest(
-                firstDeferredCandidate.scheduled,
-                reason: firstDeferredCandidate.reason,
-                now: now
-            )
-        }
-
-        if let notificationAt = scheduled.notificationAt,
-           !scheduled.notificationSent,
-           now >= notificationAt,
-           now < scheduled.dueAt {
-            scheduled.notificationSent = true
-            state.scheduled = scheduled
-            return .notificationDue(scheduled.kind)
-        }
-
-        guard now >= scheduled.dueAt else {
-            return .noChange
-        }
-
-        return .noChange
+        return decideStart(now: now, context: context)
     }
 
     @discardableResult
@@ -414,36 +468,28 @@ public struct RestEngine: Equatable, Sendable {
             return .noChange
         }
 
-        let credited = settleAwayWithoutAccrualIfNeeded(
-            now: now,
-            idleDuration: context.idleDuration,
-            excluding: [active.kind]
-        )
-        if !credited.isEmpty {
-            clearDeferrals(satisfiedBy: credited)
-        }
+        let observation = observe(now: now, context: context, excluding: [active.kind])
+        clearDeferrals(satisfiedBy: observation.credited)
 
         guard let reason = activeAppExclusionInterruptionReason(for: active.kind, context: context) else {
             return .noChange
         }
 
         state.activeSession = nil
-        let scheduled = scheduledRest(kind: active.kind, dueAt: now)
-        state.scheduled = scheduled
-        markNonWorkingEvaluation(
-            now: now,
-            idleDuration: context.idleDuration,
-            preserveAwayCandidate: isCurrentAwayCandidate(now: now, idleDuration: context.idleDuration)
-        )
-        return deferScheduledRest(scheduled, reason: reason, now: now, source: .activeInterruption)
+        state.lastEvaluatedAt = now
+        state.lastRestEndedAt = now
+        // The interrupted rest is still owed once the context clears.
+        owe(active.kind)
+        _ = eyeRestRemaining(afterEnded: active, now: now)
+        refreshProjectedSchedule(now: now)
+        return deferScheduledRest(kind: active.kind, reason: reason, now: now, source: .activeInterruption)
     }
 
     @discardableResult
     public mutating func takeNow(
         _ kind: RestKind,
         now: Date = Date(),
-        idleDuration: TimeInterval = 0,
-        preserveAwayCandidate: Bool = false
+        context: RestContext = RestContext()
     ) -> RestEngineResult {
         guard state.activeSession == nil else {
             return .denied(.alreadyActive)
@@ -454,79 +500,42 @@ public struct RestEngine: Equatable, Sendable {
         guard settings.rule(for: kind).isEnabled else {
             return .denied(.actionDisabled)
         }
-        let effectiveIdleDuration = max(0, idleDuration)
-        let creditedNaturally = updateDebt(now: now, context: RestContext(idleDuration: effectiveIdleDuration))
-        if isNaturallyAway(idleDuration: effectiveIdleDuration) {
-            if !creditedNaturally.isEmpty {
-                clearDeferrals(satisfiedBy: creditedNaturally)
-            }
+        let observation = observe(now: now, context: context)
+        clearDeferrals(satisfiedBy: observation.credited)
+        if observation.isAway {
             refreshProjectedSchedule(now: now)
-            if !creditedNaturally.isEmpty {
-                return .naturalRestsCredited(creditedNaturally)
-            }
-            return .noChange
+            return observation.credited.isEmpty ? .noChange : .naturalRestsCredited(observation.credited)
         }
-
-        let scheduled = ScheduledRest(
-            kind: kind,
-            dueAt: now,
-            notificationAt: nil,
-            notificationSent: true
-        )
-        return startScheduledRest(
-            scheduled,
-            now: now,
-            idleDuration: effectiveIdleDuration,
-            preserveAwayCandidate: preserveAwayCandidate
-        )
+        return startRest(kind: kind, scheduledAt: now, now: now)
     }
 
     @discardableResult
     public mutating func completeActive(
         now: Date = Date(),
         reason: RestCompletionReason = .completed,
-        idleDuration: TimeInterval = 0,
-        preserveAwayCandidate: Bool = false
+        context: RestContext = RestContext()
     ) -> RestEngineResult {
         guard let session = state.activeSession else {
             return .denied(.noActiveSession)
         }
 
-        let effectiveIdleDuration = max(0, idleDuration)
-        let credited: Set<RestKind>
-        if effectiveIdleDuration > 0 {
-            credited = settleAwayWithoutAccrualIfNeeded(
-                now: now,
-                idleDuration: effectiveIdleDuration,
-                excluding: [session.kind]
-            )
-        } else {
-            credited = []
-        }
-        if !credited.isEmpty {
-            clearDeferrals(satisfiedBy: credited)
-        }
-
+        let observation = observe(now: now, context: context, excluding: [session.kind])
+        clearDeferrals(satisfiedBy: observation.credited)
         state.activeSession = nil
         recordCompletion(kind: session.kind, reason: reason)
         clearDeferrals(satisfiedBy: satisfiedKinds(kind: session.kind, reason: reason))
+        _ = eyeRestRemaining(afterEnded: session, now: now)
         state.postponesInCurrentCycle = 0
-        let shouldPreserveAwayCandidate = preserveAwayCandidate &&
-            isCurrentAwayCandidate(now: now, idleDuration: effectiveIdleDuration)
-        if shouldPreserveAwayCandidate {
-            updateAwayCandidateAfterCompletion(kind: session.kind)
-        }
-        markNonWorkingEvaluation(
-            now: now,
-            idleDuration: effectiveIdleDuration,
-            preserveAwayCandidate: shouldPreserveAwayCandidate
-        )
+        state.lastEvaluatedAt = now
+        state.lastRestEndedAt = now
         refreshProjectedSchedule(now: now)
         return .completed(session, reason)
     }
 
+    /// Postpones an active Body Break. When the Eye Gate is nearly due, its remainder continues in
+    /// the same interruption and becomes the active session.
     @discardableResult
-    public mutating func postponeActive(now: Date = Date()) -> RestEngineResult {
+    public mutating func postponeActive(now: Date = Date(), context: RestContext = RestContext()) -> RestEngineResult {
         guard let session = state.activeSession else {
             return .denied(.noActiveSession)
         }
@@ -546,22 +555,26 @@ public struct RestEngine: Equatable, Sendable {
             return .denied(.postponeWindowExpired)
         }
 
+        let observation = observe(now: now, context: context, excluding: [session.kind])
+        clearDeferrals(satisfiedBy: observation.credited)
         state.activeSession = nil
         state.postponesInCurrentCycle += 1
         state.statistics.postpones += 1
         increaseDanger(for: session.kind)
         let dueAt = now.addingTimeInterval(rule.postpone.duration)
-        if session.kind == .bodyBreak {
-            state.bodyDebt = settings.bodyBreak.interval
-            state.bodySuppressedUntil = dueAt
-        }
-        markNonWorkingEvaluation(now: now, idleDuration: 0)
+        owe(.bodyBreak)
+        state.bodySuppressedUntil = dueAt
+        state.lastEvaluatedAt = now
+        state.lastRestEndedAt = now
         refreshProjectedSchedule(now: now)
+        continueEyeRest(afterEnded: session, now: now, context: context)
         return .postponed(session.kind, until: dueAt)
     }
 
+    /// Skips an active Body Break. When the Eye Gate is nearly due, its remainder continues in the
+    /// same interruption and becomes the active session.
     @discardableResult
-    public mutating func skipActive(now: Date = Date()) -> RestEngineResult {
+    public mutating func skipActive(now: Date = Date(), context: RestContext = RestContext()) -> RestEngineResult {
         guard let session = state.activeSession else {
             return .denied(.noActiveSession)
         }
@@ -571,22 +584,24 @@ public struct RestEngine: Equatable, Sendable {
         guard settings.rule(for: session.kind).ordinarySkipEnabled else {
             return .denied(.actionDisabled)
         }
-        return completeActive(now: now, reason: .skipped)
+        let result = completeActive(now: now, reason: .skipped, context: context)
+        continueEyeRest(afterEnded: session, now: now, context: context)
+        return result
     }
 
     @discardableResult
-    public mutating func emergencyOverride(now: Date = Date()) -> RestEngineResult {
+    public mutating func emergencyOverride(now: Date = Date(), context: RestContext = RestContext()) -> RestEngineResult {
         guard let session = state.activeSession else {
             return .denied(.noActiveSession)
         }
         guard session.kind == .eyeGate else {
-            return skipActive(now: now)
+            return skipActive(now: now, context: context)
         }
         let policy = settings.eyeGate.emergencyOverride
         guard policy.isEnabled else {
             return .denied(.emergencyOverrideDisabled)
         }
-        return completeActive(now: now, reason: .emergencyOverride)
+        return completeActive(now: now, reason: .emergencyOverride, context: context)
     }
 
     @discardableResult
@@ -595,25 +610,17 @@ public struct RestEngine: Equatable, Sendable {
         now: Date = Date(),
         reason: PauseReason = .user,
         appliesTo: Set<RestKind> = Set(RestKind.allCases),
-        idleDuration: TimeInterval = 0,
-        preserveAwayCandidate: Bool = false
+        context: RestContext = RestContext()
     ) -> RestEngineResult {
         let normalizedAppliesTo = appliesTo.isEmpty ? Set(RestKind.allCases) : appliesTo
-        let wasPaused = state.pause != nil
-        let startedFromActiveRest = state.activeSession != nil
         if let active = state.activeSession {
             guard normalizedAppliesTo.contains(active.kind) else {
                 return .denied(.alreadyActive)
             }
-            if canNaturallyCompleteActive(active, idleDuration: idleDuration) {
-                _ = completeActiveAfterNaturalAway(now: now, idleDuration: idleDuration)
+            if canNaturallyCompleteActive(active, idleDuration: context.idleDuration) {
+                _ = completeActive(now: now, reason: .natural, context: context)
             } else if canAutomaticallyCompleteElapsedActive(active, now: now) {
-                _ = completeActive(
-                    now: now,
-                    reason: .completed,
-                    idleDuration: idleDuration,
-                    preserveAwayCandidate: preserveAwayCandidate
-                )
+                _ = completeActive(now: now, reason: .completed, context: context)
             } else {
                 if active.kind == .eyeGate {
                     return .denied(.eyeGateCannotBeSkipped)
@@ -621,37 +628,11 @@ public struct RestEngine: Equatable, Sendable {
                 guard settings.rule(for: active.kind).ordinarySkipEnabled else {
                     return .denied(.actionDisabled)
                 }
-                let activeIdleSnapshot = preserveAwayCandidate &&
-                    isCurrentAwayCandidate(now: now, idleDuration: idleDuration) ? state.awayCandidate : nil
-                let naturalEyeGatesBeforeCompletion = state.statistics.naturalEyeGates
-                let naturalBodyBreaksBeforeCompletion = state.statistics.naturalBodyBreaks
-                _ = completeActive(
-                    now: now,
-                    reason: .skipped,
-                    idleDuration: idleDuration,
-                    preserveAwayCandidate: false
-                )
-                if let activeIdleSnapshot {
-                    var restoredSnapshot = activeIdleSnapshot
-                    if state.statistics.naturalEyeGates > naturalEyeGatesBeforeCompletion {
-                        restoredSnapshot.eyeDebt = state.eyeDebt
-                    }
-                    if state.statistics.naturalBodyBreaks > naturalBodyBreaksBeforeCompletion {
-                        restoredSnapshot.bodyDebt = state.bodyDebt
-                    }
-                    switch active.kind {
-                    case .eyeGate:
-                        restoredSnapshot.eyeDebt = state.eyeDebt
-                    case .bodyBreak:
-                        restoredSnapshot.bodyDebt = state.bodyDebt
-                    }
-                    state.awayCandidate = AwayCandidateSnapshot(
-                        startedAt: restoredSnapshot.startedAt,
-                        eyeDebt: restoredSnapshot.eyeDebt,
-                        bodyDebt: restoredSnapshot.bodyDebt
-                    )
-                }
+                _ = completeActive(now: now, reason: .skipped, context: context)
             }
+        } else {
+            let observation = observe(now: now, context: context)
+            clearDeferrals(satisfiedBy: observation.credited)
         }
 
         let until = duration.map { now.addingTimeInterval(max(1, $0)) }
@@ -659,38 +640,16 @@ public struct RestEngine: Equatable, Sendable {
         state.pause = pause
         state.scheduled = nil
         state.activeDeferral = nil
-        if preserveAwayCandidate {
-            updateAwayCandidateSnapshot(
-                now: now,
-                idleDuration: idleDuration,
-                includingPreIdleComputerUse: !wasPaused && !startedFromActiveRest
-            )
-        }
-        let shouldPreserveAwayCandidate = preserveAwayCandidate &&
-            isCurrentAwayCandidate(now: now, idleDuration: idleDuration)
-        markNonWorkingEvaluation(
-            now: now,
-            idleDuration: idleDuration,
-            preserveAwayCandidate: shouldPreserveAwayCandidate
-        )
+        state.lastEvaluatedAt = now
         refreshProjectedSchedule(now: now)
         return .paused(pause)
     }
 
     @discardableResult
-    public mutating func resume(
-        now: Date = Date(),
-        idleDuration: TimeInterval = 0,
-        preserveAwayCandidate: Bool = false
-    ) -> RestEngineResult {
+    public mutating func resume(now: Date = Date()) -> RestEngineResult {
         state.pause = nil
-        let shouldPreserveAwayCandidate = preserveAwayCandidate &&
-            isCurrentAwayCandidate(now: now, idleDuration: idleDuration)
-        markNonWorkingEvaluation(
-            now: now,
-            idleDuration: idleDuration,
-            preserveAwayCandidate: shouldPreserveAwayCandidate
-        )
+        // Paused time never becomes debt; an unattended stretch keeps running across the pause.
+        state.lastEvaluatedAt = now
         refreshProjectedSchedule(now: now)
         return .resumed
     }
@@ -702,99 +661,371 @@ public struct RestEngine: Equatable, Sendable {
         return .reset
     }
 
-    private mutating func refreshScheduleAfterSettingsUpdate(now: Date) {
-        let previous = state.scheduled
-        clearDeferralMovedIntoFuture(now: now)
-        refreshProjectedSchedule(now: now, preserveNotificationStateFrom: previous)
+    // MARK: - Exposure accounting
+
+    private struct Observation {
+        var isAway: Bool
+        var credited: Set<RestKind>
     }
 
-    private func scheduledRest(kind: RestKind, dueAt: Date) -> ScheduledRest {
-        let notificationAt: Date?
-        if settings.notifications.isEnabled(for: kind) {
-            let leadTime = settings.notifications.leadTime(for: kind)
-            notificationAt = leadTime > 0 ? dueAt.addingTimeInterval(-leadTime) : nil
-        } else {
-            notificationAt = nil
-        }
-        return ScheduledRest(kind: kind, dueAt: dueAt, notificationAt: notificationAt)
+    private var awayThreshold: TimeInterval {
+        settings.naturalBreaks.inactivityResetTime
     }
 
-    private func projectedRest(kind: RestKind, now: Date, remaining: TimeInterval) -> ScheduledRest {
-        scheduledRest(kind: kind, dueAt: now.addingTimeInterval(max(0, remaining)))
-    }
-
-    private func dueSchedule(for kind: RestKind, current scheduled: ScheduledRest?, now: Date) -> ScheduledRest {
-        if let scheduled, scheduled.kind == kind, scheduled.dueAt <= now {
-            return scheduled
-        }
-        return projectedRest(kind: kind, now: now, remaining: 0)
-    }
-
-    private mutating func evaluatePendingDeferral(now: Date, context: RestContext) -> RestEngineResult? {
-        guard state.activeDeferral != nil else {
-            return nil
-        }
-
-        clearDeferralMovedIntoFuture(now: now)
-        guard let activeDeferral = state.activeDeferral else {
-            refreshProjectedSchedule(now: now)
-            return state.scheduled.map(RestEngineResult.scheduled) ?? .noChange
-        }
-
-        let scheduled = scheduledRest(kind: activeDeferral.kind, dueAt: activeDeferral.startedAt)
-        if let reason = deferralReason(for: activeDeferral.kind, context: context) {
-            return deferScheduledRest(scheduled, reason: reason, now: now, source: activeDeferral.source)
-        }
-        return startScheduledRest(
-            scheduled,
-            now: now,
-            idleDuration: context.idleDuration,
-            preserveAwayCandidate: context.idleDuration > 0
-        )
-    }
-
-    private mutating func startScheduledRest(
-        _ scheduled: ScheduledRest,
+    /// Advances exposure accounting to `now` and credits rests that an absence satisfied.
+    private mutating func observe(
         now: Date,
-        idleDuration: TimeInterval = 0,
-        preserveAwayCandidate: Bool = false
-    ) -> RestEngineResult {
-        let rule = settings.rule(for: scheduled.kind)
+        context: RestContext,
+        excluding excludedKinds: Set<RestKind> = []
+    ) -> Observation {
+        let unattended = unattendedDuration(now: now, context: context)
+        let engagedAt = now.addingTimeInterval(-unattended)
+        if let lastEvaluatedAt = state.lastEvaluatedAt {
+            let elapsed = max(0, now.timeIntervalSince(lastEvaluatedAt))
+            let engagedSinceLastEvaluation = engagedAt > lastEvaluatedAt
+            let engagedPortion = min(elapsed, max(0, engagedAt.timeIntervalSince(lastEvaluatedAt)))
+            if engagedSinceLastEvaluation {
+                // The user came back before the away threshold: the idle stretch was screen time.
+                commitPendingDebt()
+            }
+            for kind in RestKind.allCases where accruesDebt(kind, at: now) {
+                addDebt(kind, committed: engagedPortion, pending: elapsed - engagedPortion)
+            }
+        }
+        state.lastEvaluatedAt = now
+
+        var credited = Set<RestKind>()
+        let isAway = unattended >= awayThreshold
+        if isAway {
+            discardPendingDebt()
+            credited = creditNaturalRests(absence: unattended, evidenceThreshold: awayThreshold, excluding: excludedKinds)
+        }
+        if context.screenOffDuration > 0 {
+            credited.formUnion(creditNaturalRests(
+                absence: context.screenOffDuration,
+                evidenceThreshold: 0,
+                excluding: excludedKinds
+            ))
+        }
+        normalizeDebtState()
+        return Observation(isAway: isAway, credited: credited)
+    }
+
+    /// Time since the last sign that the user was engaged with the screen.
+    private mutating func unattendedDuration(now: Date, context: RestContext) -> TimeInterval {
+        let idleDuration = max(0, context.idleDuration)
+        // An active rest covers the screen, so playback behind it says nothing about the user.
+        guard state.activeSession == nil else { return idleDuration }
+        if context.screenWatched {
+            state.lastWatchedAt = now
+            return 0
+        }
+        guard let lastWatchedAt = state.lastWatchedAt else { return idleDuration }
+        return min(idleDuration, max(0, now.timeIntervalSince(lastWatchedAt)))
+    }
+
+    private func accruesDebt(_ kind: RestKind, at date: Date) -> Bool {
+        state.activeSession == nil && settings.rule(for: kind).isEnabled && !isPaused(kind, at: date)
+    }
+
+    private mutating func addDebt(_ kind: RestKind, committed: TimeInterval, pending: TimeInterval) {
+        switch kind {
+        case .eyeGate:
+            state.eyeDebt += max(0, committed)
+            state.pendingEyeDebt += max(0, pending)
+        case .bodyBreak:
+            state.bodyDebt += max(0, committed)
+            state.pendingBodyDebt += max(0, pending)
+        }
+    }
+
+    private mutating func commitPendingDebt() {
+        state.eyeDebt += state.pendingEyeDebt
+        state.bodyDebt += state.pendingBodyDebt
+        discardPendingDebt()
+    }
+
+    private mutating func discardPendingDebt() {
+        state.pendingEyeDebt = 0
+        state.pendingBodyDebt = 0
+    }
+
+    /// Marks a rest as owed now, keeping any overdue time already accrued.
+    private mutating func owe(_ kind: RestKind) {
+        switch kind {
+        case .eyeGate:
+            state.eyeDebt = max(state.debt(for: .eyeGate), settings.eyeGate.interval)
+            state.pendingEyeDebt = 0
+        case .bodyBreak:
+            state.bodyDebt = max(state.debt(for: .bodyBreak), settings.bodyBreak.interval)
+            state.pendingBodyDebt = 0
+        }
+    }
+
+    /// Debt is bounded at two intervals: enough to keep an overdue rest's due time stable while it
+    /// waits for a pause or a deferral to clear.
+    private mutating func normalizeDebtState() {
+        if settings.eyeGate.isEnabled {
+            let ceiling = settings.eyeGate.interval * 2
+            state.eyeDebt = min(ceiling, max(0, state.eyeDebt))
+            state.pendingEyeDebt = min(ceiling - state.eyeDebt, max(0, state.pendingEyeDebt))
+        } else {
+            state.eyeDebt = 0
+            state.pendingEyeDebt = 0
+        }
+        if settings.bodyBreak.isEnabled {
+            let ceiling = settings.bodyBreak.interval * 2
+            state.bodyDebt = min(ceiling, max(0, state.bodyDebt))
+            state.pendingBodyDebt = min(ceiling - state.bodyDebt, max(0, state.pendingBodyDebt))
+        } else {
+            state.bodyDebt = 0
+            state.pendingBodyDebt = 0
+            state.bodySuppressedUntil = nil
+        }
+    }
+
+    /// Time while the app was not running cannot be observed. A gap at least as long as the away
+    /// threshold is treated as an absence; a shorter one, such as a relaunch, counts as continuous use.
+    private mutating func reconcileUnobservedGap(now: Date) -> Bool {
+        guard let lastEvaluatedAt = state.lastEvaluatedAt else {
+            state.lastEvaluatedAt = now
+            return true
+        }
+        let gap = now.timeIntervalSince(lastEvaluatedAt)
+        guard gap >= awayThreshold else { return false }
+        state.lastEvaluatedAt = now
+        discardPendingDebt()
+        if state.activeSession == nil {
+            let credited = creditNaturalRests(absence: gap, evidenceThreshold: awayThreshold)
+            clearDeferrals(satisfiedBy: credited)
+            clearDeferralMovedIntoFuture(now: now)
+        }
+        return true
+    }
+
+    /// Credits each rest whose duration the absence covered. Idle-inferred absences must also reach
+    /// the away threshold; verified screen-off periods need no extra evidence.
+    private mutating func creditNaturalRests(
+        absence: TimeInterval,
+        evidenceThreshold: TimeInterval,
+        excluding excludedKinds: Set<RestKind> = []
+    ) -> Set<RestKind> {
+        guard settings.naturalBreaks.isEnabled else { return [] }
+        var credited = Set<RestKind>()
+        if !excludedKinds.contains(.eyeGate),
+           settings.eyeGate.isEnabled,
+           absence >= max(evidenceThreshold, settings.eyeGate.duration),
+           state.debt(for: .eyeGate) > 0 {
+            state.eyeDebt = 0
+            state.pendingEyeDebt = 0
+            incrementCompleted(.eyeGate)
+            incrementNatural(.eyeGate)
+            decreaseDanger(for: .eyeGate)
+            credited.insert(.eyeGate)
+        }
+        if !excludedKinds.contains(.bodyBreak),
+           settings.bodyBreak.isEnabled,
+           absence >= max(evidenceThreshold, settings.bodyBreak.duration),
+           state.debt(for: .bodyBreak) > 0 {
+            state.bodyDebt = 0
+            state.pendingBodyDebt = 0
+            state.bodySuppressedUntil = nil
+            state.postponesInCurrentCycle = 0
+            incrementCompleted(.bodyBreak)
+            incrementNatural(.bodyBreak)
+            decreaseDanger(for: .bodyBreak)
+            credited.insert(.bodyBreak)
+            if !excludedKinds.contains(.eyeGate),
+               settings.eyeGate.isEnabled,
+               state.debt(for: .eyeGate) > 0 || state.activeDeferral?.kind == .eyeGate {
+                state.eyeDebt = 0
+                state.pendingEyeDebt = 0
+                credited.insert(.eyeGate)
+            }
+        }
+        return credited
+    }
+
+    // MARK: - Starting rests
+
+    private struct StartCandidate {
+        var kind: RestKind
+        var window: RestStartWindow
+    }
+
+    private func startCandidates(now: Date) -> [StartCandidate] {
+        RestKind.allCases
+            .filter { settings.rule(for: $0).isEnabled && !isPaused($0, at: now) }
+            .map { StartCandidate(kind: $0, window: startWindow(for: $0, now: now)) }
+            .sorted { left, right in
+                if left.window.dueAt == right.window.dueAt {
+                    return left.kind == .bodyBreak && right.kind != .bodyBreak
+                }
+                return left.window.dueAt < right.window.dueAt
+            }
+    }
+
+    private func isWithinMergeHorizon(_ kind: RestKind, window: RestStartWindow, now: Date) -> Bool {
+        let horizon = RestTiming.mergeHorizon(forInterval: settings.rule(for: kind).interval)
+        var mergeableFrom = window.dueAt.addingTimeInterval(-horizon)
+        if kind == .bodyBreak, let suppressedUntil = state.bodySuppressedUntil {
+            mergeableFrom = max(mergeableFrom, suppressedUntil)
+        }
+        return now >= min(mergeableFrom, window.opensAt)
+    }
+
+    private func isStartMoment(_ window: RestStartWindow, now: Date, pauseDuration: TimeInterval) -> Bool {
+        if now >= window.deadline {
+            return true
+        }
+        if now >= window.dueAt {
+            return pauseDuration >= RestTiming.naturalPause
+        }
+        if now >= window.opensAt {
+            return pauseDuration >= RestTiming.clearPause
+        }
+        return false
+    }
+
+    private mutating func decideStart(now: Date, context: RestContext) -> RestEngineResult {
+        let candidates = startCandidates(now: now)
+        let pauseDuration = min(
+            context.idleDuration,
+            state.lastRestEndedAt.map { max(0, now.timeIntervalSince($0)) } ?? .infinity
+        )
+        var deferred: (kind: RestKind, reason: ContextDeferralReason)?
+        var chosen: StartCandidate?
+
+        for candidate in candidates {
+            let reason = deferralReason(for: candidate.kind, context: context, now: now)
+            if let activeDeferral = state.activeDeferral, activeDeferral.kind == candidate.kind {
+                if let reason {
+                    deferred = deferred ?? (candidate.kind, reason)
+                    continue
+                }
+                // Once its context clears, a deferred rest starts at the next natural pause, or after
+                // one slack interval if the user keeps working.
+                let slack = RestTiming.slack(forInterval: settings.rule(for: candidate.kind).interval)
+                guard pauseDuration >= RestTiming.naturalPause ||
+                    now.timeIntervalSince(activeDeferral.lastSeenAt) >= slack else {
+                    continue
+                }
+                chosen = candidate
+                break
+            }
+            guard isStartMoment(candidate.window, now: now, pauseDuration: pauseDuration) else {
+                continue
+            }
+            if let reason {
+                if now >= candidate.window.dueAt {
+                    deferred = deferred ?? (candidate.kind, reason)
+                }
+                continue
+            }
+            chosen = candidate
+            break
+        }
+
+        if var chosen {
+            if chosen.kind == .eyeGate,
+               let body = candidates.first(where: { $0.kind == .bodyBreak }),
+               isWithinMergeHorizon(.bodyBreak, window: body.window, now: now),
+               deferralReason(for: .bodyBreak, context: context, now: now) == nil {
+                // The user is being interrupted anyway; the Body Break also rests the eyes.
+                chosen = body
+            }
+            if let deferred, deferred.kind != chosen.kind {
+                _ = deferScheduledRest(kind: deferred.kind, reason: deferred.reason, now: now)
+            }
+            return startRest(kind: chosen.kind, scheduledAt: chosen.window.dueAt, now: now)
+        }
+
+        if let deferred {
+            return deferScheduledRest(kind: deferred.kind, reason: deferred.reason, now: now)
+        }
+
+        // No cue for a rest the current context would hold back anyway.
+        if var scheduled = state.scheduled,
+           let notificationAt = scheduled.notificationAt,
+           !scheduled.notificationSent,
+           now >= notificationAt,
+           deferralReason(for: scheduled.kind, context: context, now: now) == nil {
+            scheduled.notificationSent = true
+            state.scheduled = scheduled
+            return .notificationDue(scheduled.kind)
+        }
+        return .noChange
+    }
+
+    private mutating func startRest(kind: RestKind, scheduledAt: Date, now: Date) -> RestEngineResult {
+        let rule = settings.rule(for: kind)
         guard rule.isEnabled else {
             refreshProjectedSchedule(now: now)
             return .noChange
         }
 
         let session = RestSession(
-            kind: scheduled.kind,
+            kind: kind,
             startedAt: now,
-            scheduledAt: scheduled.dueAt,
+            scheduledAt: scheduledAt,
             duration: rule.duration,
             manualFinishEnabled: rule.manualFinishEnabled
         )
         state.scheduled = nil
-        if state.activeDeferral?.kind == scheduled.kind {
+        if state.activeDeferral?.kind == kind {
             state.activeDeferral = nil
         }
         state.activeSession = session
-        let shouldPreserveAwayCandidate = preserveAwayCandidate &&
-            isCurrentAwayCandidate(now: now, idleDuration: idleDuration)
-        markNonWorkingEvaluation(
-            now: now,
-            idleDuration: idleDuration,
-            preserveAwayCandidate: shouldPreserveAwayCandidate
-        )
+        state.lastEvaluatedAt = now
         return .started(session)
     }
 
+    /// Time on a Body Break overlay is time away from screen work. Returns how much of the Eye Gate
+    /// remains after a Body Break ended early, crediting the eyes when nothing remains.
+    private mutating func eyeRestRemaining(afterEnded session: RestSession, now: Date) -> TimeInterval {
+        guard session.kind == .bodyBreak, settings.eyeGate.isEnabled else { return 0 }
+        let remaining = settings.eyeGate.duration - max(0, now.timeIntervalSince(session.startedAt))
+        if remaining <= 0 {
+            state.eyeDebt = 0
+            state.pendingEyeDebt = 0
+            clearDeferrals(satisfiedBy: [.eyeGate])
+        }
+        return max(0, remaining)
+    }
+
+    private mutating func continueEyeRest(afterEnded session: RestSession, now: Date, context: RestContext) {
+        guard state.activeSession == nil else { return }
+        let remaining = eyeRestRemaining(afterEnded: session, now: now)
+        guard remaining > 0,
+              !isPaused(.eyeGate, at: now),
+              deferralReason(for: .eyeGate, context: context, now: now) == nil else {
+            return
+        }
+        let window = startWindow(for: .eyeGate, now: now)
+        guard isWithinMergeHorizon(.eyeGate, window: window, now: now) else { return }
+        state.activeSession = RestSession(
+            kind: .eyeGate,
+            startedAt: now,
+            scheduledAt: window.dueAt,
+            duration: remaining,
+            manualFinishEnabled: settings.eyeGate.manualFinishEnabled
+        )
+        state.scheduled = nil
+        if state.activeDeferral?.kind == .eyeGate {
+            state.activeDeferral = nil
+        }
+    }
+
+    // MARK: - Context deferral
+
     private mutating func deferScheduledRest(
-        _ scheduled: ScheduledRest,
+        kind: RestKind,
         reason: ContextDeferralReason,
         now: Date,
         source: RestDeferralSource = .scheduledDebt
     ) -> RestEngineResult {
         if let activeDeferral = state.activeDeferral,
-           activeDeferral.kind == scheduled.kind,
+           activeDeferral.kind == kind,
            activeDeferral.reason == reason {
             state.activeDeferral?.lastSeenAt = now
             if source == .activeInterruption {
@@ -802,19 +1033,19 @@ public struct RestEngine: Equatable, Sendable {
             }
         } else {
             state.activeDeferral = RestDeferral(
-                kind: scheduled.kind,
+                kind: kind,
                 reason: reason,
                 source: source,
                 startedAt: now,
                 lastSeenAt: now
             )
-            increaseDanger(for: scheduled.kind)
+            increaseDanger(for: kind)
         }
 
-        return .deferred(scheduled.kind, reason)
+        return .deferred(kind, reason)
     }
 
-    private func deferralReason(for kind: RestKind, context: RestContext) -> ContextDeferralReason? {
+    private func deferralReason(for kind: RestKind, context: RestContext, now: Date) -> ContextDeferralReason? {
         if settings.workingHours.isEnabled, !context.inWorkingHours {
             return .outsideWorkingHours
         }
@@ -823,6 +1054,10 @@ public struct RestEngine: Equatable, Sendable {
            context.focusModeActive,
            settings.focusMode.defers(kind) {
             return .focusMode
+        }
+
+        if kind == .bodyBreak, context.inCall, !callDeferralExhausted(now: now) {
+            return .inCall
         }
 
         for evaluation in context.appExclusions where evaluation.rule.isActionable && evaluation.rule.appliesTo.contains(kind) {
@@ -837,6 +1072,17 @@ public struct RestEngine: Equatable, Sendable {
         }
 
         return nil
+    }
+
+    /// A call holds a Body Break back for at most one more Body Break interval, so a microphone that
+    /// never stops cannot silence Body Breaks.
+    private func callDeferralExhausted(now: Date) -> Bool {
+        guard let deferral = state.activeDeferral,
+              deferral.kind == .bodyBreak,
+              deferral.reason == .inCall else {
+            return false
+        }
+        return now.timeIntervalSince(deferral.startedAt) >= settings.bodyBreak.interval
     }
 
     private mutating func clearDeferrals(satisfiedBy creditedKinds: Set<RestKind>) {
@@ -867,10 +1113,7 @@ public struct RestEngine: Equatable, Sendable {
             return
         }
         guard activeDeferral.source == .scheduledDebt else { return }
-        let remaining = projectedCandidates(now: now)
-            .first { $0.kind == activeDeferral.kind }?
-            .remaining ?? .infinity
-        if remaining > 0 {
+        if startWindow(for: activeDeferral.kind, now: now).dueAt > now {
             state.activeDeferral = nil
         }
     }
@@ -890,6 +1133,8 @@ public struct RestEngine: Equatable, Sendable {
         return nil
     }
 
+    // MARK: - Completion and statistics
+
     private mutating func recordCompletion(kind: RestKind, reason: RestCompletionReason) {
         switch reason {
         case .completed, .manual:
@@ -904,12 +1149,12 @@ public struct RestEngine: Equatable, Sendable {
         case .skipped, .appExclusion:
             incrementSkipped(kind)
             increaseDanger(for: kind)
-            suppressOrDischargeMissedDebt(for: kind)
+            dischargeMissedDebt(for: kind)
         case .emergencyOverride:
             state.statistics.emergencyOverrides += 1
             incrementSkipped(kind)
             increaseDanger(for: kind)
-            suppressOrDischargeMissedDebt(for: kind)
+            dischargeMissedDebt(for: kind)
         }
     }
 
@@ -950,317 +1195,65 @@ public struct RestEngine: Equatable, Sendable {
         state.dangerScore = max(0, state.dangerScore - kind.defaultHealthWeight)
     }
 
-    private mutating func updateDebt(now: Date, context: RestContext) -> Set<RestKind> {
-        let idleDuration = max(0, context.idleDuration)
-        updateAwayCandidateSnapshot(now: now, idleDuration: idleDuration)
-
-        if isNaturallyAway(idleDuration: idleDuration) {
-            restoreAwayCandidateDebts()
-        } else {
-            accrueComputerUseDebt(by: computerUseDelta(now: now), now: now)
-        }
-        normalizeDebtState()
-
-        state.lastEvaluatedAt = now
-        state.lastIdleDuration = idleDuration
-
-        guard settings.naturalBreaks.isEnabled else {
-            return []
-        }
-        let credited = settleNaturalAwayIfNeeded(idleDuration: idleDuration)
-        if !credited.isEmpty {
-            updateAwayCandidateDebtsToCurrentState()
-        }
-        return credited
-    }
-
-    private mutating func settleAwayWithoutAccrualIfNeeded(
-        now: Date,
-        idleDuration rawIdleDuration: TimeInterval,
-        excluding excludedKinds: Set<RestKind> = []
-    ) -> Set<RestKind> {
-        let idleDuration = max(0, rawIdleDuration)
-        updateAwayCandidateSnapshot(
-            now: now,
-            idleDuration: idleDuration,
-            includingPreIdleComputerUse: false
-        )
-        if isNaturallyAway(idleDuration: idleDuration) {
-            restoreAwayCandidateDebts()
-        }
-        normalizeDebtState()
-
-        state.lastEvaluatedAt = now
-        state.lastIdleDuration = idleDuration
-
-        guard settings.naturalBreaks.isEnabled else {
-            return []
-        }
-        let credited = settleNaturalAwayIfNeeded(idleDuration: idleDuration, excluding: excludedKinds)
-        if !credited.isEmpty {
-            updateAwayCandidateDebtsToCurrentState()
-        }
-        return credited
-    }
-
-    private func computerUseDelta(now: Date) -> TimeInterval {
-        guard state.activeSession == nil,
-              let lastEvaluatedAt = state.lastEvaluatedAt else {
-            return 0
-        }
-
-        return max(0, now.timeIntervalSince(lastEvaluatedAt))
-    }
-
-    private mutating func updateAwayCandidateSnapshot(
-        now: Date,
-        idleDuration: TimeInterval,
-        includingPreIdleComputerUse: Bool = true
-    ) {
-        guard idleDuration > 0 else {
-            state.awayCandidate = nil
-            return
-        }
-
-        let awayStartedAt = now.addingTimeInterval(-idleDuration)
-        if let existing = state.awayCandidate,
-           abs(existing.startedAt.timeIntervalSince(awayStartedAt)) < 2 {
-            return
-        }
-
-        let activeDeltaBeforeIdle: TimeInterval
-        if includingPreIdleComputerUse {
-            activeDeltaBeforeIdle = state.lastEvaluatedAt.map { lastEvaluatedAt in
-                max(0, awayStartedAt.timeIntervalSince(lastEvaluatedAt))
-            } ?? 0
-        } else {
-            activeDeltaBeforeIdle = 0
-        }
-        let eyeDelta = isPaused(.eyeGate, at: now) ? 0 : activeDeltaBeforeIdle
-        let bodyDelta = isPaused(.bodyBreak, at: now) ? 0 : activeDeltaBeforeIdle
-        state.awayCandidate = AwayCandidateSnapshot(
-            startedAt: awayStartedAt,
-            eyeDebt: projectedDebt(state.eyeDebt, adding: eyeDelta, interval: settings.eyeGate.interval),
-            bodyDebt: projectedDebt(state.bodyDebt, adding: bodyDelta, interval: settings.bodyBreak.interval)
-        )
-    }
-
-    private func isCurrentAwayCandidate(now: Date, idleDuration: TimeInterval) -> Bool {
-        guard idleDuration > 0,
-              let awayCandidate = state.awayCandidate else {
-            return false
-        }
-
-        let awayStartedAt = now.addingTimeInterval(-idleDuration)
-        return abs(awayCandidate.startedAt.timeIntervalSince(awayStartedAt)) < 2
-    }
-
-    private func projectedDebt(_ debt: TimeInterval, adding delta: TimeInterval, interval: TimeInterval) -> TimeInterval {
-        min(interval, max(0, debt) + max(0, delta))
-    }
-
-    private mutating func restoreAwayCandidateDebts() {
-        guard let awayCandidate = state.awayCandidate else { return }
-        state.eyeDebt = awayCandidate.eyeDebt
-        state.bodyDebt = awayCandidate.bodyDebt
-    }
-
-    private mutating func updateAwayCandidateDebtsToCurrentState() {
-        guard let awayCandidate = state.awayCandidate else { return }
-        state.awayCandidate = AwayCandidateSnapshot(
-            startedAt: awayCandidate.startedAt,
-            eyeDebt: state.eyeDebt,
-            bodyDebt: state.bodyDebt
-        )
-    }
-
-    private mutating func updateAwayCandidateAfterCompletion(kind: RestKind) {
-        guard let awayCandidate = state.awayCandidate else { return }
+    private mutating func satisfyDebt(for kind: RestKind) {
         switch kind {
         case .eyeGate:
-            state.awayCandidate = AwayCandidateSnapshot(
-                startedAt: awayCandidate.startedAt,
-                eyeDebt: state.eyeDebt,
-                bodyDebt: awayCandidate.bodyDebt
-            )
+            state.eyeDebt = 0
+            state.pendingEyeDebt = 0
         case .bodyBreak:
-            state.awayCandidate = AwayCandidateSnapshot(
-                startedAt: awayCandidate.startedAt,
-                eyeDebt: state.eyeDebt,
-                bodyDebt: state.bodyDebt
-            )
-        }
-    }
-
-    private mutating func accrueComputerUseDebt(by usageDelta: TimeInterval, now: Date) {
-        if settings.eyeGate.isEnabled, !isPaused(.eyeGate, at: now) {
-            state.eyeDebt = projectedDebt(state.eyeDebt, adding: usageDelta, interval: settings.eyeGate.interval)
-        }
-        if settings.bodyBreak.isEnabled, !isPaused(.bodyBreak, at: now) {
-            state.bodyDebt = projectedDebt(state.bodyDebt, adding: usageDelta, interval: settings.bodyBreak.interval)
-        }
-    }
-
-    private mutating func normalizeDebtState() {
-        if !settings.eyeGate.isEnabled {
-            state.eyeDebt = 0
-        } else {
-            state.eyeDebt = min(settings.eyeGate.interval, max(0, state.eyeDebt))
-        }
-        if !settings.bodyBreak.isEnabled {
             state.bodyDebt = 0
-            state.bodySuppressedUntil = nil
-        } else {
-            state.bodyDebt = min(settings.bodyBreak.interval, max(0, state.bodyDebt))
-        }
-        if let awayCandidate = state.awayCandidate {
-            state.awayCandidate = AwayCandidateSnapshot(
-                startedAt: awayCandidate.startedAt,
-                eyeDebt: settings.eyeGate.isEnabled ? min(settings.eyeGate.interval, awayCandidate.eyeDebt) : 0,
-                bodyDebt: settings.bodyBreak.isEnabled ? min(settings.bodyBreak.interval, awayCandidate.bodyDebt) : 0
-            )
-        }
-    }
-
-    private mutating func markNonWorkingEvaluation(
-        now: Date,
-        idleDuration: TimeInterval,
-        preserveAwayCandidate: Bool = false
-    ) {
-        state.lastEvaluatedAt = now
-        state.lastIdleDuration = max(0, idleDuration)
-        if !preserveAwayCandidate {
-            state.awayCandidate = nil
-        }
-    }
-
-    private func isAway(context: RestContext) -> Bool {
-        return isNaturallyAway(idleDuration: context.idleDuration)
-    }
-
-    private func isNaturallyAway(idleDuration: TimeInterval) -> Bool {
-        isLongIdle(idleDuration: idleDuration)
-    }
-
-    private func isLongIdle(idleDuration: TimeInterval) -> Bool {
-        idleDuration >= naturalRecoveryThreshold
-    }
-
-    private var naturalRecoveryThreshold: TimeInterval {
-        settings.naturalBreaks.inactivityResetTime
-    }
-
-    private func naturalSatisfactionThreshold(for kind: RestKind) -> TimeInterval {
-        max(settings.rule(for: kind).duration, naturalRecoveryThreshold)
-    }
-
-    private func canNaturallyCompleteActive(_ session: RestSession, idleDuration: TimeInterval) -> Bool {
-        settings.naturalBreaks.isEnabled && idleDuration >= max(session.duration, naturalRecoveryThreshold)
-    }
-
-    private func canAutomaticallyCompleteElapsedActive(_ session: RestSession, now: Date) -> Bool {
-        !session.manualFinishEnabled && now.timeIntervalSince(session.startedAt) >= session.duration
-    }
-
-    private var bodyNaturalRecoveryThreshold: TimeInterval {
-        naturalSatisfactionThreshold(for: .bodyBreak)
-    }
-
-    private mutating func settleNaturalAwayIfNeeded(
-        idleDuration: TimeInterval,
-        excluding excludedKinds: Set<RestKind> = []
-    ) -> Set<RestKind> {
-        var credited = Set<RestKind>()
-        if !excludedKinds.contains(.eyeGate),
-           settings.eyeGate.isEnabled,
-           idleDuration >= naturalSatisfactionThreshold(for: .eyeGate),
-           state.eyeDebt > 0 {
+            state.pendingBodyDebt = 0
             state.eyeDebt = 0
-            incrementCompleted(.eyeGate)
-            incrementNatural(.eyeGate)
-            decreaseDanger(for: .eyeGate)
-            credited.insert(.eyeGate)
-        }
-        if !excludedKinds.contains(.bodyBreak),
-           settings.bodyBreak.isEnabled,
-           idleDuration >= bodyNaturalRecoveryThreshold,
-           state.bodyDebt > 0 {
-            state.bodyDebt = 0
+            state.pendingEyeDebt = 0
             state.bodySuppressedUntil = nil
-            state.postponesInCurrentCycle = 0
-            incrementCompleted(.bodyBreak)
-            incrementNatural(.bodyBreak)
-            decreaseDanger(for: .bodyBreak)
-            credited.insert(.bodyBreak)
-            if !excludedKinds.contains(.eyeGate),
-               settings.eyeGate.isEnabled,
-               state.eyeDebt > 0 || state.activeDeferral?.kind == .eyeGate {
-                state.eyeDebt = 0
-                credited.insert(.eyeGate)
-            }
         }
-        return credited
     }
 
-    private mutating func completeActiveAfterNaturalAway(now: Date, idleDuration: TimeInterval) -> RestEngineResult {
-        guard let active = state.activeSession else {
-            return .denied(.noActiveSession)
+    private mutating func dischargeMissedDebt(for kind: RestKind) {
+        switch kind {
+        case .eyeGate:
+            state.eyeDebt = 0
+            state.pendingEyeDebt = 0
+        case .bodyBreak:
+            state.bodyDebt = 0
+            state.pendingBodyDebt = 0
+            state.bodySuppressedUntil = nil
         }
-        if isCurrentAwayCandidate(now: now, idleDuration: idleDuration) {
-            restoreAwayCandidateDebts()
+    }
+
+    // MARK: - Projection and pause
+
+    private func scheduledRest(kind: RestKind, dueAt: Date) -> ScheduledRest {
+        let notificationAt: Date?
+        if settings.notifications.isEnabled(for: kind) {
+            let leadTime = settings.notifications.leadTime(for: kind)
+            notificationAt = leadTime > 0 ? dueAt.addingTimeInterval(-leadTime) : nil
         } else {
-            state.awayCandidate = nil
+            notificationAt = nil
         }
-        normalizeDebtState()
-        let credited = settleNaturalAwayIfNeeded(idleDuration: idleDuration, excluding: [active.kind])
-        if !credited.isEmpty {
-            clearDeferrals(satisfiedBy: credited)
-        }
-        let result = completeActive(now: now, reason: .natural)
-        if !credited.isEmpty {
-            refreshProjectedSchedule(now: now)
-        }
-        return result
+        return ScheduledRest(kind: kind, dueAt: dueAt, notificationAt: notificationAt)
     }
 
     private mutating func refreshProjectedSchedule(
         now: Date,
         preserveNotificationStateFrom previous: ScheduledRest? = nil
     ) {
-        guard state.activeSession == nil else {
+        guard state.activeSession == nil,
+              !activePauseBlocksAllEnabledRests(at: now),
+              let next = startCandidates(now: now).first else {
             state.scheduled = nil
             state.activeDeferral = nil
             return
         }
 
-        guard !activePauseBlocksAllEnabledRests(at: now) else {
-            state.scheduled = nil
-            state.activeDeferral = nil
-            return
-        }
-
-        let candidates = projectedCandidates(now: now)
-        guard let candidate = candidates.first else {
-            state.scheduled = nil
-            state.activeDeferral = nil
-            return
-        }
-
-        var next = projectedRest(kind: candidate.kind, now: now, remaining: candidate.remaining)
+        var scheduled = scheduledRest(kind: next.kind, dueAt: next.window.dueAt)
         if let previous,
-           let activeDeferral = state.activeDeferral,
-           activeDeferral.kind == next.kind,
-           previous.kind == next.kind,
-           previous.dueAt <= now,
-           next.dueAt <= now {
-            next = previous
-        } else if let previous,
-           shouldPreserveNotificationSent(from: previous, to: next, now: now) {
-            next.notificationSent = true
+           shouldPreserveNotificationSent(from: previous, to: scheduled, now: now) {
+            scheduled.notificationSent = true
         }
-        state.scheduled = next
+        state.scheduled = scheduled
         if let activeDeferral = state.activeDeferral,
-           (!settings.rule(for: activeDeferral.kind).isEnabled || isPaused(activeDeferral.kind, at: now)) {
+           !settings.rule(for: activeDeferral.kind).isEnabled || isPaused(activeDeferral.kind, at: now) {
             state.activeDeferral = nil
         }
     }
@@ -1288,30 +1281,12 @@ public struct RestEngine: Equatable, Sendable {
         return dueDrift <= sameCycleDriftTolerance
     }
 
-    private func projectedCandidates(now: Date) -> [(kind: RestKind, remaining: TimeInterval, priority: Int)] {
-        var candidates: [(kind: RestKind, remaining: TimeInterval, priority: Int)] = []
-        if settings.eyeGate.isEnabled, !isPaused(.eyeGate, at: now) {
-            candidates.append((
-                .eyeGate,
-                max(0, settings.eyeGate.interval - state.eyeDebt),
-                1
-            ))
-        }
-        if settings.bodyBreak.isEnabled, !isPaused(.bodyBreak, at: now) {
-            let debtRemaining = max(0, settings.bodyBreak.interval - state.bodyDebt)
-            let suppressionRemaining = state.bodySuppressedUntil.map { max(0, $0.timeIntervalSince(now)) } ?? 0
-            candidates.append((
-                .bodyBreak,
-                max(debtRemaining, suppressionRemaining),
-                0
-            ))
-        }
-        return candidates.sorted { left, right in
-            if left.remaining == right.remaining {
-                return left.priority < right.priority
-            }
-            return left.remaining < right.remaining
-        }
+    private func canNaturallyCompleteActive(_ session: RestSession, idleDuration: TimeInterval) -> Bool {
+        settings.naturalBreaks.isEnabled && idleDuration >= max(session.duration, awayThreshold)
+    }
+
+    private func canAutomaticallyCompleteElapsedActive(_ session: RestSession, now: Date) -> Bool {
+        !session.manualFinishEnabled && now.timeIntervalSince(session.startedAt) >= session.duration
     }
 
     private func isPaused(_ kind: RestKind, at date: Date) -> Bool {
@@ -1334,32 +1309,5 @@ public struct RestEngine: Equatable, Sendable {
         let enabledKinds = RestKind.allCases.filter { settings.rule(for: $0).isEnabled }
         guard !enabledKinds.isEmpty else { return false }
         return enabledKinds.allSatisfy { pause.applies(to: $0) }
-    }
-
-    private func dueRestCandidates(now: Date) -> [RestKind] {
-        projectedCandidates(now: now)
-            .filter { $0.remaining <= 0 }
-            .map(\.kind)
-    }
-
-    private mutating func satisfyDebt(for kind: RestKind) {
-        switch kind {
-        case .eyeGate:
-            state.eyeDebt = 0
-        case .bodyBreak:
-            state.bodyDebt = 0
-            state.eyeDebt = 0
-            state.bodySuppressedUntil = nil
-        }
-    }
-
-    private mutating func suppressOrDischargeMissedDebt(for kind: RestKind) {
-        switch kind {
-        case .eyeGate:
-            state.eyeDebt = 0
-        case .bodyBreak:
-            state.bodyDebt = 0
-            state.bodySuppressedUntil = nil
-        }
     }
 }

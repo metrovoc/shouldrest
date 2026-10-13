@@ -28,6 +28,17 @@ final class MenuStatusPresenterTests: XCTestCase {
         XCTAssertEqual(lines[1], "Body Break in 1h")
     }
 
+    func testDueRestWaitingForPauseSaysItStartsAtNextPause() {
+        var engine = RestEngine(settings: .defaults, now: start)
+        let dueAt = start.addingTimeInterval(engine.settings.eyeGate.interval)
+        _ = engine.evaluate(now: dueAt.addingTimeInterval(5), context: RestContext(idleDuration: 0))
+
+        let lines = MenuStatusPresenter.lines(state: engine.state, settings: engine.settings, now: dueAt.addingTimeInterval(5))
+
+        XCTAssertNil(engine.state.activeSession)
+        XCTAssertEqual(lines[0], "Next: Eye Gate at your next pause")
+    }
+
     func testScheduledStatusShowsRelativeAndClockTimeInLocalizedCopy() {
         let dueAt = start.addingTimeInterval(10 * 60)
         let state = RestEngineState(

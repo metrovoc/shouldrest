@@ -31,6 +31,9 @@ final class RestContextPolicyTests: XCTestCase {
         )
 
         XCTAssertEqual(context.idleDuration, 120)
+        XCTAssertFalse(context.screenWatched)
+        XCTAssertFalse(context.inCall)
+        XCTAssertEqual(context.screenOffDuration, 0)
         XCTAssertTrue(context.focusModeActive)
         XCTAssertFalse(context.inWorkingHours)
         XCTAssertEqual(context.appExclusions, appExclusions)
@@ -49,7 +52,7 @@ final class RestContextPolicyTests: XCTestCase {
         let context = RestContextPolicy.make(
             settings: settings,
             now: now,
-            idleDuration: 0,
+            idleDuration: RestTiming.naturalPause,
             focusModeActive: false,
             appExclusions: []
         )
