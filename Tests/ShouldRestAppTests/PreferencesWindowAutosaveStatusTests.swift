@@ -113,31 +113,38 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
         controller.showLanguageRefreshedStatus()
 
         XCTAssertEqual(tabView.selectedTabViewItem?.identifier as? String, L10n.tr("prefs.tabAppearance"))
-        XCTAssertEqual(label.stringValue, "语言已保存；偏好设置已刷新")
+        XCTAssertEqual(label.stringValue, "语言已保存；设置已刷新")
         XCTAssertEqual(label.toolTip, L10n.tr("prefs.autosaveLanguageChanged"))
         XCTAssertEqual(label.accessibilityHelp(), L10n.tr("prefs.autosaveLanguageChanged"))
         XCTAssertEqual(icon.image?.accessibilityDescription, L10n.tr("prefs.autosaveLanguageChanged"))
         XCTAssertFalse(label.stringValue.contains("重新打开"))
     }
 
-    func testPreferencesStartWithBrandedHeaderAndAutosaveStatus() throws {
+    func testPreferencesStartWithToolbarPanesSearchAndAutosaveStatus() throws {
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
-        let contentView = try XCTUnwrap(controller.window?.contentView)
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
 
         let header = try XCTUnwrap(view(withIdentifier: "prefs.header", in: contentView))
-        let icon = try XCTUnwrap(view(withIdentifier: "prefs.headerIcon", in: contentView) as? NSImageView)
-        let title = try XCTUnwrap(view(withIdentifier: "prefs.headerTitle", in: contentView) as? NSTextField)
-        let subtitle = try XCTUnwrap(view(withIdentifier: "prefs.headerSubtitle", in: contentView) as? NSTextField)
+        let searchField = try XCTUnwrap(view(withIdentifier: "prefs.searchField", in: contentView))
         let status = try XCTUnwrap(view(withIdentifier: "prefs.headerAutosave", in: contentView))
         let statusLabel = try XCTUnwrap(view(withIdentifier: "autosaveStatusLabel", in: contentView) as? NSTextField)
+        let toolbar = try XCTUnwrap(window.toolbar)
 
-        XCTAssertTrue(contains(icon, in: header))
-        XCTAssertTrue(contains(title, in: header))
-        XCTAssertTrue(contains(subtitle, in: header))
+        XCTAssertTrue(contains(searchField, in: header))
+        XCTAssertTrue(contains(status, in: header))
         XCTAssertTrue(contains(statusLabel, in: status))
-        XCTAssertEqual(icon.image?.size, NSSize(width: 36, height: 36))
-        XCTAssertEqual(title.stringValue, L10n.tr("preferences.title"))
-        XCTAssertEqual(subtitle.stringValue, L10n.tr("prefs.headerSubtitle"))
+        XCTAssertNil(view(withIdentifier: "prefs.headerTitle", in: contentView))
+        XCTAssertEqual(window.toolbarStyle, .preference)
+        XCTAssertEqual(toolbar.items.map(\.label), [
+            L10n.tr("prefs.tabSchedule"),
+            L10n.tr("prefs.tabContext"),
+            L10n.tr("prefs.tabAppearance"),
+            L10n.tr("prefs.tabShortcuts"),
+            L10n.tr("prefs.tabAdvanced")
+        ])
+        XCTAssertEqual(toolbar.selectedItemIdentifier, toolbar.items.first?.itemIdentifier)
+        XCTAssertEqual(window.title, L10n.tr("prefs.tabSchedule"))
         XCTAssertEqual(statusLabel.stringValue, L10n.tr("prefs.autosaveReady"))
         let restoreDefaultsButton = try XCTUnwrap(view(withIdentifier: "prefs.restoreDefaultsButton", in: contentView) as? NSButton)
         XCTAssertFalse(restoreDefaultsButton.isEnabled)
@@ -227,7 +234,7 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.autosaveBodyImageCleared"), "Body Break image cleared")
         XCTAssertEqual(
             L10n.tr("prefs.autosaveLanguageChanged"),
-            "Language saved; Preferences refreshed"
+            "Language saved; Settings refreshed"
         )
         XCTAssertEqual(
             L10n.tr("prefs.autosaveMenuBarHidden"),
@@ -244,7 +251,7 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
             L10n.format("prefs.autosaveSaveFailedHelp", "Disk is full"),
             "Settings are still pending. Details: Disk is full"
         )
-        XCTAssertEqual(L10n.tr("prefs.restoreDefaultsDisabledDefaultHelp"), "Current preferences already match the app defaults.")
+        XCTAssertEqual(L10n.tr("prefs.restoreDefaultsDisabledDefaultHelp"), "Current settings already match the app defaults.")
 
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(L10n.tr("prefs.autosaveReady"), "所有更改已保存")
@@ -264,7 +271,7 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.autosaveShortcutRestored"), "默认快捷键已恢复")
         XCTAssertEqual(L10n.tr("prefs.autosaveBodyImageSelected"), "活动休息图片已选择")
         XCTAssertEqual(L10n.tr("prefs.autosaveBodyImageCleared"), "活动休息图片已清空")
-        XCTAssertEqual(L10n.tr("prefs.autosaveLanguageChanged"), "语言已保存；偏好设置已刷新")
+        XCTAssertEqual(L10n.tr("prefs.autosaveLanguageChanged"), "语言已保存；设置已刷新")
         XCTAssertEqual(L10n.tr("prefs.autosaveMenuBarHidden"), "菜单栏图标已隐藏；恢复方式已显示在下方")
         XCTAssertEqual(L10n.tr("prefs.autosaveMenuBarShown"), "菜单栏图标已恢复")
         XCTAssertEqual(L10n.tr("prefs.autosaveEmergencyExitEnabled"), "紧急退出已启用")
@@ -274,7 +281,7 @@ final class PreferencesWindowAutosaveStatusTests: XCTestCase {
             L10n.format("prefs.autosaveSaveFailedHelp", "磁盘已满"),
             "设置仍在等待保存。详情：磁盘已满"
         )
-        XCTAssertEqual(L10n.tr("prefs.restoreDefaultsDisabledDefaultHelp"), "当前偏好设置已是应用默认值。")
+        XCTAssertEqual(L10n.tr("prefs.restoreDefaultsDisabledDefaultHelp"), "当前设置已是应用默认值。")
     }
 
     private func view(withIdentifier identifier: String, in view: NSView) -> NSView? {

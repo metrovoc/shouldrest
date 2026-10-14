@@ -242,12 +242,13 @@ final class PreferencesWindowShortcutTests: XCTestCase {
         XCTAssertEqual(pauseHelp.toolTip, L10n.tr("prefs.pause30ShortcutHelp"))
         XCTAssertEqual(pauseHelp.accessibilityLabel(), L10n.tr("prefs.pause30ShortcutHelp"))
         XCTAssertEqual(pauseHelp.accessibilityHelp(), L10n.tr("prefs.pause30ShortcutHelp"))
-        XCTAssertEqual(pauseHelp.maximumNumberOfLines, 2)
+        // Shortcut descriptions wrap in full instead of truncating.
+        XCTAssertEqual(pauseHelp.maximumNumberOfLines, 0)
         XCTAssertEqual(pauseHelp.lineBreakMode, .byWordWrapping)
 
         let emergencyHelp = try XCTUnwrap(view(withIdentifier: "shortcut.emergencyEye.help", in: contentView) as? NSTextField)
         XCTAssertEqual(emergencyHelp.stringValue, L10n.tr("prefs.emergencyEyeGateShortcutHelp"))
-        XCTAssertEqual(emergencyHelp.maximumNumberOfLines, 2)
+        XCTAssertEqual(emergencyHelp.maximumNumberOfLines, 0)
     }
 
     func testActiveRestShortcutUsesBodyBreakActionCopyByDefault() throws {

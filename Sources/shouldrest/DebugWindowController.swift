@@ -46,7 +46,7 @@ final class DebugWindowController: NSWindowController {
     private let safetySummaryProvider: () -> DebugSafetySummary
     private let textView = NSTextView()
     private let searchField = NSSearchField()
-    private let safetyPanel = NSView()
+    private let safetyPanel = SurfaceView()
     private let safetyIcon = NSImageView()
     private let safetyTitleLabel = NSTextField(labelWithString: "")
     private let safetyBodyLabel = NSTextField(labelWithString: "")
@@ -122,9 +122,19 @@ final class DebugWindowController: NSWindowController {
         textScrollView.hasVerticalScroller = true
         textScrollView.hasHorizontalScroller = true
         textScrollView.drawsBackground = true
-        textScrollView.borderType = .bezelBorder
+        textScrollView.borderType = .noBorder
         textScrollView.translatesAutoresizingMaskIntoConstraints = false
         textScrollView.documentView = textView
+
+        // A rounded frame replaces the bezel border.
+        let textFrame = SurfaceView(style: SurfaceStyle(
+            fill: { _ in .textBackgroundColor },
+            stroke: { $0 ? NSColor(white: 1, alpha: 0.12) : NSColor(white: 0, alpha: 0.12) },
+            cornerRadius: 10
+        ))
+        textFrame.translatesAutoresizingMaskIntoConstraints = false
+        textFrame.layer?.masksToBounds = true
+        textFrame.addSubview(textScrollView)
 
         let header = headerView()
         let safetySummary = safetySummaryView()
@@ -132,7 +142,7 @@ final class DebugWindowController: NSWindowController {
 
         root.addArrangedSubview(header)
         root.addArrangedSubview(safetySummary)
-        root.addArrangedSubview(textScrollView)
+        root.addArrangedSubview(textFrame)
         root.addArrangedSubview(footer)
 
         NSLayoutConstraint.activate([
@@ -140,11 +150,15 @@ final class DebugWindowController: NSWindowController {
             root.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             root.topAnchor.constraint(equalTo: contentView.topAnchor),
             root.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-            textScrollView.widthAnchor.constraint(equalTo: root.widthAnchor, constant: -48),
-            textScrollView.heightAnchor.constraint(greaterThanOrEqualToConstant: 280),
-            header.widthAnchor.constraint(equalTo: textScrollView.widthAnchor),
-            safetySummary.widthAnchor.constraint(equalTo: textScrollView.widthAnchor),
-            footer.widthAnchor.constraint(equalTo: textScrollView.widthAnchor)
+            textScrollView.leadingAnchor.constraint(equalTo: textFrame.leadingAnchor, constant: 1),
+            textScrollView.trailingAnchor.constraint(equalTo: textFrame.trailingAnchor, constant: -1),
+            textScrollView.topAnchor.constraint(equalTo: textFrame.topAnchor, constant: 1),
+            textScrollView.bottomAnchor.constraint(equalTo: textFrame.bottomAnchor, constant: -1),
+            textFrame.widthAnchor.constraint(equalTo: root.widthAnchor, constant: -48),
+            textFrame.heightAnchor.constraint(greaterThanOrEqualToConstant: 280),
+            header.widthAnchor.constraint(equalTo: textFrame.widthAnchor),
+            safetySummary.widthAnchor.constraint(equalTo: textFrame.widthAnchor),
+            footer.widthAnchor.constraint(equalTo: textFrame.widthAnchor)
         ])
 
         return contentView
@@ -163,7 +177,7 @@ final class DebugWindowController: NSWindowController {
 
         let title = NSTextField(labelWithString: L10n.tr("debug.heading"))
         title.identifier = NSUserInterfaceItemIdentifier("debug.heading")
-        title.font = .systemFont(ofSize: 22, weight: .semibold)
+        title.font = .systemFont(ofSize: 20, weight: .bold)
 
         let subtitle = NSTextField(labelWithString: L10n.tr("debug.subtitle"))
         subtitle.identifier = NSUserInterfaceItemIdentifier("debug.subtitle")
@@ -308,10 +322,6 @@ final class DebugWindowController: NSWindowController {
 
     private func configureSafetySummary() {
         safetyPanel.identifier = NSUserInterfaceItemIdentifier("debug.safetyPanel")
-        safetyPanel.wantsLayer = true
-        safetyPanel.layer?.cornerRadius = 8
-        safetyPanel.layer?.borderWidth = 1
-        safetyPanel.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.8).cgColor
 
         safetyIcon.identifier = NSUserInterfaceItemIdentifier("debug.safetyIcon")
         safetyIcon.symbolConfiguration = .init(pointSize: 17, weight: .semibold)
@@ -513,8 +523,7 @@ final class DebugWindowController: NSWindowController {
             tint = .systemOrange
         }
         safetyIcon.contentTintColor = tint
-        safetyPanel.layer?.backgroundColor = tint.withAlphaComponent(0.08).cgColor
-        safetyPanel.layer?.borderColor = tint.withAlphaComponent(0.26).cgColor
+        safetyPanel.surfaceStyle = .tinted(tint)
     }
 
     @objc private func copyPressed() {

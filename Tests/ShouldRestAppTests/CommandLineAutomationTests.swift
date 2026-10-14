@@ -10,7 +10,7 @@ final class CommandLineAutomationTests: XCTestCase {
         }
 
         XCTAssertTrue(output.contains("eye|mini [-w wait]           Start Eye Gate now or after wait; it is always strict and text-free."))
-        XCTAssertTrue(output.contains("preferences                  Open ShouldRest preferences."))
+        XCTAssertTrue(output.contains("preferences                  Open ShouldRest settings."))
         XCTAssertTrue(output.contains("support                      Copy support report."))
         XCTAssertTrue(output.contains("support-panel                Open the support report window."))
         XCTAssertTrue(output.contains("about                        Open the About window."))

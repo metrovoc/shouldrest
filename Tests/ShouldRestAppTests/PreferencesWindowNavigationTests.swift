@@ -28,6 +28,26 @@ final class PreferencesWindowNavigationTests: XCTestCase {
         }
     }
 
+    func testToolbarPanesFollowTabSelectionAndSelectTabs() throws {
+        let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
+        let window = try XCTUnwrap(controller.window)
+        let contentView = try XCTUnwrap(window.contentView)
+        let tabView = try XCTUnwrap(view(withIdentifier: "prefs.tabView", in: contentView) as? NSTabView)
+        let toolbar = try XCTUnwrap(window.toolbar)
+        let shortcutsItem = try XCTUnwrap(toolbar.items.first { $0.label == L10n.tr("prefs.tabShortcuts") })
+
+        XCTAssertEqual(tabView.tabViewType, .noTabsNoBorder)
+
+        tabView.selectTabViewItem(withIdentifier: L10n.tr("prefs.tabContext"))
+        XCTAssertEqual(toolbar.selectedItemIdentifier?.rawValue, toolbar.items[1].itemIdentifier.rawValue)
+        XCTAssertEqual(window.title, L10n.tr("prefs.tabContext"))
+
+        XCTAssertTrue(NSApplication.shared.sendAction(try XCTUnwrap(shortcutsItem.action), to: shortcutsItem.target, from: shortcutsItem))
+        XCTAssertEqual(tabView.selectedTabViewItem?.identifier as? String, L10n.tr("prefs.tabShortcuts"))
+        XCTAssertEqual(toolbar.selectedItemIdentifier, shortcutsItem.itemIdentifier)
+        XCTAssertEqual(window.title, L10n.tr("prefs.tabShortcuts"))
+    }
+
     func testPreferencesOpenWithSafeSearchFocusInsteadOfEditableScheduleField() throws {
         let controller = PreferencesWindowController(settings: .defaults, onSave: { _ in })
         let window = try XCTUnwrap(controller.window)

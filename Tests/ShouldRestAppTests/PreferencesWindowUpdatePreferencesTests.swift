@@ -83,7 +83,7 @@ final class PreferencesWindowUpdatePreferencesTests: XCTestCase {
 
         try selectAdvancedTab(in: contentView)
 
-        XCTAssertTrue(try view(withIdentifier: "prefs.section.updates.separator", in: contentView).isHidden)
+        XCTAssertTrue(try view(withIdentifier: "prefs.card.updates", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.section.updates", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.checkUpdates", in: contentView).isHidden)
         XCTAssertTrue(try view(withIdentifier: "prefs.notifyNewVersion", in: contentView).isHidden)

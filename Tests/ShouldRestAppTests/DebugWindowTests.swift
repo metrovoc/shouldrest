@@ -93,7 +93,7 @@ final class DebugWindowTests: XCTestCase {
         XCTAssertEqual(buttons.openLog.title, L10n.tr("debug.openLog"))
         XCTAssertEqual(buttons.openSettings.title, L10n.tr("debug.openSettings"))
         XCTAssertEqual(buttons.openLog.title, "Logs")
-        XCTAssertEqual(buttons.openSettings.title, "Settings")
+        XCTAssertEqual(buttons.openSettings.title, "Settings Location")
         XCTAssertFalse(buttons.openLog.title.localizedCaseInsensitiveContains("location"))
         XCTAssertFalse(buttons.openSettings.title.localizedCaseInsensitiveContains("finder"))
         XCTAssertEqual(buttons.openLog.toolTip, L10n.tr("debug.openLogHelp"))

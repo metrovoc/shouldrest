@@ -94,16 +94,17 @@ automation_pid="$!"
 preferences_seen=0
 for ((attempt = 1; attempt <= attempts; attempt++)); do
   if ! kill -0 "$pid" 2>/dev/null; then
-    echo "ShouldRest exited before the preferences window appeared." >&2
+    echo "ShouldRest exited before the settings window appeared." >&2
     cat "$support_dir/stdout.log" >&2 || true
     cat "$support_dir/stderr.log" >&2 || true
     exit 1
   fi
 
   windows="$(swift scripts/list_windows.swift || true)"
-  if grep -Eq "pid=$pid name=(ShouldRest Preferences|ShouldRest 偏好设置)" <<< "$windows"; then
+  # The Settings window is titled after its selected pane, which starts on Schedule.
+  if grep -Eq "pid=$pid name=(Schedule|日程)" <<< "$windows"; then
     if ! grep -Eq "Handled (automation|launch automation) command preferences" "$support_dir/logs/shouldrest.log" 2>/dev/null; then
-      echo "Preferences window appeared, but smoke log did not confirm preferences automation." >&2
+      echo "Settings window appeared, but smoke log did not confirm preferences automation." >&2
       cat "$support_dir/logs/shouldrest.log" >&2 || true
       exit 1
     fi
@@ -115,7 +116,7 @@ for ((attempt = 1; attempt <= attempts; attempt++)); do
 done
 
 if [[ "$preferences_seen" != "1" ]]; then
-  echo "Timed out waiting for preferences window." >&2
+  echo "Timed out waiting for settings window." >&2
   echo "Observed ShouldRest windows:" >&2
   swift scripts/list_windows.swift >&2 || true
   echo "stdout:" >&2
@@ -199,4 +200,4 @@ if [[ "$about_seen" != "1" ]]; then
   exit 1
 fi
 
-echo "GUI smoke OK: first-run welcome, preferences, support report, and about windows appeared with temporary support directory."
+echo "GUI smoke OK: first-run welcome, settings, support report, and about windows appeared with temporary support directory."

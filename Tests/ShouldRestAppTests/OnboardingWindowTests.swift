@@ -27,7 +27,7 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.feature.emergency"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.feature.body"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmPanel"))
-        XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmDescription"))
+        XCTAssertNil(contentView.descendant(withIdentifier: "onboarding.rhythmDescription"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmRationaleRow"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmRationaleIcon"))
         XCTAssertNotNil(contentView.descendant(withIdentifier: "onboarding.rhythmRationale"))
@@ -54,7 +54,8 @@ final class OnboardingWindowTests: XCTestCase {
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.emergencyFeatureTitle")))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.bodyFeatureTitle")))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.rhythmTitle")))
-        XCTAssertTrue(texts.contains(defaultRhythmDescription()))
+        // The metric tiles show the rhythm; the sentence form stays for VoiceOver only.
+        XCTAssertFalse(texts.contains(defaultRhythmDescription()))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.rhythmRationale")))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.metric.eyeInterval")))
         XCTAssertTrue(texts.contains(L10n.tr("onboarding.metric.eyeDuration")))
@@ -98,9 +99,7 @@ final class OnboardingWindowTests: XCTestCase {
             onLearnMore: {}
         )
         let contentView = try XCTUnwrap(controller.window?.contentView)
-        let description = try XCTUnwrap(
-            contentView.descendant(withIdentifier: "onboarding.rhythmDescription") as? NSTextField
-        )
+        let metricRow = try XCTUnwrap(contentView.descendant(withIdentifier: "onboarding.rhythmMetricRow"))
         let icon = try XCTUnwrap(
             contentView.descendant(withIdentifier: "onboarding.rhythmIcon") as? NSImageView
         )
@@ -123,10 +122,8 @@ final class OnboardingWindowTests: XCTestCase {
             contentView.descendant(withIdentifier: "onboarding.metric.bodyDuration.value") as? NSTextField
         )
 
-        XCTAssertEqual(description.stringValue, defaultRhythmDescription())
-        XCTAssertEqual(description.toolTip, defaultRhythmDescription())
-        XCTAssertEqual(description.accessibilityLabel(), defaultRhythmDescription())
-        XCTAssertEqual(description.accessibilityHelp(), defaultRhythmDescription())
+        XCTAssertEqual(metricRow.toolTip, defaultRhythmDescription())
+        XCTAssertEqual(metricRow.accessibilityLabel(), defaultRhythmDescription())
         XCTAssertEqual(icon.image?.accessibilityDescription, "\(L10n.tr("onboarding.rhythmTitle")): \(defaultRhythmDescription())")
         XCTAssertNotNil(icon.image)
         XCTAssertEqual(icon.accessibilityHelp(), defaultRhythmDescription())

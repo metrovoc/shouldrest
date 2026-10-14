@@ -34,7 +34,7 @@ final class PreferencesWindowEmergencyPolicyTests: XCTestCase {
         XCTAssertEqual(helpLabel.toolTip, L10n.tr("prefs.eyeEmergencyOverrideHelp"))
         XCTAssertEqual(helpLabel.accessibilityLabel(), L10n.tr("prefs.eyeEmergencyOverrideHelp"))
         XCTAssertEqual(helpLabel.accessibilityHelp(), L10n.tr("prefs.eyeEmergencyOverrideHelp"))
-        XCTAssertEqual(helpLabel.maximumNumberOfLines, 2)
+        XCTAssertEqual(helpLabel.maximumNumberOfLines, 3)
         XCTAssertEqual(helpLabel.lineBreakMode, .byWordWrapping)
         XCTAssertTrue(button.toolTip?.contains("inside the overlay") ?? false)
         XCTAssertTrue(button.toolTip?.localizedCaseInsensitiveContains("second click") ?? false)

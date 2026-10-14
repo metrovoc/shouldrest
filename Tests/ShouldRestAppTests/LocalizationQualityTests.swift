@@ -511,7 +511,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(englishValues.contains("Useful controls, not loopholes"))
         XCTAssertTrue(englishValues.contains("Emergency stays in the overlay"))
         XCTAssertTrue(englishValues.contains("Start ShouldRest"))
-        XCTAssertTrue(englishValues.contains("20-minute Eye Gates"))
+        XCTAssertTrue(englishValues.contains("10 minutes away completes a rest"))
         XCTAssertTrue(englishValues.contains("Brief screen-covering rests"))
         XCTAssertTrue(englishValues.contains("Full-screen coverage protects brief 20-second rests from skip muscle memory"))
         XCTAssertTrue(englishValues.contains("Add Idea"))
@@ -578,7 +578,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(simplifiedChineseValues.contains("有用控制，不留绕过入口"))
         XCTAssertTrue(simplifiedChineseValues.contains("覆盖层内紧急退出"))
         XCTAssertTrue(simplifiedChineseValues.contains("开始使用 ShouldRest"))
-        XCTAssertTrue(simplifiedChineseValues.contains("20 分钟护眼休息"))
+        XCTAssertTrue(simplifiedChineseValues.contains("离开 10 分钟即完成一次休息"))
         XCTAssertTrue(simplifiedChineseValues.contains("短暂覆盖屏幕的护眼休息"))
         XCTAssertTrue(simplifiedChineseValues.contains("全屏覆盖让短短 20 秒护眼休息不被习惯性跳过"))
         XCTAssertTrue(simplifiedChineseValues.contains("添加提示"))
@@ -752,9 +752,9 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.adminHideUpdates"), "Hide update UI")
         XCTAssertEqual(L10n.tr("prefs.adminHideSettingsPath"), "Hide file locations")
         XCTAssertEqual(L10n.tr("prefs.adminHideStrict"), "Hide strict preferences")
-        XCTAssertEqual(L10n.tr("prefs.preferencesMessage"), "Preferences banner")
+        XCTAssertEqual(L10n.tr("prefs.preferencesMessage"), "Settings banner")
         XCTAssertTrue(L10n.tr("prefs.preferencesMessagePlaceholder").contains("Team"))
-        XCTAssertTrue(L10n.tr("prefs.preferencesMessageHelp").contains("top of Preferences"))
+        XCTAssertTrue(L10n.tr("prefs.preferencesMessageHelp").contains("top of Settings"))
         XCTAssertEqual(L10n.tr("prefs.showAdminControls"), "Show advanced support controls")
         XCTAssertEqual(L10n.tr("prefs.hideAdminControls"), "Hide advanced support controls")
         XCTAssertTrue(L10n.tr("prefs.adminControlsHelp").contains("rarely changed support options"))
@@ -764,7 +764,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.noImageSelected"), "Drop or choose an image")
         XCTAssertEqual(L10n.tr("prefs.eyeManualFinish"), "Wait for me after Eye Gate ends")
         XCTAssertEqual(L10n.tr("prefs.manualFinish"), "Wait for me after Body Break ends")
-        XCTAssertEqual(L10n.tr("prefs.imagePathHiddenHelp"), "Image location is hidden in Preferences.")
+        XCTAssertEqual(L10n.tr("prefs.imagePathHiddenHelp"), "Image location is hidden in Settings.")
         XCTAssertFalse(L10n.tr("prefs.imagePathHiddenHelp").localizedCaseInsensitiveContains("path"))
         XCTAssertEqual(L10n.tr("status.pauseReason.user"), "Paused by you")
         XCTAssertTrue(L10n.tr("prefs.eyeManualFinishHelp").contains("Early dismissal stays disabled"))
@@ -776,7 +776,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(L10n.tr("menu.supportHelp").contains("project links"))
         XCTAssertFalse(L10n.tr("menu.checkUpdatesHelp").localizedCaseInsensitiveContains("github"))
         XCTAssertEqual(L10n.tr("menu.checkUpdatesHelp"), "Check for a newer ShouldRest release.")
-        XCTAssertEqual(L10n.tr("menu.settingsFile"), "Settings")
+        XCTAssertEqual(L10n.tr("menu.settingsFile"), "Settings Location")
         XCTAssertEqual(L10n.tr("menu.showSettingsFile"), "Show in Finder")
         XCTAssertFalse(L10n.tr("menu.showSettingsFile").contains("Settings Location"))
         XCTAssertEqual(L10n.tr("menu.copySettingsPath"), "Copy Location")
@@ -803,21 +803,21 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(L10n.tr("debug.summaryPausedBody").localizedCaseInsensitiveContains("shouldrest resume"))
         XCTAssertFalse(L10n.tr("debug.summaryPausedBodyMenuHidden").localizedCaseInsensitiveContains("status menu"))
         XCTAssertEqual(L10n.tr("debug.openLog"), "Logs")
-        XCTAssertEqual(L10n.tr("debug.openSettings"), "Settings")
+        XCTAssertEqual(L10n.tr("debug.openSettings"), "Settings Location")
         XCTAssertFalse(L10n.tr("debug.openLog").localizedCaseInsensitiveContains("location"))
         XCTAssertFalse(L10n.tr("debug.openSettings").localizedCaseInsensitiveContains("finder"))
         XCTAssertTrue(L10n.tr("debug.openLogHelp").localizedCaseInsensitiveContains("location"))
         XCTAssertTrue(L10n.tr("debug.openSettingsHelp").localizedCaseInsensitiveContains("finder"))
         XCTAssertEqual(L10n.tr("debug.openLogHidden"), "Log Location Hidden")
         XCTAssertEqual(L10n.tr("debug.openSettingsHidden"), "Settings Location Hidden")
-        XCTAssertTrue(L10n.tr("debug.openLogHiddenHelp").contains("hidden in Preferences"))
-        XCTAssertTrue(L10n.tr("debug.openSettingsHiddenHelp").contains("hidden in Preferences"))
+        XCTAssertTrue(L10n.tr("debug.openLogHiddenHelp").contains("hidden in Settings"))
+        XCTAssertTrue(L10n.tr("debug.openSettingsHiddenHelp").contains("hidden in Settings"))
         XCTAssertFalse(L10n.tr("debug.openLogHiddenHelp").localizedCaseInsensitiveContains("access"))
         XCTAssertFalse(L10n.tr("debug.openSettingsHiddenHelp").localizedCaseInsensitiveContains("access"))
         XCTAssertFalse(L10n.tr("debug.pathHidden").localizedCaseInsensitiveContains("access"))
         XCTAssertEqual(
             L10n.tr("debug.summaryReadyBodyMenuHidden"),
-            "The menu bar icon is hidden. ShouldRest is still running; open ShouldRest from Applications, run shouldrest preferences, or use shouldrest://preferences to reopen Preferences."
+            "The menu bar icon is hidden. ShouldRest is still running; open ShouldRest from Applications, run shouldrest preferences, or use shouldrest://preferences to reopen Settings."
         )
         XCTAssertFalse(L10n.tr("debug.summaryReadyBodyMenuHidden").localizedCaseInsensitiveContains("Menu actions"))
         XCTAssertTrue(L10n.tr("debug.summaryEyeActiveBody").localizedCaseInsensitiveContains("Emergency Exit twice"))
@@ -850,7 +850,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("about.debug"), "Support Report")
         XCTAssertEqual(
             L10n.tr("about.body"),
-            "ShouldRest %@\n\nShouldRest is built around a simple rule: short eye rests need strong protection, while longer movement breaks need humane flexibility.\n\nIt keeps schedules, updates, support tools, and preferences available without turning them into easy skip paths for 20-second Eye Gates."
+            "ShouldRest %@\n\nShouldRest is built around a simple rule: short eye rests need strong protection, while longer movement breaks need humane flexibility.\n\nIt keeps schedules, updates, support tools, and settings available without turning them into easy skip paths for 20-second Eye Gates."
         )
         XCTAssertEqual(L10n.tr("about.tagline"), "Strict eye rests, flexible movement breaks, and controls that stay out of the way.")
         XCTAssertEqual(L10n.tr("about.eyeGateBody"), "Full-screen coverage protects brief 20-second rests from skip muscle memory.")
@@ -858,7 +858,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("about.compatibilityTitle"), "Useful controls, not loopholes")
         XCTAssertEqual(
             L10n.tr("about.compatibilityBody"),
-            "Schedules, updates, support tools, and Preferences stay available without weakening Eye Gate."
+            "Schedules, updates, support tools, and Settings stay available without weakening Eye Gate."
         )
         XCTAssertFalse(L10n.tr("about.body").localizedCaseInsensitiveContains("automation"))
         XCTAssertFalse(L10n.tr("about.compatibilityBody").localizedCaseInsensitiveContains("automation"))
@@ -1037,7 +1037,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("prefs.noImageSelected"), "拖入或选择图片")
         XCTAssertEqual(L10n.tr("prefs.eyeManualFinish"), "护眼休息计时结束后等我完成")
         XCTAssertEqual(L10n.tr("prefs.manualFinish"), "活动休息计时结束后等我完成")
-        XCTAssertEqual(L10n.tr("prefs.imagePathHiddenHelp"), "图片位置已在偏好设置中隐藏。")
+        XCTAssertEqual(L10n.tr("prefs.imagePathHiddenHelp"), "图片位置已在设置中隐藏。")
         XCTAssertFalse(L10n.tr("prefs.imagePathHiddenHelp").contains("路径"))
         XCTAssertEqual(L10n.tr("status.pauseReason.user"), "你已暂停")
         XCTAssertTrue(L10n.tr("prefs.eyeManualFinishHelp").contains("仍然不能提前结束"))
@@ -1048,7 +1048,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(L10n.tr("menu.supportHelp").contains("更新检查"))
         XCTAssertFalse(L10n.tr("menu.checkUpdatesHelp").localizedCaseInsensitiveContains("github"))
         XCTAssertEqual(L10n.tr("menu.checkUpdatesHelp"), "检查是否有新的 ShouldRest 版本。")
-        XCTAssertEqual(L10n.tr("menu.settingsFile"), "设置")
+        XCTAssertEqual(L10n.tr("menu.settingsFile"), "设置位置")
         XCTAssertEqual(L10n.tr("menu.showSettingsFile"), "在 Finder 中显示")
         XCTAssertFalse(L10n.tr("menu.showSettingsFile").contains("设置位置"))
         XCTAssertEqual(L10n.tr("menu.copySettingsPath"), "复制位置")
@@ -1076,9 +1076,9 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertTrue(L10n.tr("debug.summaryPausedBody").contains("shouldrest resume"))
         XCTAssertFalse(L10n.tr("debug.summaryPausedBodyMenuHidden").contains("状态菜单"))
         XCTAssertEqual(L10n.tr("debug.openLog"), "日志")
-        XCTAssertEqual(L10n.tr("debug.openSettings"), "设置")
+        XCTAssertEqual(L10n.tr("debug.openSettings"), "设置位置")
         XCTAssertFalse(L10n.tr("debug.openLog").contains("Finder"))
-        XCTAssertFalse(L10n.tr("debug.openSettings").contains("位置"))
+        XCTAssertFalse(L10n.tr("debug.openSettings").contains("Finder"))
         XCTAssertTrue(L10n.tr("debug.openLogHelp").contains("Finder"))
         XCTAssertTrue(L10n.tr("debug.openSettingsHelp").contains("位置"))
         XCTAssertEqual(L10n.tr("debug.openLogHidden"), "日志位置已隐藏")
@@ -1090,7 +1090,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(L10n.tr("debug.pathHidden").contains("访问"))
         XCTAssertEqual(
             L10n.tr("debug.summaryReadyBodyMenuHidden"),
-            "菜单栏图标已隐藏。ShouldRest 仍在运行；可从“应用程序”打开 ShouldRest，或使用 shouldrest preferences、shouldrest://preferences 重新打开偏好设置。"
+            "菜单栏图标已隐藏。ShouldRest 仍在运行；可从“应用程序”打开 ShouldRest，或使用 shouldrest preferences、shouldrest://preferences 重新打开设置。"
         )
         XCTAssertFalse(L10n.tr("debug.summaryReadyBodyMenuHidden").contains("菜单操作"))
         XCTAssertTrue(L10n.tr("debug.summaryEyeActiveBody").contains("紧急退出两次"))
@@ -1120,7 +1120,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("about.debug"), "支持报告")
         XCTAssertEqual(
             L10n.tr("about.body"),
-            "ShouldRest %@\n\nShouldRest 围绕一个简单原则构建：短暂护眼休息需要强约束，较长活动休息需要有弹性的控制。\n\n它保留调度、更新、支持工具和偏好设置，但不把这些控制变成 20 秒护眼休息的绕过入口。"
+            "ShouldRest %@\n\nShouldRest 围绕一个简单原则构建：短暂护眼休息需要强约束，较长活动休息需要有弹性的控制。\n\n它保留调度、更新、支持工具和设置，但不把这些控制变成 20 秒护眼休息的绕过入口。"
         )
         XCTAssertEqual(L10n.tr("about.tagline"), "严格护眼休息、灵活活动休息，以及不添乱的控制。")
         XCTAssertEqual(L10n.tr("about.eyeGateBody"), "全屏覆盖让短短 20 秒护眼休息不被习惯性跳过。")
@@ -1128,7 +1128,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertEqual(L10n.tr("about.compatibilityTitle"), "有用控制，不留绕过入口")
         XCTAssertEqual(
             L10n.tr("about.compatibilityBody"),
-            "调度、更新、支持工具和偏好设置保持可用，但不削弱护眼覆盖层。"
+            "调度、更新、支持工具和设置保持可用，但不削弱护眼覆盖层。"
         )
         XCTAssertFalse(L10n.tr("about.body").contains("自动化"))
         XCTAssertFalse(L10n.tr("about.compatibilityBody").contains("自动化"))
@@ -1177,7 +1177,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(L10n.tr("menu.emergencyOverrideHelp").localizedCaseInsensitiveContains("arm"))
         XCTAssertTrue(L10n.tr("cli.help").contains("eye|mini [-w wait]           Start Eye Gate now or after wait; it is always strict and text-free."))
         XCTAssertTrue(L10n.tr("cli.help").contains("Bring the active Eye Gate overlay forward for Emergency Exit."))
-        XCTAssertTrue(L10n.tr("cli.help").contains("Open ShouldRest preferences."))
+        XCTAssertTrue(L10n.tr("cli.help").contains("Open ShouldRest settings."))
         XCTAssertTrue(L10n.tr("cli.help").contains("support                      Copy support report."))
         XCTAssertTrue(L10n.tr("cli.help").contains("support-panel                Open the support report window."))
         XCTAssertTrue(L10n.tr("cli.help").contains("Open the About window."))
@@ -1241,7 +1241,7 @@ final class LocalizationQualityTests: XCTestCase {
         XCTAssertFalse(L10n.tr("menu.emergencyOverrideHelp").contains("待确认"))
         XCTAssertTrue(L10n.tr("cli.help").contains("eye|mini [-w wait]           立即或延迟开始护眼休息；始终严格且不显示自定义文字。"))
         XCTAssertTrue(L10n.tr("cli.help").contains("把当前护眼覆盖层带到前台以便紧急退出"))
-        XCTAssertTrue(L10n.tr("cli.help").contains("打开偏好设置"))
+        XCTAssertTrue(L10n.tr("cli.help").contains("打开设置"))
         XCTAssertTrue(L10n.tr("cli.help").contains("support                      复制支持报告"))
         XCTAssertTrue(L10n.tr("cli.help").contains("support-panel                打开支持报告窗口"))
         XCTAssertTrue(L10n.tr("cli.help").contains("打开关于窗口"))
@@ -1285,27 +1285,27 @@ final class LocalizationQualityTests: XCTestCase {
         defer { L10n.languageOverride = nil }
 
         L10n.languageOverride = "en"
-        XCTAssertEqual(L10n.tr("onboarding.preferences"), "Customize in Preferences")
+        XCTAssertEqual(L10n.tr("onboarding.preferences"), "Customize in Settings")
         XCTAssertTrue(L10n.tr("onboarding.preferencesHelp").contains("adjust the schedule"))
-        XCTAssertNotEqual(L10n.tr("onboarding.preferences"), "Open Preferences")
+        XCTAssertNotEqual(L10n.tr("onboarding.preferences"), "Open Settings")
         XCTAssertEqual(
             L10n.format("onboarding.rhythmDescription", 20, 20, 60, 3),
             "Eye Gate every 20 min for 20 sec. Body Break every 60 min for 3 min."
         )
-        XCTAssertTrue(L10n.tr("onboarding.body").contains("10-minute away rule"))
+        XCTAssertTrue(L10n.tr("onboarding.body").contains("10 minutes away completes a rest"))
         XCTAssertTrue(L10n.tr("onboarding.bodyFeatureBody").contains("finish automatically by default"))
         XCTAssertEqual(L10n.tr("onboarding.useRecommended"), "Start ShouldRest")
         XCTAssertTrue(L10n.tr("onboarding.rhythmRationale").contains("low cost"))
 
         L10n.languageOverride = "zh-Hans"
-        XCTAssertEqual(L10n.tr("onboarding.preferences"), "在偏好设置中自定义")
+        XCTAssertEqual(L10n.tr("onboarding.preferences"), "在设置中自定义")
         XCTAssertTrue(L10n.tr("onboarding.preferencesHelp").contains("调整休息节奏"))
-        XCTAssertNotEqual(L10n.tr("onboarding.preferences"), "打开偏好设置")
+        XCTAssertNotEqual(L10n.tr("onboarding.preferences"), "打开设置")
         XCTAssertEqual(
             L10n.format("onboarding.rhythmDescription", 20, 20, 60, 3),
             "护眼休息每 20 分钟 20 秒；活动休息每 60 分钟 3 分钟。"
         )
-        XCTAssertTrue(L10n.tr("onboarding.body").contains("10 分钟离开阈值"))
+        XCTAssertTrue(L10n.tr("onboarding.body").contains("离开 10 分钟即完成一次休息"))
         XCTAssertTrue(L10n.tr("onboarding.bodyFeatureBody").contains("默认到点自动结束"))
         XCTAssertEqual(L10n.tr("onboarding.useRecommended"), "开始使用 ShouldRest")
         XCTAssertTrue(L10n.tr("onboarding.rhythmRationale").contains("成本低"))
@@ -1393,12 +1393,12 @@ final class LocalizationQualityTests: XCTestCase {
 
         L10n.languageOverride = "en"
         XCTAssertEqual(L10n.tr("prefs.restoreDefaultsContinue"), "Restore Defaults")
-        XCTAssertTrue(L10n.tr("prefs.restoreDefaultsWarning").contains("current preferences"))
+        XCTAssertTrue(L10n.tr("prefs.restoreDefaultsWarning").contains("current settings"))
         XCTAssertFalse(L10n.tr("prefs.restoreDefaultsContinue").localizedCaseInsensitiveContains("continue"))
 
         L10n.languageOverride = "zh-Hans"
         XCTAssertEqual(L10n.tr("prefs.restoreDefaultsContinue"), "恢复默认")
-        XCTAssertTrue(L10n.tr("prefs.restoreDefaultsWarning").contains("当前偏好设置"))
+        XCTAssertTrue(L10n.tr("prefs.restoreDefaultsWarning").contains("当前设置"))
         XCTAssertFalse(L10n.tr("prefs.restoreDefaultsContinue").contains("继续"))
     }
 

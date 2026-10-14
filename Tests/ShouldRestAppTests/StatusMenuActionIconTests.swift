@@ -91,7 +91,9 @@ final class StatusMenuActionIconTests: XCTestCase {
         let copyItem = try XCTUnwrap(submenu.items.last)
 
         XCTAssertEqual(item.title, L10n.tr("menu.settingsFile"))
-        XCTAssertEqual(item.title, "Settings")
+        // Distinct from the Settings window item in the main menu.
+        XCTAssertEqual(item.title, "Settings Location")
+        XCTAssertNotEqual(item.title, L10n.tr("menu.preferences").replacingOccurrences(of: "…", with: ""))
         XCTAssertEqual(item.toolTip, L10n.tr("menu.settingsFileHelp"))
         XCTAssertEqual(item.accessibilityLabel(), L10n.tr("menu.settingsFile"))
         XCTAssertEqual(item.accessibilityHelp(), L10n.tr("menu.settingsFileHelp"))

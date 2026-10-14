@@ -10,6 +10,9 @@ final class FlippedView: NSView {
     }
 }
 
+/// A grouped section of settings, drawn like System Settings form groups.
+final class PreferencesCardView: SurfaceStackView {}
+
 private struct SunriseLocationPreset: Equatable {
     static let customID = "custom"
 
@@ -121,7 +124,6 @@ final class LocalImagePreviewView: NSImageView {
         }
     }
     private var isDropHighlighted = false
-    private var restingBorderColor: CGColor?
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -209,13 +211,23 @@ final class LocalImagePreviewView: NSImageView {
     private func setDropHighlighted(_ highlighted: Bool) {
         guard highlighted != isDropHighlighted else { return }
         isDropHighlighted = highlighted
-        if highlighted {
-            restingBorderColor = layer?.borderColor
-            layer?.borderColor = NSColor.controlAccentColor.withAlphaComponent(0.66).cgColor
-        } else {
-            layer?.borderColor = restingBorderColor ?? NSColor.separatorColor.cgColor
-            restingBorderColor = nil
+        applyFrameStyle()
+    }
+
+    /// Draws the preview frame for the current appearance and drop state.
+    func applyFrameStyle() {
+        wantsLayer = true
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            layer?.backgroundColor = NSColor.textBackgroundColor.withAlphaComponent(0.45).cgColor
+            layer?.borderColor = isDropHighlighted
+                ? NSColor.controlAccentColor.withAlphaComponent(0.66).cgColor
+                : NSColor.separatorColor.cgColor
         }
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        applyFrameStyle()
     }
 }
 
@@ -518,13 +530,13 @@ final class PlaceholderTextView: NSTextView {
 }
 
 @MainActor
-final class PreferencesWindowController: NSWindowController, NSWindowDelegate, NSTextFieldDelegate, NSSearchFieldDelegate, NSTextViewDelegate, PreferencesWindowKeyboardDelegate {
+final class PreferencesWindowController: NSWindowController, NSWindowDelegate, NSTextFieldDelegate, NSSearchFieldDelegate, NSTextViewDelegate, NSTabViewDelegate, NSToolbarDelegate, PreferencesWindowKeyboardDelegate {
     private static let defaultUpdateFeedURL = RestSettings.defaults.operations.updateFeedURL
 
     private var settings: RestSettings
     private let onSave: (RestSettings) throws -> Void
     private let adminMessageContainer = NSStackView()
-    private let adminMessageBanner = NSStackView()
+    private let adminMessageBanner = SurfaceStackView()
     private let adminMessageIcon = NSImageView()
     private let adminMessageLabel = NSTextField(labelWithString: "")
     private let searchField = NSSearchField()
@@ -545,6 +557,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private var saveStatusInvalidDetail: String?
     private var numberInputs: [NumberInput] = []
     private weak var preferencesTabView: NSTabView?
+    private var toolbarPanes: [(identifier: NSToolbarItem.Identifier, title: String, symbolName: String)] = []
     private var searchTargets: [PreferencesSearchTarget] = []
     private var highlightedSearchTarget: PreferencesHighlightSnapshot?
     private var currentSearchQuery = ""
@@ -662,7 +675,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let soundVolume = NSTextField()
     private let soundVolumeSlider = NSSlider()
     private let soundVolumeValueLabel = NSTextField(labelWithString: "")
-    private let soundPreviewStatusRow = NSStackView()
+    private let soundPreviewStatusRow = SurfaceStackView()
     private let soundPreviewStatusIcon = NSImageView()
     private let soundPreviewStatusLabel = NSTextField(labelWithString: "")
 
@@ -715,7 +728,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private var shortcutDuringRestGroupHeader: NSView?
     private let shortcutReset = ShortcutRecorderButton()
     private var shortcutClearControls: [(recorder: ShortcutRecorderButton, button: NSButton)] = []
-    private let shortcutConflictRow = NSStackView()
+    private let shortcutConflictRow = SurfaceStackView()
     private let shortcutConflictIcon = NSImageView()
     private let shortcutConflictLabel = NSTextField(labelWithString: "")
     private let shortcutConflictReviewButton = NSButton()
@@ -747,7 +760,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private let updateFeedURL = NSTextField()
     private let restoreUpdateSourceButton = NSButton()
     private let updateSourceAdvancedButton = NSButton()
-    private var updateSectionSeparator: NSView?
+    private var updateSectionCard: NSView?
     private var updateSectionHeader: NSView?
     private var updateFeedURLRow: NSView?
     private let disableUpdateFeatures = NSButton(checkboxWithTitle: L10n.tr("prefs.adminHideUpdates"), target: nil, action: nil)
@@ -767,12 +780,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         self.nowProvider = nowProvider
 
         let window = PreferencesWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 820, height: 760),
-            styleMask: [.titled, .closable, .resizable],
+            contentRect: NSRect(x: 0, y: 0, width: 780, height: 700),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
         window.title = L10n.tr("preferences.title")
+        window.toolbarStyle = .preference
+        window.minSize = NSSize(width: 780, height: 480)
         window.level = .floating
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.hidesOnDeactivate = false
@@ -782,6 +797,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         window.delegate = self
 
         buildContent()
+        installToolbar()
         loadSettings()
         focusPreferencesSearch()
     }
@@ -850,6 +866,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
         let tabView = NSTabView()
         tabView.identifier = NSUserInterfaceItemIdentifier("prefs.tabView")
+        tabView.tabViewType = .noTabsNoBorder
+        tabView.delegate = self
         preferencesTabView = tabView
         tabView.translatesAutoresizingMaskIntoConstraints = false
         tabView.setContentHuggingPriority(.defaultLow, for: .vertical)
@@ -857,20 +875,21 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         root.addArrangedSubview(tabView)
 
         let scheduleStack = contentStack()
+        addSummary(scheduleSummaryView(), to: scheduleStack)
         scheduleStack.addArrangedSubview(section(
             L10n.tr("prefs.sectionEyeGate"),
             icon: .restGate,
             identifier: "prefs.section.eyeGate"
         ))
-        scheduleStack.addArrangedSubview(scheduleSummaryView())
+        let eyeGateCard = addPreferencesCard(to: scheduleStack, identifier: "prefs.card.eyeGate")
         eyeEnabled.identifier = NSUserInterfaceItemIdentifier("prefs.eyeEnabled")
-        scheduleStack.addArrangedSubview(eyeEnabled)
+        eyeGateCard.addArrangedSubview(eyeEnabled)
         let eyeEnabledHelp = inlineControlHelpRow(
             L10n.tr("prefs.enableEyeGateHelp"),
             identifier: "prefs.eyeEnabledHelp"
         )
         eyeEnabledHelpLabel = eyeEnabledHelp.label
-        scheduleStack.addArrangedSubview(eyeEnabledHelp.row)
+        eyeGateCard.addArrangedSubview(eyeEnabledHelp.row)
         let eyeIntervalRow = numberRow(
             L10n.tr("prefs.everyMinutes"),
             eyeInterval,
@@ -883,7 +902,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         )
         eyeIntervalRow.identifier = NSUserInterfaceItemIdentifier("prefs.eyeIntervalRow")
         self.eyeIntervalRow = eyeIntervalRow
-        scheduleStack.addArrangedSubview(eyeIntervalRow)
+        eyeGateCard.addArrangedSubview(eyeIntervalRow)
         let eyeDurationRow = numberRow(
             L10n.tr("prefs.durationSeconds"),
             eyeDuration,
@@ -896,15 +915,15 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         )
         eyeDurationRow.identifier = NSUserInterfaceItemIdentifier("prefs.eyeDurationRow")
         self.eyeDurationRow = eyeDurationRow
-        scheduleStack.addArrangedSubview(eyeDurationRow)
+        eyeGateCard.addArrangedSubview(eyeDurationRow)
         let eyeColorRow = row(L10n.tr("prefs.overlayColor"), eyeColor)
         eyeColorRow.identifier = NSUserInterfaceItemIdentifier("prefs.eyeColorRow")
         self.eyeColorRow = eyeColorRow
-        scheduleStack.addArrangedSubview(eyeColorRow)
+        eyeGateCard.addArrangedSubview(eyeColorRow)
         eyeNotify.identifier = NSUserInterfaceItemIdentifier("prefs.eyeNotify")
-        scheduleStack.addArrangedSubview(eyeNotify)
+        eyeGateCard.addArrangedSubview(eyeNotify)
         eyeFullScreenCue.identifier = NSUserInterfaceItemIdentifier("prefs.eyeFullScreenCue")
-        scheduleStack.addArrangedSubview(eyeFullScreenCue)
+        eyeGateCard.addArrangedSubview(eyeFullScreenCue)
         let eyeLeadRow = numberRow(
             L10n.tr("prefs.notificationLead"),
             eyeLead,
@@ -916,38 +935,38 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         )
         eyeLeadRow.identifier = NSUserInterfaceItemIdentifier("prefs.eyeLeadRow")
         self.eyeLeadRow = eyeLeadRow
-        scheduleStack.addArrangedSubview(eyeLeadRow)
+        eyeGateCard.addArrangedSubview(eyeLeadRow)
         eyeManualFinish.identifier = NSUserInterfaceItemIdentifier("prefs.eyeManualFinish")
-        scheduleStack.addArrangedSubview(eyeManualFinish)
+        eyeGateCard.addArrangedSubview(eyeManualFinish)
         let eyeManualFinishHelp = inlineControlHelpRow(
             L10n.tr("prefs.eyeManualFinishHelp"),
             identifier: "prefs.eyeManualFinishHelp"
         )
         eyeManualFinishHelpRow = eyeManualFinishHelp.row
-        scheduleStack.addArrangedSubview(eyeManualFinishHelp.row)
+        eyeGateCard.addArrangedSubview(eyeManualFinishHelp.row)
         eyeEmergencyOverride.identifier = NSUserInterfaceItemIdentifier("prefs.eyeEmergencyOverride")
-        scheduleStack.addArrangedSubview(eyeEmergencyOverride)
+        eyeGateCard.addArrangedSubview(eyeEmergencyOverride)
         let eyeEmergencyOverrideHelp = inlineControlHelpRow(
             L10n.tr("prefs.eyeEmergencyOverrideHelp"),
             identifier: "prefs.eyeEmergencyOverrideHelp"
         )
         eyeEmergencyOverrideHelpRow = eyeEmergencyOverrideHelp.row
         eyeEmergencyOverrideHelpLabel = eyeEmergencyOverrideHelp.label
-        scheduleStack.addArrangedSubview(eyeEmergencyOverrideHelp.row)
-        scheduleStack.addArrangedSubview(separator())
+        eyeGateCard.addArrangedSubview(eyeEmergencyOverrideHelp.row)
         scheduleStack.addArrangedSubview(section(
             L10n.tr("prefs.sectionBodyBreak"),
             icon: .systemSymbol("figure.walk"),
             identifier: "prefs.section.bodyBreak"
         ))
+        let bodyBreakCard = addPreferencesCard(to: scheduleStack, identifier: "prefs.card.bodyBreak")
         bodyEnabled.identifier = NSUserInterfaceItemIdentifier("prefs.bodyEnabled")
-        scheduleStack.addArrangedSubview(bodyEnabled)
+        bodyBreakCard.addArrangedSubview(bodyEnabled)
         let bodyEnabledHelp = inlineControlHelpRow(
             L10n.tr("prefs.enableBodyBreakHelp"),
             identifier: "prefs.bodyEnabledHelp"
         )
         bodyEnabledHelpLabel = bodyEnabledHelp.label
-        scheduleStack.addArrangedSubview(bodyEnabledHelp.row)
+        bodyBreakCard.addArrangedSubview(bodyEnabledHelp.row)
         let bodyIntervalRow = numberRow(
             L10n.tr("prefs.bodyIntervalMinutes"),
             bodyInterval,
@@ -960,7 +979,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         )
         bodyIntervalRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyIntervalRow")
         self.bodyIntervalRow = bodyIntervalRow
-        scheduleStack.addArrangedSubview(bodyIntervalRow)
+        bodyBreakCard.addArrangedSubview(bodyIntervalRow)
         let bodyDurationRow = numberRow(
             L10n.tr("prefs.durationMinutes"),
             bodyDuration,
@@ -973,15 +992,15 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         )
         bodyDurationRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyDurationRow")
         self.bodyDurationRow = bodyDurationRow
-        scheduleStack.addArrangedSubview(bodyDurationRow)
+        bodyBreakCard.addArrangedSubview(bodyDurationRow)
         let bodyColorRow = row(L10n.tr("prefs.overlayColor"), bodyColor)
         bodyColorRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyColorRow")
         self.bodyColorRow = bodyColorRow
-        scheduleStack.addArrangedSubview(bodyColorRow)
+        bodyBreakCard.addArrangedSubview(bodyColorRow)
         bodyNotify.identifier = NSUserInterfaceItemIdentifier("prefs.bodyNotify")
-        scheduleStack.addArrangedSubview(bodyNotify)
+        bodyBreakCard.addArrangedSubview(bodyNotify)
         bodyFullScreenCue.identifier = NSUserInterfaceItemIdentifier("prefs.bodyFullScreenCue")
-        scheduleStack.addArrangedSubview(bodyFullScreenCue)
+        bodyBreakCard.addArrangedSubview(bodyFullScreenCue)
         let bodyLeadRow = numberRow(
             L10n.tr("prefs.notificationLead"),
             bodyLead,
@@ -993,7 +1012,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         )
         bodyLeadRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyLeadRow")
         self.bodyLeadRow = bodyLeadRow
-        scheduleStack.addArrangedSubview(bodyLeadRow)
+        bodyBreakCard.addArrangedSubview(bodyLeadRow)
         let bodyPostponeMinutesRow = numberRow(
             L10n.tr("prefs.postponeMinutes"),
             bodyPostponeMinutes,
@@ -1005,7 +1024,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         )
         bodyPostponeMinutesRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyPostponeMinutesRow")
         self.bodyPostponeMinutesRow = bodyPostponeMinutesRow
-        scheduleStack.addArrangedSubview(bodyPostponeMinutesRow)
+        bodyBreakCard.addArrangedSubview(bodyPostponeMinutesRow)
         let bodyPostponeLimitRow = numberRow(
             L10n.tr("prefs.maxPostpones"),
             bodyPostponeLimit,
@@ -1017,7 +1036,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         )
         bodyPostponeLimitRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyPostponeLimitRow")
         self.bodyPostponeLimitRow = bodyPostponeLimitRow
-        scheduleStack.addArrangedSubview(bodyPostponeLimitRow)
+        bodyBreakCard.addArrangedSubview(bodyPostponeLimitRow)
         let bodyPostponeWindowPercentRow = numberRow(
             L10n.tr("prefs.postponeWindowPercent"),
             bodyPostponeWindowPercent,
@@ -1029,44 +1048,45 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         )
         bodyPostponeWindowPercentRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyPostponeWindowPercentRow")
         self.bodyPostponeWindowPercentRow = bodyPostponeWindowPercentRow
-        scheduleStack.addArrangedSubview(bodyPostponeWindowPercentRow)
+        bodyBreakCard.addArrangedSubview(bodyPostponeWindowPercentRow)
         bodyAllowSkip.identifier = NSUserInterfaceItemIdentifier("prefs.bodyAllowSkip")
-        scheduleStack.addArrangedSubview(bodyAllowSkip)
+        bodyBreakCard.addArrangedSubview(bodyAllowSkip)
         let bodyAllowSkipHelp = inlineControlHelpRow(
             L10n.tr("prefs.bodyAllowSkipHelp"),
             identifier: "prefs.bodyAllowSkipHelp"
         )
         bodyAllowSkipHelpRow = bodyAllowSkipHelp.row
-        scheduleStack.addArrangedSubview(bodyAllowSkipHelp.row)
+        bodyBreakCard.addArrangedSubview(bodyAllowSkipHelp.row)
         bodyManualFinish.identifier = NSUserInterfaceItemIdentifier("prefs.bodyManualFinish")
-        scheduleStack.addArrangedSubview(bodyManualFinish)
+        bodyBreakCard.addArrangedSubview(bodyManualFinish)
         bodyCoversAllDisplays.identifier = NSUserInterfaceItemIdentifier("prefs.bodyCoversAllDisplays")
-        scheduleStack.addArrangedSubview(bodyCoversAllDisplays)
+        bodyBreakCard.addArrangedSubview(bodyCoversAllDisplays)
         let bodyCoveredDisplayRow = row(L10n.tr("prefs.bodyCoveredDisplay"), bodyCoveredDisplay)
         bodyCoveredDisplay.identifier = NSUserInterfaceItemIdentifier("prefs.bodyCoveredDisplay")
         bodyCoveredDisplayRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyCoveredDisplayRow")
         self.bodyCoveredDisplayRow = bodyCoveredDisplayRow
-        scheduleStack.addArrangedSubview(bodyCoveredDisplayRow)
+        bodyBreakCard.addArrangedSubview(bodyCoveredDisplayRow)
         let bodyContentDisplayRow = row(L10n.tr("prefs.bodyContentDisplay"), bodyContentDisplay)
         bodyContentDisplay.identifier = NSUserInterfaceItemIdentifier("prefs.bodyContentDisplay")
         bodyContentDisplayRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyContentDisplayRow")
         self.bodyContentDisplayRow = bodyContentDisplayRow
-        scheduleStack.addArrangedSubview(bodyContentDisplayRow)
+        bodyBreakCard.addArrangedSubview(bodyContentDisplayRow)
         bodyBlankSecondaryDisplays.identifier = NSUserInterfaceItemIdentifier("prefs.bodyBlankSecondaryDisplays")
-        scheduleStack.addArrangedSubview(bodyBlankSecondaryDisplays)
+        bodyBreakCard.addArrangedSubview(bodyBlankSecondaryDisplays)
         let bodyConfiguredDisplayRow = row(L10n.tr("prefs.configuredDisplayIndex"), bodyConfiguredDisplay)
         bodyConfiguredDisplayRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyConfiguredDisplayRow")
         self.bodyConfiguredDisplayRow = bodyConfiguredDisplayRow
-        scheduleStack.addArrangedSubview(bodyConfiguredDisplayRow)
-        scheduleStack.addArrangedSubview(indentedControlRow(bodyDisplaySummaryLabel))
+        bodyBreakCard.addArrangedSubview(bodyConfiguredDisplayRow)
+        bodyBreakCard.addArrangedSubview(indentedControlRow(bodyDisplaySummaryLabel))
         configureSchedulePreferenceHelp()
         addTab(to: tabView, title: L10n.tr("prefs.tabSchedule"), icon: .systemSymbol("clock"), stack: scheduleStack)
 
         let contextStack = contentStack()
+        addSummary(contextSummaryView(), to: contextStack)
         contextStack.addArrangedSubview(section(L10n.tr("prefs.sectionContext"), symbolName: "scope"))
-        contextStack.addArrangedSubview(contextSummaryView())
+        let contextCard = addPreferencesCard(to: contextStack, identifier: "prefs.card.context")
         naturalBreaks.identifier = NSUserInterfaceItemIdentifier("prefs.naturalBreaks")
-        contextStack.addArrangedSubview(naturalBreaks)
+        contextCard.addArrangedSubview(naturalBreaks)
         let naturalIdleMinutesRow = numberRow(
             L10n.tr("prefs.naturalIdleMinutes"),
             naturalIdleMinutes,
@@ -1078,56 +1098,56 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         )
         naturalIdleMinutesRow.identifier = NSUserInterfaceItemIdentifier("prefs.naturalIdleMinutesRow")
         self.naturalIdleMinutesRow = naturalIdleMinutesRow
-        contextStack.addArrangedSubview(naturalIdleMinutesRow)
+        contextCard.addArrangedSubview(naturalIdleMinutesRow)
         focusMonitor.identifier = NSUserInterfaceItemIdentifier("prefs.focusMonitor")
-        contextStack.addArrangedSubview(focusMonitor)
+        contextCard.addArrangedSubview(focusMonitor)
         focusDefersBody.identifier = NSUserInterfaceItemIdentifier("prefs.focusDefersBody")
-        contextStack.addArrangedSubview(focusDefersBody)
+        contextCard.addArrangedSubview(focusDefersBody)
         workingHoursEnabled.identifier = NSUserInterfaceItemIdentifier("prefs.workingHours")
-        contextStack.addArrangedSubview(workingHoursEnabled)
+        contextCard.addArrangedSubview(workingHoursEnabled)
         let workingStartRow = row(L10n.tr("prefs.workingStart"), workingStartPicker)
         workingStartPicker.identifier = NSUserInterfaceItemIdentifier("prefs.workingStartPicker")
         workingStartRow.identifier = NSUserInterfaceItemIdentifier("prefs.workingStartRow")
         self.workingStartRow = workingStartRow
-        contextStack.addArrangedSubview(workingStartRow)
+        contextCard.addArrangedSubview(workingStartRow)
         let workingEndRow = row(L10n.tr("prefs.workingEnd"), workingEndPicker)
         workingEndPicker.identifier = NSUserInterfaceItemIdentifier("prefs.workingEndPicker")
         workingEndRow.identifier = NSUserInterfaceItemIdentifier("prefs.workingEndRow")
         self.workingEndRow = workingEndRow
-        contextStack.addArrangedSubview(workingEndRow)
-        contextStack.addArrangedSubview(separator())
+        contextCard.addArrangedSubview(workingEndRow)
         contextStack.addArrangedSubview(section(L10n.tr("prefs.sectionExclusion"), symbolName: "app.badge"))
+        let appRulesCard = addPreferencesCard(to: contextStack, identifier: "prefs.card.appRules")
         appExclusionEnabled.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionEnabled")
-        contextStack.addArrangedSubview(appExclusionEnabled)
+        appRulesCard.addArrangedSubview(appExclusionEnabled)
         let appExclusionNameRow = row(L10n.tr("prefs.name"), appExclusionName)
         appExclusionName.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionNameField")
         appExclusionNameRow.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionNameRow")
         self.appExclusionNameRow = appExclusionNameRow
-        contextStack.addArrangedSubview(appExclusionNameRow)
+        appRulesCard.addArrangedSubview(appExclusionNameRow)
         let appExclusionTermsRow = row(L10n.tr("prefs.matchTerms"), appExclusionTermsPickerRow())
         appExclusionTerms.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionTermsField")
         appExclusionTermsRow.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionTermsRow")
         self.appExclusionTermsRow = appExclusionTermsRow
-        contextStack.addArrangedSubview(appExclusionTermsRow)
+        appRulesCard.addArrangedSubview(appExclusionTermsRow)
         let appExclusionModeRow = row(L10n.tr("prefs.mode"), appExclusionMode)
         appExclusionMode.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionMode")
         appExclusionModeRow.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionModeRow")
         self.appExclusionModeRow = appExclusionModeRow
-        contextStack.addArrangedSubview(appExclusionModeRow)
+        appRulesCard.addArrangedSubview(appExclusionModeRow)
         appExclusionAppliesEye.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionAppliesEye")
-        contextStack.addArrangedSubview(appExclusionAppliesEye)
+        appRulesCard.addArrangedSubview(appExclusionAppliesEye)
         appExclusionAppliesBody.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionAppliesBody")
-        contextStack.addArrangedSubview(appExclusionAppliesBody)
-        contextStack.addArrangedSubview(indentedControlRow(appExclusionPreviewLabel))
+        appRulesCard.addArrangedSubview(appExclusionAppliesBody)
+        appRulesCard.addArrangedSubview(indentedControlRow(appExclusionPreviewLabel))
         let appExclusionAddRuleRow = indentedControlRow(appExclusionRuleActionRow())
         appExclusionAddRuleRow.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionAddRuleRow")
         self.appExclusionAddRuleRow = appExclusionAddRuleRow
-        contextStack.addArrangedSubview(appExclusionAddRuleRow)
+        appRulesCard.addArrangedSubview(appExclusionAddRuleRow)
         let appExclusionRulesListRow = multilineRow(L10n.tr("prefs.appExclusionRules"), appExclusionRulesListStack)
         appExclusionRulesListRow.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionRulesListRow")
         self.appExclusionRulesListRow = appExclusionRulesListRow
-        contextStack.addArrangedSubview(appExclusionRulesListRow)
-        contextStack.addArrangedSubview(appExclusionsAdvancedButton)
+        appRulesCard.addArrangedSubview(appExclusionRulesListRow)
+        appRulesCard.addArrangedSubview(appExclusionsAdvancedButton)
         let appExclusionsJSONRow = advancedBulkEditorRow(
             L10n.tr("prefs.advancedRulesJSON"),
             guidance: L10n.tr("prefs.advancedRulesGuidance"),
@@ -1137,26 +1157,27 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         )
         appExclusionsJSONRow.identifier = NSUserInterfaceItemIdentifier("prefs.appExclusionsJSONRow")
         self.appExclusionsJSONRow = appExclusionsJSONRow
-        contextStack.addArrangedSubview(appExclusionsJSONRow)
+        appRulesCard.addArrangedSubview(appExclusionsJSONRow)
         addTab(to: tabView, title: L10n.tr("prefs.tabContext"), icon: .systemSymbol("scope"), stack: contextStack)
 
         let appearanceStack = contentStack()
         appearanceStack.addArrangedSubview(section(L10n.tr("prefs.sectionPresentation"), symbolName: "paintbrush"))
+        let presentationCard = addPreferencesCard(to: appearanceStack, identifier: "prefs.card.presentation")
         themeSource.identifier = NSUserInterfaceItemIdentifier("prefs.theme")
-        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.theme"), themeSource))
+        presentationCard.addArrangedSubview(row(L10n.tr("prefs.theme"), themeSource))
         languageIdentifier.identifier = NSUserInterfaceItemIdentifier("prefs.language")
-        appearanceStack.addArrangedSubview(row(L10n.tr("prefs.language"), languageIdentifier))
-        appearanceStack.addArrangedSubview(inlineControlHelpRow(
+        presentationCard.addArrangedSubview(row(L10n.tr("prefs.language"), languageIdentifier))
+        presentationCard.addArrangedSubview(inlineControlHelpRow(
             L10n.tr("prefs.languageHelp"),
             identifier: "prefs.languageInlineHelp"
         ).row)
         currentTimeInBodyBreak.identifier = NSUserInterfaceItemIdentifier("prefs.currentTimeBody")
-        appearanceStack.addArrangedSubview(currentTimeInBodyBreak)
+        presentationCard.addArrangedSubview(currentTimeInBodyBreak)
         breakHealth.identifier = NSUserInterfaceItemIdentifier("prefs.breakHealth")
-        appearanceStack.addArrangedSubview(breakHealth)
+        presentationCard.addArrangedSubview(breakHealth)
         silentNotifications.identifier = NSUserInterfaceItemIdentifier("prefs.silentNotifications")
-        appearanceStack.addArrangedSubview(silentNotifications)
-        appearanceStack.addArrangedSubview(inlineControlHelpRow(
+        presentationCard.addArrangedSubview(silentNotifications)
+        presentationCard.addArrangedSubview(inlineControlHelpRow(
             L10n.tr("prefs.silentNotificationsHelp"),
             identifier: "prefs.silentNotificationsInlineHelp"
         ).row)
@@ -1164,58 +1185,58 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         eyeStartSound.identifier = NSUserInterfaceItemIdentifier("prefs.eyeStartSound")
         eyeStartSoundRow.identifier = NSUserInterfaceItemIdentifier("prefs.eyeStartSoundRow")
         self.eyeStartSoundRow = eyeStartSoundRow
-        appearanceStack.addArrangedSubview(eyeStartSoundRow)
+        presentationCard.addArrangedSubview(eyeStartSoundRow)
         let eyeFinishSoundRow = row(L10n.tr("prefs.eyeFinishSound"), soundPickerRow(eyeFinishSound, eyeFinishSoundPreview))
         eyeFinishSound.identifier = NSUserInterfaceItemIdentifier("prefs.eyeFinishSound")
         eyeFinishSoundRow.identifier = NSUserInterfaceItemIdentifier("prefs.eyeFinishSoundRow")
         self.eyeFinishSoundRow = eyeFinishSoundRow
-        appearanceStack.addArrangedSubview(eyeFinishSoundRow)
+        presentationCard.addArrangedSubview(eyeFinishSoundRow)
         let bodyStartSoundRow = row(L10n.tr("prefs.bodyStartSound"), soundPickerRow(bodyStartSound, bodyStartSoundPreview))
         bodyStartSound.identifier = NSUserInterfaceItemIdentifier("prefs.bodyStartSound")
         bodyStartSoundRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyStartSoundRow")
         self.bodyStartSoundRow = bodyStartSoundRow
-        appearanceStack.addArrangedSubview(bodyStartSoundRow)
+        presentationCard.addArrangedSubview(bodyStartSoundRow)
         let bodyFinishSoundRow = row(L10n.tr("prefs.bodyFinishSound"), soundPickerRow(bodyFinishSound, bodyFinishSoundPreview))
         bodyFinishSound.identifier = NSUserInterfaceItemIdentifier("prefs.bodyFinishSound")
         bodyFinishSoundRow.identifier = NSUserInterfaceItemIdentifier("prefs.bodyFinishSoundRow")
         self.bodyFinishSoundRow = bodyFinishSoundRow
-        appearanceStack.addArrangedSubview(bodyFinishSoundRow)
+        presentationCard.addArrangedSubview(bodyFinishSoundRow)
         let soundVolumeControlRow = row(L10n.tr("prefs.volume"), soundVolumeRow())
         soundVolumeControlRow.identifier = NSUserInterfaceItemIdentifier("prefs.soundVolumeRow")
-        appearanceStack.addArrangedSubview(soundVolumeControlRow)
-        appearanceStack.addArrangedSubview(inlineControlHelpRow(
+        presentationCard.addArrangedSubview(soundVolumeControlRow)
+        presentationCard.addArrangedSubview(inlineControlHelpRow(
             L10n.tr("prefs.soundVolumeHelp"),
             identifier: "prefs.soundVolumeInlineHelp",
             leadingWidth: 220
         ).row)
-        appearanceStack.addArrangedSubview(soundPreviewStatusView())
-        appearanceStack.addArrangedSubview(separator())
+        presentationCard.addArrangedSubview(soundPreviewStatusView())
         appearanceStack.addArrangedSubview(section(L10n.tr("prefs.sectionCustomIdea"), symbolName: "text.bubble"))
+        let restContentCard = addPreferencesCard(to: appearanceStack, identifier: "prefs.card.restContent")
         useBuiltInIdeas.identifier = NSUserInterfaceItemIdentifier("prefs.useBuiltInIdeas")
-        appearanceStack.addArrangedSubview(useBuiltInIdeas)
+        restContentCard.addArrangedSubview(useBuiltInIdeas)
         let localImagePathRow = row(L10n.tr("prefs.localImagePath"), localImagePickerRow())
         localImagePathRow.identifier = NSUserInterfaceItemIdentifier("prefs.localImagePathRow")
         self.localImagePathRow = localImagePathRow
-        appearanceStack.addArrangedSubview(localImagePathRow)
-        appearanceStack.addArrangedSubview(indentedControlRow(bodyContentSummaryLabel))
+        restContentCard.addArrangedSubview(localImagePathRow)
+        restContentCard.addArrangedSubview(indentedControlRow(bodyContentSummaryLabel))
         let customBodyTitleRow = row(L10n.tr("prefs.title"), customBodyTitle)
         customBodyTitle.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyTitleField")
         customBodyTitleRow.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyTitleRow")
         self.customBodyTitleRow = customBodyTitleRow
-        appearanceStack.addArrangedSubview(customBodyTitleRow)
+        restContentCard.addArrangedSubview(customBodyTitleRow)
         let customBodyTextRow = multilineRow(L10n.tr("prefs.text"), customBodyTextScrollView)
         customBodyTextRow.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyTextRow")
         self.customBodyTextRow = customBodyTextRow
-        appearanceStack.addArrangedSubview(customBodyTextRow)
+        restContentCard.addArrangedSubview(customBodyTextRow)
         let customBodyAddIdeaButtonRow = indentedControlRow(customBodyIdeaActionRow())
         customBodyAddIdeaButtonRow.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyAddIdeaButtonRow")
         self.customBodyAddIdeaButtonRow = customBodyAddIdeaButtonRow
-        appearanceStack.addArrangedSubview(customBodyAddIdeaButtonRow)
+        restContentCard.addArrangedSubview(customBodyAddIdeaButtonRow)
         let customBodyIdeasListRow = multilineRow(L10n.tr("prefs.customIdeaRotation"), customBodyIdeasListStack)
         customBodyIdeasListRow.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyIdeasListRow")
         self.customBodyIdeasListRow = customBodyIdeasListRow
-        appearanceStack.addArrangedSubview(customBodyIdeasListRow)
-        appearanceStack.addArrangedSubview(customBodyIdeasAdvancedButton)
+        restContentCard.addArrangedSubview(customBodyIdeasListRow)
+        restContentCard.addArrangedSubview(customBodyIdeasAdvancedButton)
         let customBodyIdeasJSONRow = advancedBulkEditorRow(
             L10n.tr("prefs.advancedIdeasJSON"),
             guidance: L10n.tr("prefs.advancedIdeasGuidance"),
@@ -1225,13 +1246,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         )
         customBodyIdeasJSONRow.identifier = NSUserInterfaceItemIdentifier("prefs.customBodyIdeasJSONRow")
         self.customBodyIdeasJSONRow = customBodyIdeasJSONRow
-        appearanceStack.addArrangedSubview(customBodyIdeasJSONRow)
+        restContentCard.addArrangedSubview(customBodyIdeasJSONRow)
         configureAppearancePreferenceHelp()
         addTab(to: tabView, title: L10n.tr("prefs.tabAppearance"), icon: .systemSymbol("paintbrush"), stack: appearanceStack)
 
         let shortcutsStack = contentStack()
         shortcutsStack.addArrangedSubview(section(L10n.tr("prefs.sectionShortcuts"), symbolName: "keyboard"))
-        shortcutsStack.addArrangedSubview(shortcutConflictRow)
+        let shortcutsCard = addPreferencesCard(to: shortcutsStack, identifier: "prefs.card.shortcuts")
+        shortcutsCard.addArrangedSubview(shortcutConflictRow)
         shortcutPauseToggle.identifier = NSUserInterfaceItemIdentifier("shortcut.pauseToggle")
         shortcutPause30.identifier = NSUserInterfaceItemIdentifier("shortcut.pause30")
         shortcutPause1h.identifier = NSUserInterfaceItemIdentifier("shortcut.pause1h")
@@ -1244,47 +1266,47 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         shortcutEndBody.identifier = NSUserInterfaceItemIdentifier("shortcut.endBody")
         shortcutEmergencyEye.identifier = NSUserInterfaceItemIdentifier("shortcut.emergencyEye")
         shortcutReset.identifier = NSUserInterfaceItemIdentifier("shortcut.reset")
-        shortcutsStack.addArrangedSubview(shortcutGroupHeader(
+        shortcutsCard.addArrangedSubview(shortcutGroupHeader(
             L10n.tr("prefs.shortcutGroupPause"),
             symbolName: "pause.circle",
             identifier: "prefs.shortcutGroupPause"
         ))
-        shortcutsStack.addArrangedSubview(shortcutRow(
+        shortcutsCard.addArrangedSubview(shortcutRow(
             L10n.tr("prefs.pauseToggle"),
             shortcutPauseToggle,
             help: L10n.tr("prefs.pauseToggleShortcutHelp")
         ))
-        shortcutsStack.addArrangedSubview(shortcutRow(
+        shortcutsCard.addArrangedSubview(shortcutRow(
             L10n.tr("prefs.pause30Shortcut"),
             shortcutPause30,
             help: L10n.tr("prefs.pause30ShortcutHelp")
         ))
-        shortcutsStack.addArrangedSubview(shortcutRow(
+        shortcutsCard.addArrangedSubview(shortcutRow(
             L10n.tr("prefs.pause1hShortcut"),
             shortcutPause1h,
             help: L10n.tr("prefs.pause1hShortcutHelp")
         ))
-        shortcutsStack.addArrangedSubview(shortcutRow(
+        shortcutsCard.addArrangedSubview(shortcutRow(
             L10n.tr("prefs.pause2hShortcut"),
             shortcutPause2h,
             help: L10n.tr("prefs.pause2hShortcutHelp")
         ))
-        shortcutsStack.addArrangedSubview(shortcutRow(
+        shortcutsCard.addArrangedSubview(shortcutRow(
             L10n.tr("prefs.pause5hShortcut"),
             shortcutPause5h,
             help: L10n.tr("prefs.pause5hShortcutHelp")
         ))
-        shortcutsStack.addArrangedSubview(shortcutRow(
+        shortcutsCard.addArrangedSubview(shortcutRow(
             L10n.tr("prefs.pauseUntilMorningShortcut"),
             shortcutPauseUntilMorning,
             help: L10n.tr("prefs.pauseUntilMorningShortcutHelp")
         ))
-        shortcutsStack.addArrangedSubview(shortcutGroupHeader(
+        shortcutsCard.addArrangedSubview(shortcutGroupHeader(
             L10n.tr("prefs.shortcutGroupStart"),
             symbolName: "play.circle",
             identifier: "prefs.shortcutGroupStart"
         ))
-        shortcutsStack.addArrangedSubview(shortcutRow(
+        shortcutsCard.addArrangedSubview(shortcutRow(
             L10n.tr("prefs.nextScheduledRest"),
             shortcutNextScheduled,
             help: L10n.tr("prefs.nextScheduledRestHelp")
@@ -1296,7 +1318,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         )
         shortcutEyeNowRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutEyeNowRow")
         self.shortcutEyeNowRow = shortcutEyeNowRow
-        shortcutsStack.addArrangedSubview(shortcutEyeNowRow)
+        shortcutsCard.addArrangedSubview(shortcutEyeNowRow)
         let shortcutBodyNowRow = shortcutRow(
             L10n.tr("prefs.bodyBreakNow"),
             shortcutBodyNow,
@@ -1304,14 +1326,14 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         )
         shortcutBodyNowRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutBodyNowRow")
         self.shortcutBodyNowRow = shortcutBodyNowRow
-        shortcutsStack.addArrangedSubview(shortcutBodyNowRow)
+        shortcutsCard.addArrangedSubview(shortcutBodyNowRow)
         let shortcutDuringRestGroupHeader = shortcutGroupHeader(
             L10n.tr("prefs.shortcutGroupDuringRest"),
             symbolName: "rectangle.inset.filled.and.person.filled",
             identifier: "prefs.shortcutGroupDuringRest"
         )
         self.shortcutDuringRestGroupHeader = shortcutDuringRestGroupHeader
-        shortcutsStack.addArrangedSubview(shortcutDuringRestGroupHeader)
+        shortcutsCard.addArrangedSubview(shortcutDuringRestGroupHeader)
         let shortcutEndBodyRow = shortcutRow(
             activeRestShortcutTitle(
                 eyeGateEnabled: settings.eyeGate.isEnabled,
@@ -1337,7 +1359,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             }
         }
         self.shortcutEndBodyRow = shortcutEndBodyRow
-        shortcutsStack.addArrangedSubview(shortcutEndBodyRow)
+        shortcutsCard.addArrangedSubview(shortcutEndBodyRow)
         let shortcutEmergencyEyeRow = shortcutRow(
             L10n.tr("prefs.emergencyEyeGate"),
             shortcutEmergencyEye,
@@ -1345,13 +1367,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         )
         shortcutEmergencyEyeRow.identifier = NSUserInterfaceItemIdentifier("prefs.shortcutEmergencyEyeRow")
         self.shortcutEmergencyEyeRow = shortcutEmergencyEyeRow
-        shortcutsStack.addArrangedSubview(shortcutEmergencyEyeRow)
-        shortcutsStack.addArrangedSubview(shortcutGroupHeader(
+        shortcutsCard.addArrangedSubview(shortcutEmergencyEyeRow)
+        shortcutsCard.addArrangedSubview(shortcutGroupHeader(
             L10n.tr("prefs.shortcutGroupMaintenance"),
             symbolName: "arrow.counterclockwise.circle",
             identifier: "prefs.shortcutGroupMaintenance"
         ))
-        shortcutsStack.addArrangedSubview(shortcutRow(
+        shortcutsCard.addArrangedSubview(shortcutRow(
             L10n.tr("prefs.reset"),
             shortcutReset,
             help: L10n.tr("prefs.resetShortcutHelp")
@@ -1364,30 +1386,31 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             icon: .systemSymbol("power"),
             identifier: "prefs.section.startup"
         ))
+        let startupCard = addPreferencesCard(to: advancedStack, identifier: "prefs.card.startup")
         openAtLogin.identifier = NSUserInterfaceItemIdentifier("prefs.openAtLogin")
-        advancedStack.addArrangedSubview(openAtLogin)
+        startupCard.addArrangedSubview(openAtLogin)
         showMenuBarItem.identifier = NSUserInterfaceItemIdentifier("prefs.showMenuBarItem")
-        advancedStack.addArrangedSubview(showMenuBarItem)
+        startupCard.addArrangedSubview(showMenuBarItem)
         let showMenuBarItemRecoveryRow = indentedControlRow(menuBarRecoveryNoticeView())
         showMenuBarItemRecoveryRow.identifier = NSUserInterfaceItemIdentifier("prefs.showMenuBarItemRecoveryRow")
         self.showMenuBarItemRecoveryRow = showMenuBarItemRecoveryRow
-        advancedStack.addArrangedSubview(showMenuBarItemRecoveryRow)
+        startupCard.addArrangedSubview(showMenuBarItemRecoveryRow)
         showOnboardingNextLaunch.identifier = NSUserInterfaceItemIdentifier("prefs.showOnboardingNextLaunch")
-        advancedStack.addArrangedSubview(showOnboardingNextLaunch)
-        advancedStack.addArrangedSubview(separator())
+        startupCard.addArrangedSubview(showOnboardingNextLaunch)
         advancedStack.addArrangedSubview(section(
             L10n.tr("prefs.sectionPauseBehavior"),
             icon: .systemSymbol("moon.zzz"),
             identifier: "prefs.section.pauseBehavior"
         ))
+        let pauseBehaviorCard = addPreferencesCard(to: advancedStack, identifier: "prefs.card.pauseBehavior")
         let pauseUntilMorningModeRow = row(L10n.tr("prefs.pauseUntilMorningMode"), pauseUntilMorningMode)
         pauseUntilMorningMode.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningMode")
-        advancedStack.addArrangedSubview(pauseUntilMorningModeRow)
+        pauseBehaviorCard.addArrangedSubview(pauseUntilMorningModeRow)
         let pauseUntilMorningLocationRow = row(L10n.tr("prefs.pauseUntilMorningLocation"), pauseUntilMorningLocation)
         pauseUntilMorningLocation.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningLocation")
         pauseUntilMorningLocationRow.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningLocationRow")
         self.pauseUntilMorningLocationRow = pauseUntilMorningLocationRow
-        advancedStack.addArrangedSubview(pauseUntilMorningLocationRow)
+        pauseBehaviorCard.addArrangedSubview(pauseUntilMorningLocationRow)
         let pauseUntilMorningHourRow = numberRow(
             L10n.tr("prefs.pauseUntilMorningHour"),
             pauseUntilMorningHour,
@@ -1399,24 +1422,20 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         )
         pauseUntilMorningHourRow.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningHourRow")
         self.pauseUntilMorningHourRow = pauseUntilMorningHourRow
-        advancedStack.addArrangedSubview(pauseUntilMorningHourRow)
+        pauseBehaviorCard.addArrangedSubview(pauseUntilMorningHourRow)
         let pauseUntilMorningLatitudeRow = row(L10n.tr("prefs.pauseUntilMorningLatitude"), pauseUntilMorningLatitude)
         pauseUntilMorningLatitude.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningLatitudeField")
         pauseUntilMorningLatitudeRow.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningLatitudeRow")
         self.pauseUntilMorningLatitudeRow = pauseUntilMorningLatitudeRow
-        advancedStack.addArrangedSubview(pauseUntilMorningLatitudeRow)
+        pauseBehaviorCard.addArrangedSubview(pauseUntilMorningLatitudeRow)
         let pauseUntilMorningLongitudeRow = row(L10n.tr("prefs.pauseUntilMorningLongitude"), pauseUntilMorningLongitude)
         pauseUntilMorningLongitude.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningLongitudeField")
         pauseUntilMorningLongitudeRow.identifier = NSUserInterfaceItemIdentifier("prefs.pauseUntilMorningLongitudeRow")
         self.pauseUntilMorningLongitudeRow = pauseUntilMorningLongitudeRow
-        advancedStack.addArrangedSubview(pauseUntilMorningLongitudeRow)
-        advancedStack.addArrangedSubview(indentedControlRow(pauseUntilMorningSummaryLabel))
+        pauseBehaviorCard.addArrangedSubview(pauseUntilMorningLongitudeRow)
+        pauseBehaviorCard.addArrangedSubview(indentedControlRow(pauseUntilMorningSummaryLabel))
         pauseForSuspendOrLock.identifier = NSUserInterfaceItemIdentifier("prefs.pauseForSuspendOrLock")
-        advancedStack.addArrangedSubview(pauseForSuspendOrLock)
-        let updateSectionSeparator = separator()
-        updateSectionSeparator.identifier = NSUserInterfaceItemIdentifier("prefs.section.updates.separator")
-        self.updateSectionSeparator = updateSectionSeparator
-        advancedStack.addArrangedSubview(updateSectionSeparator)
+        pauseBehaviorCard.addArrangedSubview(pauseForSuspendOrLock)
         let updateSectionHeader = section(
             L10n.tr("prefs.sectionUpdates"),
             icon: .systemSymbol("arrow.triangle.2.circlepath"),
@@ -1424,22 +1443,24 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         )
         self.updateSectionHeader = updateSectionHeader
         advancedStack.addArrangedSubview(updateSectionHeader)
+        let updatesCard = addPreferencesCard(to: advancedStack, identifier: "prefs.card.updates")
+        self.updateSectionCard = updatesCard
         checkUpdates.identifier = NSUserInterfaceItemIdentifier("prefs.checkUpdates")
-        advancedStack.addArrangedSubview(checkUpdates)
+        updatesCard.addArrangedSubview(checkUpdates)
         notifyNewVersion.identifier = NSUserInterfaceItemIdentifier("prefs.notifyNewVersion")
-        advancedStack.addArrangedSubview(notifyNewVersion)
-        advancedStack.addArrangedSubview(updateSourceAdvancedButton)
+        updatesCard.addArrangedSubview(notifyNewVersion)
+        updatesCard.addArrangedSubview(updateSourceAdvancedButton)
         let updateFeedURLRow = row(L10n.tr("prefs.updateFeedURL"), updateSourceRow())
         updateFeedURL.identifier = NSUserInterfaceItemIdentifier("prefs.updateFeedURLField")
         updateFeedURLRow.identifier = NSUserInterfaceItemIdentifier("prefs.updateFeedURLRow")
         self.updateFeedURLRow = updateFeedURLRow
-        advancedStack.addArrangedSubview(updateFeedURLRow)
-        advancedStack.addArrangedSubview(separator())
+        updatesCard.addArrangedSubview(updateFeedURLRow)
         advancedStack.addArrangedSubview(section(
             L10n.tr("prefs.sectionSupportControls"),
             icon: .systemSymbol("lifepreserver"),
             identifier: "prefs.section.supportControls"
         ))
+        let supportControlsCard = addPreferencesCard(to: advancedStack, identifier: "prefs.card.supportControls")
         adminControlsStack.orientation = .vertical
         adminControlsStack.alignment = .leading
         adminControlsStack.spacing = 14
@@ -1452,8 +1473,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         adminControlsStack.addArrangedSubview(hideStrictPreferences)
         customPreferencesMessage.identifier = NSUserInterfaceItemIdentifier("prefs.preferencesMessageField")
         adminControlsStack.addArrangedSubview(multilineRow(L10n.tr("prefs.preferencesMessage"), customPreferencesMessage))
-        advancedStack.addArrangedSubview(adminControlsAdvancedButton)
-        advancedStack.addArrangedSubview(adminControlsStack)
+        supportControlsCard.addArrangedSubview(adminControlsAdvancedButton)
+        supportControlsCard.addArrangedSubview(adminControlsStack)
         addTab(to: tabView, title: L10n.tr("prefs.tabAdvanced"), icon: .systemSymbol("gearshape"), stack: advancedStack)
 
         let footer = footerBar()
@@ -1472,33 +1493,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     }
 
     private func preferencesHeaderBar() -> NSStackView {
-        let icon = NSImageView(image: RestGateIcon.fallbackAppImage(
-            size: 36,
-            accessibilityDescription: L10n.tr("app.name")
-        ))
-        icon.identifier = NSUserInterfaceItemIdentifier("prefs.headerIcon")
-        icon.translatesAutoresizingMaskIntoConstraints = false
-        icon.imageScaling = .scaleProportionallyUpOrDown
-        icon.widthAnchor.constraint(equalToConstant: 36).isActive = true
-        icon.heightAnchor.constraint(equalToConstant: 36).isActive = true
-
-        let title = NSTextField(labelWithString: L10n.tr("preferences.title"))
-        title.identifier = NSUserInterfaceItemIdentifier("prefs.headerTitle")
-        title.font = .systemFont(ofSize: 17, weight: .semibold)
-
-        let subtitle = NSTextField(labelWithString: L10n.tr("prefs.headerSubtitle"))
-        subtitle.identifier = NSUserInterfaceItemIdentifier("prefs.headerSubtitle")
-        subtitle.font = .systemFont(ofSize: 12, weight: .regular)
-        subtitle.textColor = .secondaryLabelColor
-        subtitle.lineBreakMode = .byWordWrapping
-        subtitle.maximumNumberOfLines = 2
-        subtitle.widthAnchor.constraint(lessThanOrEqualToConstant: 340).isActive = true
-
-        let copy = NSStackView(views: [title, subtitle])
-        copy.orientation = .vertical
-        copy.alignment = .leading
-        copy.spacing = 2
-
         let statusStack = NSStackView(views: [saveStatusIcon, saveStatusLabel])
         statusStack.identifier = NSUserInterfaceItemIdentifier("prefs.headerAutosave")
         statusStack.orientation = .horizontal
@@ -1510,7 +1504,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let searchStack = NSStackView(views: [searchField, searchStatusLabel])
         searchStack.identifier = NSUserInterfaceItemIdentifier("prefs.headerSearch")
         searchStack.orientation = .vertical
-        searchStack.spacing = 2
+        searchStack.spacing = 4
         searchStack.alignment = .leading
         searchStack.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         searchStack.setContentCompressionResistancePriority(.required, for: .horizontal)
@@ -1520,16 +1514,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
         spacer.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
-        let header = NSStackView(views: [icon, copy, spacer, searchStack, statusStack])
+        let header = NSStackView(views: [searchStack, spacer, statusStack])
         header.identifier = NSUserInterfaceItemIdentifier("prefs.header")
         header.orientation = .horizontal
-        header.alignment = .centerY
+        header.alignment = .top
         header.spacing = 12
-        header.edgeInsets = NSEdgeInsets(top: 14, left: 24, bottom: 14, right: 24)
-        header.wantsLayer = true
-        header.layer?.backgroundColor = NSColor.controlBackgroundColor.withAlphaComponent(0.55).cgColor
-        header.layer?.borderWidth = 1
-        header.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.7).cgColor
+        header.edgeInsets = NSEdgeInsets(top: 14, left: 24, bottom: 4, right: 24)
+        statusStack.heightAnchor.constraint(equalTo: searchField.heightAnchor).isActive = true
         return header
     }
 
@@ -1560,10 +1551,37 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let stack = NSStackView()
         stack.orientation = .vertical
         stack.alignment = .leading
-        stack.spacing = 14
-        stack.edgeInsets = NSEdgeInsets(top: 24, left: 24, bottom: 24, right: 24)
+        stack.spacing = 8
+        stack.edgeInsets = NSEdgeInsets(top: 16, left: 24, bottom: 28, right: 24)
         stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
+    }
+
+    /// Adds a grouped card under the current section header and returns it for the section rows.
+    private func addPreferencesCard(to stack: NSStackView, identifier: String) -> PreferencesCardView {
+        let card = PreferencesCardView(style: .card)
+        card.identifier = NSUserInterfaceItemIdentifier(identifier)
+        card.orientation = .vertical
+        card.alignment = .leading
+        card.spacing = 14
+        card.edgeInsets = NSEdgeInsets(top: 16, left: 18, bottom: 16, right: 18)
+        card.translatesAutoresizingMaskIntoConstraints = false
+        stack.addArrangedSubview(card)
+        card.widthAnchor.constraint(
+            equalTo: stack.widthAnchor,
+            constant: -(stack.edgeInsets.left + stack.edgeInsets.right)
+        ).isActive = true
+        stack.setCustomSpacing(26, after: card)
+        return card
+    }
+
+    private func addSummary(_ summary: NSStackView, to stack: NSStackView) {
+        stack.addArrangedSubview(summary)
+        summary.widthAnchor.constraint(
+            equalTo: stack.widthAnchor,
+            constant: -(stack.edgeInsets.left + stack.edgeInsets.right)
+        ).isActive = true
+        stack.setCustomSpacing(22, after: summary)
     }
 
     private func scheduleSummaryView() -> NSStackView {
@@ -1573,27 +1591,24 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             accessibilityDescription: L10n.tr("prefs.tabSchedule")
         )
         scheduleSummaryIcon.symbolConfiguration = .init(pointSize: 15, weight: .semibold)
-        scheduleSummaryIcon.contentTintColor = .secondaryLabelColor
+        scheduleSummaryIcon.contentTintColor = .controlAccentColor
         scheduleSummaryIcon.setAccessibilityLabel(L10n.tr("prefs.tabSchedule"))
         scheduleSummaryIcon.widthAnchor.constraint(equalToConstant: 20).isActive = true
 
         scheduleSummaryLabel.identifier = NSUserInterfaceItemIdentifier("prefs.scheduleSummaryLabel")
-        scheduleSummaryLabel.textColor = .secondaryLabelColor
+        scheduleSummaryLabel.textColor = .labelColor
         scheduleSummaryLabel.lineBreakMode = .byWordWrapping
         scheduleSummaryLabel.maximumNumberOfLines = 3
-        scheduleSummaryLabel.widthAnchor.constraint(equalToConstant: 590).isActive = true
+        scheduleSummaryLabel.preferredMaxLayoutWidth = 600
+        scheduleSummaryLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
-        let stack = NSStackView(views: [scheduleSummaryIcon, scheduleSummaryLabel])
+        let stack = SurfaceStackView(views: [scheduleSummaryIcon, scheduleSummaryLabel])
         stack.identifier = NSUserInterfaceItemIdentifier("prefs.scheduleSummary")
         stack.orientation = .horizontal
-        stack.spacing = 8
+        stack.spacing = 10
         stack.alignment = .top
-        stack.edgeInsets = NSEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
-        stack.wantsLayer = true
-        stack.layer?.cornerRadius = 7
-        stack.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.08).cgColor
-        stack.layer?.borderWidth = 1
-        stack.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.55).cgColor
+        stack.edgeInsets = NSEdgeInsets(top: 10, left: 14, bottom: 10, right: 14)
+        stack.surfaceStyle = .accentNotice
         return stack
     }
 
@@ -1604,27 +1619,24 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             accessibilityDescription: L10n.tr("prefs.tabContext")
         )
         contextSummaryIcon.symbolConfiguration = .init(pointSize: 15, weight: .semibold)
-        contextSummaryIcon.contentTintColor = .secondaryLabelColor
+        contextSummaryIcon.contentTintColor = .controlAccentColor
         contextSummaryIcon.setAccessibilityLabel(L10n.tr("prefs.tabContext"))
         contextSummaryIcon.widthAnchor.constraint(equalToConstant: 20).isActive = true
 
         contextSummaryLabel.identifier = NSUserInterfaceItemIdentifier("prefs.contextSummaryLabel")
-        contextSummaryLabel.textColor = .secondaryLabelColor
+        contextSummaryLabel.textColor = .labelColor
         contextSummaryLabel.lineBreakMode = .byWordWrapping
         contextSummaryLabel.maximumNumberOfLines = 4
-        contextSummaryLabel.widthAnchor.constraint(equalToConstant: 590).isActive = true
+        contextSummaryLabel.preferredMaxLayoutWidth = 600
+        contextSummaryLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
-        let stack = NSStackView(views: [contextSummaryIcon, contextSummaryLabel])
+        let stack = SurfaceStackView(views: [contextSummaryIcon, contextSummaryLabel])
         stack.identifier = NSUserInterfaceItemIdentifier("prefs.contextSummary")
         stack.orientation = .horizontal
-        stack.spacing = 8
+        stack.spacing = 10
         stack.alignment = .top
-        stack.edgeInsets = NSEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
-        stack.wantsLayer = true
-        stack.layer?.cornerRadius = 7
-        stack.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.08).cgColor
-        stack.layer?.borderWidth = 1
-        stack.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.55).cgColor
+        stack.edgeInsets = NSEdgeInsets(top: 10, left: 14, bottom: 10, right: 14)
+        stack.surfaceStyle = .accentNotice
         return stack
     }
 
@@ -1667,11 +1679,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         adminMessageBanner.spacing = 8
         adminMessageBanner.alignment = .top
         adminMessageBanner.edgeInsets = NSEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
-        adminMessageBanner.wantsLayer = true
-        adminMessageBanner.layer?.cornerRadius = 7
-        adminMessageBanner.layer?.borderWidth = 1
-        adminMessageBanner.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.08).cgColor
-        adminMessageBanner.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.55).cgColor
+        adminMessageBanner.surfaceStyle = .accentNotice
         adminMessageBanner.addArrangedSubview(adminMessageIcon)
         adminMessageBanner.addArrangedSubview(adminMessageLabel)
         adminMessageBanner.setAccessibilityLabel(L10n.tr("prefs.preferencesMessage"))
@@ -1681,17 +1689,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func menuBarRecoveryNoticeView() -> NSStackView {
         let notice = L10n.tr("prefs.showMenuBarItemRecovery")
-        let stack = NSStackView(views: [showMenuBarItemRecoveryIcon, showMenuBarItemRecoveryLabel])
+        let stack = SurfaceStackView(views: [showMenuBarItemRecoveryIcon, showMenuBarItemRecoveryLabel])
         stack.identifier = NSUserInterfaceItemIdentifier("prefs.showMenuBarItemRecoveryNotice")
         stack.orientation = .horizontal
         stack.spacing = 8
         stack.alignment = .top
         stack.edgeInsets = NSEdgeInsets(top: 7, left: 10, bottom: 7, right: 10)
-        stack.wantsLayer = true
-        stack.layer?.cornerRadius = 7
-        stack.layer?.borderWidth = 1
-        stack.layer?.backgroundColor = NSColor.systemOrange.withAlphaComponent(0.07).cgColor
-        stack.layer?.borderColor = NSColor.systemOrange.withAlphaComponent(0.22).cgColor
+        stack.surfaceStyle = .warningNotice
         stack.widthAnchor.constraint(lessThanOrEqualToConstant: 418).isActive = true
         stack.toolTip = notice
         stack.setAccessibilityLabel(notice)
@@ -1707,6 +1711,71 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         item.view = scrollContainer(for: stack)
         tabView.addTabViewItem(item)
         registerSearchTargets(in: stack, tabIdentifier: title)
+        if case let .systemSymbol(symbolName) = icon {
+            toolbarPanes.append((
+                identifier: NSToolbarItem.Identifier("pane.\(tabView.numberOfTabViewItems)"),
+                title: title,
+                symbolName: symbolName
+            ))
+        }
+    }
+
+    // MARK: - Toolbar panes
+
+    private func installToolbar() {
+        let toolbar = NSToolbar(identifier: "dev.shouldrest.settings")
+        toolbar.delegate = self
+        toolbar.displayMode = .iconAndLabel
+        toolbar.allowsUserCustomization = false
+        window?.toolbar = toolbar
+        syncToolbarSelection()
+    }
+
+    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        toolbarPanes.map(\.identifier)
+    }
+
+    func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        toolbarPanes.map(\.identifier)
+    }
+
+    func toolbarSelectableItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        toolbarPanes.map(\.identifier)
+    }
+
+    func toolbar(
+        _ toolbar: NSToolbar,
+        itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier,
+        willBeInsertedIntoToolbar flag: Bool
+    ) -> NSToolbarItem? {
+        guard let pane = toolbarPanes.first(where: { $0.identifier == itemIdentifier }) else { return nil }
+        let item = NSToolbarItem(itemIdentifier: itemIdentifier)
+        item.label = pane.title
+        item.paletteLabel = pane.title
+        item.toolTip = pane.title
+        item.image = NSImage(systemSymbolName: pane.symbolName, accessibilityDescription: pane.title)
+        item.target = self
+        item.action = #selector(selectPaneFromToolbar(_:))
+        return item
+    }
+
+    @objc private func selectPaneFromToolbar(_ sender: NSToolbarItem) {
+        guard let pane = toolbarPanes.first(where: { $0.identifier == sender.itemIdentifier }) else { return }
+        preferencesTabView?.selectTabViewItem(withIdentifier: pane.title)
+    }
+
+    func tabView(_ tabView: NSTabView, didSelect tabViewItem: NSTabViewItem?) {
+        syncToolbarSelection()
+    }
+
+    /// Keeps the toolbar and window title on the visible pane, however it was selected.
+    private func syncToolbarSelection() {
+        guard let selectedTitle = preferencesTabView?.selectedTabViewItem?.label,
+              let pane = toolbarPanes.first(where: { $0.title == selectedTitle }) else {
+            return
+        }
+        window?.toolbar?.selectedItemIdentifier = pane.identifier
+        window?.title = pane.title
     }
 
     private func tabImage(_ icon: PreferencesTabIcon, accessibilityDescription: String) -> NSImage {
@@ -1895,11 +1964,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         soundPreviewStatusRow.spacing = 8
         soundPreviewStatusRow.alignment = .top
         soundPreviewStatusRow.edgeInsets = NSEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
-        soundPreviewStatusRow.wantsLayer = true
-        soundPreviewStatusRow.layer?.cornerRadius = 7
-        soundPreviewStatusRow.layer?.borderWidth = 1
-        soundPreviewStatusRow.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.08).cgColor
-        soundPreviewStatusRow.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.55).cgColor
+        soundPreviewStatusRow.surfaceStyle = .accentNotice
         soundPreviewStatusRow.widthAnchor.constraint(equalToConstant: 650).isActive = true
         soundPreviewStatusRow.addArrangedSubview(soundPreviewStatusIcon)
         soundPreviewStatusRow.addArrangedSubview(soundPreviewStatusLabel)
@@ -2262,10 +2327,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         localImagePreview.translatesAutoresizingMaskIntoConstraints = false
         localImagePreview.imageScaling = .scaleProportionallyUpOrDown
         localImagePreview.wantsLayer = true
-        localImagePreview.layer?.cornerRadius = 6
+        localImagePreview.layer?.cornerRadius = 8
+        localImagePreview.layer?.cornerCurve = .continuous
         localImagePreview.layer?.borderWidth = 1
-        localImagePreview.layer?.borderColor = NSColor.separatorColor.cgColor
-        localImagePreview.layer?.backgroundColor = NSColor.textBackgroundColor.withAlphaComponent(0.45).cgColor
+        localImagePreview.applyFrameStyle()
         localImagePreview.setAccessibilityLabel(L10n.tr("prefs.localImagePath"))
         updateLocalImagePreviewDropHelp(bodyBreakEnabled: true)
         localImagePreview.onImageURLDropped = { [weak self] url in
@@ -2490,11 +2555,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         shortcutConflictRow.alignment = .top
         shortcutConflictRow.spacing = 8
         shortcutConflictRow.edgeInsets = NSEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
-        shortcutConflictRow.wantsLayer = true
-        shortcutConflictRow.layer?.cornerRadius = 7
-        shortcutConflictRow.layer?.borderWidth = 1
-        shortcutConflictRow.layer?.backgroundColor = NSColor.systemOrange.withAlphaComponent(0.08).cgColor
-        shortcutConflictRow.layer?.borderColor = NSColor.systemOrange.withAlphaComponent(0.28).cgColor
+        shortcutConflictRow.surfaceStyle = .warningNotice
         shortcutConflictRow.widthAnchor.constraint(lessThanOrEqualToConstant: 650).isActive = true
         shortcutConflictRow.addArrangedSubview(shortcutConflictIcon)
         shortcutConflictRow.addArrangedSubview(shortcutConflictLabel)
@@ -2912,7 +2973,7 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
     private func updateUpdatePreferencesVisibility() {
         let hideUpdateControls = settings.admin.disableAppUpdateFeatures
         let showUpdateDependents = !hideUpdateControls && isOn(checkUpdates)
-        updateSectionSeparator?.isHidden = hideUpdateControls
+        updateSectionCard?.isHidden = hideUpdateControls
         updateSectionHeader?.isHidden = hideUpdateControls
         checkUpdates.isHidden = hideUpdateControls
         notifyNewVersion.isHidden = !showUpdateDependents
@@ -5352,17 +5413,13 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         content: NSView,
         actions: NSView
     ) -> NSStackView {
-        let row = NSStackView(views: [content, actions])
+        let row = SurfaceStackView(views: [content, actions])
         row.identifier = NSUserInterfaceItemIdentifier(identifier)
         row.orientation = .horizontal
         row.spacing = 8
         row.alignment = .centerY
         row.edgeInsets = NSEdgeInsets(top: 6, left: 8, bottom: 6, right: 6)
-        row.wantsLayer = true
-        row.layer?.cornerRadius = 6
-        row.layer?.borderWidth = 1
-        row.layer?.backgroundColor = NSColor.controlBackgroundColor.withAlphaComponent(0.42).cgColor
-        row.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.45).cgColor
+        row.surfaceStyle = .inset
         row.widthAnchor.constraint(equalToConstant: 360).isActive = true
         row.heightAnchor.constraint(greaterThanOrEqualToConstant: 52).isActive = true
 
@@ -5532,23 +5589,24 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         let imageView = NSImageView()
         switch icon {
         case .restGate:
-            imageView.image = RestGateIcon.menuBarImage(accessibilityDescription: title)
+            imageView.image = RestGateIcon.glyphImage(pointSize: 18, accessibilityDescription: title)
             imageView.imageScaling = .scaleProportionallyUpOrDown
             if let identifier {
                 imageView.identifier = NSUserInterfaceItemIdentifier("\(identifier).restGateIcon")
             }
         case let .systemSymbol(symbolName):
             imageView.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: title)
-            imageView.symbolConfiguration = .init(pointSize: 16, weight: .semibold)
+            imageView.symbolConfiguration = .init(pointSize: 13, weight: .semibold)
             if let identifier {
                 imageView.identifier = NSUserInterfaceItemIdentifier("\(identifier).systemIcon")
             }
         }
-        imageView.contentTintColor = .secondaryLabelColor
-        imageView.widthAnchor.constraint(equalToConstant: 22).isActive = true
+        imageView.contentTintColor = .controlAccentColor
+        imageView.widthAnchor.constraint(equalToConstant: 18).isActive = true
+        imageView.heightAnchor.constraint(equalToConstant: 18).isActive = true
 
         let label = NSTextField(labelWithString: title)
-        label.font = .systemFont(ofSize: 15, weight: .semibold)
+        label.font = .systemFont(ofSize: 13, weight: .semibold)
         if let identifier {
             label.identifier = NSUserInterfaceItemIdentifier("\(identifier).label")
         }
@@ -5558,8 +5616,9 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             stack.identifier = NSUserInterfaceItemIdentifier(identifier)
         }
         stack.orientation = .horizontal
-        stack.spacing = 8
+        stack.spacing = 7
         stack.alignment = .centerY
+        stack.edgeInsets = NSEdgeInsets(top: 0, left: 4, bottom: 0, right: 0)
         return stack
     }
 
@@ -5597,8 +5656,9 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
         label.font = .systemFont(ofSize: 11)
         label.textColor = .secondaryLabelColor
         label.lineBreakMode = .byWordWrapping
-        label.maximumNumberOfLines = 2
-        label.widthAnchor.constraint(lessThanOrEqualToConstant: 640).isActive = true
+        label.maximumNumberOfLines = 3
+        label.preferredMaxLayoutWidth = 600
+        label.widthAnchor.constraint(lessThanOrEqualToConstant: 600).isActive = true
         label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         label.setContentCompressionResistancePriority(.required, for: .vertical)
         setInlineControlHelp(text, on: label)
@@ -5656,7 +5716,8 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
             detailLabel.font = .systemFont(ofSize: 11)
             detailLabel.textColor = .secondaryLabelColor
             detailLabel.lineBreakMode = .byWordWrapping
-            detailLabel.maximumNumberOfLines = 2
+            detailLabel.maximumNumberOfLines = 0
+            detailLabel.preferredMaxLayoutWidth = 220
             detailLabel.toolTip = help
             detailLabel.setAccessibilityLabel(help)
             detailLabel.setAccessibilityHelp(help)
@@ -5885,6 +5946,10 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private func registerSearchTargets(in stack: NSStackView, tabIdentifier: String) {
         for view in stack.arrangedSubviews {
+            if let card = view as? PreferencesCardView {
+                registerSearchTargets(in: card, tabIdentifier: tabIdentifier)
+                continue
+            }
             let text = searchableText(in: view).joined(separator: " ")
             let normalizedText = Self.normalizedSearchText("\(tabIdentifier) \(text)")
             guard !normalizedText.isEmpty else { continue }
@@ -6367,12 +6432,6 @@ final class PreferencesWindowController: NSWindowController, NSWindowDelegate, N
 
     private var fileLocationsHiddenForCurrentPreferences: Bool {
         isLoadingSettings ? settings.admin.hideSettingsFileLocation : isOn(hideSettingsPath)
-    }
-
-    private func separator() -> NSBox {
-        let box = NSBox()
-        box.boxType = .separator
-        return box
     }
 
     private func configurePopup(_ popup: NSPopUpButton, options: [(rawValue: String, title: String)]) {

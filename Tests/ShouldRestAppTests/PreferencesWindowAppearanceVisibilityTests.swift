@@ -845,7 +845,7 @@ final class PreferencesWindowAppearanceVisibilityTests: XCTestCase {
         XCTAssertEqual(label.toolTip, text)
         XCTAssertEqual(label.accessibilityLabel(), text)
         XCTAssertEqual(label.accessibilityHelp(), text)
-        XCTAssertEqual(label.maximumNumberOfLines, 2)
+        XCTAssertEqual(label.maximumNumberOfLines, 3)
         XCTAssertEqual(label.lineBreakMode, .byWordWrapping)
 
         let row = try view(withIdentifier: "\(identifier)Row", in: rootView)

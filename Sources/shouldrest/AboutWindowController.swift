@@ -3,6 +3,11 @@ import Foundation
 
 @MainActor
 final class AboutWindowController: NSWindowController {
+    private enum Metrics {
+        static let width: CGFloat = 580
+        static let contentWidth: CGFloat = 500
+    }
+
     private let version: String
     private let projectURL: URL
     private let onOpenDebug: () -> Void
@@ -23,18 +28,25 @@ final class AboutWindowController: NSWindowController {
         self.onOpenProject = onOpenProject
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 600, height: 420),
-            styleMask: [.titled, .closable],
+            contentRect: NSRect(x: 0, y: 0, width: Metrics.width, height: 420),
+            styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
         window.title = L10n.tr("about.title")
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
+        window.isMovableByWindowBackground = true
         window.level = .floating
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.hidesOnDeactivate = false
         super.init(window: window)
 
-        window.contentView = buildContent()
+        let contentView = buildContent()
+        window.contentView = contentView
+        contentView.layoutSubtreeIfNeeded()
+        let height = max(400, ceil(contentView.fittingSize.height))
+        window.setContentSize(NSSize(width: Metrics.width, height: height))
         window.center()
     }
 
@@ -47,17 +59,19 @@ final class AboutWindowController: NSWindowController {
 
         let root = NSStackView()
         root.orientation = .vertical
-        root.alignment = .leading
-        root.spacing = 18
-        root.edgeInsets = NSEdgeInsets(top: 28, left: 30, bottom: 22, right: 30)
+        root.alignment = .centerX
+        root.spacing = 20
+        root.edgeInsets = NSEdgeInsets(top: 40, left: 40, bottom: 24, right: 40)
         root.translatesAutoresizingMaskIntoConstraints = false
 
         let contentView = NSView()
         contentView.addSubview(root)
 
-        root.addArrangedSubview(headerView())
+        let header = headerView()
+        root.addArrangedSubview(header)
         root.addArrangedSubview(summaryPanel())
         root.addArrangedSubview(buttonRow())
+        root.setCustomSpacing(24, after: header)
 
         NSLayoutConstraint.activate([
             root.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
@@ -70,109 +84,119 @@ final class AboutWindowController: NSWindowController {
     }
 
     private func headerView() -> NSView {
-        let icon = NSImageView(image: appIcon())
+        let icon = NSImageView(image: RestGateIcon.appIcon(size: 88, accessibilityDescription: L10n.tr("app.name")))
         icon.identifier = NSUserInterfaceItemIdentifier("about.brandIcon")
         icon.imageScaling = .scaleProportionallyUpOrDown
         icon.translatesAutoresizingMaskIntoConstraints = false
-        icon.widthAnchor.constraint(equalToConstant: 72).isActive = true
-        icon.heightAnchor.constraint(equalToConstant: 72).isActive = true
+        icon.widthAnchor.constraint(equalToConstant: 88).isActive = true
+        icon.heightAnchor.constraint(equalToConstant: 88).isActive = true
 
         let title = NSTextField(labelWithString: L10n.tr("app.name"))
         title.identifier = NSUserInterfaceItemIdentifier("about.heading")
-        title.font = .systemFont(ofSize: 28, weight: .semibold)
+        title.font = .systemFont(ofSize: 26, weight: .bold)
 
         let versionLabel = NSTextField(labelWithString: L10n.format("about.version", version))
         versionLabel.identifier = NSUserInterfaceItemIdentifier("about.version")
-        versionLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        versionLabel.font = .monospacedDigitSystemFont(ofSize: NSFont.smallSystemFontSize, weight: .regular)
         versionLabel.textColor = .secondaryLabelColor
+        versionLabel.isSelectable = true
 
-        let tagline = NSTextField(labelWithString: L10n.tr("about.tagline"))
+        let tagline = NSTextField(wrappingLabelWithString: L10n.tr("about.tagline"))
         tagline.identifier = NSUserInterfaceItemIdentifier("about.tagline")
         tagline.font = .systemFont(ofSize: 13, weight: .medium)
         tagline.textColor = .secondaryLabelColor
-        tagline.lineBreakMode = .byWordWrapping
-        tagline.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        tagline.alignment = .center
+        tagline.isSelectable = false
+        tagline.preferredMaxLayoutWidth = 420
+        tagline.widthAnchor.constraint(lessThanOrEqualToConstant: 420).isActive = true
 
-        let copyStack = NSStackView(views: [title, versionLabel, tagline])
-        copyStack.orientation = .vertical
-        copyStack.alignment = .leading
-        copyStack.spacing = 5
-
-        let header = NSStackView(views: [icon, copyStack])
-        header.orientation = .horizontal
-        header.alignment = .centerY
-        header.spacing = 16
-        header.widthAnchor.constraint(greaterThanOrEqualToConstant: 520).isActive = true
+        let header = NSStackView(views: [icon, title, versionLabel, tagline])
+        header.orientation = .vertical
+        header.alignment = .centerX
+        header.spacing = 4
+        header.setCustomSpacing(14, after: icon)
+        header.setCustomSpacing(10, after: versionLabel)
+        header.widthAnchor.constraint(greaterThanOrEqualToConstant: Metrics.contentWidth).isActive = true
         return header
     }
 
     private func summaryPanel() -> NSView {
-        let panel = NSStackView()
+        let panel = SurfaceStackView(style: .card)
         panel.identifier = NSUserInterfaceItemIdentifier("about.summaryPanel")
         panel.orientation = .vertical
         panel.alignment = .leading
-        panel.spacing = 12
+        panel.spacing = 14
         panel.edgeInsets = NSEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
-        panel.wantsLayer = true
-        panel.layer?.cornerRadius = 8
-        panel.layer?.backgroundColor = NSColor.controlBackgroundColor.withAlphaComponent(0.72).cgColor
-        panel.layer?.borderColor = NSColor.separatorColor.cgColor
-        panel.layer?.borderWidth = 1
 
         panel.addArrangedSubview(featureRow(
             identifier: "about.feature.eyeGate",
-            symbolName: "eye",
+            image: RestGateIcon.glyphImage(pointSize: 18, accessibilityDescription: L10n.tr("about.eyeGateTitle")),
             title: L10n.tr("about.eyeGateTitle"),
             body: L10n.tr("about.eyeGateBody")
         ))
         panel.addArrangedSubview(featureRow(
             identifier: "about.feature.bodyBreak",
-            symbolName: "figure.walk",
+            image: symbolImage("figure.walk", accessibilityDescription: L10n.tr("about.bodyBreakTitle")),
             title: L10n.tr("about.bodyBreakTitle"),
             body: L10n.tr("about.bodyBreakBody")
         ))
         panel.addArrangedSubview(featureRow(
             identifier: "about.feature.compatibility",
-            symbolName: "slider.horizontal.3",
+            image: symbolImage("slider.horizontal.3", accessibilityDescription: L10n.tr("about.compatibilityTitle")),
             title: L10n.tr("about.compatibilityTitle"),
             body: L10n.tr("about.compatibilityBody")
         ))
-        panel.widthAnchor.constraint(equalToConstant: 540).isActive = true
+        panel.widthAnchor.constraint(equalToConstant: Metrics.contentWidth).isActive = true
         return panel
     }
 
-    private func featureRow(identifier: String, symbolName: String, title: String, body: String) -> NSView {
+    private func featureRow(identifier: String, image: NSImage, title: String, body: String) -> NSView {
         let row = NSStackView()
         row.identifier = NSUserInterfaceItemIdentifier(identifier)
         row.orientation = .horizontal
         row.alignment = .top
-        row.spacing = 10
+        row.spacing = 12
 
-        let icon = NSImageView(image: symbolImage(symbolName, accessibilityDescription: title))
+        let icon = NSImageView(image: image)
         icon.identifier = NSUserInterfaceItemIdentifier("\(identifier).icon")
-        icon.contentTintColor = .secondaryLabelColor
-        icon.imageScaling = .scaleProportionallyUpOrDown
+        icon.symbolConfiguration = .init(pointSize: 14, weight: .semibold)
+        icon.contentTintColor = .controlAccentColor
+        icon.imageScaling = .scaleProportionallyDown
         icon.translatesAutoresizingMaskIntoConstraints = false
-        icon.widthAnchor.constraint(equalToConstant: 20).isActive = true
-        icon.heightAnchor.constraint(equalToConstant: 20).isActive = true
+
+        let tile = SurfaceView(style: SurfaceStyle(
+            fill: { NSColor.controlAccentColor.withAlphaComponent($0 ? 0.22 : 0.13) },
+            stroke: { _ in nil },
+            cornerRadius: 8
+        ))
+        tile.translatesAutoresizingMaskIntoConstraints = false
+        tile.addSubview(icon)
+        NSLayoutConstraint.activate([
+            tile.widthAnchor.constraint(equalToConstant: 30),
+            tile.heightAnchor.constraint(equalToConstant: 30),
+            icon.centerXAnchor.constraint(equalTo: tile.centerXAnchor),
+            icon.centerYAnchor.constraint(equalTo: tile.centerYAnchor),
+            icon.widthAnchor.constraint(equalToConstant: 18),
+            icon.heightAnchor.constraint(equalToConstant: 18)
+        ])
 
         let titleLabel = NSTextField(labelWithString: title)
         titleLabel.font = .systemFont(ofSize: 13, weight: .semibold)
 
-        let bodyLabel = NSTextField(labelWithString: body)
-        bodyLabel.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
+        let bodyWidth = Metrics.contentWidth - 32 - 30 - 12
+        let bodyLabel = NSTextField(wrappingLabelWithString: body)
+        bodyLabel.font = .systemFont(ofSize: 12)
         bodyLabel.textColor = .secondaryLabelColor
-        bodyLabel.lineBreakMode = .byWordWrapping
-        bodyLabel.maximumNumberOfLines = 2
-        bodyLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        bodyLabel.isSelectable = false
+        bodyLabel.preferredMaxLayoutWidth = bodyWidth
+        bodyLabel.widthAnchor.constraint(equalToConstant: bodyWidth).isActive = true
 
         let copyStack = NSStackView(views: [titleLabel, bodyLabel])
         copyStack.orientation = .vertical
         copyStack.alignment = .leading
         copyStack.spacing = 2
-        copyStack.widthAnchor.constraint(equalToConstant: 480).isActive = true
 
-        row.addArrangedSubview(icon)
+        row.addArrangedSubview(tile)
         row.addArrangedSubview(copyStack)
         return row
     }
@@ -185,7 +209,7 @@ final class AboutWindowController: NSWindowController {
         row.orientation = .horizontal
         row.alignment = .centerY
         row.spacing = 10
-        row.widthAnchor.constraint(equalToConstant: 540).isActive = true
+        row.widthAnchor.constraint(equalToConstant: Metrics.contentWidth).isActive = true
         return row
     }
 
@@ -210,7 +234,7 @@ final class AboutWindowController: NSWindowController {
             closeButton,
             identifier: "about.closeButton",
             title: L10n.tr("about.close"),
-            symbolName: "xmark.circle",
+            symbolName: "checkmark",
             action: #selector(closePressed),
             toolTip: L10n.tr("about.closeHelp")
         )
@@ -230,6 +254,7 @@ final class AboutWindowController: NSWindowController {
         button.target = self
         button.action = action
         button.bezelStyle = .rounded
+        button.controlSize = .large
         button.image = symbolImage(symbolName, accessibilityDescription: title)
         button.imagePosition = .imageLeading
         button.imageHugsTitle = true
@@ -249,13 +274,6 @@ final class AboutWindowController: NSWindowController {
 
     @objc private func closePressed() {
         window?.performClose(nil)
-    }
-
-    private func appIcon() -> NSImage {
-        if let appIcon = NSApp.applicationIconImage {
-            return appIcon
-        }
-        return RestGateIcon.fallbackAppImage(size: 72, accessibilityDescription: L10n.tr("app.name"))
     }
 
     private func symbolImage(_ name: String, accessibilityDescription: String? = nil) -> NSImage {

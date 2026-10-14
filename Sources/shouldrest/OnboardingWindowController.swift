@@ -8,11 +8,15 @@ private enum OnboardingFeatureIcon {
 
 @MainActor
 final class OnboardingWindowController: NSWindowController {
+    private enum Metrics {
+        static let width: CGFloat = 640
+        static let contentWidth: CGFloat = 560
+    }
+
     private let onStart: () -> Void
     private let onOpenPreferences: () -> Void
     private let onLearnMore: () -> Void
     private let rhythmIcon = NSImageView()
-    private let rhythmDescription = NSTextField(labelWithString: "")
     private let rhythmRationale = NSTextField(labelWithString: "")
     private let rhythmRationaleIcon = NSImageView()
     private let rhythmMetricEyeInterval = NSTextField(labelWithString: "")
@@ -31,18 +35,21 @@ final class OnboardingWindowController: NSWindowController {
         self.onLearnMore = onLearnMore
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 680, height: 560),
-            styleMask: [.titled, .closable],
+            contentRect: NSRect(x: 0, y: 0, width: Metrics.width, height: 560),
+            styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
         window.title = L10n.tr("onboarding.title")
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
+        window.isMovableByWindowBackground = true
         window.level = .floating
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.hidesOnDeactivate = false
-        window.center()
         super.init(window: window)
         buildContent()
+        window.center()
     }
 
     required init?(coder: NSCoder) {
@@ -50,19 +57,25 @@ final class OnboardingWindowController: NSWindowController {
     }
 
     private func buildContent() {
-        guard let contentView = window?.contentView else { return }
+        guard let window, let contentView = window.contentView else { return }
         let stack = NSStackView()
         stack.orientation = .vertical
-        stack.alignment = .leading
+        stack.alignment = .centerX
         stack.spacing = 18
-        stack.edgeInsets = NSEdgeInsets(top: 28, left: 30, bottom: 24, right: 30)
+        stack.edgeInsets = NSEdgeInsets(top: 44, left: 40, bottom: 28, right: 40)
         stack.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(stack)
 
-        stack.addArrangedSubview(heroView())
-        stack.addArrangedSubview(featureList())
-        stack.addArrangedSubview(rhythmPanel())
-        stack.addArrangedSubview(buttonRow())
+        let hero = heroView()
+        let rhythm = rhythmPanel()
+        let features = featureList()
+        let buttons = buttonRow()
+        stack.addArrangedSubview(hero)
+        stack.addArrangedSubview(rhythm)
+        stack.addArrangedSubview(features)
+        stack.addArrangedSubview(buttons)
+        stack.setCustomSpacing(26, after: hero)
+        stack.setCustomSpacing(24, after: features)
 
         NSLayoutConstraint.activate([
             stack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
@@ -70,99 +83,114 @@ final class OnboardingWindowController: NSWindowController {
             stack.topAnchor.constraint(equalTo: contentView.topAnchor),
             stack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor)
         ])
+
+        stack.layoutSubtreeIfNeeded()
+        let height = max(540, ceil(stack.fittingSize.height))
+        window.setContentSize(NSSize(width: Metrics.width, height: height))
     }
 
     private func heroView() -> NSView {
-        let hero = NSStackView()
-        hero.orientation = .horizontal
-        hero.alignment = .centerY
-        hero.spacing = 18
-
-        let icon = NSImageView(image: brandImage())
+        let icon = NSImageView(image: RestGateIcon.appIcon(size: 84, accessibilityDescription: L10n.tr("app.name")))
         icon.identifier = NSUserInterfaceItemIdentifier("onboarding.brandIcon")
         icon.imageScaling = .scaleProportionallyUpOrDown
         icon.translatesAutoresizingMaskIntoConstraints = false
-        icon.widthAnchor.constraint(equalToConstant: 64).isActive = true
-        icon.heightAnchor.constraint(equalToConstant: 64).isActive = true
-        hero.addArrangedSubview(icon)
+        icon.widthAnchor.constraint(equalToConstant: 84).isActive = true
+        icon.heightAnchor.constraint(equalToConstant: 84).isActive = true
 
-        let copy = NSStackView()
-        copy.orientation = .vertical
-        copy.alignment = .leading
-        copy.spacing = 6
+        let title = centeredLabel(
+            L10n.tr("onboarding.heading"),
+            identifier: "onboarding.heading",
+            font: .systemFont(ofSize: 26, weight: .bold),
+            color: .labelColor
+        )
+        let subtitle = centeredLabel(
+            L10n.tr("onboarding.subtitle"),
+            identifier: "onboarding.subtitle",
+            font: .systemFont(ofSize: 14, weight: .medium),
+            color: .secondaryLabelColor
+        )
+        let body = centeredLabel(
+            L10n.tr("onboarding.body"),
+            identifier: "onboarding.body",
+            font: .systemFont(ofSize: 13),
+            color: .secondaryLabelColor
+        )
 
-        let title = NSTextField(labelWithString: L10n.tr("onboarding.heading"))
-        title.identifier = NSUserInterfaceItemIdentifier("onboarding.heading")
-        title.font = .systemFont(ofSize: 24, weight: .semibold)
-        title.lineBreakMode = .byWordWrapping
-        title.maximumNumberOfLines = 2
-
-        let subtitle = NSTextField(labelWithString: L10n.tr("onboarding.subtitle"))
-        subtitle.identifier = NSUserInterfaceItemIdentifier("onboarding.subtitle")
-        subtitle.font = .systemFont(ofSize: 13, weight: .regular)
-        subtitle.textColor = .secondaryLabelColor
-        subtitle.lineBreakMode = .byWordWrapping
-        subtitle.maximumNumberOfLines = 2
-
-        let body = NSTextField(labelWithString: L10n.tr("onboarding.body"))
-        body.identifier = NSUserInterfaceItemIdentifier("onboarding.body")
-        body.font = .systemFont(ofSize: 13, weight: .regular)
-        body.textColor = .secondaryLabelColor
-        body.lineBreakMode = .byWordWrapping
-        body.maximumNumberOfLines = 3
-
-        [title, subtitle, body].forEach { label in
-            label.widthAnchor.constraint(lessThanOrEqualToConstant: 520).isActive = true
-            copy.addArrangedSubview(label)
-        }
-        hero.addArrangedSubview(copy)
+        let hero = NSStackView(views: [icon, title, subtitle, body])
+        hero.orientation = .vertical
+        hero.alignment = .centerX
+        hero.spacing = 6
+        hero.setCustomSpacing(14, after: icon)
         return hero
     }
 
+    private func rhythmPanel() -> NSView {
+        let panel = SurfaceStackView(style: .card)
+        panel.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmPanel")
+        panel.orientation = .vertical
+        panel.alignment = .leading
+        panel.spacing = 12
+        panel.edgeInsets = NSEdgeInsets(top: 14, left: 16, bottom: 14, right: 16)
+        panel.widthAnchor.constraint(equalToConstant: Metrics.contentWidth).isActive = true
+
+        let titleRow = NSStackView()
+        titleRow.orientation = .horizontal
+        titleRow.alignment = .centerY
+        titleRow.spacing = 7
+
+        rhythmIcon.image = symbolImage("timer", accessibilityDescription: rhythmAccessibilityTitle())
+        rhythmIcon.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmIcon")
+        rhythmIcon.symbolConfiguration = .init(pointSize: 13, weight: .semibold)
+        rhythmIcon.contentTintColor = .controlAccentColor
+        rhythmIcon.setAccessibilityLabel(L10n.tr("onboarding.rhythmTitle"))
+        rhythmIcon.setAccessibilityHelp(rhythmDescriptionText)
+        rhythmIcon.widthAnchor.constraint(equalToConstant: 18).isActive = true
+        rhythmIcon.heightAnchor.constraint(equalToConstant: 18).isActive = true
+        titleRow.addArrangedSubview(rhythmIcon)
+
+        let title = NSTextField(labelWithString: L10n.tr("onboarding.rhythmTitle"))
+        title.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmTitle")
+        title.font = .systemFont(ofSize: 13, weight: .semibold)
+        titleRow.addArrangedSubview(title)
+
+        configureRhythmRationale()
+        updateRhythmMetricValues()
+
+        let metrics = rhythmMetricsView()
+        panel.addArrangedSubview(titleRow)
+        panel.addArrangedSubview(metrics)
+        panel.addArrangedSubview(rhythmRationaleRow())
+        metrics.widthAnchor.constraint(equalTo: panel.widthAnchor, constant: -32).isActive = true
+        return panel
+    }
+
     private func featureList() -> NSView {
-        let panel = NSView()
+        let panel = SurfaceStackView(style: .card)
         panel.identifier = NSUserInterfaceItemIdentifier("onboarding.featureList")
-        panel.wantsLayer = true
-        panel.layer?.cornerRadius = 8
-        panel.layer?.borderWidth = 1
-        panel.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.8).cgColor
-        panel.layer?.backgroundColor = NSColor.controlBackgroundColor.withAlphaComponent(0.72).cgColor
-        panel.setContentHuggingPriority(.required, for: .vertical)
-        panel.setContentCompressionResistancePriority(.required, for: .vertical)
+        panel.orientation = .vertical
+        panel.alignment = .leading
+        panel.spacing = 14
+        panel.edgeInsets = NSEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        panel.widthAnchor.constraint(equalToConstant: Metrics.contentWidth).isActive = true
 
-        let list = NSStackView()
-        list.orientation = .vertical
-        list.alignment = .leading
-        list.spacing = 14
-        list.translatesAutoresizingMaskIntoConstraints = false
-        panel.addSubview(list)
-
-        list.addArrangedSubview(featureRow(
+        panel.addArrangedSubview(featureRow(
             identifier: "onboarding.feature.eye",
             icon: .restGate,
             title: L10n.tr("onboarding.eyeFeatureTitle"),
             body: L10n.tr("onboarding.eyeFeatureBody")
         ))
-        list.addArrangedSubview(featureRow(
+        panel.addArrangedSubview(featureRow(
             identifier: "onboarding.feature.emergency",
             icon: .systemSymbol("exclamationmark.triangle"),
             title: L10n.tr("onboarding.emergencyFeatureTitle"),
             body: L10n.tr("onboarding.emergencyFeatureBody")
         ))
-        list.addArrangedSubview(featureRow(
+        panel.addArrangedSubview(featureRow(
             identifier: "onboarding.feature.body",
             icon: .systemSymbol("figure.walk"),
             title: L10n.tr("onboarding.bodyFeatureTitle"),
             body: L10n.tr("onboarding.bodyFeatureBody")
         ))
-
-        NSLayoutConstraint.activate([
-            list.leadingAnchor.constraint(equalTo: panel.leadingAnchor, constant: 16),
-            list.trailingAnchor.constraint(equalTo: panel.trailingAnchor, constant: -16),
-            list.topAnchor.constraint(equalTo: panel.topAnchor, constant: 14),
-            list.bottomAnchor.constraint(equalTo: panel.bottomAnchor, constant: -14)
-        ])
-        panel.widthAnchor.constraint(equalToConstant: 620).isActive = true
         return panel
     }
 
@@ -176,34 +204,29 @@ final class OnboardingWindowController: NSWindowController {
         let imageView = NSImageView()
         switch icon {
         case .restGate:
-            imageView.image = RestGateIcon.menuBarImage(accessibilityDescription: title)
-            imageView.imageScaling = .scaleProportionallyUpOrDown
+            imageView.image = RestGateIcon.glyphImage(pointSize: 18, accessibilityDescription: title)
             imageView.identifier = NSUserInterfaceItemIdentifier("\(identifier).restGateIcon")
         case let .systemSymbol(symbolName):
             imageView.image = symbolImage(symbolName, accessibilityDescription: title)
+            imageView.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 14, weight: .semibold)
             imageView.identifier = NSUserInterfaceItemIdentifier("\(identifier).systemIcon")
         }
-        imageView.symbolConfiguration = NSImage.SymbolConfiguration(pointSize: 17, weight: .medium)
-        imageView.contentTintColor = .secondaryLabelColor
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.widthAnchor.constraint(equalToConstant: 24).isActive = true
-        imageView.heightAnchor.constraint(equalToConstant: 24).isActive = true
-        row.addArrangedSubview(imageView)
+        row.addArrangedSubview(iconTile(imageView))
 
         let copy = NSStackView()
         copy.orientation = .vertical
         copy.alignment = .leading
-        copy.spacing = 3
+        copy.spacing = 2
 
         let titleLabel = NSTextField(labelWithString: title)
         titleLabel.font = .systemFont(ofSize: 13, weight: .semibold)
 
-        let bodyLabel = NSTextField(labelWithString: body)
-        bodyLabel.font = .systemFont(ofSize: 12, weight: .regular)
+        let bodyLabel = NSTextField(wrappingLabelWithString: body)
+        bodyLabel.font = .systemFont(ofSize: 12)
         bodyLabel.textColor = .secondaryLabelColor
-        bodyLabel.lineBreakMode = .byWordWrapping
-        bodyLabel.maximumNumberOfLines = 2
-        bodyLabel.widthAnchor.constraint(lessThanOrEqualToConstant: 540).isActive = true
+        bodyLabel.isSelectable = false
+        bodyLabel.preferredMaxLayoutWidth = Metrics.contentWidth - 32 - 30 - 12
+        bodyLabel.widthAnchor.constraint(equalToConstant: Metrics.contentWidth - 32 - 30 - 12).isActive = true
 
         copy.addArrangedSubview(titleLabel)
         copy.addArrangedSubview(bodyLabel)
@@ -211,83 +234,39 @@ final class OnboardingWindowController: NSWindowController {
         return row
     }
 
-    private func rhythmPanel() -> NSView {
-        let panel = NSView()
-        panel.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmPanel")
-        panel.wantsLayer = true
-        panel.layer?.cornerRadius = 8
-        panel.layer?.borderWidth = 1
-        panel.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.6).cgColor
-        panel.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.07).cgColor
-
-        let stack = NSStackView()
-        stack.orientation = .vertical
-        stack.alignment = .leading
-        stack.spacing = 10
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        panel.addSubview(stack)
-
-        let titleRow = NSStackView()
-        titleRow.orientation = .horizontal
-        titleRow.alignment = .centerY
-        titleRow.spacing = 8
-
-        rhythmIcon.image = symbolImage("timer", accessibilityDescription: rhythmAccessibilityTitle())
-        rhythmIcon.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmIcon")
-        rhythmIcon.symbolConfiguration = .init(pointSize: 14, weight: .semibold)
-        rhythmIcon.contentTintColor = .secondaryLabelColor
-        rhythmIcon.setAccessibilityLabel(L10n.tr("onboarding.rhythmTitle"))
-        rhythmIcon.setAccessibilityHelp(rhythmDescriptionText)
-        rhythmIcon.widthAnchor.constraint(equalToConstant: 18).isActive = true
-        rhythmIcon.heightAnchor.constraint(equalToConstant: 18).isActive = true
-        titleRow.addArrangedSubview(rhythmIcon)
-
-        let title = NSTextField(labelWithString: L10n.tr("onboarding.rhythmTitle"))
-        title.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmTitle")
-        title.font = .systemFont(ofSize: 13, weight: .semibold)
-        titleRow.addArrangedSubview(title)
-
-        configureRhythmDescription()
-        configureRhythmRationale()
-        updateRhythmMetricValues()
-
-        stack.addArrangedSubview(titleRow)
-        stack.addArrangedSubview(rhythmDescription)
-        stack.addArrangedSubview(rhythmRationaleRow())
-        stack.addArrangedSubview(rhythmMetricsView())
-
+    /// A tinted rounded tile behind a feature glyph.
+    private func iconTile(_ imageView: NSImageView) -> NSView {
+        let tile = SurfaceView(style: SurfaceStyle(
+            fill: { NSColor.controlAccentColor.withAlphaComponent($0 ? 0.22 : 0.13) },
+            stroke: { _ in nil },
+            cornerRadius: 8
+        ))
+        tile.translatesAutoresizingMaskIntoConstraints = false
+        imageView.contentTintColor = .controlAccentColor
+        imageView.imageScaling = .scaleProportionallyDown
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        tile.addSubview(imageView)
         NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: panel.leadingAnchor, constant: 14),
-            stack.trailingAnchor.constraint(equalTo: panel.trailingAnchor, constant: -14),
-            stack.topAnchor.constraint(equalTo: panel.topAnchor, constant: 12),
-            stack.bottomAnchor.constraint(equalTo: panel.bottomAnchor, constant: -12)
+            tile.widthAnchor.constraint(equalToConstant: 30),
+            tile.heightAnchor.constraint(equalToConstant: 30),
+            imageView.centerXAnchor.constraint(equalTo: tile.centerXAnchor),
+            imageView.centerYAnchor.constraint(equalTo: tile.centerYAnchor),
+            imageView.widthAnchor.constraint(equalToConstant: 18),
+            imageView.heightAnchor.constraint(equalToConstant: 18)
         ])
-        panel.widthAnchor.constraint(equalToConstant: 620).isActive = true
-        return panel
-    }
-
-    private func configureRhythmDescription() {
-        rhythmDescription.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmDescription")
-        rhythmDescription.stringValue = rhythmDescriptionText
-        rhythmDescription.font = .systemFont(ofSize: 12, weight: .regular)
-        rhythmDescription.textColor = .secondaryLabelColor
-        rhythmDescription.lineBreakMode = .byWordWrapping
-        rhythmDescription.maximumNumberOfLines = 2
-        rhythmDescription.widthAnchor.constraint(lessThanOrEqualToConstant: 560).isActive = true
-        rhythmDescription.toolTip = rhythmDescriptionText
-        rhythmDescription.setAccessibilityLabel(rhythmDescriptionText)
-        rhythmDescription.setAccessibilityHelp(rhythmDescriptionText)
+        return tile
     }
 
     private func configureRhythmRationale() {
         let rationale = L10n.tr("onboarding.rhythmRationale")
         rhythmRationale.identifier = NSUserInterfaceItemIdentifier("onboarding.rhythmRationale")
         rhythmRationale.stringValue = rationale
-        rhythmRationale.font = .systemFont(ofSize: 11.5, weight: .medium)
-        rhythmRationale.textColor = .labelColor
+        rhythmRationale.font = .systemFont(ofSize: 12)
+        rhythmRationale.textColor = .secondaryLabelColor
         rhythmRationale.lineBreakMode = .byWordWrapping
         rhythmRationale.maximumNumberOfLines = 2
-        rhythmRationale.widthAnchor.constraint(lessThanOrEqualToConstant: 540).isActive = true
+        rhythmRationale.preferredMaxLayoutWidth = Metrics.contentWidth - 32 - 22
+        rhythmRationale.widthAnchor.constraint(lessThanOrEqualToConstant: Metrics.contentWidth - 32 - 22).isActive = true
         rhythmRationale.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         rhythmRationale.setContentCompressionResistancePriority(.required, for: .vertical)
         rhythmRationale.toolTip = rationale
@@ -321,8 +300,12 @@ final class OnboardingWindowController: NSWindowController {
         row.orientation = .horizontal
         row.alignment = .top
         row.distribution = .fillEqually
-        row.spacing = 12
-        row.widthAnchor.constraint(equalToConstant: 592).isActive = true
+        row.spacing = 8
+        // The tiles already show each value; one sentence keeps VoiceOver brief.
+        row.setAccessibilityElement(true)
+        row.setAccessibilityRole(.group)
+        row.setAccessibilityLabel(rhythmDescriptionText)
+        row.toolTip = rhythmDescriptionText
 
         row.addArrangedSubview(rhythmMetricColumn(
             identifier: "onboarding.metric.eyeInterval",
@@ -357,24 +340,25 @@ final class OnboardingWindowController: NSWindowController {
         title: String,
         valueLabel: NSTextField
     ) -> NSView {
-        let column = NSStackView()
+        let column = SurfaceStackView(style: .inset)
         column.identifier = NSUserInterfaceItemIdentifier(identifier)
         column.orientation = .vertical
         column.alignment = .leading
         column.spacing = 4
+        column.edgeInsets = NSEdgeInsets(top: 9, left: 10, bottom: 9, right: 10)
         column.setContentCompressionResistancePriority(.required, for: .vertical)
 
         let titleRow = NSStackView()
         titleRow.orientation = .horizontal
         titleRow.alignment = .centerY
-        titleRow.spacing = 5
+        titleRow.spacing = 4
 
         let icon = NSImageView(image: symbolImage(symbolName, accessibilityDescription: title))
         icon.identifier = NSUserInterfaceItemIdentifier("\(identifier).icon")
-        icon.symbolConfiguration = .init(pointSize: 11, weight: .medium)
-        icon.contentTintColor = .tertiaryLabelColor
-        icon.widthAnchor.constraint(equalToConstant: 14).isActive = true
-        icon.heightAnchor.constraint(equalToConstant: 14).isActive = true
+        icon.symbolConfiguration = .init(pointSize: 10, weight: .semibold)
+        icon.contentTintColor = .secondaryLabelColor
+        icon.widthAnchor.constraint(equalToConstant: 13).isActive = true
+        icon.heightAnchor.constraint(equalToConstant: 13).isActive = true
 
         let titleLabel = NSTextField(labelWithString: title)
         titleLabel.identifier = NSUserInterfaceItemIdentifier("\(identifier).title")
@@ -387,7 +371,7 @@ final class OnboardingWindowController: NSWindowController {
         titleRow.addArrangedSubview(titleLabel)
 
         valueLabel.identifier = NSUserInterfaceItemIdentifier("\(identifier).value")
-        valueLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+        valueLabel.font = .systemFont(ofSize: 15, weight: .semibold)
         valueLabel.textColor = .labelColor
         valueLabel.lineBreakMode = .byTruncatingTail
         valueLabel.maximumNumberOfLines = 1
@@ -402,12 +386,12 @@ final class OnboardingWindowController: NSWindowController {
         row.orientation = .horizontal
         row.alignment = .centerY
         row.spacing = 10
-        row.widthAnchor.constraint(equalToConstant: 620).isActive = true
+        row.widthAnchor.constraint(equalToConstant: Metrics.contentWidth).isActive = true
 
         let learnMoreButton = onboardingButton(
             title: L10n.tr("onboarding.learnMore"),
             identifier: "onboarding.aboutButton",
-            symbolName: "questionmark.circle",
+            symbolName: "info.circle",
             help: L10n.tr("onboarding.learnMoreHelp"),
             action: #selector(learnMore)
         )
@@ -421,7 +405,7 @@ final class OnboardingWindowController: NSWindowController {
         let startButton = onboardingButton(
             title: L10n.tr("onboarding.useRecommended"),
             identifier: "onboarding.startButton",
-            symbolName: "checkmark.circle.fill",
+            symbolName: "checkmark",
             help: L10n.tr("onboarding.startHelp"),
             action: #selector(start)
         )
@@ -443,6 +427,7 @@ final class OnboardingWindowController: NSWindowController {
         let button = NSButton(title: title, target: self, action: action)
         button.identifier = NSUserInterfaceItemIdentifier(identifier)
         button.bezelStyle = .rounded
+        button.controlSize = .large
         button.image = symbolImage(symbolName, accessibilityDescription: title)
         button.imagePosition = .imageLeading
         button.imageHugsTitle = true
@@ -452,6 +437,18 @@ final class OnboardingWindowController: NSWindowController {
         button.setContentHuggingPriority(.required, for: .horizontal)
         button.setContentCompressionResistancePriority(.required, for: .horizontal)
         return button
+    }
+
+    private func centeredLabel(_ text: String, identifier: String, font: NSFont, color: NSColor) -> NSTextField {
+        let label = NSTextField(wrappingLabelWithString: text)
+        label.identifier = NSUserInterfaceItemIdentifier(identifier)
+        label.font = font
+        label.textColor = color
+        label.alignment = .center
+        label.isSelectable = false
+        label.preferredMaxLayoutWidth = Metrics.contentWidth
+        label.widthAnchor.constraint(lessThanOrEqualToConstant: Metrics.contentWidth).isActive = true
+        return label
     }
 
     private var rhythmDescriptionText: String {
@@ -528,13 +525,6 @@ final class OnboardingWindowController: NSWindowController {
 
     private func rhythmAccessibilityTitle() -> String {
         "\(L10n.tr("onboarding.rhythmTitle")): \(rhythmDescriptionText)"
-    }
-
-    private func brandImage() -> NSImage {
-        if let appIcon = NSImage(named: "AppIcon") {
-            return appIcon
-        }
-        return RestGateIcon.fallbackAppImage(size: 64, accessibilityDescription: L10n.tr("app.name"))
     }
 
     private func symbolImage(_ symbolName: String, accessibilityDescription: String?) -> NSImage {
