@@ -83,6 +83,12 @@ for sound in crystal-glass reverie silence tic-toc wind-chime; do
   require_file "$resources_dir/$sound.wav"
 done
 
+echo "==> Checking for embedded build paths"
+if LC_ALL=C grep -rlaF "$ROOT" "$app_dir"; then
+  echo "App bundle embeds the checkout path." >&2
+  exit 1
+fi
+
 echo "==> Verifying app signature"
 codesign --verify --deep --strict "$app_dir"
 

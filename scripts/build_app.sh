@@ -17,6 +17,9 @@ rm -rf "$APP_DIR"
 mkdir -p "$MACOS" "$RESOURCES"
 
 cp "$ROOT/.build/release/shouldrest" "$MACOS/shouldrest"
+# Drops the linker's debug map, which lists absolute object file paths and would
+# publish the checkout location. The unstripped binary stays in .build.
+strip -S "$MACOS/shouldrest"
 cp "$ROOT/packaging/Info.plist" "$CONTENTS/Info.plist"
 
 # Compiles the Icon Composer document and the accent color into Assets.car, plus
