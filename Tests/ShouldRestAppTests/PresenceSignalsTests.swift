@@ -1,8 +1,23 @@
+import CoreAudio
 import Foundation
 import XCTest
 @testable import shouldrest
 
 final class PresenceSignalsTests: XCTestCase {
+    func testOutputOnlyAudioDoesNotCountAsACall() {
+        XCTAssertFalse(MicrophoneActivityDetector.isInUse(processes: [42]) { _, selector in
+            selector == kAudioProcessPropertyIsRunningInput ? 0 : 1
+        })
+    }
+
+    func testActiveInputCountsAsACallEvenWithOtherUnreadableProcesses() {
+        XCTAssertTrue(MicrophoneActivityDetector.isInUse(processes: [41, 42]) { process, selector in
+            guard process == 42, selector == kAudioProcessPropertyIsRunningInput else { return nil }
+            return 1
+        })
+        XCTAssertFalse(MicrophoneActivityDetector.isInUse(processes: [41]) { _, _ in nil })
+    }
+
     func testDisplayAssertionFromPlaybackMeansScreenIsWatched() {
         let assertions: [NSNumber: [[String: Any]]] = [
             501: [[

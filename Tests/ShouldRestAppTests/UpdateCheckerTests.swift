@@ -7,6 +7,14 @@ final class UpdateCheckerTests: XCTestCase {
         case unexpectedFetch
     }
 
+    func testOnlyANewerReleaseOffersAnUpdateLink() throws {
+        let url = try XCTUnwrap(URL(string: "https://example.com/releases/latest"))
+        XCTAssertNil(UpdateCheckResult(status: .upToDate, releaseURL: url).availableUpdateURL)
+        XCTAssertNil(UpdateCheckResult(status: .failed("offline"), releaseURL: url).availableUpdateURL)
+        XCTAssertNil(UpdateCheckResult(status: .notConfigured, releaseURL: url).availableUpdateURL)
+        XCTAssertEqual(UpdateCheckResult(status: .newerVersion("1.2.0"), releaseURL: url).availableUpdateURL, url)
+    }
+
     func testComparesVersionComponentsAndVPREFIX() {
         XCTAssertTrue(UpdateChecker.isVersion("v1.2.10", newerThan: "1.2.9"))
         XCTAssertTrue(UpdateChecker.isVersion("1.3", newerThan: "1.2.99"))
@@ -56,6 +64,16 @@ final class UpdateCheckerTests: XCTestCase {
         let result = await checker.check(feedURL: "https://example.com/latest", currentVersion: "1.0.0")
 
         XCTAssertEqual(result.status, .upToDate)
+    }
+
+    func testLocalBuildAheadOfPublishedReleaseOffersNoUpdate() async {
+        let checker = UpdateChecker(fetch: { _ in
+            (Self.jsonData(["tag_name": "v1.2.3", "html_url": "https://example.com/releases/v1.2.3"]),
+             Self.httpResponse(statusCode: 200))
+        })
+        let result = await checker.check(feedURL: "https://example.com/latest", currentVersion: "1.2.4")
+        XCTAssertEqual(result.status, .upToDate)
+        XCTAssertNil(result.availableUpdateURL)
     }
 
     func testReportsHTTPAndMalformedResponseFailures() async {

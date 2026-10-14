@@ -121,7 +121,7 @@ enum EmergencyAutomationQueue {
 }
 
 enum AppVersion {
-    private static let fallback = "0.1.134"
+    private static let fallback = "0.1.135"
 
     static var current: String {
         current(bundle: Bundle.main)

@@ -35,9 +35,10 @@ Body Break is the longer, lower-frequency, negotiable rest.
 
 - Rest debt follows screen exposure, not wall-clock time. Input, video playback, and calls count as exposure; idle time stays provisional until the user returns (exposure) or the away threshold passes (rest).
 - A verified screen-off period (sleep, lock, display sleep) counts as rest once it lasts as long as the rest itself.
-- A due rest starts at the first natural pause in input, or slightly early during a clear pause, and never later than its deadline.
-- Rests due within a few minutes of each other share one interruption.
-- Body Breaks wait for calls, for at most one more Body Break interval; Eye Gates do not.
+- Automatic rests show the configured cue for its full lead time, including early starts, combined rests, and releases from a context hold. After the cue, a due rest starts at a natural pause or its deadline; a delayed timer tick still provides the full cue.
+- Rests due within a few minutes of each other share one interruption when context permits. A Body Break that could not combine with an Eye Gate waits at least the merge horizon after the Eye Gate ends (five minutes at the default rhythm), preserving its debt.
+- Body Breaks wait while audio input is active, for at most one more Body Break interval; Eye Gates do not. Audio playback alone does not indicate a call.
+- Diagnostic logs record cue and start timing, debt, context holds and releases, and spacing from the previous rest.
 
 ## Capability Rule
 

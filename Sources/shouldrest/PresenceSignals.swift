@@ -55,17 +55,22 @@ enum ScreenAttentionDetector {
     }
 }
 
-/// A running audio input device usually means a call or meeting.
+/// Active input streams indicate a possible call; output on a duplex device does not.
 enum MicrophoneActivityDetector {
     static func isInUse() -> Bool {
-        audioDevices().contains { device in
-            hasInputStreams(device) && isRunningSomewhere(device)
-        }
+        isInUse(processes: audioProcesses(), read: readUInt32)
     }
 
-    private static func audioDevices() -> [AudioObjectID] {
+    static func isInUse(
+        processes: [AudioObjectID],
+        read: (AudioObjectID, AudioObjectPropertySelector) -> UInt32?
+    ) -> Bool {
+        processes.contains { read($0, kAudioProcessPropertyIsRunningInput) == 1 }
+    }
+
+    private static func audioProcesses() -> [AudioObjectID] {
         var address = AudioObjectPropertyAddress(
-            mSelector: kAudioHardwarePropertyDevices,
+            mSelector: kAudioHardwarePropertyProcessObjectList,
             mScope: kAudioObjectPropertyScopeGlobal,
             mElement: kAudioObjectPropertyElementMain
         )
@@ -74,31 +79,22 @@ enum MicrophoneActivityDetector {
         guard AudioObjectGetPropertyDataSize(system, &address, 0, nil, &size) == noErr, size > 0 else {
             return []
         }
-        var devices = [AudioObjectID](repeating: 0, count: Int(size) / MemoryLayout<AudioObjectID>.size)
-        guard AudioObjectGetPropertyData(system, &address, 0, nil, &size, &devices) == noErr else {
+        var processes = [AudioObjectID](repeating: 0, count: Int(size) / MemoryLayout<AudioObjectID>.size)
+        guard AudioObjectGetPropertyData(system, &address, 0, nil, &size, &processes) == noErr else {
             return []
         }
-        return devices
+        return Array(processes.prefix(Int(size) / MemoryLayout<AudioObjectID>.size))
     }
 
-    private static func hasInputStreams(_ device: AudioObjectID) -> Bool {
+    private static func readUInt32(_ object: AudioObjectID, selector: AudioObjectPropertySelector) -> UInt32? {
         var address = AudioObjectPropertyAddress(
-            mSelector: kAudioDevicePropertyStreams,
-            mScope: kAudioDevicePropertyScopeInput,
-            mElement: kAudioObjectPropertyElementMain
-        )
-        var size: UInt32 = 0
-        return AudioObjectGetPropertyDataSize(device, &address, 0, nil, &size) == noErr && size > 0
-    }
-
-    private static func isRunningSomewhere(_ device: AudioObjectID) -> Bool {
-        var address = AudioObjectPropertyAddress(
-            mSelector: kAudioDevicePropertyDeviceIsRunningSomewhere,
+            mSelector: selector,
             mScope: kAudioObjectPropertyScopeGlobal,
             mElement: kAudioObjectPropertyElementMain
         )
-        var isRunning: UInt32 = 0
+        var value: UInt32 = 0
         var size = UInt32(MemoryLayout<UInt32>.size)
-        return AudioObjectGetPropertyData(device, &address, 0, nil, &size, &isRunning) == noErr && isRunning != 0
+        guard AudioObjectGetPropertyData(object, &address, 0, nil, &size, &value) == noErr else { return nil }
+        return value
     }
 }

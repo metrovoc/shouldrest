@@ -776,6 +776,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private var systemSuspensionState = SystemSuspensionState()
     private var pausedForSuspendOrLock = false
     private var manualAwaitingSessionID: UUID?
+    private var lastLoggedDeferral: RestDeferral?
     private var latestReleaseURL: URL?
     private var bodyBreakIdeas = BodyBreakIdeaAssignments()
     private var activeBreakShortcutSessionID: UUID?
@@ -854,7 +855,7 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
         timer.resume()
         tickTimer = timer
-        logger.log("Application launched")
+        logger.log("Application launched version=\(AppVersion.current) eyeInterval=\(settings.eyeGate.interval)s bodyInterval=\(settings.bodyBreak.interval)s eyeCueLead=\(settings.notifications.leadTime(for: .eyeGate))s bodyCueLead=\(settings.notifications.leadTime(for: .bodyBreak))s")
         applyAppearanceSetting()
         applyOpenAtLoginSetting()
         configureGlobalShortcuts()
@@ -1051,6 +1052,13 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func handleEngineResult(_ result: RestEngineResult, now: Date, context: RestContext) {
+        for message in RestStartLogDetails.deferralTransitions(from: lastLoggedDeferral, to: engine.state.activeDeferral) {
+            logger.log("\(message) \(RestStartLogDetails.stateText(engine.state, now: now))")
+        }
+        lastLoggedDeferral = engine.state.activeDeferral
+        if engine.pendingCueKind == nil {
+            preRestCueController.dismiss()
+        }
         switch result {
         case .started(let session):
             preRestCueController.dismiss()
@@ -1066,19 +1074,17 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             )
             refreshActiveBreakShortcut()
             refreshEmergencyEscapeShortcut()
-            logger.log("Started \(session.kind.rawValue) \(RestStartLogDetails.text(for: session, context: context))")
+            logger.log("Started \(session.kind.rawValue) \(RestStartLogDetails.text(for: session, context: context)) \(RestStartLogDetails.stateText(engine.state, now: now))")
             persistEngineState()
         case .notificationDue(let kind):
             showPreRestCue(for: kind, now: now)
-            logger.log("Pre-rest cue due for \(kind.rawValue)")
+            logger.log("Pre-rest cue due for \(kind.rawValue) lead=\(settings.notifications.leadTime(for: kind))s \(RestStartLogDetails.stateText(engine.state, now: now)) inCall=\(context.inCall) focus=\(context.focusModeActive)")
             persistEngineState()
         case .naturalRestsCredited(let kinds):
             preRestCueController.dismiss()
             let credited = kinds.map(\.rawValue).sorted().joined(separator: ",")
             logger.log("Natural rests credited kinds=\(credited)")
             persistEngineState()
-        case .deferred:
-            preRestCueController.dismiss()
         default:
             break
         }
@@ -1128,11 +1134,11 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func showPreRestCue(for kind: RestKind, now: Date) {
-        // The rest waits for a natural pause, so the cue stays until it starts or the window closes.
+        // Keep the cue visible through the lead time and the wait for a natural pause.
         preRestCueController.present(
             kind: kind,
             settings: settings,
-            dismissAt: engine.startWindow(for: kind, now: now).deadline,
+            dismissAt: nil,
             now: now
         )
     }
@@ -2890,9 +2896,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
             currentVersion: AppVersion.current
         )
 
+        latestReleaseURL = result.availableUpdateURL
         switch result.status {
         case .newerVersion(let version):
-            latestReleaseURL = result.releaseURL
             logger.log("Update available version=\(version) url=\(String(describing: result.releaseURL))")
             if settings.operations.notifyNewVersion || notifyWhenCurrent {
                 showAppNotification(
@@ -2902,7 +2908,6 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
                 )
             }
         case .upToDate:
-            latestReleaseURL = result.releaseURL
             logger.log("Update check: up to date")
             if notifyWhenCurrent {
                 showAppNotification(title: L10n.tr("notification.updateTitle"), body: L10n.tr("notification.updateCurrent"))
@@ -3122,6 +3127,32 @@ enum ActiveRestCountdown {
 /// Records how a scheduled rest landed relative to its due time and the user's activity, so start
 /// timing can be checked against real use.
 enum RestStartLogDetails {
+    static func deferralTransitions(from previous: RestDeferral?, to next: RestDeferral?) -> [String] {
+        guard previous?.kind != next?.kind || previous?.reason != next?.reason else { return [] }
+        var messages: [String] = []
+        if let previous {
+            messages.append("Scheduled \(previous.kind.rawValue) hold ended: \(MenuStatusPresenter.deferralReasonText(previous.reason))")
+        }
+        if let next {
+            messages.append("Scheduled \(next.kind.rawValue) deferred: \(MenuStatusPresenter.deferralReasonText(next.reason))")
+        }
+        return messages
+    }
+
+    static func stateText(_ state: RestEngineState, now: Date) -> String {
+        var text = "eyeDebt=\(Int(state.debt(for: .eyeGate)))s bodyDebt=\(Int(state.debt(for: .bodyBreak)))s"
+        if let endedAt = state.lastRestEndedAt {
+            text += " sinceRest=\(Int(now.timeIntervalSince(endedAt)))s previous=\(state.lastRestKind?.rawValue ?? "unknown")"
+        }
+        if let until = state.bodySuppressedUntil {
+            text += " bodyPostponeRemaining=\(Int(until.timeIntervalSince(now)))s"
+        }
+        if let scheduled = state.scheduled {
+            text += " projected=\(scheduled.kind.rawValue) dueIn=\(Int(scheduled.dueAt.timeIntervalSince(now)))s"
+        }
+        return text
+    }
+
     static func text(for session: RestSession, context: RestContext) -> String {
         let offset = Int(session.startedAt.timeIntervalSince(session.scheduledAt).rounded())
         let idle = Int(context.idleDuration.rounded())
@@ -3129,6 +3160,7 @@ enum RestStartLogDetails {
         if context.screenWatched {
             text += " watched"
         }
+        text += " inCall=\(context.inCall) focus=\(context.focusModeActive) workingHours=\(context.inWorkingHours)"
         return text
     }
 }

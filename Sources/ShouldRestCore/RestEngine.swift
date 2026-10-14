@@ -16,6 +16,7 @@ public struct RestEngineState: Codable, Equatable, Sendable {
     public var lastEvaluatedAt: Date?
     /// Last time another app held the display awake for playback, a call, or a presentation.
     public var lastWatchedAt: Date?
+    public var lastRestKind: RestKind?
     /// Input stops during a rest, so a pause only counts as a moment to start the next rest once it
     /// lasts beyond the end of the previous one.
     public var lastRestEndedAt: Date?
@@ -35,6 +36,7 @@ public struct RestEngineState: Codable, Equatable, Sendable {
         pendingBodyDebt: TimeInterval = 0,
         lastEvaluatedAt: Date? = nil,
         lastWatchedAt: Date? = nil,
+        lastRestKind: RestKind? = nil,
         lastRestEndedAt: Date? = nil,
         bodySuppressedUntil: Date? = nil,
         postponesInCurrentCycle: Int = 0,
@@ -51,6 +53,7 @@ public struct RestEngineState: Codable, Equatable, Sendable {
         self.pendingBodyDebt = max(0, pendingBodyDebt)
         self.lastEvaluatedAt = lastEvaluatedAt
         self.lastWatchedAt = lastWatchedAt
+        self.lastRestKind = lastRestKind
         self.lastRestEndedAt = lastRestEndedAt
         self.bodySuppressedUntil = bodySuppressedUntil
         self.postponesInCurrentCycle = postponesInCurrentCycle
@@ -79,6 +82,7 @@ public struct RestEngineState: Codable, Equatable, Sendable {
         case pendingBodyDebt
         case lastEvaluatedAt
         case lastWatchedAt
+        case lastRestKind
         case lastRestEndedAt
         case bodySuppressedUntil
         case postponesInCurrentCycle
@@ -99,6 +103,7 @@ public struct RestEngineState: Codable, Equatable, Sendable {
             pendingBodyDebt: container.decodeLossy(TimeInterval.self, forKey: .pendingBodyDebt, default: 0),
             lastEvaluatedAt: container.decodeLossyOptional(Date.self, forKey: .lastEvaluatedAt),
             lastWatchedAt: container.decodeLossyOptional(Date.self, forKey: .lastWatchedAt),
+            lastRestKind: container.decodeLossyOptional(RestKind.self, forKey: .lastRestKind),
             lastRestEndedAt: container.decodeLossyOptional(Date.self, forKey: .lastRestEndedAt),
             bodySuppressedUntil: container.decodeLossyOptional(Date.self, forKey: .bodySuppressedUntil),
             postponesInCurrentCycle: container.decodeLossy(Int.self, forKey: .postponesInCurrentCycle, default: 0),
@@ -123,7 +128,7 @@ public struct ScheduledRest: Codable, Equatable, Sendable {
 }
 
 /// When a due rest may begin. It starts early only during a clear pause, at the first natural pause
-/// once due, and regardless of activity at the deadline.
+/// once due, and regardless of activity at the deadline, after the configured cue lead time.
 public struct RestStartWindow: Equatable, Sendable {
     public var opensAt: Date
     public var dueAt: Date
@@ -360,6 +365,15 @@ public struct RestEngine: Equatable, Sendable {
     public private(set) var settings: RestSettings
     public private(set) var state: RestEngineState
 
+    // A cue belongs to this running process; persisted notification flags cannot prove it is visible.
+    private struct Cue: Equatable, Sendable {
+        var kind: RestKind
+        var startedAt: Date
+    }
+    private var cue: Cue?
+
+    public var pendingCueKind: RestKind? { cue?.kind }
+
     public init(settings: RestSettings = .defaults, now: Date = Date()) {
         self.settings = settings.normalizedForCurrentDesign()
         self.state = RestEngineState(lastEvaluatedAt: now)
@@ -389,6 +403,7 @@ public struct RestEngine: Equatable, Sendable {
     public mutating func updateSettings(_ settings: RestSettings, now: Date = Date()) {
         let enforcedSettings = settings.normalizedForCurrentDesign()
         self.settings = enforcedSettings
+        cue = nil
         if !enforcedSettings.presentation.breakHealthMode {
             state.dangerScore = 0
         }
@@ -413,12 +428,18 @@ public struct RestEngine: Equatable, Sendable {
             dueAt = max(dueAt, suppressedUntil)
             opensAt = max(dueAt.addingTimeInterval(-slack), suppressedUntil)
         }
+        if kind == .bodyBreak, state.lastRestKind == .eyeGate, let lastRestEndedAt = state.lastRestEndedAt {
+            let spacedStart = lastRestEndedAt.addingTimeInterval(RestTiming.mergeHorizon(forInterval: rule.interval))
+            dueAt = max(dueAt, spacedStart)
+            opensAt = max(opensAt, spacedStart)
+        }
         return RestStartWindow(opensAt: opensAt, dueAt: dueAt, deadline: dueAt.addingTimeInterval(slack))
     }
 
     @discardableResult
     public mutating func evaluate(now: Date = Date(), context: RestContext = RestContext()) -> RestEngineResult {
         if let pause = state.pause {
+            if let cue, pause.applies(to: cue.kind) { self.cue = nil }
             if pause.isActive(at: now) {
                 if pauseBlocksAllEnabledRests(pause) {
                     let observation = observe(now: now, context: context)
@@ -446,9 +467,11 @@ public struct RestEngine: Equatable, Sendable {
         refreshProjectedSchedule(now: now, preserveNotificationStateFrom: previousSchedule)
 
         if !observation.credited.isEmpty {
+            cue = nil
             return .naturalRestsCredited(observation.credited)
         }
         if observation.isAway {
+            cue = nil
             return .noChange
         }
         return decideStart(now: now, context: context)
@@ -478,6 +501,7 @@ public struct RestEngine: Equatable, Sendable {
         state.activeSession = nil
         state.lastEvaluatedAt = now
         state.lastRestEndedAt = now
+        state.lastRestKind = active.kind
         // The interrupted rest is still owed once the context clears.
         owe(active.kind)
         _ = eyeRestRemaining(afterEnded: active, now: now)
@@ -528,6 +552,7 @@ public struct RestEngine: Equatable, Sendable {
         state.postponesInCurrentCycle = 0
         state.lastEvaluatedAt = now
         state.lastRestEndedAt = now
+        state.lastRestKind = session.kind
         refreshProjectedSchedule(now: now)
         return .completed(session, reason)
     }
@@ -566,6 +591,7 @@ public struct RestEngine: Equatable, Sendable {
         state.bodySuppressedUntil = dueAt
         state.lastEvaluatedAt = now
         state.lastRestEndedAt = now
+        state.lastRestKind = session.kind
         refreshProjectedSchedule(now: now)
         continueEyeRest(afterEnded: session, now: now, context: context)
         return .postponed(session.kind, until: dueAt)
@@ -638,6 +664,7 @@ public struct RestEngine: Equatable, Sendable {
         let until = duration.map { now.addingTimeInterval(max(1, $0)) }
         let pause = PauseState(reason: reason, startedAt: now, until: until, appliesTo: normalizedAppliesTo)
         state.pause = pause
+        cue = nil
         state.scheduled = nil
         state.activeDeferral = nil
         state.lastEvaluatedAt = now
@@ -647,6 +674,7 @@ public struct RestEngine: Equatable, Sendable {
 
     @discardableResult
     public mutating func resume(now: Date = Date()) -> RestEngineResult {
+        cue = nil
         state.pause = nil
         // Paused time never becomes debt; an unattended stretch keeps running across the pause.
         state.lastEvaluatedAt = now
@@ -656,6 +684,7 @@ public struct RestEngine: Equatable, Sendable {
 
     @discardableResult
     public mutating func reset(now: Date = Date()) -> RestEngineResult {
+        cue = nil
         state = RestEngineState(lastEvaluatedAt: now)
         refreshProjectedSchedule(now: now)
         return .reset
@@ -867,6 +896,10 @@ public struct RestEngine: Equatable, Sendable {
 
     private func isWithinMergeHorizon(_ kind: RestKind, window: RestStartWindow, now: Date) -> Bool {
         let horizon = RestTiming.mergeHorizon(forInterval: settings.rule(for: kind).interval)
+        if kind == .bodyBreak, state.lastRestKind == .eyeGate,
+           let endedAt = state.lastRestEndedAt, now < endedAt.addingTimeInterval(horizon) {
+            return false
+        }
         var mergeableFrom = window.dueAt.addingTimeInterval(-horizon)
         if kind == .bodyBreak, let suppressedUntil = state.bodySuppressedUntil {
             mergeableFrom = max(mergeableFrom, suppressedUntil)
@@ -889,6 +922,9 @@ public struct RestEngine: Equatable, Sendable {
 
     private mutating func decideStart(now: Date, context: RestContext) -> RestEngineResult {
         let candidates = startCandidates(now: now)
+        if let cue, deferralReason(for: cue.kind, context: context, now: now) != nil {
+            self.cue = nil
+        }
         let pauseDuration = min(
             context.idleDuration,
             state.lastRestEndedAt.map { max(0, now.timeIntervalSince($0)) } ?? .infinity
@@ -910,6 +946,7 @@ public struct RestEngine: Equatable, Sendable {
                     now.timeIntervalSince(activeDeferral.lastSeenAt) >= slack else {
                     continue
                 }
+                guard now >= candidate.window.opensAt else { continue }
                 chosen = candidate
                 break
             }
@@ -937,6 +974,14 @@ public struct RestEngine: Equatable, Sendable {
             if let deferred, deferred.kind != chosen.kind {
                 _ = deferScheduledRest(kind: deferred.kind, reason: deferred.reason, now: now)
             }
+            if needsCue(for: chosen.kind) {
+                guard let cue, cue.kind == chosen.kind else {
+                    return beginCue(for: chosen.kind, now: now)
+                }
+                guard now.timeIntervalSince(cue.startedAt) >= settings.notifications.leadTime(for: chosen.kind) else {
+                    return .noChange
+                }
+            }
             return startRest(kind: chosen.kind, scheduledAt: chosen.window.dueAt, now: now)
         }
 
@@ -944,17 +989,26 @@ public struct RestEngine: Equatable, Sendable {
             return deferScheduledRest(kind: deferred.kind, reason: deferred.reason, now: now)
         }
 
-        // No cue for a rest the current context would hold back anyway.
-        if var scheduled = state.scheduled,
+        // A cue can begin before a start opportunity, but never during a deferring context.
+        if let scheduled = state.scheduled,
            let notificationAt = scheduled.notificationAt,
-           !scheduled.notificationSent,
+           cue == nil,
            now >= notificationAt,
            deferralReason(for: scheduled.kind, context: context, now: now) == nil {
-            scheduled.notificationSent = true
-            state.scheduled = scheduled
-            return .notificationDue(scheduled.kind)
+            return beginCue(for: scheduled.kind, now: now)
         }
         return .noChange
+    }
+
+    private func needsCue(for kind: RestKind) -> Bool {
+        settings.notifications.isEnabled(for: kind) && settings.notifications.leadTime(for: kind) > 0
+    }
+
+    private mutating func beginCue(for kind: RestKind, now: Date) -> RestEngineResult {
+        cue = Cue(kind: kind, startedAt: now)
+        state.scheduled = scheduledRest(kind: kind, dueAt: startWindow(for: kind, now: now).dueAt)
+        state.scheduled?.notificationSent = true
+        return .notificationDue(kind)
     }
 
     private mutating func startRest(kind: RestKind, scheduledAt: Date, now: Date) -> RestEngineResult {
@@ -976,6 +1030,7 @@ public struct RestEngine: Equatable, Sendable {
             state.activeDeferral = nil
         }
         state.activeSession = session
+        cue = nil
         state.lastEvaluatedAt = now
         return .started(session)
     }
@@ -1113,7 +1168,7 @@ public struct RestEngine: Equatable, Sendable {
             return
         }
         guard activeDeferral.source == .scheduledDebt else { return }
-        if startWindow(for: activeDeferral.kind, now: now).dueAt > now {
+        if state.debt(for: activeDeferral.kind) < settings.rule(for: activeDeferral.kind).interval {
             state.activeDeferral = nil
         }
     }

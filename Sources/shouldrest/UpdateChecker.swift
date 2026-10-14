@@ -10,6 +10,11 @@ struct UpdateCheckResult: Equatable {
 
     var status: Status
     var releaseURL: URL?
+
+    var availableUpdateURL: URL? {
+        guard case .newerVersion = status else { return nil }
+        return releaseURL
+    }
 }
 
 final class UpdateChecker: @unchecked Sendable {
