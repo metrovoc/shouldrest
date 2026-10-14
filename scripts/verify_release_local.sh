@@ -6,11 +6,11 @@ cd "$ROOT"
 
 stretchly_settings="${1:-/tmp/stretchly-research/app/utils/defaultSettings.js}"
 stretchly_commands="${2:-$(dirname "$stretchly_settings")/commands.js}"
-app_dir="$ROOT/dist/ShouldRest.app"
+app_dir="${DIST_DIR:-$ROOT/dist}/ShouldRest.app"
 info_plist="$app_dir/Contents/Info.plist"
 resources_dir="$app_dir/Contents/Resources/ShouldRest_shouldrest.bundle"
 version="$("/usr/libexec/PlistBuddy" -c "Print :CFBundleShortVersionString" "$ROOT/packaging/Info.plist")"
-dmg_path="$ROOT/dist/ShouldRest-$version.dmg"
+dmg_path="${DIST_DIR:-$ROOT/dist}/ShouldRest-$version.dmg"
 
 require_file() {
   local path="$1"

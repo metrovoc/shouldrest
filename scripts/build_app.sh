@@ -6,7 +6,9 @@ cd "$ROOT"
 
 swift build -c release
 
-APP_DIR="$ROOT/dist/ShouldRest.app"
+# DIST_DIR can point outside a synced folder whose file provider tags bundles,
+# which codesign rejects.
+APP_DIR="${DIST_DIR:-$ROOT/dist}/ShouldRest.app"
 CONTENTS="$APP_DIR/Contents"
 MACOS="$CONTENTS/MacOS"
 RESOURCES="$CONTENTS/Resources"

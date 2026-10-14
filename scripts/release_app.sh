@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-DIST_DIR="$ROOT/dist"
+DIST_DIR="${DIST_DIR:-$ROOT/dist}"
 APP_NAME="ShouldRest"
 APP_DIR="$DIST_DIR/$APP_NAME.app"
 INFO_PLIST="$ROOT/packaging/Info.plist"
