@@ -13,25 +13,35 @@ final class RestGateIconTests: XCTestCase {
         XCTAssertNotNil(image.tiffRepresentation)
     }
 
-    func testMenuBarIconUsesPauseGateGlyphWithoutPupilDot() throws {
+    func testMenuBarIconDrawsClosedEyeWithClearCorners() throws {
         let image = RestGateIcon.menuBarImage(accessibilityDescription: "ShouldRest")
         let bitmap = try XCTUnwrap(bitmapRepresentation(of: image))
 
-        XCTAssertGreaterThan(maxAlpha(in: bitmap, x: 7...8, y: 7...11), 0.70)
-        XCTAssertGreaterThan(maxAlpha(in: bitmap, x: 10...11, y: 7...11), 0.70)
-        XCTAssertLessThan(averageAlpha(in: bitmap, x: 12...13, y: 12...13), 0.42)
+        // The lid dips through the middle and the lashes hang below it.
+        XCTAssertGreaterThan(maxAlpha(in: bitmap, x: 8...9, y: 8...10), 0.85)
+        XCTAssertGreaterThan(maxAlpha(in: bitmap, x: 8...9, y: 11...12), 0.7)
+        XCTAssertLessThan(maxAlpha(in: bitmap, x: 6...11, y: 1...4), 0.1)
+        XCTAssertLessThan(averageAlpha(in: bitmap, x: 0...17, y: 15...17), 0.05)
     }
 
     func testMenuBarHealthIndicatorAddsCompactCornerBadgeWithoutChangingSize() throws {
         let image = RestGateIcon.menuBarImage(
             accessibilityDescription: "ShouldRest",
-            showsHealthIndicator: true
+            badge: .restDebt
         )
         let bitmap = try XCTUnwrap(bitmapRepresentation(of: image))
 
         XCTAssertEqual(image.size, NSSize(width: 18, height: 18))
         XCTAssertTrue(image.isTemplate)
-        XCTAssertGreaterThan(maxAlpha(in: bitmap, x: 14...16, y: 14...16), 0.70)
+        XCTAssertGreaterThan(maxAlpha(in: bitmap, x: 14...16, y: 1...3), 0.85)
+    }
+
+    func testGlyphImageIsTemplateAtRequestedSize() {
+        let image = RestGateIcon.glyphImage(pointSize: 22, accessibilityDescription: "ShouldRest")
+
+        XCTAssertEqual(image.size, NSSize(width: 22, height: 22))
+        XCTAssertTrue(image.isTemplate)
+        XCTAssertEqual(image.accessibilityDescription, "ShouldRest")
     }
 
     func testFallbackAppIconUsesRequestedSizeAndIsNotTemplate() {

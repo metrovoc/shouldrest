@@ -106,14 +106,28 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         let content = MenuStatusPresenter.headerContent(state: state, settings: settings, now: start)
 
-        XCTAssertEqual(content.title, "ShouldRest")
+        XCTAssertEqual(content.title, "Eye Gate in 10m")
         XCTAssertEqual(
             content.primary,
-            "Next: Eye Gate in 10m (\(start.addingTimeInterval(10 * 60).formatted(date: .omitted, time: .shortened)))"
+            "Due around \(start.addingTimeInterval(10 * 60).formatted(date: .omitted, time: .shortened))"
         )
         XCTAssertEqual(content.secondary, "Body Break in 1h")
         XCTAssertEqual(content.healthBadge, "Debt 3/10")
-        XCTAssertEqual(content.icon, .restGate)
+        XCTAssertEqual(content.icon, MenuStatusPresenter.MenuBarIcon(glyph: .eye, badge: .restDebt))
+        XCTAssertEqual(content.progress ?? -1, 0.5, accuracy: 0.001)
+        XCTAssertEqual(content.tone, .active)
+    }
+
+    func testHeaderContentWaitsForNaturalPauseOnceRestIsDue() {
+        let state = RestEngineState(
+            scheduled: ScheduledRest(kind: .eyeGate, dueAt: start, notificationAt: nil)
+        )
+
+        let content = MenuStatusPresenter.headerContent(state: state, settings: .defaults, now: start.addingTimeInterval(5))
+
+        XCTAssertEqual(content.title, "Eye Gate at your next pause")
+        XCTAssertEqual(content.primary, "Starts when you next pause typing or scrolling.")
+        XCTAssertEqual(content.progress, 1)
     }
 
     func testHeaderContentHidesHealthBadgeWhenBreakHealthModeIsDisabled() {
@@ -195,7 +209,12 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         XCTAssertEqual(lines[0], "Paused until \(start.addingTimeInterval(30 * 60).formatted(date: .omitted, time: .shortened))")
         XCTAssertEqual(lines[1], "Paused by you · resumes in 30m")
-        XCTAssertEqual(content.secondary, "Paused by you · resumes in 30m")
+        XCTAssertEqual(content.title, lines[0])
+        XCTAssertEqual(content.primary, "Paused by you · resumes in 30m")
+        XCTAssertNil(content.secondary)
+        XCTAssertNil(content.progress)
+        XCTAssertEqual(content.icon, .paused)
+        XCTAssertEqual(content.tone, .onHold)
     }
 
     func testIndefinitePauseStatusShowsManualResumeContext() {
@@ -210,10 +229,10 @@ final class MenuStatusPresenterTests: XCTestCase {
             "Paused indefinitely",
             "Paused by you · resume from menu, shortcut, or shouldrest resume"
         ])
-        XCTAssertEqual(content.secondary, "Paused by you · resume from menu, shortcut, or shouldrest resume")
-        XCTAssertFalse(content.secondary?.localizedCaseInsensitiveContains("this menu") ?? true)
-        XCTAssertTrue(content.secondary?.localizedCaseInsensitiveContains("shortcut") ?? false)
-        XCTAssertTrue(content.secondary?.localizedCaseInsensitiveContains("shouldrest resume") ?? false)
+        XCTAssertEqual(content.primary, "Paused by you · resume from menu, shortcut, or shouldrest resume")
+        XCTAssertFalse(content.primary.localizedCaseInsensitiveContains("this menu"))
+        XCTAssertTrue(content.primary.localizedCaseInsensitiveContains("shortcut"))
+        XCTAssertTrue(content.primary.localizedCaseInsensitiveContains("shouldrest resume"))
     }
 
     func testBodyBreakOnlyPauseKeepsScheduledEyeGateAsPrimaryStatus() {
@@ -240,8 +259,9 @@ final class MenuStatusPresenterTests: XCTestCase {
             lines[1],
             "Body Break paused until \(pausedUntil.formatted(date: .omitted, time: .shortened))"
         )
+        XCTAssertEqual(content.title, "Eye Gate in 10m")
         XCTAssertEqual(content.secondary, lines[1])
-        XCTAssertEqual(content.icon, .restGate)
+        XCTAssertEqual(content.icon, .eye)
     }
 
     func testPauseStatusNamesNonManualPauseReasons() {
@@ -292,7 +312,8 @@ final class MenuStatusPresenterTests: XCTestCase {
             "Body Break delayed: App rule: Presentation"
         )
         XCTAssertEqual(appRuleLines[1], "Scheduling resumes automatically when this context ends.")
-        XCTAssertEqual(appRuleHeader.secondary, "Scheduling resumes automatically when this context ends.")
+        XCTAssertEqual(appRuleHeader.primary, "Scheduling resumes automatically when this context ends.")
+        XCTAssertEqual(appRuleHeader.icon, .deferred)
         XCTAssertTrue(appRuleTooltip.contains("Scheduling resumes automatically when this context ends."))
         XCTAssertEqual(
             MenuStatusPresenter.lines(state: focusState, settings: .defaults, now: start)[0],
@@ -319,8 +340,8 @@ final class MenuStatusPresenterTests: XCTestCase {
         let engine = RestEngine(settings: .defaults, now: start)
 
         XCTAssertEqual(MenuStatusPresenter.menuBarTitle(state: engine.state, settings: engine.settings, now: start), "")
-        XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: engine.state), .restGate)
-        XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: engine.state, settings: engine.settings), .restGate)
+        XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: engine.state), .eye)
+        XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: engine.state, settings: engine.settings), .eye)
     }
 
     func testMenuBarHealthIndicatorUsesIconBadgeWithoutTextTitle() {
@@ -335,11 +356,41 @@ final class MenuStatusPresenterTests: XCTestCase {
         )
 
         XCTAssertEqual(MenuStatusPresenter.menuBarTitle(state: eyeDebtState, settings: settings, now: start), "")
-        XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: eyeDebtState, settings: settings), .restGateWithHealthIndicator)
+        XCTAssertEqual(
+            MenuStatusPresenter.menuBarIcon(state: eyeDebtState, settings: settings),
+            MenuStatusPresenter.MenuBarIcon(glyph: .eye, badge: .restDebt)
+        )
         XCTAssertEqual(
             MenuStatusPresenter.menuBarIcon(state: bodyDebtState, settings: settings),
-            .systemSymbolWithHealthIndicator("figure.walk")
+            MenuStatusPresenter.MenuBarIcon(glyph: .eye, badge: .restDebt)
         )
+    }
+
+    func testMenuBarIconShowsWalkingFigureOnlyDuringActiveBodyBreak() {
+        let active = RestEngineState(activeSession: RestSession(
+            kind: .bodyBreak,
+            startedAt: start,
+            scheduledAt: start,
+            duration: 180,
+            manualFinishEnabled: false
+        ))
+        let scheduled = RestEngineState(
+            scheduled: ScheduledRest(kind: .bodyBreak, dueAt: start.addingTimeInterval(60), notificationAt: nil)
+        )
+
+        XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: active), .bodyBreak)
+        XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: scheduled), .eye)
+    }
+
+    func testMenuBarIconDimsWhenNoRestIsEnabled() {
+        var settings = RestSettings.defaults
+        settings.eyeGate.isEnabled = false
+        settings.bodyBreak.isEnabled = false
+
+        let icon = MenuStatusPresenter.menuBarIcon(state: RestEngineState(), settings: settings)
+
+        XCTAssertEqual(icon, .deferred)
+        XCTAssertEqual(MenuStatusPresenter.headerContent(state: RestEngineState(), settings: settings, now: start).tone, .onHold)
     }
 
     func testMenuBarHealthIndicatorRespectsBreakHealthMode() {
@@ -350,7 +401,7 @@ final class MenuStatusPresenterTests: XCTestCase {
             dangerScore: 3
         )
 
-        XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: state, settings: settings), .restGate)
+        XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: state, settings: settings), .eye)
     }
 
     func testDefaultMenuBarPresentationStaysIconOnlyAcrossStates() {
@@ -422,10 +473,9 @@ final class MenuStatusPresenterTests: XCTestCase {
             }
         }
 
-        XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: states[0]), .systemSymbol("figure.walk"))
-        XCTAssertNotNil(NSImage(systemSymbolName: MenuStatusPresenter.menuBarSymbolName(state: states[0]), accessibilityDescription: nil))
-        XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: states[3]), .systemSymbol("pause.circle"))
-        XCTAssertNotNil(NSImage(systemSymbolName: MenuStatusPresenter.menuBarSymbolName(state: states[3]), accessibilityDescription: nil))
+        XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: states[0]), .eye)
+        XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: states[1]), .eye)
+        XCTAssertEqual(MenuStatusPresenter.menuBarIcon(state: states[3]), .paused)
     }
 
     func testManualFinishStatusShowsReadyInsteadOfZeroRemaining() {
@@ -442,8 +492,9 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         XCTAssertEqual(lines.first, "Eye Gate ready to finish")
         XCTAssertEqual(lines[1], "Finish from the overlay when ready.")
-        XCTAssertEqual(content.primary, "Eye Gate ready to finish")
-        XCTAssertEqual(content.secondary, "Finish from the overlay when ready.")
+        XCTAssertEqual(content.title, "Eye Gate ready to finish")
+        XCTAssertEqual(content.primary, "Finish from the overlay when ready.")
+        XCTAssertEqual(content.progress, 1)
         XCTAssertFalse(lines.first?.contains("0s") ?? true)
     }
 
@@ -489,8 +540,8 @@ final class MenuStatusPresenterTests: XCTestCase {
 
         XCTAssertEqual(lines.first, "Body Break ready to finish")
         XCTAssertEqual(lines[1], "Finish from this menu or the overlay when ready.")
-        XCTAssertEqual(content.primary, "Body Break ready to finish")
-        XCTAssertEqual(content.secondary, "Finish from this menu or the overlay when ready.")
+        XCTAssertEqual(content.title, "Body Break ready to finish")
+        XCTAssertEqual(content.primary, "Finish from this menu or the overlay when ready.")
         XCTAssertFalse(lines[1].localizedCaseInsensitiveContains("postpone"))
         XCTAssertFalse(lines[1].localizedCaseInsensitiveContains("skip"))
     }

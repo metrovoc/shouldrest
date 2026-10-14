@@ -113,6 +113,10 @@
 "status.nextWithCountdown" = "下一次：%@，%@后（%@）";
 "status.nextAtPause" = "下一次：%@，将在你停顿时开始";
 "status.nextBodyIn" = "活动休息还有 %@";
+"status.headlineNextIn" = "%2$@后开始%1$@";
+"status.headlineDueAround" = "预计 %@ 左右";
+"status.headlineAtPause" = "%@将在你停顿时开始";
+"status.headlineAtPauseDetail" = "会在你下次停止输入或滚动时开始。";
 "status.active" = "%@ 进行中，剩余 %@";
 "status.readyToFinish" = "%@ 已完成，等待结束";
 "status.eyeGateActiveGuidance" = "在覆盖层内点击紧急退出两次，或按两次 Esc。";

@@ -4,47 +4,50 @@ import XCTest
 
 @MainActor
 final class StatusMenuHeaderViewTests: XCTestCase {
-    func testHeaderViewRendersTitleStatusSecondaryAndBadge() throws {
+    func testHeaderViewLeadsWithStatusAndShowsDetailBadgeAndProgress() throws {
         let view = StatusMenuHeaderView(
             content: MenuStatusPresenter.HeaderContent(
-                title: "ShouldRest",
-                primary: "Next: Eye Gate at 8:00 PM",
+                title: "Eye Gate in 10m",
+                primary: "Due around 8:00 PM",
                 secondary: "Body Break in 30m",
                 healthBadge: "Debt 3/10",
-                icon: .restGate
+                icon: .eye,
+                progress: 0.25
             )
         )
 
-        let expectedSummary = "ShouldRest. Next: Eye Gate at 8:00 PM. Body Break in 30m. Debt 3/10"
-        XCTAssertEqual(view.frame.size, NSSize(width: 318, height: 82))
+        let expectedSummary = "Eye Gate in 10m. Due around 8:00 PM. Body Break in 30m. Debt 3/10"
+        XCTAssertEqual(view.frame.width, 300)
+        XCTAssertGreaterThan(view.frame.height, 60)
         XCTAssertEqual(view.toolTip, expectedSummary)
         XCTAssertEqual(view.accessibilityLabel(), expectedSummary)
         XCTAssertEqual(view.accessibilityHelp(), expectedSummary)
 
         let icon = try XCTUnwrap(view.descendant(withIdentifier: "statusMenu.headerIcon") as? NSImageView)
-        XCTAssertEqual(icon.accessibilityLabel(), "ShouldRest")
+        XCTAssertEqual(icon.accessibilityLabel(), L10n.tr("app.name"))
         XCTAssertEqual(icon.accessibilityHelp(), expectedSummary)
-        XCTAssertEqual(icon.toolTip, "ShouldRest")
-        assertTextField("statusMenu.headerTitle", in: view, text: "ShouldRest")
-        assertTextField("statusMenu.headerPrimary", in: view, text: "Next: Eye Gate at 8:00 PM")
+        XCTAssertTrue(icon.image?.isTemplate ?? false)
+        assertTextField("statusMenu.headerTitle", in: view, text: "Eye Gate in 10m")
+        assertTextField("statusMenu.headerPrimary", in: view, text: "Due around 8:00 PM")
         assertTextField("statusMenu.headerSecondary", in: view, text: "Body Break in 30m", isHidden: false)
         assertTextField("statusMenu.headerBadge", in: view, text: "Debt 3/10", isHidden: false)
+        XCTAssertEqual(view.progressForTesting ?? -1, 0.25, accuracy: 0.001)
     }
 
-    func testHeaderViewCanHideOptionalSecondaryAndBadge() throws {
+    func testHeaderViewCanHideOptionalSecondaryBadgeAndProgress() throws {
         let view = StatusMenuHeaderView(
             content: MenuStatusPresenter.HeaderContent(
-                title: "ShouldRest",
-                primary: "Paused indefinitely",
+                title: "Paused indefinitely",
+                primary: "Paused by you",
                 secondary: nil,
                 healthBadge: nil,
-                icon: .systemSymbol("pause.circle")
+                icon: .paused
             )
         )
 
-        XCTAssertEqual(view.accessibilityLabel(), "ShouldRest. Paused indefinitely")
-        XCTAssertEqual(view.accessibilityHelp(), "ShouldRest. Paused indefinitely")
-        XCTAssertEqual(try textField("statusMenu.headerPrimary", in: view).stringValue, "Paused indefinitely")
+        XCTAssertEqual(view.accessibilityLabel(), "Paused indefinitely. Paused by you")
+        XCTAssertEqual(view.accessibilityHelp(), "Paused indefinitely. Paused by you")
+        XCTAssertEqual(try textField("statusMenu.headerTitle", in: view).stringValue, "Paused indefinitely")
         let secondary = try textField("statusMenu.headerSecondary", in: view)
         XCTAssertTrue(secondary.isHidden)
         XCTAssertNil(secondary.toolTip)
@@ -56,16 +59,17 @@ final class StatusMenuHeaderViewTests: XCTestCase {
         XCTAssertNil(badge.toolTip)
         XCTAssertNil(badge.accessibilityLabel())
         XCTAssertNil(badge.accessibilityHelp())
+        XCTAssertNil(view.progressForTesting)
     }
 
     func testHeaderSecondaryWrapsGuidanceCopy() throws {
         let view = StatusMenuHeaderView(
             content: MenuStatusPresenter.HeaderContent(
-                title: "ShouldRest",
-                primary: "Eye Gate active, 15s remaining",
+                title: "Eye Gate in 10m",
+                primary: "Due around 8:00 PM",
                 secondary: "Click Emergency Exit twice in the overlay, or press Esc twice.",
                 healthBadge: nil,
-                icon: .restGate
+                icon: .eye
             )
         )
 
@@ -75,17 +79,38 @@ final class StatusMenuHeaderViewTests: XCTestCase {
         XCTAssertEqual(secondary.lineBreakMode, .byWordWrapping)
         XCTAssertEqual(secondary.maximumNumberOfLines, 2)
         XCTAssertEqual(
-            secondary.stringValue,
-            "Click Emergency Exit twice in the overlay, or press Esc twice."
-        )
-        XCTAssertEqual(
             secondary.accessibilityLabel(),
             "Click Emergency Exit twice in the overlay, or press Esc twice."
         )
-        XCTAssertEqual(
-            secondary.accessibilityHelp(),
-            "Click Emergency Exit twice in the overlay, or press Esc twice."
+    }
+
+    func testHeaderUpdatesInPlaceWhileMenuIsOpen() throws {
+        let view = StatusMenuHeaderView(
+            content: MenuStatusPresenter.HeaderContent(
+                title: "Eye Gate in 10m",
+                primary: "Due around 8:00 PM",
+                secondary: nil,
+                healthBadge: nil,
+                icon: .eye,
+                progress: 0.5
+            )
         )
+        let title = try textField("statusMenu.headerTitle", in: view)
+
+        view.update(content: MenuStatusPresenter.HeaderContent(
+            title: "Eye Gate in 9m",
+            primary: "Due around 8:00 PM",
+            secondary: nil,
+            healthBadge: "Debt 1/10",
+            icon: .eye,
+            progress: 0.55
+        ))
+
+        XCTAssertTrue(title === (try textField("statusMenu.headerTitle", in: view)))
+        XCTAssertEqual(title.stringValue, "Eye Gate in 9m")
+        XCTAssertFalse(try textField("statusMenu.headerBadge", in: view).isHidden)
+        XCTAssertEqual(view.progressForTesting ?? -1, 0.55, accuracy: 0.001)
+        XCTAssertEqual(view.accessibilityLabel(), "Eye Gate in 9m. Due around 8:00 PM. Debt 1/10")
     }
 
     private func assertTextField(

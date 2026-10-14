@@ -1,30 +1,32 @@
 import Foundation
 import ShouldRestCore
 
+enum MenuBarBadge: Equatable {
+    case restDebt
+    case paused
+}
+
 enum MenuStatusPresenter {
-    enum MenuBarIcon: Equatable {
-        case restGate
-        case restGateWithHealthIndicator
-        case systemSymbol(String)
-        case systemSymbolWithHealthIndicator(String)
-
-        var fallbackSystemSymbolName: String {
-            switch self {
-            case .restGate, .restGateWithHealthIndicator:
-                return "pause.rectangle"
-            case .systemSymbol(let symbolName), .systemSymbolWithHealthIndicator(let symbolName):
-                return symbolName
-            }
+    /// The menu bar glyph: the closed eye in normal use, dimmed while rests are on hold.
+    struct MenuBarIcon: Equatable {
+        enum Glyph: Equatable {
+            case eye
+            case bodyBreak
         }
 
-        var withHealthIndicator: MenuBarIcon {
-            switch self {
-            case .restGate, .restGateWithHealthIndicator:
-                return .restGateWithHealthIndicator
-            case .systemSymbol(let symbolName), .systemSymbolWithHealthIndicator(let symbolName):
-                return .systemSymbolWithHealthIndicator(symbolName)
-            }
-        }
+        var glyph: Glyph
+        var isDimmed = false
+        var badge: MenuBarBadge?
+
+        static let eye = MenuBarIcon(glyph: .eye)
+        static let bodyBreak = MenuBarIcon(glyph: .bodyBreak)
+        static let deferred = MenuBarIcon(glyph: .eye, isDimmed: true)
+        static let paused = MenuBarIcon(glyph: .eye, isDimmed: true, badge: .paused)
+    }
+
+    enum HeaderTone: Equatable {
+        case active
+        case onHold
     }
 
     struct HeaderContent: Equatable {
@@ -33,6 +35,12 @@ enum MenuStatusPresenter {
         var secondary: String?
         var healthBadge: String?
         var icon: MenuBarIcon
+        /// Share of the current interval or rest that has elapsed, when one is running.
+        var progress: Double? = nil
+
+        var tone: HeaderTone {
+            icon.isDimmed ? .onHold : .active
+        }
     }
 
     static func lines(state: RestEngineState, settings: RestSettings, now: Date = Date()) -> [String] {
@@ -81,14 +89,48 @@ enum MenuStatusPresenter {
         return "\(L10n.tr("app.name")): \(parts.joined(separator: ". "))"
     }
 
+    /// Leads with what happens next; the full status lines stay in the tooltip.
     static func headerContent(state: RestEngineState, settings: RestSettings, now: Date = Date()) -> HeaderContent {
         let statusLines = lines(state: state, settings: settings, now: now)
+        let icon = menuBarIcon(state: state, settings: settings)
+        let healthBadge = healthBadgeText(state: state, settings: settings)
+
+        if state.activeSession == nil,
+           !isOnHold(state: state, settings: settings),
+           let scheduled = state.scheduled {
+            let interval = settings.rule(for: scheduled.kind).interval
+            let remaining = scheduled.dueAt.timeIntervalSince(now)
+            let title: String
+            let primary: String
+            if remaining > 0 {
+                let seconds = Int(ceil(remaining))
+                title = L10n.format("status.headlineNextIn", restKindName(scheduled.kind), compactDurationText(seconds: seconds))
+                primary = L10n.format("status.headlineDueAround", scheduled.dueAt.formatted(date: .omitted, time: .shortened))
+            } else {
+                title = L10n.format("status.headlineAtPause", restKindName(scheduled.kind))
+                primary = L10n.tr("status.headlineAtPauseDetail")
+            }
+            return HeaderContent(
+                title: title,
+                primary: primary,
+                secondary: statusLines.dropFirst().first,
+                healthBadge: healthBadge,
+                icon: icon,
+                progress: interval > 0 ? min(1, max(0, 1 - remaining / interval)) : nil
+            )
+        }
+
+        var progress: Double?
+        if let active = state.activeSession, active.duration > 0 {
+            progress = min(1, max(0, now.timeIntervalSince(active.startedAt) / active.duration))
+        }
         return HeaderContent(
-            title: L10n.tr("app.name"),
-            primary: statusLines.first ?? L10n.tr("status.noRests"),
-            secondary: statusLines.dropFirst().first,
-            healthBadge: healthBadgeText(state: state, settings: settings),
-            icon: menuBarIcon(state: state)
+            title: statusLines.first ?? L10n.tr("status.noRests"),
+            primary: statusLines.dropFirst().first ?? "",
+            secondary: nil,
+            healthBadge: healthBadge,
+            icon: icon,
+            progress: progress
         )
     }
 
@@ -96,32 +138,45 @@ enum MenuStatusPresenter {
         ""
     }
 
-    static func menuBarSymbolName(state: RestEngineState) -> String {
-        menuBarIcon(state: state).fallbackSystemSymbolName
-    }
-
     static func menuBarIcon(state: RestEngineState) -> MenuBarIcon {
         if let active = state.activeSession {
-            return icon(for: active.kind)
+            return active.kind == .bodyBreak ? .bodyBreak : .eye
         }
         if state.activeDeferral != nil {
-            return .systemSymbol("clock")
+            return .deferred
         }
-        if let scheduled = state.scheduled {
-            return icon(for: scheduled.kind)
+        if state.scheduled != nil {
+            return .eye
         }
         if state.pause != nil {
-            return .systemSymbol("pause.circle")
+            return .paused
         }
-        return icon(for: .eyeGate)
+        return .eye
     }
 
     static func menuBarIcon(state: RestEngineState, settings: RestSettings) -> MenuBarIcon {
-        let icon = menuBarIcon(state: state)
-        guard settings.presentation.breakHealthMode, state.dangerScore > 0 else {
-            return icon
+        var icon = menuBarIcon(state: state)
+        if state.activeSession == nil {
+            if let pause = state.pause, pauseCoversAllEnabledRests(pause, settings: settings) {
+                icon = .paused
+            } else if !RestKind.allCases.contains(where: { settings.rule(for: $0).isEnabled }) {
+                icon.isDimmed = true
+            }
         }
-        return icon.withHealthIndicator
+        if icon.badge == nil, settings.presentation.breakHealthMode, state.dangerScore > 0 {
+            icon.badge = .restDebt
+        }
+        return icon
+    }
+
+    private static func isOnHold(state: RestEngineState, settings: RestSettings) -> Bool {
+        if state.activeDeferral != nil {
+            return true
+        }
+        if let pause = state.pause, pauseCoversAllEnabledRests(pause, settings: settings) {
+            return true
+        }
+        return false
     }
 
     static func deferralReasonText(_ reason: ContextDeferralReason) -> String {
@@ -143,15 +198,6 @@ enum MenuStatusPresenter {
             return L10n.tr("kind.eyeGate")
         case .bodyBreak:
             return L10n.tr("kind.bodyBreak")
-        }
-    }
-
-    private static func icon(for kind: RestKind) -> MenuBarIcon {
-        switch kind {
-        case .eyeGate:
-            return .restGate
-        case .bodyBreak:
-            return .systemSymbol("figure.walk")
         }
     }
 

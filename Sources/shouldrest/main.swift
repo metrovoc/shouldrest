@@ -784,6 +784,8 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private var emergencyEscapeShortcutSessionID: UUID?
     private var menuBarImageCache: [String: NSImage] = [:]
     private var currentMenuBarImageKey: String?
+    private weak var statusHeaderView: StatusMenuHeaderView?
+    private var isStatusMenuOpen = false
     private var lastGlobalShortcutFailureKey: String?
     private var lastActiveBreakShortcutFailureKey: String?
     private var automationTasks: [UUID: Task<Void, Never>] = [:]
@@ -1151,9 +1153,19 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         item.button?.toolTip = tooltip
         item.button?.setAccessibilityLabel(accessibilityDescription)
         item.button?.setAccessibilityHelp(tooltip)
+        // An open menu keeps its items; only the header counts down.
+        if isStatusMenuOpen, let statusHeaderView {
+            statusHeaderView.update(content: MenuStatusPresenter.headerContent(
+                state: engine.state,
+                settings: settings,
+                now: now
+            ))
+            return
+        }
         let showsOrdinaryControls = StatusMenuPolicy.showsOrdinaryControls(state: engine.state)
 
         let menu = NSMenu()
+        menu.delegate = self
         menu.addItem(statusHeaderMenuItem(now: now))
         menu.addItem(.separator())
 
@@ -1283,7 +1295,9 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
         }
         menu.addItem(resetItem)
         menu.addItem(.separator())
-        menu.addItem(actionItem(L10n.tr("menu.preferences"), #selector(openPreferences)))
+        let preferencesItem = actionItem(L10n.tr("menu.preferences"), #selector(openPreferences))
+        preferencesItem.keyEquivalent = ","
+        menu.addItem(preferencesItem)
         menu.addItem(supportMenuItem())
 
         menu.addItem(.separator())
@@ -1324,13 +1338,15 @@ final class ShouldRestAppDelegate: NSObject, NSApplicationDelegate {
     private func statusHeaderMenuItem(now: Date) -> NSMenuItem {
         let item = NSMenuItem()
         item.isEnabled = false
-        item.view = StatusMenuHeaderView(
+        let headerView = StatusMenuHeaderView(
             content: MenuStatusPresenter.headerContent(
                 state: engine.state,
                 settings: settings,
                 now: now
             )
         )
+        statusHeaderView = headerView
+        item.view = headerView
         return item
     }
 
@@ -4947,6 +4963,18 @@ private extension NSRect {
         [minX, minY, width, height].map { coordinate in
             Int64((coordinate * 1_000).rounded())
         }
+    }
+}
+
+extension ShouldRestAppDelegate: NSMenuDelegate {
+    func menuWillOpen(_ menu: NSMenu) {
+        isStatusMenuOpen = true
+        rebuildMenu()
+    }
+
+    func menuDidClose(_ menu: NSMenu) {
+        isStatusMenuOpen = false
+        rebuildMenu()
     }
 }
 

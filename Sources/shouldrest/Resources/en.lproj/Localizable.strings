@@ -113,6 +113,10 @@
 "status.nextWithCountdown" = "Next: %@ in %@ (%@)";
 "status.nextAtPause" = "Next: %@ at your next pause";
 "status.nextBodyIn" = "Body Break in %@";
+"status.headlineNextIn" = "%@ in %@";
+"status.headlineDueAround" = "Due around %@";
+"status.headlineAtPause" = "%@ at your next pause";
+"status.headlineAtPauseDetail" = "Starts when you next pause typing or scrolling.";
 "status.active" = "%@ active, %@ remaining";
 "status.readyToFinish" = "%@ ready to finish";
 "status.eyeGateActiveGuidance" = "Click Emergency Exit twice in the overlay, or press Esc twice.";

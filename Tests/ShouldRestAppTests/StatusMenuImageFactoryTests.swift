@@ -4,60 +4,77 @@ import XCTest
 
 @MainActor
 final class StatusMenuImageFactoryTests: XCTestCase {
-    func testRestGateMenuBarImageUsesBrandMarkInsteadOfSystemFallback() throws {
+    func testEyeMenuBarImageUsesBrandMarkInsteadOfSystemFallback() throws {
         let image = try XCTUnwrap(StatusMenuImageFactory.image(
-            for: .restGate,
+            for: .eye,
             accessibilityDescription: "ShouldRest"
         ))
         let bitmap = try XCTUnwrap(bitmapRepresentation(of: image))
 
-        XCTAssertEqual(StatusMenuImageFactory.cacheKey(for: .restGate), "restGate:brand")
+        XCTAssertEqual(StatusMenuImageFactory.cacheKey(for: .eye), "eye:full:none")
         XCTAssertEqual(image.size, NSSize(width: 18, height: 18))
         XCTAssertTrue(image.isTemplate)
         XCTAssertEqual(image.accessibilityDescription, "ShouldRest")
-        XCTAssertGreaterThan(maxAlpha(in: bitmap, x: 7...8, y: 7...11), 0.70)
-        XCTAssertGreaterThan(maxAlpha(in: bitmap, x: 10...11, y: 7...11), 0.70)
-        XCTAssertLessThan(averageAlpha(in: bitmap, x: 12...13, y: 12...13), 0.42)
+        XCTAssertGreaterThan(maxAlpha(in: bitmap, x: 8...9, y: 8...12), 0.85)
+        XCTAssertLessThan(maxAlpha(in: bitmap, x: 13...16, y: 0...3), 0.1)
     }
 
     func testRestDebtMenuBarImageUsesCompactBadgeWithoutTextOccupancy() throws {
+        let icon = MenuStatusPresenter.MenuBarIcon(glyph: .eye, badge: .restDebt)
         let image = try XCTUnwrap(StatusMenuImageFactory.image(
-            for: .restGateWithHealthIndicator,
+            for: icon,
             accessibilityDescription: "ShouldRest: Debt 3/10"
         ))
         let bitmap = try XCTUnwrap(bitmapRepresentation(of: image))
 
-        XCTAssertEqual(StatusMenuImageFactory.cacheKey(for: .restGateWithHealthIndicator), "restGate:brand:health")
+        XCTAssertEqual(StatusMenuImageFactory.cacheKey(for: icon), "eye:full:restDebt")
         XCTAssertEqual(image.size, NSSize(width: 18, height: 18))
         XCTAssertTrue(image.isTemplate)
         XCTAssertEqual(image.accessibilityDescription, "ShouldRest: Debt 3/10")
-        XCTAssertGreaterThan(maxAlpha(in: bitmap, x: 14...16, y: 14...16), 0.70)
+        XCTAssertGreaterThan(maxAlpha(in: bitmap, x: 14...16, y: 1...3), 0.85)
     }
 
-    func testSystemStatusMenuImageUsesRequestedSymbolAndAccessibilityDescription() throws {
+    func testPausedMenuBarImageDimsTheEyeAndAddsPauseBadge() throws {
         let image = try XCTUnwrap(StatusMenuImageFactory.image(
-            for: .systemSymbol("pause.circle"),
+            for: .paused,
             accessibilityDescription: "Paused"
-        ))
-
-        XCTAssertEqual(StatusMenuImageFactory.cacheKey(for: .systemSymbol("pause.circle")), "symbol:pause.circle")
-        XCTAssertTrue(image.isTemplate)
-        XCTAssertEqual(image.accessibilityDescription, "Paused")
-        XCTAssertNotNil(image.tiffRepresentation)
-    }
-
-    func testSystemStatusMenuImageCanCarryRestDebtBadge() throws {
-        let image = try XCTUnwrap(StatusMenuImageFactory.image(
-            for: .systemSymbolWithHealthIndicator("pause.circle"),
-            accessibilityDescription: "Paused. Debt 4/10"
         ))
         let bitmap = try XCTUnwrap(bitmapRepresentation(of: image))
 
-        XCTAssertEqual(StatusMenuImageFactory.cacheKey(for: .systemSymbolWithHealthIndicator("pause.circle")), "symbol:pause.circle:health")
+        XCTAssertEqual(StatusMenuImageFactory.cacheKey(for: .paused), "eye:dimmed:paused")
+        XCTAssertTrue(image.isTemplate)
+        XCTAssertEqual(image.accessibilityDescription, "Paused")
+        let eyeAlpha = maxAlpha(in: bitmap, x: 8...9, y: 8...12)
+        XCTAssertGreaterThan(eyeAlpha, 0.25)
+        XCTAssertLessThan(eyeAlpha, 0.6)
+        XCTAssertGreaterThan(maxAlpha(in: bitmap, x: 13...14, y: 1...4), 0.85)
+    }
+
+    func testDeferredMenuBarImageOnlyDimsTheEye() throws {
+        let image = try XCTUnwrap(StatusMenuImageFactory.image(
+            for: .deferred,
+            accessibilityDescription: "Delayed"
+        ))
+        let bitmap = try XCTUnwrap(bitmapRepresentation(of: image))
+
+        XCTAssertEqual(StatusMenuImageFactory.cacheKey(for: .deferred), "eye:dimmed:none")
+        XCTAssertLessThan(maxAlpha(in: bitmap, x: 8...9, y: 8...12), 0.6)
+        XCTAssertLessThan(maxAlpha(in: bitmap, x: 13...16, y: 0...3), 0.1)
+    }
+
+    func testBodyBreakMenuBarImageCanCarryRestDebtBadge() throws {
+        let icon = MenuStatusPresenter.MenuBarIcon(glyph: .bodyBreak, badge: .restDebt)
+        let image = try XCTUnwrap(StatusMenuImageFactory.image(
+            for: icon,
+            accessibilityDescription: "Body Break. Debt 4/10"
+        ))
+        let bitmap = try XCTUnwrap(bitmapRepresentation(of: image))
+
+        XCTAssertEqual(StatusMenuImageFactory.cacheKey(for: icon), "bodyBreak:full:restDebt")
         XCTAssertEqual(image.size, NSSize(width: 18, height: 18))
         XCTAssertTrue(image.isTemplate)
-        XCTAssertEqual(image.accessibilityDescription, "Paused. Debt 4/10")
-        XCTAssertGreaterThan(maxAlpha(in: bitmap, x: 14...16, y: 14...16), 0.70)
+        XCTAssertEqual(image.accessibilityDescription, "Body Break. Debt 4/10")
+        XCTAssertGreaterThan(maxAlpha(in: bitmap, x: 14...16, y: 1...3), 0.85)
     }
 
     private func bitmapRepresentation(of image: NSImage) -> NSBitmapImageRep? {

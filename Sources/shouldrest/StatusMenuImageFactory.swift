@@ -3,71 +3,79 @@ import AppKit
 @MainActor
 enum StatusMenuImageFactory {
     static func cacheKey(for icon: MenuStatusPresenter.MenuBarIcon) -> String {
-        switch icon {
-        case .restGate:
-            return "restGate:brand"
-        case .restGateWithHealthIndicator:
-            return "restGate:brand:health"
-        case .systemSymbol(let symbolName):
-            return "symbol:\(symbolName)"
-        case .systemSymbolWithHealthIndicator(let symbolName):
-            return "symbol:\(symbolName):health"
+        let glyph: String
+        switch icon.glyph {
+        case .eye:
+            glyph = "eye"
+        case .bodyBreak:
+            glyph = "bodyBreak"
         }
+        let badge: String
+        switch icon.badge {
+        case nil:
+            badge = "none"
+        case .restDebt:
+            badge = "restDebt"
+        case .paused:
+            badge = "paused"
+        }
+        return "\(glyph):\(icon.isDimmed ? "dimmed" : "full"):\(badge)"
     }
 
     static func image(
         for icon: MenuStatusPresenter.MenuBarIcon,
         accessibilityDescription: String?
     ) -> NSImage? {
-        switch icon {
-        case .restGate:
-            return RestGateIcon.menuBarImage(accessibilityDescription: accessibilityDescription)
-        case .restGateWithHealthIndicator:
+        switch icon.glyph {
+        case .eye:
             return RestGateIcon.menuBarImage(
                 accessibilityDescription: accessibilityDescription,
-                showsHealthIndicator: true
+                isDimmed: icon.isDimmed,
+                badge: icon.badge
             )
-        case .systemSymbol(let symbolName):
-            return systemSymbolImage(
-                symbolName,
+        case .bodyBreak:
+            return symbolImage(
+                "figure.walk",
                 accessibilityDescription: accessibilityDescription,
-                showsHealthIndicator: false
-            )
-        case .systemSymbolWithHealthIndicator(let symbolName):
-            return systemSymbolImage(
-                symbolName,
-                accessibilityDescription: accessibilityDescription,
-                showsHealthIndicator: true
+                isDimmed: icon.isDimmed,
+                badge: icon.badge
             )
         }
     }
 
-    private static func systemSymbolImage(
+    private static func symbolImage(
         _ symbolName: String,
         accessibilityDescription: String?,
-        showsHealthIndicator: Bool
+        isDimmed: Bool,
+        badge: MenuBarBadge?
     ) -> NSImage? {
         let configuration = NSImage.SymbolConfiguration(pointSize: 15, weight: .medium)
-        let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: accessibilityDescription)?
-            .withSymbolConfiguration(configuration)
-            ?? NSImage(systemSymbolName: "circle", accessibilityDescription: accessibilityDescription)
-        guard showsHealthIndicator, let image else {
-            image?.isTemplate = true
-            return image
+        guard let symbol = NSImage(systemSymbolName: symbolName, accessibilityDescription: accessibilityDescription)?
+            .withSymbolConfiguration(configuration) else {
+            return nil
         }
 
-        let badgedImage = NSImage(size: NSSize(width: 18, height: 18))
-        badgedImage.lockFocus()
-        image.draw(
-            in: NSRect(x: 0, y: 0, width: 18, height: 18),
-            from: .zero,
-            operation: .sourceOver,
-            fraction: 1
-        )
-        RestGateIcon.drawTemplateHealthIndicator(size: 18)
-        badgedImage.unlockFocus()
-        badgedImage.accessibilityDescription = accessibilityDescription
-        badgedImage.isTemplate = true
-        return badgedImage
+        let size = NSSize(width: RestGateIcon.menuBarSize, height: RestGateIcon.menuBarSize)
+        let image = NSImage(size: size, flipped: false) { rect in
+            let symbolRect = NSRect(
+                x: rect.midX - symbol.size.width / 2,
+                y: rect.midY - symbol.size.height / 2,
+                width: symbol.size.width,
+                height: symbol.size.height
+            )
+            symbol.draw(
+                in: symbolRect,
+                from: .zero,
+                operation: .sourceOver,
+                fraction: isDimmed ? RestGateIcon.dimmedAlpha : 1
+            )
+            if let badge {
+                RestGateIcon.drawTemplateBadge(badge, size: rect.width)
+            }
+            return true
+        }
+        image.accessibilityDescription = accessibilityDescription
+        image.isTemplate = true
+        return image
     }
 }
