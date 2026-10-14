@@ -3681,11 +3681,14 @@ final class OverlayController {
 
         for screen in screens {
             let id = screen.displayID
+            var createdWindow: OverlayWindow?
             if windows[id] == nil {
                 let window = OverlayWindow(screen: screen, session: session, settings: settings)
                 windows[id] = window
+                createdWindow = window
             }
             windows[id]?.setFrame(screen.frame, display: true)
+            createdWindow?.fadeIn()
             windows[id]?.makeKeyAndOrderFront(nil)
             windows[id]?.orderFrontRegardless()
             windows[id]?.overlayView.ensureOverlayKeyboardFocusIfNeeded()
@@ -3795,6 +3798,8 @@ final class OverlayWindow: NSWindow {
         contentView = overlayView
         level = settings.rule(for: session.kind).enforcement.usesScreenSaverLevel ? .screenSaver : .modalPanel
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle]
+        // Utility windows fade out when closed, so the screen eases back after a rest.
+        animationBehavior = .utilityWindow
         isReleasedWhenClosed = false
         hasShadow = false
         hidesOnDeactivate = false
@@ -3802,6 +3807,17 @@ final class OverlayWindow: NSWindow {
         canHide = false
         configureBackdrop(session: session, settings: settings)
         syncOverlayViewFrame(to: screen.frame.size)
+    }
+
+    /// Eases a newly shown overlay in instead of cutting to it.
+    func fadeIn() {
+        guard !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else { return }
+        alphaValue = 0
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = 0.45
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            animator().alphaValue = 1
+        }
     }
 
     func configureBackdrop(session: RestSession, settings: RestSettings) {
@@ -3851,23 +3867,27 @@ final class OverlayActionButton: NSButton {
         true
     }
 
-    func applyBodyActionTileStyle(isPendingButton: Bool, isActionLocked: Bool) {
+    func applyBodyActionTileStyle(isPendingButton: Bool, isActionLocked: Bool, isProminent: Bool = false) {
         wantsLayer = true
-        layer?.cornerRadius = 7
+        layer?.cornerRadius = OverlayMetrics.actionHeight / 2
+        layer?.cornerCurve = .continuous
         layer?.borderWidth = 1
         layer?.masksToBounds = true
 
         let backgroundAlpha: CGFloat
         let borderAlpha: CGFloat
-        if isPendingButton {
-            backgroundAlpha = 0.18
-            borderAlpha = 0.34
+        if isProminent {
+            backgroundAlpha = isActionLocked ? 0.5 : 0.94
+            borderAlpha = isActionLocked ? 0.5 : 1
+        } else if isPendingButton {
+            backgroundAlpha = 0.2
+            borderAlpha = 0.3
         } else if isActionLocked {
-            backgroundAlpha = 0.08
-            borderAlpha = 0.16
+            backgroundAlpha = 0.07
+            borderAlpha = 0.12
         } else {
-            backgroundAlpha = 0.14
-            borderAlpha = 0.28
+            backgroundAlpha = 0.13
+            borderAlpha = 0.2
         }
 
         layer?.backgroundColor = NSColor.white.withAlphaComponent(backgroundAlpha).cgColor
@@ -4008,11 +4028,88 @@ enum OverlayCountdownFormatter {
     }
 }
 
+enum OverlayMetrics {
+    static let actionHeight: CGFloat = 34
+    static let ringDiameter: CGFloat = 156
+    static let ringLineWidth: CGFloat = 5
+}
+
+/// The depleting ring around the overlay countdown, readable from the corner of the eye.
+@MainActor
+final class RestCountdownRingView: NSView {
+    private let trackLayer = CAShapeLayer()
+    private let progressLayer = CAShapeLayer()
+    private(set) var progress: CGFloat = 1
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        wantsLayer = true
+        setAccessibilityElement(false)
+        for shape in [trackLayer, progressLayer] {
+            shape.fillColor = nil
+            shape.lineCap = .round
+            shape.lineWidth = OverlayMetrics.ringLineWidth
+            layer?.addSublayer(shape)
+        }
+        trackLayer.strokeColor = NSColor.white.withAlphaComponent(0.14).cgColor
+        progressLayer.strokeColor = NSColor.white.withAlphaComponent(0.88).cgColor
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        nil
+    }
+
+    override func layout() {
+        super.layout()
+        let radius = (min(bounds.width, bounds.height) - OverlayMetrics.ringLineWidth) / 2
+        let path = CGMutablePath()
+        // Starts at twelve o'clock and runs clockwise.
+        path.addArc(
+            center: CGPoint(x: bounds.midX, y: bounds.midY),
+            radius: max(0, radius),
+            startAngle: .pi / 2,
+            endAngle: .pi / 2 - 2 * .pi,
+            clockwise: true
+        )
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        for shape in [trackLayer, progressLayer] {
+            shape.frame = bounds
+            shape.path = path
+        }
+        CATransaction.commit()
+    }
+
+    func setProgress(_ value: CGFloat, animated: Bool) {
+        let clamped = min(1, max(0, value))
+        guard clamped != progress else { return }
+        let current = progressLayer.presentation()?.strokeEnd ?? progressLayer.strokeEnd
+        progress = clamped
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        progressLayer.strokeEnd = clamped
+        if animated {
+            // Ticks arrive once a second; easing across each one keeps the ring moving smoothly.
+            let animation = CABasicAnimation(keyPath: "strokeEnd")
+            animation.fromValue = current
+            animation.toValue = clamped
+            animation.duration = 1
+            animation.timingFunction = CAMediaTimingFunction(name: .linear)
+            progressLayer.add(animation, forKey: "progress")
+        } else {
+            progressLayer.removeAnimation(forKey: "progress")
+        }
+        CATransaction.commit()
+    }
+}
+
 @MainActor
 final class RestOverlayView: NSView {
     private let titleLabel = NSTextField(labelWithString: "")
     private let detailLabel = NSTextField(labelWithString: "")
     private let countdownLabel = NSTextField(labelWithString: "")
+    private let countdownRing = RestCountdownRingView()
     private let imageView = NSImageView()
     private let emergencyPanel = OverlayClickPanel()
     private let emergencyButton = OverlayActionButton()
@@ -4030,6 +4127,10 @@ final class RestOverlayView: NSView {
     private var emergencyPanelHeightConstraint: NSLayoutConstraint?
     private var bodyActionRequestPending = false
     private var pendingBodyAction: BodyOverlayActionKind?
+    private var isManualAwaiting = false
+    private var bodyActionRailConstraints: [NSLayoutConstraint] = []
+    private var bodyActionInlineConstraints: [NSLayoutConstraint] = []
+    private var ringSessionID: UUID?
     var emergencyFocusAttemptForTesting: (() -> EmergencyOverlayFocusResult)?
     var onEmergencyOverrideRequested: (() -> EmergencyOverrideDecision)?
     var bodyActions: BodyOverlayActions? {
@@ -4040,6 +4141,10 @@ final class RestOverlayView: NSView {
         }
     }
 
+    var countdownProgressForTesting: CGFloat {
+        countdownRing.progress
+    }
+
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true
@@ -4047,7 +4152,14 @@ final class RestOverlayView: NSView {
         imageView.translatesAutoresizingMaskIntoConstraints = false
         imageView.imageScaling = .scaleProportionallyUpOrDown
         imageView.isHidden = true
+        imageView.wantsLayer = true
+        imageView.layer?.cornerRadius = 14
+        imageView.layer?.cornerCurve = .continuous
+        imageView.layer?.masksToBounds = true
         addSubview(imageView)
+
+        countdownRing.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(countdownRing)
 
         [titleLabel, detailLabel, countdownLabel].forEach { label in
             label.translatesAutoresizingMaskIntoConstraints = false
@@ -4061,15 +4173,16 @@ final class RestOverlayView: NSView {
 
         titleLabel.identifier = NSUserInterfaceItemIdentifier("overlay.title.label")
         titleLabel.maximumNumberOfLines = 3
-        titleLabel.font = .systemFont(ofSize: 34, weight: .semibold)
+        titleLabel.font = Self.roundedFont(ofSize: 40, weight: .semibold)
         titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         detailLabel.identifier = NSUserInterfaceItemIdentifier("overlay.detail.label")
         detailLabel.maximumNumberOfLines = 5
-        detailLabel.font = .systemFont(ofSize: 18, weight: .regular)
+        detailLabel.font = .systemFont(ofSize: 19, weight: .regular)
+        detailLabel.textColor = Self.detailTextColor
         detailLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         countdownLabel.identifier = NSUserInterfaceItemIdentifier("overlay.countdown.label")
         countdownLabel.maximumNumberOfLines = 1
-        countdownLabel.font = .monospacedDigitSystemFont(ofSize: 28, weight: .medium)
+        countdownLabel.font = Self.countdownFont(ofSize: 40)
 
         emergencyPanel.identifier = NSUserInterfaceItemIdentifier("overlay.emergency.panel")
         emergencyPanel.translatesAutoresizingMaskIntoConstraints = false
@@ -4118,10 +4231,11 @@ final class RestOverlayView: NSView {
         bodyActionPanel.identifier = NSUserInterfaceItemIdentifier("overlay.bodyActions.panel")
         bodyActionPanel.translatesAutoresizingMaskIntoConstraints = false
         bodyActionPanel.wantsLayer = true
-        bodyActionPanel.layer?.cornerRadius = 8
+        bodyActionPanel.layer?.cornerRadius = (OverlayMetrics.actionHeight + 16) / 2
+        bodyActionPanel.layer?.cornerCurve = .continuous
         bodyActionPanel.layer?.borderWidth = 1
-        bodyActionPanel.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.075).cgColor
-        bodyActionPanel.layer?.borderColor = NSColor.white.withAlphaComponent(0.15).cgColor
+        bodyActionPanel.layer?.backgroundColor = NSColor.white.withAlphaComponent(0.06).cgColor
+        bodyActionPanel.layer?.borderColor = NSColor.white.withAlphaComponent(0.1).cgColor
         bodyActionPanel.isHidden = true
         bodyActionPanel.onClick = { [weak self] in
             self?.requestSingleVisibleBodyActionFromPanel()
@@ -4130,7 +4244,7 @@ final class RestOverlayView: NSView {
 
         bodyActionStack.translatesAutoresizingMaskIntoConstraints = false
         bodyActionStack.orientation = .horizontal
-        bodyActionStack.spacing = 12
+        bodyActionStack.spacing = 10
         bodyActionStack.alignment = .centerY
         bodyActionStack.addArrangedSubview(bodyPostponeButton)
         bodyActionStack.addArrangedSubview(bodySkipButton)
@@ -4143,19 +4257,36 @@ final class RestOverlayView: NSView {
         self.emergencyPanelWidthConstraint = emergencyPanelWidthConstraint
         self.emergencyPanelHeightConstraint = emergencyPanelHeightConstraint
 
+        // Title, detail, and countdown center as one group, whatever the text length.
+        let contentGuide = NSLayoutGuide()
+        addLayoutGuide(contentGuide)
+        bodyActionRailConstraints = [
+            bodyActionPanel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -36)
+        ]
+        bodyActionInlineConstraints = [
+            bodyActionPanel.topAnchor.constraint(equalTo: countdownRing.bottomAnchor, constant: 32)
+        ]
+
         NSLayoutConstraint.activate([
+            contentGuide.topAnchor.constraint(equalTo: titleLabel.topAnchor),
+            contentGuide.bottomAnchor.constraint(equalTo: countdownRing.bottomAnchor),
+            contentGuide.centerYAnchor.constraint(equalTo: centerYAnchor, constant: -16),
             imageView.centerXAnchor.constraint(equalTo: centerXAnchor),
-            imageView.bottomAnchor.constraint(equalTo: titleLabel.topAnchor, constant: -24),
+            imageView.bottomAnchor.constraint(equalTo: titleLabel.topAnchor, constant: -28),
             imageView.widthAnchor.constraint(lessThanOrEqualTo: widthAnchor, multiplier: 0.38),
             imageView.heightAnchor.constraint(lessThanOrEqualTo: heightAnchor, multiplier: 0.32),
             titleLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
-            titleLabel.centerYAnchor.constraint(equalTo: centerYAnchor, constant: -34),
-            titleLabel.widthAnchor.constraint(lessThanOrEqualTo: widthAnchor, multiplier: 0.7),
-            detailLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 14),
+            titleLabel.widthAnchor.constraint(lessThanOrEqualTo: widthAnchor, multiplier: 0.7, constant: -Self.labelFrameAllowance),
+            detailLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 12),
             detailLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
-            detailLabel.widthAnchor.constraint(lessThanOrEqualTo: widthAnchor, multiplier: 0.7),
-            countdownLabel.topAnchor.constraint(equalTo: detailLabel.bottomAnchor, constant: 20),
-            countdownLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
+            detailLabel.widthAnchor.constraint(lessThanOrEqualTo: widthAnchor, multiplier: 0.7, constant: -Self.labelFrameAllowance),
+            countdownRing.topAnchor.constraint(equalTo: detailLabel.bottomAnchor, constant: 40),
+            countdownRing.centerXAnchor.constraint(equalTo: centerXAnchor),
+            countdownRing.widthAnchor.constraint(equalToConstant: OverlayMetrics.ringDiameter),
+            countdownRing.heightAnchor.constraint(equalToConstant: OverlayMetrics.ringDiameter),
+            countdownLabel.centerXAnchor.constraint(equalTo: countdownRing.centerXAnchor),
+            countdownLabel.centerYAnchor.constraint(equalTo: countdownRing.centerYAnchor),
+            countdownLabel.widthAnchor.constraint(lessThanOrEqualToConstant: OverlayMetrics.ringDiameter - 28),
             emergencyButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -28),
             emergencyButton.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -24),
             emergencyButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 126),
@@ -4164,13 +4295,28 @@ final class RestOverlayView: NSView {
             emergencyPanel.bottomAnchor.constraint(equalTo: emergencyButton.bottomAnchor, constant: 10),
             emergencyPanelWidthConstraint,
             emergencyPanelHeightConstraint,
-            bodyActionPanel.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -24),
-            bodyActionPanel.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -20),
-            bodyActionStack.leadingAnchor.constraint(equalTo: bodyActionPanel.leadingAnchor, constant: 12),
-            bodyActionStack.trailingAnchor.constraint(equalTo: bodyActionPanel.trailingAnchor, constant: -12),
+            bodyActionPanel.centerXAnchor.constraint(equalTo: centerXAnchor),
+            bodyActionStack.leadingAnchor.constraint(equalTo: bodyActionPanel.leadingAnchor, constant: 8),
+            bodyActionStack.trailingAnchor.constraint(equalTo: bodyActionPanel.trailingAnchor, constant: -8),
             bodyActionStack.topAnchor.constraint(equalTo: bodyActionPanel.topAnchor, constant: 8),
             bodyActionStack.bottomAnchor.constraint(equalTo: bodyActionPanel.bottomAnchor, constant: -8)
-        ])
+        ] + bodyActionRailConstraints)
+    }
+
+    private static let detailTextColor = NSColor.white.withAlphaComponent(0.8)
+    /// Large label frames extend a few points past their alignment rects; keep frames inside the readable width.
+    private static let labelFrameAllowance: CGFloat = 6
+
+    private static func roundedFont(ofSize size: CGFloat, weight: NSFont.Weight) -> NSFont {
+        let font = NSFont.systemFont(ofSize: size, weight: weight)
+        guard let descriptor = font.fontDescriptor.withDesign(.rounded) else { return font }
+        return NSFont(descriptor: descriptor, size: size) ?? font
+    }
+
+    private static func countdownFont(ofSize size: CGFloat) -> NSFont {
+        let font = NSFont.monospacedDigitSystemFont(ofSize: size, weight: .medium)
+        guard let descriptor = font.fontDescriptor.withDesign(.rounded) else { return font }
+        return NSFont(descriptor: descriptor, size: size) ?? font
     }
 
     required init?(coder: NSCoder) {
@@ -4182,7 +4328,7 @@ final class RestOverlayView: NSView {
     }
 
     override func layout() {
-        let readableWidth = max(160, bounds.width * 0.7)
+        let readableWidth = max(160, bounds.width * 0.7) - Self.labelFrameAllowance
         titleLabel.preferredMaxLayoutWidth = readableWidth
         detailLabel.preferredMaxLayoutWidth = readableWidth
         updateReadableLabelWrapping(maxWidth: readableWidth)
@@ -4214,6 +4360,7 @@ final class RestOverlayView: NSView {
         emergencyOverrideArmed: Bool = false,
         bodyActions: BodyOverlayActions? = nil
     ) {
+        isManualAwaiting = manualAwaiting
         self.bodyActions = bodyActions
         let canUseEmergencyOverride = isEmergencyOverrideAvailable && !(manualAwaiting && session.kind == .eyeGate)
         configureEmergencyButton(
@@ -4225,6 +4372,7 @@ final class RestOverlayView: NSView {
         titleLabel.isHidden = !showsContent
         detailLabel.isHidden = !showsContent
         countdownLabel.isHidden = !showsContent
+        countdownRing.isHidden = !showsContent
         imageView.isHidden = true
         imageView.image = nil
 
@@ -4233,6 +4381,8 @@ final class RestOverlayView: NSView {
             return
         }
 
+        let isNewSession = ringSessionID != session.id
+        ringSessionID = session.id
         if manualAwaiting {
             switch session.kind {
             case .eyeGate:
@@ -4242,7 +4392,8 @@ final class RestOverlayView: NSView {
                 titleLabel.stringValue = L10n.tr("overlay.bodyCompleteTitle")
                 setDetailText(L10n.tr("overlay.bodyCompleteBody"), allowsRichText: false)
             }
-            countdownLabel.stringValue = L10n.tr("overlay.ready")
+            setCountdownText(L10n.tr("overlay.ready"))
+            countdownRing.setProgress(1, animated: false)
             updateOverlayTextAccessibility()
             return
         }
@@ -4265,11 +4416,29 @@ final class RestOverlayView: NSView {
         }
         let remainingText = OverlayCountdownFormatter.remainingText(seconds: remainingSeconds)
         if session.kind == .bodyBreak, settings.presentation.showCurrentTimeDuringBodyBreak {
-            countdownLabel.stringValue = "\(remainingText) · \(Date().formatted(date: .omitted, time: .shortened))"
+            setCountdownText("\(remainingText) · \(Date().formatted(date: .omitted, time: .shortened))")
         } else {
-            countdownLabel.stringValue = remainingText
+            setCountdownText(remainingText)
         }
+        let progress = session.duration > 0 ? CGFloat(remainingSeconds) / CGFloat(session.duration) : 0
+        countdownRing.setProgress(
+            progress,
+            animated: !isNewSession && !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        )
         updateOverlayTextAccessibility()
+    }
+
+    /// Uses the largest countdown size that still fits inside the ring.
+    private func setCountdownText(_ text: String) {
+        countdownLabel.stringValue = text
+        let maxWidth = OverlayMetrics.ringDiameter - 32
+        for size: CGFloat in [40, 34, 28, 23, 19] {
+            let font = Self.countdownFont(ofSize: size)
+            if text.size(withAttributes: [.font: font]).width <= maxWidth || size == 19 {
+                countdownLabel.font = font
+                break
+            }
+        }
     }
 
     @objc private func emergencyOverridePressed() {
@@ -4538,14 +4707,15 @@ final class RestOverlayView: NSView {
         button.bezelStyle = .inline
         button.isBordered = false
         button.imagePosition = .imageLeading
-        button.contentTintColor = NSColor.white.withAlphaComponent(0.72)
+        button.imageHugsTitle = true
+        button.contentTintColor = NSColor.white.withAlphaComponent(0.78)
         button.target = self
         button.action = action
-        button.alphaValue = 0.78
+        button.alphaValue = 0.82
         button.setContentHuggingPriority(.required, for: .horizontal)
         button.setContentCompressionResistancePriority(.required, for: .horizontal)
         button.widthAnchor.constraint(greaterThanOrEqualToConstant: 112).isActive = true
-        button.heightAnchor.constraint(equalToConstant: 34).isActive = true
+        button.heightAnchor.constraint(equalToConstant: OverlayMetrics.actionHeight).isActive = true
         updateBodyActionButtonPresentation(button, kind: kind)
     }
 
@@ -4560,20 +4730,34 @@ final class RestOverlayView: NSView {
             (bodyFinishButton, BodyOverlayActionKind.finish)
         ].forEach { button, kind in
             button.isEnabled = !button.isHidden && !bodyActionRequestPending
-            button.alphaValue = bodyActionRequestPending ? 0.42 : 0.78
+            button.alphaValue = bodyActionRequestPending ? 0.42 : (kind == .finish && isManualAwaiting ? 1 : 0.82)
             if button.isHidden {
                 clearBodyActionButtonPresentation(button)
             } else {
                 updateBodyActionButtonPresentation(button, kind: kind)
                 button.applyBodyActionTileStyle(
                     isPendingButton: bodyActionRequestPending && pendingBodyAction == kind,
-                    isActionLocked: bodyActionRequestPending && pendingBodyAction != kind
+                    isActionLocked: bodyActionRequestPending && pendingBodyAction != kind,
+                    isProminent: kind == .finish && isManualAwaiting
                 )
             }
         }
         bodyActionStack.isHidden = bodyPostponeButton.isHidden && bodySkipButton.isHidden && bodyFinishButton.isHidden
         bodyActionPanel.isHidden = bodyActionStack.isHidden
+        updateBodyActionPanelPlacement()
         updateBodyActionPanelAffordance()
+    }
+
+    /// Postpone and skip stay low at the screen edge; a ready rest offers Finish under the countdown.
+    private func updateBodyActionPanelPlacement() {
+        let showsInline = isManualAwaiting && singleVisibleBodyActionKind() == .finish
+        if showsInline {
+            NSLayoutConstraint.deactivate(bodyActionRailConstraints)
+            NSLayoutConstraint.activate(bodyActionInlineConstraints)
+        } else {
+            NSLayoutConstraint.deactivate(bodyActionInlineConstraints)
+            NSLayoutConstraint.activate(bodyActionRailConstraints)
+        }
     }
 
     private func updateBodyActionPanelAffordance() {
@@ -4624,16 +4808,26 @@ final class RestOverlayView: NSView {
             help = kind.help
         }
         let symbolName = isPendingButton ? "hourglass" : kind.symbolName
+        let isProminent = kind == .finish && isManualAwaiting
+        let foreground = isProminent
+            ? NSColor.black.withAlphaComponent(0.82)
+            : NSColor.white.withAlphaComponent(0.88)
 
-        button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: title)
+        button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: title)?
+            .withSymbolConfiguration(.init(pointSize: 13, weight: .semibold))
+        button.image?.accessibilityDescription = title
+        button.contentTintColor = foreground
         button.toolTip = help
         button.setAccessibilityLabel(title)
         button.setAccessibilityHelp(help)
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.alignment = .center
         button.attributedTitle = NSAttributedString(
             string: title,
             attributes: [
-                .foregroundColor: NSColor.white.withAlphaComponent(0.82),
-                .font: NSFont.systemFont(ofSize: 13, weight: .medium)
+                .foregroundColor: foreground,
+                .font: NSFont.systemFont(ofSize: 13, weight: isProminent ? .semibold : .medium),
+                .paragraphStyle: paragraph
             ]
         )
     }
@@ -4719,8 +4913,8 @@ final class RestOverlayView: NSView {
         <style>
         body {
           font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-          font-size: 18px;
-          color: white;
+          font-size: 19px;
+          color: rgba(255, 255, 255, 0.8);
           text-align: center;
         }
         a { color: #b7ecff; }

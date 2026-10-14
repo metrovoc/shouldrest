@@ -24,6 +24,14 @@ final class RestOverlayViewCountdownTests: XCTestCase {
         XCTAssertEqual(OverlayCountdownFormatter.remainingText(seconds: 3_661), "1:01:01")
     }
 
+    func testCountdownRingTracksRemainingShareAndFillsWhenReady() {
+        let running = configuredBodyOverlay(remainingSeconds: 75)
+        XCTAssertEqual(running.countdownProgressForTesting, 0.25, accuracy: 0.001)
+
+        let ready = configuredBodyOverlay(remainingSeconds: 0, manualAwaiting: true)
+        XCTAssertEqual(ready.countdownProgressForTesting, 1, accuracy: 0.001)
+    }
+
     func testBodyBreakOverlayShowsReadableCountdownInsteadOfRawSeconds() throws {
         let view = configuredBodyOverlay(remainingSeconds: 300)
         let countdown = try XCTUnwrap(view.descendant(withIdentifier: "overlay.countdown.label") as? NSTextField)

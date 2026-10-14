@@ -248,6 +248,29 @@ final class RestOverlayViewBodyActionsTests: XCTestCase {
         }
     }
 
+    func testReadyFinishSitsUnderCountdownWhilePostponeAndSkipStayAtScreenEdge() throws {
+        let ready = configuredBodyOverlay(
+            manualAwaiting: true,
+            actions: BodyOverlayActions(canPostpone: false, canFinish: true, canSkip: false, postpone: nil, finish: {}, skip: nil)
+        )
+        ready.layoutSubtreeIfNeeded()
+        let readyPanel = try XCTUnwrap(ready.descendant(withIdentifier: "overlay.bodyActions.panel"))
+        let readyCountdown = try XCTUnwrap(ready.descendant(withIdentifier: "overlay.countdown.label"))
+        let finishButton = try XCTUnwrap(ready.descendant(withIdentifier: "overlay.bodyFinish.button") as? NSButton)
+        XCTAssertLessThan(readyPanel.frame.maxY, readyCountdown.frame.minY)
+        XCTAssertGreaterThan(readyPanel.frame.minY, 60)
+        XCTAssertGreaterThan(finishButton.layer?.backgroundColor?.alpha ?? 0, 0.8)
+
+        let running = configuredBodyOverlay(
+            actions: BodyOverlayActions(canPostpone: true, canFinish: false, canSkip: true, postpone: {}, finish: nil, skip: {})
+        )
+        running.layoutSubtreeIfNeeded()
+        let runningPanel = try XCTUnwrap(running.descendant(withIdentifier: "overlay.bodyActions.panel"))
+        let postponeButton = try XCTUnwrap(running.descendant(withIdentifier: "overlay.bodyPostpone.button") as? NSButton)
+        XCTAssertLessThanOrEqual(runningPanel.frame.minY, 60)
+        XCTAssertLessThan(postponeButton.layer?.backgroundColor?.alpha ?? 1, 0.3)
+    }
+
     func testManualAwaitingBodyFinishPanelPaddingTriggersFinish() throws {
         var didFinish = false
         let view = configuredBodyOverlay(
