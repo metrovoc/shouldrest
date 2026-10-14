@@ -66,9 +66,16 @@ if [[ "$icon_file" != "AppIcon" ]]; then
   exit 1
 fi
 
+icon_name="$("/usr/libexec/PlistBuddy" -c "Print :CFBundleIconName" "$info_plist")"
+if [[ "$icon_name" != "AppIcon" ]]; then
+  echo "Unexpected icon name: $icon_name" >&2
+  exit 1
+fi
+
 echo "==> Checking packaged resources"
 require_dir "$resources_dir"
 require_file "$app_dir/Contents/Resources/AppIcon.icns"
+require_file "$app_dir/Contents/Resources/Assets.car"
 require_file "$resources_dir/en.lproj/Localizable.strings"
 require_file "$resources_dir/zh-hans.lproj/Localizable.strings"
 require_file "$resources_dir/ThirdPartyNotices.txt"

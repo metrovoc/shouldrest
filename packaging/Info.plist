@@ -12,6 +12,8 @@
     <string>dev.shouldrest.app</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
+    <key>CFBundleIconName</key>
+    <string>AppIcon</string>
     <key>CFBundleName</key>
     <string>ShouldRest</string>
     <key>CFBundlePackageType</key>
@@ -35,6 +37,8 @@
     <string>14.0</string>
     <key>LSUIElement</key>
     <true/>
+    <key>NSAccentColorName</key>
+    <string>AccentColor</string>
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSUserNotificationAlertStyle</key>

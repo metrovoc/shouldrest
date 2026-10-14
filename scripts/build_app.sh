@@ -18,9 +18,25 @@ mkdir -p "$MACOS" "$RESOURCES"
 
 cp "$ROOT/.build/release/shouldrest" "$MACOS/shouldrest"
 cp "$ROOT/packaging/Info.plist" "$CONTENTS/Info.plist"
-if [[ -f "$ROOT/packaging/AppIcon.icns" ]]; then
-    cp "$ROOT/packaging/AppIcon.icns" "$RESOURCES/AppIcon.icns"
+
+# Compiles the Icon Composer document and the accent color into Assets.car, plus
+# AppIcon.icns for CFBundleIconFile.
+ICON_PLIST="$(mktemp -t shouldrest-icon)"
+if ! icon_log="$(xcrun actool "$ROOT/packaging/AppIcon.icon" "$ROOT/packaging/Assets.xcassets" \
+    --compile "$RESOURCES" \
+    --platform macosx \
+    --target-device mac \
+    --minimum-deployment-target "$(/usr/libexec/PlistBuddy -c "Print :LSMinimumSystemVersion" "$ROOT/packaging/Info.plist")" \
+    --app-icon AppIcon \
+    --accent-color AccentColor \
+    --output-partial-info-plist "$ICON_PLIST" \
+    --output-format human-readable-text \
+    --errors 2>&1)"; then
+    echo "$icon_log" >&2
+    rm -f "$ICON_PLIST"
+    exit 1
 fi
+rm -f "$ICON_PLIST"
 
 SOURCE_RESOURCES="$ROOT/Sources/shouldrest/Resources"
 RESOURCE_BUNDLE="$RESOURCES/ShouldRest_shouldrest.bundle"

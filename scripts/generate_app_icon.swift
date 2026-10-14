@@ -1,118 +1,61 @@
 #!/usr/bin/env swift
-import AppKit
+// Writes the closed-eye glyph used by packaging/AppIcon.icon as filled outlines.
+// Icon Composer's glass renderer mishandles open stroked paths, so strokes are
+// expanded and unioned here. Keep the geometry in sync with RestGateIcon.
+import CoreGraphics
 import Foundation
 
 let root = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
-let iconset = root.appendingPathComponent("packaging/AppIcon.iconset")
-let output = root.appendingPathComponent("packaging/AppIcon.icns")
+let output = root.appendingPathComponent("packaging/AppIcon.icon/Assets/closed-eye.svg")
 
-try? FileManager.default.removeItem(at: iconset)
-try FileManager.default.createDirectory(at: iconset, withIntermediateDirectories: true)
-defer {
-    try? FileManager.default.removeItem(at: iconset)
+// SVG coordinates on a 1024 canvas, y pointing down.
+let lid = CGMutablePath()
+lid.move(to: CGPoint(x: 236, y: 408))
+lid.addCurve(to: CGPoint(x: 788, y: 408), control1: CGPoint(x: 340, y: 582), control2: CGPoint(x: 684, y: 582))
+
+let lashes = CGMutablePath()
+for (start, end) in [
+    (CGPoint(x: 512, y: 546), CGPoint(x: 512, y: 644)),
+    (CGPoint(x: 386, y: 523), CGPoint(x: 343, y: 611)),
+    (CGPoint(x: 638, y: 523), CGPoint(x: 681, y: 611)),
+    (CGPoint(x: 291, y: 470), CGPoint(x: 224, y: 535)),
+    (CGPoint(x: 733, y: 470), CGPoint(x: 800, y: 535))
+] {
+    lashes.move(to: start)
+    lashes.addLine(to: end)
 }
 
-struct IconVariant {
-    let fileName: String
-    let pixels: Int
+let glyph = lid.copy(strokingWithWidth: 78, lineCap: .round, lineJoin: .round, miterLimit: 10)
+    .union(lashes.copy(strokingWithWidth: 54, lineCap: .round, lineJoin: .round, miterLimit: 10))
+
+func format(_ value: CGFloat) -> String {
+    String(format: "%.2f", value)
 }
 
-let variants = [
-    IconVariant(fileName: "icon_16x16.png", pixels: 16),
-    IconVariant(fileName: "icon_16x16@2x.png", pixels: 32),
-    IconVariant(fileName: "icon_32x32.png", pixels: 32),
-    IconVariant(fileName: "icon_32x32@2x.png", pixels: 64),
-    IconVariant(fileName: "icon_128x128.png", pixels: 128),
-    IconVariant(fileName: "icon_128x128@2x.png", pixels: 256),
-    IconVariant(fileName: "icon_256x256.png", pixels: 256),
-    IconVariant(fileName: "icon_256x256@2x.png", pixels: 512),
-    IconVariant(fileName: "icon_512x512.png", pixels: 512),
-    IconVariant(fileName: "icon_512x512@2x.png", pixels: 1024)
-]
-
-func drawIcon(pixels: Int) throws -> Data {
-    let size = CGFloat(pixels)
-    guard let rep = NSBitmapImageRep(
-        bitmapDataPlanes: nil,
-        pixelsWide: pixels,
-        pixelsHigh: pixels,
-        bitsPerSample: 8,
-        samplesPerPixel: 4,
-        hasAlpha: true,
-        isPlanar: false,
-        colorSpaceName: .deviceRGB,
-        bytesPerRow: 0,
-        bitsPerPixel: 0
-    ) else {
-        throw NSError(domain: "ShouldRestIcon", code: 1)
+var data = ""
+glyph.applyWithBlock { element in
+    let points = element.pointee.points
+    switch element.pointee.type {
+    case .moveToPoint:
+        data += "M\(format(points[0].x)) \(format(points[0].y))"
+    case .addLineToPoint:
+        data += "L\(format(points[0].x)) \(format(points[0].y))"
+    case .addQuadCurveToPoint:
+        data += "Q\(format(points[0].x)) \(format(points[0].y)) \(format(points[1].x)) \(format(points[1].y))"
+    case .addCurveToPoint:
+        data += "C\(format(points[0].x)) \(format(points[0].y)) \(format(points[1].x)) \(format(points[1].y)) \(format(points[2].x)) \(format(points[2].y))"
+    case .closeSubpath:
+        data += "Z"
+    @unknown default:
+        break
     }
-
-    rep.size = NSSize(width: size, height: size)
-    NSGraphicsContext.saveGraphicsState()
-    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
-
-    NSColor.clear.setFill()
-    NSRect(x: 0, y: 0, width: size, height: size).fill()
-
-    let corner = size * 0.21
-    let background = NSBezierPath(roundedRect: NSRect(x: 0, y: 0, width: size, height: size), xRadius: corner, yRadius: corner)
-    NSColor(red: 0.05, green: 0.09, blue: 0.11, alpha: 1).setFill()
-    background.fill()
-
-    let inset = size * 0.12
-    let inner = NSBezierPath(roundedRect: NSRect(x: inset, y: inset, width: size - inset * 2, height: size - inset * 2), xRadius: corner * 0.72, yRadius: corner * 0.72)
-    NSColor(red: 0.03, green: 0.19, blue: 0.20, alpha: 1).setFill()
-    inner.fill()
-
-    let ringRect = NSRect(x: size * 0.22, y: size * 0.24, width: size * 0.56, height: size * 0.56)
-    let ring = NSBezierPath(ovalIn: ringRect)
-    NSColor(red: 0.70, green: 0.96, blue: 0.92, alpha: 1).setFill()
-    ring.fill()
-
-    let centerRect = ringRect.insetBy(dx: size * 0.075, dy: size * 0.075)
-    let center = NSBezierPath(ovalIn: centerRect)
-    NSColor(red: 0.03, green: 0.19, blue: 0.20, alpha: 1).setFill()
-    center.fill()
-
-    let leftBar = NSBezierPath(
-        roundedRect: NSRect(x: size * 0.405, y: size * 0.37, width: size * 0.07, height: size * 0.28),
-        xRadius: size * 0.032,
-        yRadius: size * 0.032
-    )
-    let rightBar = NSBezierPath(
-        roundedRect: NSRect(x: size * 0.525, y: size * 0.37, width: size * 0.07, height: size * 0.28),
-        xRadius: size * 0.032,
-        yRadius: size * 0.032
-    )
-    NSColor(red: 0.70, green: 0.96, blue: 0.92, alpha: 1).setFill()
-    leftBar.fill()
-    rightBar.fill()
-
-    let cadenceDot = NSBezierPath(ovalIn: NSRect(x: size * 0.65, y: size * 0.64, width: size * 0.12, height: size * 0.12))
-    NSColor(red: 0.44, green: 0.88, blue: 0.72, alpha: 1).setFill()
-    cadenceDot.fill()
-
-    let restBar = NSBezierPath(roundedRect: NSRect(x: size * 0.30, y: size * 0.20, width: size * 0.40, height: size * 0.065), xRadius: size * 0.032, yRadius: size * 0.032)
-    NSColor(red: 0.44, green: 0.88, blue: 0.72, alpha: 1).setFill()
-    restBar.fill()
-
-    NSGraphicsContext.restoreGraphicsState()
-    guard let data = rep.representation(using: .png, properties: [:]) else {
-        throw NSError(domain: "ShouldRestIcon", code: 2)
-    }
-    return data
 }
 
-for variant in variants {
-    let data = try drawIcon(pixels: variant.pixels)
-    try data.write(to: iconset.appendingPathComponent(variant.fileName))
-}
+let svg = """
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <path fill="#FFFFFF" d="\(data)"/>
+</svg>
 
-let process = Process()
-process.executableURL = URL(fileURLWithPath: "/usr/bin/iconutil")
-process.arguments = ["-c", "icns", iconset.path, "-o", output.path]
-try process.run()
-process.waitUntilExit()
-guard process.terminationStatus == 0 else {
-    throw NSError(domain: "ShouldRestIcon", code: Int(process.terminationStatus))
-}
+"""
+try svg.write(to: output, atomically: true, encoding: .utf8)
+print(output.path)
